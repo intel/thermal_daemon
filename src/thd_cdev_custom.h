@@ -30,7 +30,9 @@
 
 class cthd_cdev_custom :  public cthd_cdev {
 private:
-
+	std::string path_str;
+	int use_custom;
+	
 public:
 	cthd_cdev_custom(int index) : cthd_cdev(index) {}
 

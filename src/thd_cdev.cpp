@@ -102,7 +102,7 @@ int cthd_cdev::get_curr_state()
 	return curr_state;
 }
 
-void cthd_cdev::thd_cdev_set_state(int state)
+void cthd_cdev::thd_cdev_set_state(int set_point, int temperature, int state)
 {
 	thd_log_debug(">>thd_cdev_set_state index:%d state:%d\n", index, state);
 
@@ -121,21 +121,20 @@ void cthd_cdev::thd_cdev_set_state(int state)
 	}
 #else
 	curr_state = get_curr_state();
-	thd_log_info("thd_cdev_set_%d:curr state %d max state %d\n", index, curr_state, max_state);
+	thd_log_debug("thd_cdev_set_%d:curr state %d max state %d\n", index, curr_state, max_state);
 	if (state) {
 		if (curr_state < max_state) {
-			thd_log_info("device:%s %d\n", type_str.c_str(), curr_state+1);
+			thd_log_debug("device:%s %d\n", type_str.c_str(), curr_state+1);
 			set_curr_state(curr_state + 1);
-			thd_log_info("set to device:%s %d\n", type_str.c_str(), get_curr_state());
 
 		}
 	} else {
 		if (curr_state > 0) {
 			thd_log_info("device:%s %d\n", type_str.c_str(), curr_state);
 			set_curr_state(curr_state - 1);
-			thd_log_info("set to device:%s %d\n", type_str.c_str(), get_curr_state());
 		}
 	}
+	thd_log_info("Set : %d, %d, %d, %d, %d\n", set_point, temperature, index, get_curr_state(), max_state);
 
 #endif
 	thd_log_debug("<<thd_cdev_set_state %d\n", state);

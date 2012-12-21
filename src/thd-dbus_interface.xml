@@ -22,5 +22,13 @@
       <arg type="s" name="cur_pref" direction="out"/>
     </method>
 
+    <method name="Calibrate">
+      <arg type="s" name="calibrate" direction="in"/>
+    </method>
+
+    <method name="Terminate">
+      <arg type="s" name="terminate" direction="in"/>
+    </method>
+
   </interface>
 </node>

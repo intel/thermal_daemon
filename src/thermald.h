@@ -52,8 +52,8 @@
 #define thd_log_info(...)	g_log(NULL, G_LOG_LEVEL_INFO, __VA_ARGS__)
 
 // Common return value defines
-#define THD_SUCCESS		0
-#define THD_ERROR		-1
+#define THD_SUCCESS			0
+#define THD_ERROR			-1
 #define THD_FATAL_ERROR		-2
 
 // Dbus related

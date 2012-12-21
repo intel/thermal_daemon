@@ -1,0 +1,364 @@
+<?xml version="1.0"?><!DOCTYPE ThermalConfiguration [
+<!ELEMENT uuid (#PCDATA)>
+<!ELEMENT Preference (#PCDATA)>
+<!ELEMENT Name (#PCDATA)>
+<!ELEMENT Sensor_path (#PCDATA)>
+<!ELEMENT Temperature (#PCDATA)>
+<!ELEMENT type (#PCDATA)>
+<!ELEMENT TripPoint (Temperature,CoolingDevice,type)>
+<!ELEMENT TripPoints (TripPoint)+>
+<!ELEMENT Kp (#PCDATA)>
+<!ELEMENT Ki (#PCDATA)>
+<!ELEMENT Kd (#PCDATA)>
+<!ELEMENT PidControl (Kp,Ki,Kd)>
+<!ELEMENT ThermalZone (Name,Sensor_path,TripPoints)>
+<!ELEMENT ThermalZones (ThermalZone)+>
+<!ELEMENT Index (#PCDATA)>
+<!ELEMENT Type (#PCDATA)>
+<!ELEMENT Path (#PCDATA)>
+<!ELEMENT MinState (#PCDATA)>
+<!ELEMENT MaxState (#PCDATA)>
+<!ELEMENT CoolingDevice (#PCDATA|Index|Type|Path|MinState|MaxState)*>
+<!ELEMENT CoolingDevices (CoolingDevice)+>
+<!ELEMENT Platform (Name,uuid,Preference,ThermalZones,CoolingDevices)>
+<!ELEMENT ThermalConfiguration (Platform)+>
+]>
+
+<!-- 	EXAMPLE CONF FILE
+ 	Motivation: How can it help
+Configuration in this file is useful for the following cases:
+1. If there is no thermal sysfs data but has some some sensors
+and cooling devices.
+2. Buggy ACPI provided data: For example has 0's in trip points
+or invalid trip points
+3. Non ACPI detectable sensor and cooling devices, so thermal zone
+information
+4. Virtual zones: Decision based on sensors present in multiple zones.
+For example
+if temperature in ZONE1 and ZONE2 combined exceeds a trip point,
+then take action. You can also specify simple equation
+2*ZONE1 + 3*ZONE2 + 10 for temerature capculation and fire associated
+cooling devices for this virtual zone.
+5. Specify ACPI passive cooling clock throttling constants
+6. Specify constants for using PID controller for passive cooling
+
+Caveats:
+Using DMI UUID to identify a platform. What else can we use?
+WILL BE ENHANCING TILL SOME TIME! SO DTD IS NOT FINAL.
+-->
+
+<!--
+Example below specifies
+- One platform thermal configuration data
+- Three temperature zones
+	Two temerature zones
+	One virtual temperature zone
+- 4 cooling devices
+	Two active cooling FAN type devices
+	one passive cooling using ACPI formula
+	one passive cooling with PID controller
+-->
+
+<!-- BEGIN -->
+
+<!-- Thermal configuration -->
+<ThermalConfiguration>
+<Platform>
+<Name>Intel IvyBridge UltraBook SDV</Name>
+<uuid>C4850803-A624-C485-0803-A624C4850803</uuid>
+<Preference>PERFORMANCE</Preference>
+<!-- Either PERFORMANCE or QUIET 
+<Preference>QUIET</Preference>
+-->
+	<ThermalZones>
+		<!-- Thermal Zone 0 -->
+		<ThermalZone>
+			<Name>Zone0</Name>
+			<Sensor_path>/sys/class/thermal/thermal_zone0/temp</Sensor_path>
+			<TripPoints>
+				<TripPoint>
+					<Temperature>50000</Temperature>
+					<CoolingDevice>9</CoolingDevice>
+					<type>active</type>
+				</TripPoint>
+				<TripPoint>
+					<Temperature>60000</Temperature>
+					<CoolingDevice>8</CoolingDevice>
+					<type>active</type>
+				</TripPoint>
+				<TripPoint>
+					<Temperature>70000</Temperature>
+					<CoolingDevice>7</CoolingDevice>
+					<type>active</type>
+				</TripPoint>
+				<TripPoint>
+					<Temperature>75000</Temperature>
+					<CoolingDevice>6</CoolingDevice>
+					<type>active</type>
+				</TripPoint>
+				<TripPoint>
+					<Temperature>80000</Temperature>
+					<CoolingDevice>5</CoolingDevice>
+					<type>active</type>
+				</TripPoint>
+					<TripPoint>
+					<Temperature>85000</Temperature>
+					<CoolingDevice>4</CoolingDevice>
+					<type>active</type>
+				</TripPoint>
+				<TripPoint>
+					<Temperature>86000</Temperature>
+					<CoolingDevice>3</CoolingDevice>
+					<type>active</type>
+				</TripPoint>
+				<TripPoint>
+					<Temperature>90000</Temperature>
+					<CoolingDevice>2</CoolingDevice>
+					<type>active</type>
+				</TripPoint>
+				<TripPoint>
+					<Temperature>95000</Temperature>
+					<CoolingDevice>1</CoolingDevice>
+					<type>active</type>
+				</TripPoint>
+				<TripPoint>
+					<Temperature>98000</Temperature>
+					<CoolingDevice>0</CoolingDevice>
+					<type>active</type>
+				</TripPoint>
+				<TripPoint>
+					<Temperature>105000</Temperature>
+					<type>critical</type>
+				</TripPoint>
+			</TripPoints>
+		</ThermalZone>
+		<!-- Thermal Zone 1 -->
+		<ThermalZone>
+			<Name>Zone1</Name>
+			<Sensor_path>/sys/class/thermal/thermal_zone1/temp</Sensor_path>
+<!-- PID Control paramaters setting
+			<PidControl>
+				<Kp>1</Kp>
+				<Ki>0</Ki>
+				<Kd>0</Kd>
+			</PidControl>
+-->
+			<TripPoints>
+				<TripPoint>
+					<Temperature>95000</Temperature>
+					<CoolingDevice>13</CoolingDevice>
+					<type>passive</type>
+				</TripPoint>
+				<TripPoint>
+					<Temperature>95000</Temperature>
+					<CoolingDevice>12</CoolingDevice>
+					<type>passive</type>
+				</TripPoint>
+				<TripPoint>
+					<Temperature>95000</Temperature>
+					<CoolingDevice>11</CoolingDevice>
+					<type>passive</type>
+				</TripPoint>
+				<TripPoint>
+					<Temperature>95000</Temperature>
+					<CoolingDevice>10</CoolingDevice>
+					<type>passive</type>
+				<TripPoint>
+					<Temperature>105000</Temperature>
+					<type>critical</type>
+				</TripPoint>
+				</TripPoint>
+			</TripPoints>
+		</ThermalZone>
+	<!-- Thermal Zones End -->
+	</ThermalZones>
+	<!-- Cooling Devices Begin -->
+	<CoolingDevices>
+		<CoolingDevice>
+			<Index>0</Index>
+			<Type>Fan</Type>
+			<Path>/sys/class/thermal/cooling_device0/cur_state</Path>
+			<MinState>0</MinState>
+			<MaxState>1</MaxState>
+		</CoolingDevice>
+		<CoolingDevice>
+			<Index>1</Index>
+			<Type>Fan</Type>
+			<Path>/sys/class/thermal/cooling_device1/cur_state</Path>
+			<MinState>0</MinState>
+			<MaxState>1</MaxState>
+		</CoolingDevice>
+		<CoolingDevice>
+			<Index>2</Index>
+			<Type>Fan</Type>
+			<Path>/sys/class/thermal/cooling_device2/cur_state</Path>
+			<MinState>0</MinState>
+			<MaxState>1</MaxState>
+		</CoolingDevice>
+		<CoolingDevice>
+			<Index>3</Index>
+			<Type>Fan</Type>
+			<Path>/sys/class/thermal/cooling_device3/cur_state</Path>
+			<MinState>0</MinState>
+			<MaxState>1</MaxState>
+		</CoolingDevice>
+		<CoolingDevice>
+			<Index>4</Index>
+			<Type>Fan</Type>
+			<Path>/sys/class/thermal/cooling_device4/cur_state</Path>
+			<MinState>0</MinState>
+			<MaxState>1</MaxState>
+		</CoolingDevice>
+		<CoolingDevice>
+			<Index>5</Index>
+			<Type>Fan</Type>
+			<Path>/sys/class/thermal/cooling_device5/cur_state</Path>
+			<MinState>0</MinState>
+			<MaxState>1</MaxState>
+		</CoolingDevice>
+		<CoolingDevice>
+			<Index>6</Index>
+			<Type>Fan</Type>
+			<Path>/sys/class/thermal/cooling_device6/cur_state</Path>
+			<MinState>0</MinState>
+			<MaxState>1</MaxState>
+		</CoolingDevice>
+		<CoolingDevice>
+			<Index>7</Index>
+			<Type>Fan</Type>
+			<Path>/sys/class/thermal/cooling_device7/cur_state</Path>
+			<MinState>0</MinState>
+			<MaxState>1</MaxState>
+		</CoolingDevice>
+		<CoolingDevice>
+			<Index>8</Index>
+			<Type>Fan</Type>
+			<Path>/sys/class/thermal/cooling_device8/cur_state</Path>
+			<MinState>0</MinState>
+			<MaxState>1</MaxState>
+		</CoolingDevice>
+		<CoolingDevice>
+			<Index>9</Index>
+			<Type>Fan</Type>
+			<Path>/sys/class/thermal/cooling_device9/cur_state</Path>
+			<MinState>0</MinState>
+			<MaxState>1</MaxState>
+		</CoolingDevice>
+		<CoolingDevice>
+			<Index>10</Index>
+			<Type>Processor</Type>
+			<Path>/sys/class/thermal/cooling_device10/cur_state</Path>
+			<MinState>0</MinState>
+			<MaxState>17</MaxState>
+		</CoolingDevice>
+		<CoolingDevice>
+			<Index>11</Index>
+			<Type>Processor</Type>
+			<Path>/sys/class/thermal/cooling_device11/cur_state</Path>
+			<MinState>0</MinState>
+			<MaxState>17</MaxState>
+		</CoolingDevice>
+		<CoolingDevice>
+			<Index>12</Index>
+			<Type>Processor</Type>
+			<Path>/sys/class/thermal/cooling_device12/cur_state</Path>
+			<MinState>0</MinState>
+			<MaxState>17</MaxState>
+		</CoolingDevice>
+		<CoolingDevice>
+			<Index>13</Index>
+			<Type>Processor</Type>
+			<Path>/sys/class/thermal/cooling_device13/cur_state</Path>
+			<MinState>0</MinState>
+			<MaxState>17</MaxState>
+		</CoolingDevice>
+		<CoolingDevice>
+			<Index>14</Index>
+			<Type>LCD</Type>
+			<Path>/sys/class/thermal/cooling_device14/cur_state</Path>
+			<MinState>0</MinState>
+			<MaxState>16</MaxState>
+		</CoolingDevice>
+	<!-- Cooling Devices End -->
+	</CoolingDevices>
+</Platform>
+<Platform>
+	<Name>SandyBridge Platform</Name>
+	<uuid>001320F9-BE92-0013-20F9-BE92001320F9</uuid>
+	<Preference>PERFORMANCE</Preference>
+
+	<ThermalZones>
+		<ThermalZone>
+			<Name>Zone0</Name>
+			<Sensor_path>/sys/class/thermal/thermal_zone0/temp</Sensor_path>
+			<TripPoints>
+				<TripPoint>
+					<Temperature> 40000 </Temperature>
+					<CoolingDevice>4</CoolingDevice>
+					<type>active</type>
+				</TripPoint>
+				<TripPoint>
+					<Temperature> 45000 </Temperature>
+					<CoolingDevice>3</CoolingDevice>
+					<type>active</type>
+				</TripPoint>
+				<TripPoint>
+					<Temperature> 50000 </Temperature>
+					<CoolingDevice>2</CoolingDevice>
+					<type>active</type>
+				</TripPoint>
+				<TripPoint>
+					<Temperature> 55000 </Temperature>
+					<CoolingDevice>1</CoolingDevice>
+					<type>active</type>
+				</TripPoint>
+				<TripPoint>
+					<Temperature> 71000 </Temperature>
+					<CoolingDevice>0</CoolingDevice>
+					<type>active</type>
+				</TripPoint>
+			</TripPoints>
+		</ThermalZone>
+	</ThermalZones>
+	<CoolingDevices>
+		<CoolingDevice>
+			<Index>0</Index>
+			<Type>Fan</Type>
+			<Path>/sys/class/thermal/cooling_device0/cur_state</Path>
+			<MinState>0</MinState>
+			<MaxState>1</MaxState>
+		</CoolingDevice>
+		<CoolingDevice>
+			<Index>1</Index>
+			<Type>Fan</Type>
+			<Path>/sys/class/thermal/cooling_device1/cur_state</Path>
+			<MinState>0</MinState>
+			<MaxState>1</MaxState>
+		</CoolingDevice>
+		<CoolingDevice>
+			<Index>2</Index>
+			<Type>Fan</Type>
+			<Path>/sys/class/thermal/cooling_device2/cur_state</Path>
+			<MinState>0</MinState>
+			<MaxState>1</MaxState>
+		</CoolingDevice>
+		<CoolingDevice>
+			<Index>3</Index>
+			<Type>Fan</Type>
+			<Path>/sys/class/thermal/cooling_device3/cur_state</Path>
+			<MinState>0</MinState>
+			<MaxState>1</MaxState>
+		</CoolingDevice>
+		<CoolingDevice>
+			<Index>4</Index>
+			<Type>Fan</Type>
+			<Path>/sys/class/thermal/cooling_device4/cur_state</Path>
+			<MinState>0</MinState>
+			<MaxState>1</MaxState>
+		</CoolingDevice>
+	</CoolingDevices>
+</Platform>
+
+</ThermalConfiguration>
+<!-- END -->
+

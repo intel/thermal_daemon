@@ -1,5 +1,5 @@
 /*
- * thd_cdev.h: thermal cooling class interface
+ * thd_pid.h: PID controller
  *
  * Copyright (C) 2012 Intel Corporation. All rights reserved.
  *
@@ -22,38 +22,41 @@
  *
  */
 
-#ifndef THD_CDEV_H
-#define THD_CDEV_H
+#ifndef THD_PID_H
+#define THD_PID_H
 
 #include "thermald.h"
 #include "thd_sys_fs.h"
-#include "thd_preference.h"
+#include <vector>
 
-class cthd_cdev {
-
-protected:
-	int				index;
-	unsigned int 	curr_state;
-	unsigned int 	max_state;
-	unsigned int 	min_state;
-	int 			Kp;
-	int 			Kd;
-	int 			Ki;
+class cthd_pid {
 
 private:
 	csys_fs 		cdev_sysfs;
-	unsigned int 		trip_point;
-	std::string 		type_str;
+	int		 		last_time;
+	float 			err_sum, last_err;
+	float 			kp, ki, kd;
+	std::vector <int> 	cdev_indexes;
+
+	pthread_attr_t crazy_thread_attr;
+	pthread_t 	crazy_running_thread;
+	bool		calibrated;
+	std::string	sensor_path;
+
+	int 		getMilliCount();
 
 public:
-	cthd_cdev(unsigned int _index);
-	void thd_cdev_set_state(int set_point, int temperature, int state);
-	int thd_cdev_get_index() { return index; }
+	cthd_pid();
+	//cthd_pid(float Kp, float Ki, float Kd);
+	void set_pid_params(float Kp, float Ki, float Kd);
+	void calibrate();
+	int update_pid(int temp, int setpoint);
+	void 		close_loop_tune();
 
-	virtual void set_curr_state(int state);
-	virtual int get_curr_state();
-	virtual int get_max_state();
-	virtual int update();
+	void add_sensor_path(std::string path);
+	void add_cdev_index(int index);
+
+	void print_pid_constants();
 };
 
 #endif

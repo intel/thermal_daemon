@@ -33,6 +33,7 @@
 #include "thd_cdev.h"
 #include "thd_cdev_custom.h"
 #include "thd_nl_wrapper.h"
+#include "thd_parse.h"
 #include <pthread.h>
 #include <poll.h>
 
@@ -45,6 +46,7 @@ typedef enum {
 	TERMINATE,
 	PREF_CHANGED,
 	THERMAL_ZONE_NOTIFY,
+	CALIBRATE,
 }message_name_t;
 
 typedef struct {
@@ -55,13 +57,17 @@ typedef struct {
 
 class cthd_engine {
 
-private:
-	static const int max_thermal_zones = 10;
-	static const int max_cool_devs = 50;
-	csys_fs thd_sysfs;
+protected:
 	std::vector <cthd_zone_custom> zones;
 	std::vector <cthd_cdev_custom> cdevs;
 	int				cdev_cnt;
+
+private:
+	static const int max_thermal_zones = 10;
+	static const int max_cool_devs = 50;
+	bool status;
+
+	csys_fs thd_sysfs;
 	int preference;
 	pthread_t thd_engine;
 	pthread_attr_t thd_attr;
@@ -76,16 +82,24 @@ private:
 	int proc_message(message_capsul_t *msg);
 	void process_pref_change();
 	void thermal_zone_change(message_capsul_t *msg);
-	
+
+	void process_terminate();
+
 public:
 	cthd_engine();
+	virtual ~cthd_engine() {}
 	void thd_engine_thread();
 	int thd_engine_start();
 	int thd_engine_stop();
+
 	bool set_preference(const int pref);
-	cthd_cdev thd_get_cdev_at_index(int index) {if (index < cdev_cnt) return cdevs[index];}
+	void thd_engine_terminate();
+
+	cthd_cdev thd_get_cdev_at_index(int index);
 	void thd_cdev_dump();
 	void send_message(message_name_t msg_id, int size, unsigned char *msg);
+	void takeover_thermal_control();
+	void giveup_thermal_control();
 
 	virtual int read_thermal_zones();
 	virtual int read_cooling_devices();

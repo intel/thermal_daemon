@@ -92,6 +92,7 @@ int csys_fs::read_symbolic_link_value(const std::string &path, char *buf, int le
 	int ret = ::readlink(p.c_str(), buf, len);
 	if (ret < 0)
         	return -errno;
+	buf[ret] = '\0';
 	return 0;
 }
 

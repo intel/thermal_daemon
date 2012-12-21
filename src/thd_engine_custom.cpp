@@ -28,17 +28,58 @@
 
 int cthd_engine_custom::read_thermal_zones()
 {
-	// Currently there is no custom interface
-	// use default
-	thd_log_debug("Use parent method \n");
-	return cthd_engine::read_thermal_zones();
+	int count = 0;
+
+	parse_success = false;
+
+	try{
+
+		if (parser.parser_init() != THD_SUCCESS)
+			throw THD_ERROR;
+		if (parser.start_parse() != THD_SUCCESS)
+			throw THD_ERROR;
+
+		parser.dump_thermal_conf();
+
+		if (parser.platform_matched()) {
+			parse_success = true;
+			thd_log_info("uuid matched zone-cnt %d\n", parser.zone_count());
+			for (int i=0; i<parser.zone_count(); ++i) {
+				cthd_zone_custom zone(i);
+				if (zone.thd_update_zones() != THD_SUCCESS)
+					continue;
+				zones.push_back(zone);
+				++count;
+			}
+		} else
+			return cthd_engine::read_thermal_zones();
+
+		parser.parser_deinit();
+	}
+	catch(int e)
+	{
+		return cthd_engine::read_thermal_zones();;
+	}
+
+	return THD_SUCCESS;
 }
 
 int cthd_engine_custom::read_cooling_devices()
 {
-	// Currently there is no custom interface
-	// use default
-	thd_log_debug("Use parent method \n");
-	return cthd_engine::read_cooling_devices();
+
+	if (parser.platform_matched()) {
+		parse_success = true;
+		cdev_cnt = 0;
+		thd_log_info("uuid matched cdev-cnt %d\n", parser.cdev_count());
+		for (int i=0; i<parser.cdev_count(); ++i) {
+			cthd_cdev_custom cdev(cdev_cnt);
+			if (cdev.update() != THD_SUCCESS)
+				continue;
+			cdevs.push_back(cdev);
+			++cdev_cnt;
+		}
+		return THD_SUCCESS;
+	} else
+		return cthd_engine::read_cooling_devices();
 }
 

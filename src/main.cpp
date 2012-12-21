@@ -25,6 +25,7 @@
  * functions.
  */
 #include <syslog.h>
+#include <signal.h>
 #include "thermald.h"
 #include "thd_preference.h"
 #include "thd_engine.h"
@@ -46,6 +47,10 @@ GType pref_object_get_type(void);
 #define PREF_TYPE_OBJECT (pref_object_get_type())
 G_DEFINE_TYPE(PrefObject, pref_object, G_TYPE_OBJECT)
 
+gboolean thd_dbus_interface_calibrate(PrefObject* obj, gint* value_out,
+                                                  GError** error);
+gboolean thd_dbus_interface_terminate(PrefObject* obj, gint* value_out,
+                                                  GError** error);
 gboolean thd_dbus_interface_set_current_preference(PrefObject* obj, gint* value_out,
                                                   GError** error);
 gboolean thd_dbus_interface_get_current_preference(PrefObject* obj, gdouble* value_out,
@@ -105,6 +110,19 @@ gboolean thd_dbus_interface_get_current_preference(PrefObject* obj, gdouble* val
 	value_out = (gdouble*) thd_pref.get_preference_cstr();
 	thd_log_debug("thd_dbus_interface_get_current_preference out :%s\n", (char*)value_out);
 
+	return TRUE;
+}
+
+gboolean thd_dbus_interface_calibrate(PrefObject* obj, gint* value_out,
+                                                  GError** error)
+{
+	return TRUE;
+}
+
+gboolean thd_dbus_interface_terminate(PrefObject* obj, gint* value_out,
+                                                  GError** error)
+{
+	thd_engine.thd_engine_terminate();
 	return TRUE;
 }
 
@@ -226,6 +244,13 @@ static int thd_dbus_server_proc(gboolean no_daemon)
 	return THD_SUCCESS;
 }
 
+void sig_int_handler(int signum)
+{
+	// control+c handler
+	thd_engine.giveup_thermal_control();
+	exit (1);
+}
+
 // main function
 int main (int argc, char *argv[])
 {
@@ -307,6 +332,9 @@ int main (int argc, char *argv[])
 	openlog("thermald", LOG_PID, LOG_USER | LOG_DAEMON | LOG_SYSLOG); // Don't care return val
 	thd_daemonize = !no_daemon;
 	g_log_set_handler( NULL, G_LOG_LEVEL_MASK, thd_logger, NULL );
+
+	if (no_daemon)
+		signal(SIGINT, sig_int_handler);
 
 	// Initialize thermald objects
 	if (thd_engine.thd_engine_start() != THD_SUCCESS) {

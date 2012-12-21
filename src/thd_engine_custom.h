@@ -31,10 +31,15 @@
 
 class cthd_engine_custom :  public cthd_engine {
 private:
+	bool parse_success;
 
 public:
+	~cthd_engine_custom() { }
 	int read_thermal_zones();
 	int read_cooling_devices();
+	cthd_parse parser;
+
+	int use_custom_engine() { return parse_success; }
 };
 
 #endif

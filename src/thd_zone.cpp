@@ -30,13 +30,15 @@ cthd_zone::cthd_zone(int _index)
 	  trip_point_cnt(0),
 	  zone_temp(0),
 	  cool_dev_cnt(0),
-	  cdev_mask(0)
+	  cdev_mask(0),
+	  temperature_sysfs_path("")
 {
 	thd_log_debug("Added zone index:%d \n", index);
 }
 
 int cthd_zone::read_trip_points()
 {
+
 	// Gather all trip points
 	std::stringstream trip_sysfs;
 	trip_sysfs << index << "/" << "trip_point_";
@@ -48,7 +50,7 @@ int cthd_zone::read_trip_points()
 		std::string temp_str;
 		std::string hyst_str;
 		trip_point_type_t trip_type;
-		unsigned int temp=0, hyst=0;
+		unsigned int temp=0, hyst=1;
 
 		type_stream << trip_sysfs.str() << i << "_type";
 		if (zone_sysfs.exists(type_stream.str())) {
@@ -118,8 +120,10 @@ int cthd_zone::read_cdev_trip_points()
 				if (ptr) {
 					ptr += strlen("cooling_device");
 					thd_log_debug("symbolic name %s:%s\n", buf, ptr);
-					if (trip_cnt >= 0)
+					if (trip_cnt >= 0) {
 						trip_points[trip_cnt].thd_trip_point_add_cdev_index(atoi(ptr));
+						pid_control.add_cdev_index(atoi(ptr));
+					}
 				}
 			}
 		}
@@ -132,17 +136,46 @@ int cthd_zone::read_cdev_trip_points()
 void cthd_zone::thermal_zone_change()
 {
 	int i, count;
+	cthd_preference thd_pref;
 
 	count = trip_points.size();
 	for (i=count -1; i >= 0; --i)	{
 		cthd_trip_point trip_point = trip_points[i];
-		trip_point.thd_trip_point_check(zone_temp);
+		trip_point.thd_trip_point_check(zone_temp, thd_pref.get_preference());
 	}
+}
+void cthd_zone::update_zone_preference()
+{
+
+	int i, count;
+	cthd_preference thd_pref;
+
+	thd_log_debug("update_zone_preference\n");
+	count = trip_points.size();
+	for (i=count -1; i >= 0; --i)	{
+		cthd_trip_point trip_point = trip_points[i];
+		trip_point.thd_trip_point_check(0, thd_pref.get_old_preference());
+	}
+
+	for (i=count -1; i >= 0; --i)	{
+		cthd_trip_point trip_point = trip_points[i];
+		trip_point.thd_trip_point_check(read_zone_temp(), thd_pref.get_preference());
+	}
+
 }
 
 int cthd_zone::thd_update_zones()
 {
 	int ret;
+
+	set_sensor_path();
+
+	enable_disable_pid_controller();
+	if (enable_pid) {
+		get_pid_params();
+		thd_log_debug("pid controller address %x \n", &pid_control);
+		pid_control.set_pid_params(Kp, Ki, Kd);
+	}
 
 	ret = read_trip_points();
 	if (ret != THD_SUCCESS)
@@ -152,6 +185,10 @@ int cthd_zone::thd_update_zones()
 	if (ret != THD_SUCCESS)
 		return THD_ERROR;
 
+	if (enable_pid) {
+		pid_control.print_pid_constants();
+
+	}
 	return THD_SUCCESS;
 }
 
@@ -161,18 +198,27 @@ void cthd_zone::zone_temperature_notification(int type, int data)
 	thermal_zone_change();
 }
 
+void cthd_zone::set_sensor_path()
+{
+	std::stringstream ss;
+
+	temperature_sysfs_path.assign("/sys/class/thermal/thermal_zone");
+	ss << index << "/temp";
+	temperature_sysfs_path.append(ss.str());
+	thd_log_debug("set_sensor_path %s\n", temperature_sysfs_path.c_str());
+}
+
 unsigned int cthd_zone::read_zone_temp()
 {
-	std::stringstream temp_sysfs;
+	csys_fs sysfs;
 	std::string buffer;
 
-	temp_sysfs << index << "/" << "temp";
 	thd_log_debug("read_zone_temp \n");
-	if (!zone_sysfs.exists(temp_sysfs.str())) {
-		thd_log_warn("read_zone_temp: No temp sysfs for reading temp \n");
+	if (!sysfs.exists(temperature_sysfs_path)) {
+		thd_log_warn("read_zone_temp: No temp sysfs for reading temp: %s\n", temperature_sysfs_path.c_str());
 		return zone_temp;
 	}
-	zone_sysfs.read(temp_sysfs.str(), buffer);
+	sysfs.read(temperature_sysfs_path, buffer);
 	std::istringstream(buffer) >> zone_temp;
 	thd_log_info("Zone temp %u \n", zone_temp);
 

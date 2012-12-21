@@ -30,6 +30,8 @@
 #include "thd_preference.h"
 #include "thd_cdev.h"
 #include "thd_trip_point.h"
+#include "thd_pid.h"
+
 #include <vector>
 
 typedef struct {
@@ -39,26 +41,40 @@ typedef struct {
 }thermal_zone_notify_t;
 
 class cthd_zone {
-private:
-	static const int		max_trip_points = 50;
-	static const int		max_cool_devs = 50;
-	int				index;
+
+protected:
+	int 							index;
+	int								trip_point_cnt;
 	std::vector <cthd_trip_point> 	trip_points;
-	int				trip_point_cnt;
-	std::vector <cthd_cdev> 	assoc_cdevs;
-	int				cool_dev_cnt;
-	unsigned long			cdev_mask;
-	csys_fs 			zone_sysfs;
-	unsigned int 			zone_temp;
-	unsigned int			read_zone_temp();
-	void				thermal_zone_change();
+	bool							enable_pid;
+	cthd_pid						pid_control;
+	int								Kp, Ki, Kd;
+	unsigned int 					zone_temp;
+	std::string				temperature_sysfs_path;
+//	std::stringstream		_temperature_sysfs_path;
+
+	virtual	void set_sensor_path();
+
+private:
+	static const int				max_trip_points = 50;
+	static const int				max_cool_devs = 50;
+	std::vector <cthd_cdev> 		assoc_cdevs;
+	int								cool_dev_cnt;
+	unsigned long					cdev_mask;
+	csys_fs 						zone_sysfs;
+	void							thermal_zone_change();
 
 public:
 	cthd_zone(int index);
 	void zone_temperature_notification(int type, int data);
 	virtual int read_trip_points();
 	virtual int read_cdev_trip_points();
+	virtual void enable_disable_pid_controller() {enable_pid = false;}
+	virtual void get_pid_params() {Kp = Ki = Kd = 0;}
+	virtual unsigned int			read_zone_temp();
+
 	int thd_update_zones();
+	void update_zone_preference();
 };
 
 #endif

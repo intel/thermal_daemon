@@ -35,6 +35,9 @@ public:
 	cthd_zone_custom(int index) : cthd_zone(index) {}
 	int read_trip_points();
 	int read_cdev_trip_points();
+	void enable_disable_pid_controller();
+	void get_pid_params();
+	void set_sensor_path();
 };
 
 #endif

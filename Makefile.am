@@ -7,10 +7,13 @@ ACLOCAL_AMFLAGS =
 # Global C Flags
 AM_CFLAGS = ${DBUS_CFLAGS}
 AM_CXXFLAGS = ${DBUS_CFLAGS}\
+		$(XML_CFLAGS) \
 		-DTDRUNDIR=\"$(tdrundir)\" \
 		-DTDCONFDIR=\"$(tdconfdir)\" \
 		-I netlink-if \
-		-I src
+		-I src \
+		-fpermissive \
+		-fopenmp
 
 EXTRA_DIST=Makefile.glib \
 	thermald.pc.in
@@ -27,7 +30,8 @@ thermald_LDADD = \
         $(GLIB_LIBS) \
         $(LIBNL_LIBS) \
         $(LIBM) \
-        $(LIBDL)
+        $(LIBDL) \
+		$(XML_LIBS)
 
 BUILT_SOURCES = \
 	thd-dbus-interface.h
@@ -43,6 +47,8 @@ thermald_SOURCES = \
 		src/thd_trip_point.cpp \
 		src/thd_cdev.cpp \
 		src/thd_cdev_custom.cpp \
+		src/thd_parse.cpp \
+		src/thd_pid.cpp \
 		netlink-if/libnetlink.cpp \
 		netlink-if/thd_nl_wrapper.cpp
 
@@ -50,3 +56,7 @@ thd-dbus-interface.h: $(top_srcdir)/src/thd-dbus_interface.xml
 	$(AM_V_GEN) dbus-binding-tool --prefix=thd_dbus_interface --mode=glib-server --output=$@ $<
 
 CLEANFILES = $(BUILT_SOURCES)
+
+install: install-am
+	echo "copy default xml config"
+	cp thermal-conf.xml ${tdconfdir} 

@@ -97,8 +97,10 @@ bool cthd_preference::set_preference(const char *pref_str)
 	if (pref == PREF_INVALID) {
 		return FALSE; 
 	}
+
 	std::stringstream filename;
 	filename << TDCONFDIR << "/" << "thd_preference.conf";
+
 	std::ofstream fout(filename.str().c_str());
         if (!fout.good()){
 		return FALSE;
@@ -106,5 +108,46 @@ bool cthd_preference::set_preference(const char *pref_str)
 	fout << pref;
 	fout.close();
 
+	// Save the old preference
+	old_preference = preference;
+	std::stringstream filename_save;
+	filename_save << TDCONFDIR << "/" << "thd_preference.conf.save";
+
+	std::ofstream fout_save(filename_save.str().c_str());
+        if (!fout_save.good()){
+		return FALSE;
+	}
+	fout_save << old_preference;
+	fout_save.close();
+
+
+    std::ifstream ifs(filename.str().c_str(), std::ifstream::in);
+    if (!ifs.good()){
+		preference = PREF_PERFORMANCE;
+	} else {
+		//ifs.read(reinterpret_cast < char * > (&preference), sizeof(preference));
+		ifs >> preference;
+	}
+	ifs.close();
+
+	thd_log_debug("old_preference %d new preference %d\n", old_preference, preference);
+
 	return TRUE;
+}
+
+int cthd_preference::get_old_preference()
+{
+	std::stringstream filename;
+
+	filename << TDCONFDIR << "/" << "thd_preference.conf.save";
+	std::ifstream ifs(filename.str().c_str(), std::ifstream::in);
+	if (!ifs.good()){
+		old_preference = PREF_PERFORMANCE;
+	} else {
+		//ifs.read(reinterpret_cast < char * > (&preference), sizeof(preference));
+		ifs >> old_preference;
+	}
+	ifs.close();
+
+	return old_preference;
 }

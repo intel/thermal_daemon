@@ -42,6 +42,7 @@ enum {
 class cthd_preference {
 private:
 	int preference;
+	int old_preference;
 	int string_pref_to_int(std::string& pref_str);
 	std::string int_pref_to_string(int pref);
 public:
@@ -50,6 +51,8 @@ public:
 	std::string get_preference_str();
 	const char* get_preference_cstr();
 	int get_preference();
+	int get_old_preference();
+
 };
 
 #endif
