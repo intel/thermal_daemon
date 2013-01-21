@@ -1,6 +1,6 @@
 /*
- * thd_preference.h: Thermal preference class interface file
- *
+ * thd_zone_therm_sys_fs.h: thermal zone class interface
+ *	for thermal sysfs
  * Copyright (C) 2012 Intel Corporation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or
@@ -22,38 +22,31 @@
  *
  */
 
-#ifndef THD_PREFERENCE_H
-#define THD_PREFERENCE_H
+#ifndef THD_ZONE_THERM_SYS_FS_H_
+#define THD_ZONE_THERM_SYS_FS_H_
 
-#include "thd_common.h"
-#include <string>
-#include <cstring>
-#include <sstream>
-#include <iostream>
-#include <fstream>
+#include "thd_zone.h"
 
-enum {
-	PREF_BALANCED,
-	PREF_PERFORMANCE,
-	PREF_ENERGY_CONSERVE,
-	PREF_DISABLED
-};
-
-class cthd_preference {
+class cthd_sysfs_zone : public cthd_zone
+{
 private:
-	int preference;
-	int old_preference;
-	int string_pref_to_int(std::string& pref_str);
-	std::string int_pref_to_string(int pref);
+	bool	using_custom_zone;
+	int trip_point_cnt;
+	int	read_xml_trip_points();
+	int	read_xml_cdev_trip_points();
 
 public:
-	cthd_preference();
-	bool set_preference(const char *pref);
-	std::string get_preference_str();
-	const char* get_preference_cstr();
-	int get_preference();
-	int get_old_preference();
+	static const int				max_trip_points = 50;
+	static const int				max_cool_devs = 50;
 
+	cthd_sysfs_zone(int count, std::string path)
+		: cthd_zone(count, path),
+		  trip_point_cnt(0), using_custom_zone(false)  {}
+
+
+	int read_trip_points();
+	int read_cdev_trip_points();
+	void set_temp_sensor_path();
 };
 
-#endif
+#endif /* THD_ZONE_THERM_SYS_FS_H_ */

@@ -27,12 +27,28 @@
 int csys_fs::write(const std::string &path, const std::string &buf)
 {
     std::string p = base_path + path;
+	int fd = ::open(p.c_str(), O_WRONLY);
+	if (fd < 0)
+        return -errno;
+
+	int ret = ::write(fd, buf.c_str(), buf.size());
+	close(fd);
+
+    return ret;
+}
+
+int csys_fs::write(const std::string &path, unsigned int position, unsigned long long data)
+{
+    std::string p = base_path + path;
     int fd = ::open(p.c_str(), O_WRONLY);
     if (fd < 0)
         return -errno;
 
-    int ret = ::write(fd, buf.c_str(), buf.size());
-    close(fd);
+	if (::lseek(fd, position, SEEK_CUR) == -1)
+		return -errno;
+
+	int ret = ::write(fd, &data, sizeof(data));
+	close(fd);
 
     return ret;
 }
@@ -50,6 +66,22 @@ int csys_fs::read(const std::string &path, char *buf, int len)
 	int fd = ::open(p.c_str(), O_RDONLY);
 	if (fd < 0)
         	return -errno;
+
+	int ret = ::read(fd, buf, len);
+	close(fd);
+
+	return ret;
+}
+
+int csys_fs::read(const std::string &path, unsigned int position, char *buf, int len)
+{
+	std::string p = base_path + path;
+	int fd = ::open(p.c_str(), O_RDONLY);
+	if (fd < 0)
+		return -errno;
+
+	if (::lseek(fd, position, SEEK_CUR) == -1)
+		return -errno;
 
 	int ret = ::read(fd, buf, len);
 	close(fd);
@@ -77,7 +109,7 @@ int csys_fs::read(const std::string &path, std::string &buf)
 bool csys_fs::exists(const std::string &path)
 {
 	struct stat s;
-	//thd_log_debug("checking for %s\n", (base_path+path).c_str());
+
 	return (bool) (stat((base_path + path).c_str(), &s) == 0);
 }
 
@@ -95,4 +127,3 @@ int csys_fs::read_symbolic_link_value(const std::string &path, char *buf, int le
 	buf[ret] = '\0';
 	return 0;
 }
-

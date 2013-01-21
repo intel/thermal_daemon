@@ -1,5 +1,4 @@
-/*
- * thd_zone.h: thermal zone class interface
+/* thd_msr.h: thermal engine msr class interface
  *
  * Copyright (C) 2012 Intel Corporation. All rights reserved.
  *
@@ -22,46 +21,30 @@
  *
  */
 
-#ifndef THD_ZONE_H
-#define THD_ZONE_H
+#ifndef THD_MSR_H
+#define THD_MSR_H
 
 #include "thd_common.h"
 #include "thd_sys_fs.h"
-#include "thd_preference.h"
-#include "thd_cdev.h"
-#include "thd_trip_point.h"
 
-#include <vector>
-
-typedef struct {
-	int zone;
-	int type;
-	unsigned int data;
-}thermal_zone_notify_t;
-
-class cthd_zone {
-
-protected:
-	int 							index;
-	std::vector <cthd_trip_point> 	trip_points;
-	unsigned int 					zone_temp;
-	std::string						temperature_sysfs_path;
-	csys_fs 						zone_sysfs;
-
+class cthd_msr {
 private:
-	void							thermal_zone_temp_change();
+	csys_fs msr_sysfs;
+
+	int get_no_cpus();
+	int read_msr(int cpu, unsigned int idx, unsigned long long *val);
+	int write_msr(int cpu, unsigned int idx, unsigned long long val);
 
 public:
-	cthd_zone(int _index, std::string control_path);
-	virtual ~cthd_zone() {}
-	void zone_temperature_notification(int type, int data);
-	int zone_update();
-	void update_zone_preference();;
+	cthd_msr();
 
-	virtual unsigned int read_zone_temp();
-	virtual int read_trip_points() = 0;
-	virtual int read_cdev_trip_points() = 0;
-	virtual void set_temp_sensor_path() = 0;
+	bool check_turbo_status();
+	int enable_turbo();
+	int disable_turbo();
+
+	int	get_clock_mod_duty_cycle();
+	int set_clock_mod_duty_cycle(int state);
 };
 
 #endif
+

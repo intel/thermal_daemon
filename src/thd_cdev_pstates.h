@@ -1,5 +1,5 @@
 /*
- * thd_preference.h: Thermal preference class interface file
+ * thd_cdev_pstates.h: thermal cooling class interface
  *
  * Copyright (C) 2012 Intel Corporation. All rights reserved.
  *
@@ -22,38 +22,36 @@
  *
  */
 
-#ifndef THD_PREFERENCE_H
-#define THD_PREFERENCE_H
+#ifndef THD_CDEV_PSTATES_H_
+#define THD_CDEV_PSTATES_H_
 
-#include "thd_common.h"
 #include <string>
-#include <cstring>
-#include <sstream>
-#include <iostream>
-#include <fstream>
+#include <vector>
+#include "thd_cdev.h"
+#include "thd_msr.h"
 
-enum {
-	PREF_BALANCED,
-	PREF_PERFORMANCE,
-	PREF_ENERGY_CONSERVE,
-	PREF_DISABLED
-};
 
-class cthd_preference {
+class cthd_cdev_pstates : public cthd_cdev
+{
 private:
-	int preference;
-	int old_preference;
-	int string_pref_to_int(std::string& pref_str);
-	std::string int_pref_to_string(int pref);
+
+	int					cpu_start_index;
+	int					cpu_end_index;
+	std::vector<int> 	cpufreqs;
+	int 				pstate_active_freq_index;
+	int					turbo_state;
+	cthd_msr			msr;
+	std::string			last_governor;
 
 public:
-	cthd_preference();
-	bool set_preference(const char *pref);
-	std::string get_preference_str();
-	const char* get_preference_cstr();
-	int get_preference();
-	int get_old_preference();
+	cthd_cdev_pstates(unsigned int _index) : cthd_cdev(_index, "/sys/devices/system/cpu/") {}
 
+	int init();
+	int control_begin();
+	int control_end();
+	void set_curr_state(int state);
+	int get_max_state();
+	int update();
 };
 
-#endif
+#endif /* THD_CDEV_PSTATES_H_ */

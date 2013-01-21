@@ -1,6 +1,7 @@
 #!/bin/sh
 
 echo "****thermald preference****"
+echo "0 : DEFAULT"
 echo "1 : PERFORMANCE"
 echo "2 : ENERGY_CONSERVE"
 echo "3 : DISABLED"
@@ -10,6 +11,8 @@ echo -n " Enter thermald preference [1..3]: "
 read opt_no
 
 case $opt_no in
+0) dbus-send --dest=org.thermald.control /org/thermald/settings org.thermald.value.SetCurrentPreference string:"FALLBACK"
+;;
 
 1) dbus-send --dest=org.thermald.control /org/thermald/settings org.thermald.value.SetCurrentPreference string:"PERFORMANCE"
 ;;

@@ -1,5 +1,4 @@
-/*
- * thd_preference.h: Thermal preference class interface file
+/* thd_msr.cpp: thermal engine common definitions
  *
  * Copyright (C) 2012 Intel Corporation. All rights reserved.
  *
@@ -22,38 +21,9 @@
  *
  */
 
-#ifndef THD_PREFERENCE_H
-#define THD_PREFERENCE_H
+#ifndef THD_COMMON_H_
+#define THD_COMMON_H_
 
-#include "thd_common.h"
-#include <string>
-#include <cstring>
-#include <sstream>
-#include <iostream>
-#include <fstream>
+#include <thermald.h>
 
-enum {
-	PREF_BALANCED,
-	PREF_PERFORMANCE,
-	PREF_ENERGY_CONSERVE,
-	PREF_DISABLED
-};
-
-class cthd_preference {
-private:
-	int preference;
-	int old_preference;
-	int string_pref_to_int(std::string& pref_str);
-	std::string int_pref_to_string(int pref);
-
-public:
-	cthd_preference();
-	bool set_preference(const char *pref);
-	std::string get_preference_str();
-	const char* get_preference_cstr();
-	int get_preference();
-	int get_old_preference();
-
-};
-
-#endif
+#endif /* THD_COMMON_H_ */

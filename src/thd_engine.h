@@ -22,24 +22,21 @@
  *
  */
 
-#ifndef THD_ENGINE_H
-#define THD_ENGINE_H
+#ifndef THD_ENGINE_H_
+#define THD_ENGINE_H_
 
-#include "thermald.h"
+#include <pthread.h>
+#include <poll.h>
+#include "thd_common.h"
 #include "thd_sys_fs.h"
 #include "thd_preference.h"
 #include "thd_zone.h"
-#include "thd_zone_custom.h"
 #include "thd_cdev.h"
-#include "thd_cdev_custom.h"
-#include "thd_nl_wrapper.h"
 #include "thd_parse.h"
-#include <pthread.h>
-#include <poll.h>
+#include "thd_nl_wrapper.h"
 
+#define MAX_MSG_SIZE 		512
 #define THD_NUM_OF_POLL_FDS	10
-#define MAX_MSG_SIZE 512
-
 
 typedef enum {
 	WAKEUP,
@@ -48,6 +45,13 @@ typedef enum {
 	THERMAL_ZONE_NOTIFY,
 	CALIBRATE,
 }message_name_t;
+
+// This defines whether the thermal control is entirey done by
+// this daemon or it just complements, what is done in kernel
+typedef enum {
+	COMPLEMENTRY,
+	EXCLUSIVE,
+}control_mode_t;
 
 typedef struct {
 	message_name_t msg_id;
@@ -58,25 +62,28 @@ typedef struct {
 class cthd_engine {
 
 protected:
-	std::vector <cthd_zone_custom> zones;
-	std::vector <cthd_cdev_custom> cdevs;
-	int				cdev_cnt;
+	std::vector <cthd_zone *> zones;
+	std::vector <cthd_cdev *> cdevs;
+	int			cdev_cnt;
+	int 			zone_count;
+	bool 			parse_thermal_zone_success;
+	bool			parse_thermal_cdev_success;
 
 private:
-	static const int max_thermal_zones = 10;
-	static const int max_cool_devs = 50;
 	bool status;
+	control_mode_t control_mode;
 
-	csys_fs thd_sysfs;
 	int preference;
 	pthread_t thd_engine;
 	pthread_attr_t thd_attr;
 	pthread_cond_t thd_cond_var;
 	pthread_mutex_t thd_cond_mutex;
+
 	struct pollfd poll_fds[THD_NUM_OF_POLL_FDS];
 	int write_pipe_fd;
 	int wakeup_fd;
 	int poll_timeout_msec;
+
 	cthd_nl_wrapper nl_wrapper;
 
 	int proc_message(message_capsul_t *msg);
@@ -86,24 +93,35 @@ private:
 	void process_terminate();
 
 public:
+	static const int cdev_pstate_index = 99;
+	static const int max_thermal_zones = 10;
+	static const int max_cool_devs = 50;
+	static const int def_poll_interval = 5000;
+	cthd_parse 	 parser;
+
 	cthd_engine();
 	virtual ~cthd_engine() {}
+	void set_control_mode(control_mode_t mode) {control_mode = mode;}
 	void thd_engine_thread();
 	int thd_engine_start();
 	int thd_engine_stop();
 
 	bool set_preference(const int pref);
 	void thd_engine_terminate();
+	void thd_engine_calibrate();
 
-	cthd_cdev thd_get_cdev_at_index(int index);
-	void thd_cdev_dump();
+	cthd_cdev *thd_get_cdev_at_index(int index);
+
 	void send_message(message_name_t msg_id, int size, unsigned char *msg);
+
 	void takeover_thermal_control();
 	void giveup_thermal_control();
 
-	virtual int read_thermal_zones();
-	virtual int read_cooling_devices();
+	virtual int read_thermal_zones() { return 0; };
+	virtual int read_cooling_devices() {return 0;};
+
+	int use_custom_zones() { return parse_thermal_zone_success; }
+	int use_custom_cdevs() { return parse_thermal_cdev_success; }
 };
 
-#endif
-
+#endif /* THD_ENGINE_H_ */

@@ -27,14 +27,17 @@
 static void *cthd_engine_thread(void *arg);
 
 cthd_engine::cthd_engine()
-	: thd_sysfs("/sys/class/thermal/"),
-	  poll_timeout_msec(0),
+	: poll_timeout_msec(-1),
 	  wakeup_fd(0),
+	  control_mode(COMPLEMENTRY),
 	  write_pipe_fd(0),
 	  cdev_cnt(0),
 	  preference(0),
 	  status(true),
-	  thd_engine(NULL)
+	  thd_engine(NULL),
+	  parse_thermal_zone_success(false),
+	  parse_thermal_cdev_success(false),	
+	  zone_count(0)
 {
 }
 
@@ -43,7 +46,7 @@ void cthd_engine::thd_engine_thread()
 	int n, i;
 	int result;
 
-	thd_log_debug("thd_engine_thread begin\n");
+	thd_log_info("thd_engine_thread begin\n");
 	for (;;) {
 
 		n = poll(poll_fds, THD_NUM_OF_POLL_FDS, poll_timeout_msec);
@@ -59,9 +62,10 @@ void cthd_engine::thd_engine_thread()
 			}
 			// Polling mode enabled. Trigger a temp change message
 			for (i=0; i<zones.size(); ++i)	{
-				cthd_zone zone = zones[i];
-				zone.zone_temperature_notification(0, 0);
+				cthd_zone *zone = zones[i];
+				zone->zone_temperature_notification(0, 0);
 			}
+//			zone_dts.zone_temperature_notification(0, 0);
 		}
 		if (poll_fds[0].revents & POLLIN) {
 			// Netlink message
@@ -111,23 +115,11 @@ int cthd_engine::thd_engine_start()
 	poll_fds[wakeup_fd].fd = wake_fds[0];
 	poll_fds[wakeup_fd].events = POLLIN;
 	poll_fds[wakeup_fd].revents = 0;
+
 	poll_timeout_msec = -1;
 	if (thd_poll_interval) {
 		thd_log_warn("Polling mode is enabled: %d\n", thd_poll_interval);
 		poll_timeout_msec = thd_poll_interval * 1000;
-	}
-	// Check existance of sysfs of thermal
-	if (!thd_sysfs.exists()) {
-		thd_log_error("Thermal sysfs is not present: ");
-		// This is a fatal error and daemon will exit
-		return THD_FATAL_ERROR;
-	}
-
-	ret = read_thermal_zones();
-	if (ret != THD_SUCCESS) {
-		thd_log_error("Thermal sysfs Error in reading thermal zones");
-		// This is a fatal error and daemon will exit
-		return THD_FATAL_ERROR;
 	}
 
 	ret = read_cooling_devices();
@@ -137,6 +129,18 @@ int cthd_engine::thd_engine_start()
 		return THD_FATAL_ERROR;
 	}
 
+	ret = read_thermal_zones();
+	if (ret != THD_SUCCESS) {
+		thd_log_error("No thermal sensors found");
+		// This is a fatal error and daemon will exit
+		return THD_FATAL_ERROR;
+	}
+
+#if 0
+	// TO BE DONE...
+	// There seems to be a bug in using pthread in daemon
+	// need to look at this later
+
 	// condition variable
 	pthread_cond_init (&thd_cond_var, NULL);
 	pthread_mutex_init(&thd_cond_mutex, NULL);
@@ -144,7 +148,29 @@ int cthd_engine::thd_engine_start()
 	pthread_attr_init(&thd_attr);
 	pthread_attr_setdetachstate(&thd_attr, PTHREAD_CREATE_DETACHED);
 	ret = pthread_create(&thd_engine, &thd_attr, cthd_engine_thread, (void *)this);
+#else
+{
+                pid_t   childpid;
 
+                if((childpid = fork()) == -1)
+                {
+                        perror("fork");
+                        exit(1);
+                }
+
+                if(childpid == 0)
+                {
+                        /* Child process closes up input side of pipe */
+                        close(wake_fds[1]);
+			cthd_engine_thread((void *)this);
+                }
+                else
+                {
+                        /* Parent process closes up output side of pipe */
+                        close(wake_fds[0]);
+                }
+}
+#endif
 	// Netlink stuff
 	nl_wrapper.genl_acpi_family_open(this);
 	if (nl_wrapper.rtnl_fd() < 0) {
@@ -155,67 +181,19 @@ int cthd_engine::thd_engine_start()
 	poll_fds[0].events = POLLIN;
 	poll_fds[0].revents = 0;
 
-	takeover_thermal_control();
+	cthd_preference thd_pref;
+	preference = thd_pref.get_preference();
+	thd_log_info("Current user preference is %d\n", preference);
+
+	if (control_mode == EXCLUSIVE) {
+		thd_log_info("Control is taken over from kernel\n");
+		takeover_thermal_control();
+	}
 	return ret;
 }
 
 int cthd_engine::thd_engine_stop()
 {
-	return THD_SUCCESS;
-}
-
-int cthd_engine::read_thermal_zones()
-{
-	int count = 0;
-
-	// Check for the presence of thermal zones
-	if (thd_sysfs.exists("thermal_zone")) {
-		cthd_zone_custom zone(count);
-		zones.push_back(zone);
-		++count;
-	}
-	for (int i=0; i<max_thermal_zones; ++i) {
-		std::stringstream tzone;
-		tzone << "thermal_zone" << i;
-		if (thd_sysfs.exists(tzone.str().c_str())) {
-			cthd_zone_custom zone(count);
-			if (zone.thd_update_zones() != THD_SUCCESS)
-				continue;
-			zones.push_back(zone);
-			++count;
-		}
-	}
-	thd_log_debug("%d thermal zones present\n", count);
-
-	if (!count) {
-		thd_log_error("Thermal sysfs: No Zones present: ");
-		return THD_FATAL_ERROR;
-	}
-
-	return THD_SUCCESS;
-}
-
-int cthd_engine::read_cooling_devices()
-{
-	cdev_cnt = 0;
-	for (int i=0; i<max_cool_devs; ++i) {
-		std::stringstream tcdev;
-		tcdev << "cooling_device" << i;
-		if (thd_sysfs.exists(tcdev.str().c_str())) {
-			cthd_cdev_custom cdev(cdev_cnt);
-			if (cdev.update() != THD_SUCCESS)
-				continue;
-			cdevs.push_back(cdev);
-			++cdev_cnt;
-		}
-	}
-	thd_log_debug("%d cooling device present\n", cdev_cnt);
-
-	if (!cdev_cnt) {
-		thd_log_error("Thermal sysfs: No cooling devices: ");
-		return THD_FATAL_ERROR;
-	}
-
 	return THD_SUCCESS;
 }
 
@@ -257,15 +235,24 @@ void cthd_engine::process_pref_change()
 	}
 
 	for (int i=0; i<zones.size(); ++i)	{
-		cthd_zone zone = zones[i];
-		zone.update_zone_preference();
+		cthd_zone *zone = zones[i];
+		zone->update_zone_preference();
 	}
 
+	if (preference != 0)
+		takeover_thermal_control();
 }
 
 void cthd_engine::thd_engine_terminate()
 {
+	send_message(TERMINATE, 0, NULL);
+	sleep(1);
 	process_terminate();
+}
+
+void cthd_engine::thd_engine_calibrate()
+{
+	send_message(CALIBRATE, 0, NULL);
 }
 
 void cthd_engine::thermal_zone_change(message_capsul_t *msg)
@@ -274,8 +261,8 @@ void cthd_engine::thermal_zone_change(message_capsul_t *msg)
 
 	thermal_zone_notify_t *pmsg = (thermal_zone_notify_t*)msg->msg;
 	for (i=0; i<zones.size(); ++i)	{
-		cthd_zone zone = zones[i];
-		zone.zone_temperature_notification(pmsg->type, pmsg->data);
+		cthd_zone *zone = zones[i];
+		zone->zone_temperature_notification(pmsg->type, pmsg->data);
 	}
 }
 
@@ -288,7 +275,10 @@ int cthd_engine::proc_message(message_capsul_t *msg)
 		case WAKEUP:
 			break;
 		case TERMINATE:
+			thd_log_warn("Terminating ...\n");
+
 			ret = -1;
+			exit(1);
 	 		break;
 		case PREF_CHANGED:
 			process_pref_change();
@@ -309,22 +299,13 @@ int cthd_engine::proc_message(message_capsul_t *msg)
 	return ret;
 }
 
-void cthd_engine::thd_cdev_dump()
-{
-	int i;
-
-	for (i=0; i<cdev_cnt; ++i){
-		cthd_cdev cdev = cdevs[i];
-		thd_log_debug("cdev index %d\n", cdev.thd_cdev_get_index());
-	}
-}
-
-cthd_cdev cthd_engine::thd_get_cdev_at_index(int index)
+cthd_cdev* cthd_engine::thd_get_cdev_at_index(int index)
 {
 	if (index < cdev_cnt)
 		return cdevs[index];
 	else
 		return NULL;
+
 }
 
 void cthd_engine::takeover_thermal_control()
@@ -339,7 +320,6 @@ void cthd_engine::takeover_thermal_control()
 		}
 
 	}
-
 }
 
 void cthd_engine::giveup_thermal_control()
@@ -361,4 +341,3 @@ void cthd_engine::process_terminate()
 	giveup_thermal_control();
 	exit(0);
 }
-

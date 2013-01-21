@@ -29,7 +29,8 @@
 #include "thermald.h"
 #include "thd_preference.h"
 #include "thd_engine.h"
-#include "thd_engine_custom.h"
+#include "thd_engine_therm_sys_fs.h"
+#include "thd_engine_dts.h"
 
 #if !defined(TD_DIST_VERSION)
 # define TD_DIST_VERSION PACKAGE_VERSION
@@ -64,11 +65,16 @@ static int thd_log_level = G_LOG_LEVEL_ERROR | G_LOG_LEVEL_CRITICAL | G_LOG_LEVE
 // Daemonize or not 
 static gboolean thd_daemonize;
 
+// Disable dbus
+static gboolean dbus_disable;
+
 // poll mode
-int thd_poll_interval = 0;
+int thd_poll_interval = 5;
 
 // Thermal engine
-cthd_engine_custom thd_engine;
+cthd_engine *thd_engine;
+
+gboolean use_thermal_sys_fs = FALSE;
 
 // DBUS Related functions
 
@@ -96,7 +102,7 @@ gboolean thd_dbus_interface_set_current_preference(PrefObject* obj, gint* value_
 	g_assert(obj != NULL);
 	cthd_preference thd_pref;
 	ret = thd_pref.set_preference((char*)value_out);
-	thd_engine.send_message(PREF_CHANGED, 0, NULL);
+	thd_engine->send_message(PREF_CHANGED, 0, NULL);
 }
 
 // Callback function called to get value via dbus
@@ -116,13 +122,14 @@ gboolean thd_dbus_interface_get_current_preference(PrefObject* obj, gdouble* val
 gboolean thd_dbus_interface_calibrate(PrefObject* obj, gint* value_out,
                                                   GError** error)
 {
+	thd_engine->thd_engine_calibrate();
 	return TRUE;
 }
 
 gboolean thd_dbus_interface_terminate(PrefObject* obj, gint* value_out,
                                                   GError** error)
 {
-	thd_engine.thd_engine_terminate();
+	thd_engine->thd_engine_terminate();
 	return TRUE;
 }
 
@@ -181,62 +188,77 @@ static int thd_dbus_server_proc(gboolean no_daemon)
 		thd_log_error("Couldn't create GMainLoop:");
 		return THD_FATAL_ERROR;
 	}
-	bus = dbus_g_bus_get(DBUS_BUS_SESSION, &error);
-	if (error != NULL) {
-		thd_log_error("Couldn't connect to session bus: %s:", error->message);
-		return THD_FATAL_ERROR;
-	}
+	if (!dbus_disable) {
+		bus = dbus_g_bus_get(DBUS_BUS_SESSION, &error);
+		if (error != NULL) {
+			thd_log_error("Couldn't connect to session bus: %s:", error->message);
+			return THD_FATAL_ERROR;
+		}
 
-	// Get a bus proxy instance
-	bus_proxy = dbus_g_proxy_new_for_name(bus,
+		// Get a bus proxy instance
+		bus_proxy = dbus_g_proxy_new_for_name(bus,
 					DBUS_SERVICE_DBUS,
 					DBUS_PATH_DBUS,
 					DBUS_INTERFACE_DBUS);
-	if (bus_proxy == NULL) {
-		thd_log_error ("Failed to get a proxy for D-Bus:");
-		return THD_FATAL_ERROR;
-	}
+		if (bus_proxy == NULL) {
+			thd_log_error ("Failed to get a proxy for D-Bus:");
+			return THD_FATAL_ERROR;
+		}
 
-	thd_log_debug("Registering the well-known name (%s)\n", THD_SERVICE_NAME);
-	// register the well-known name
-	if (!dbus_g_proxy_call(bus_proxy,
-			"RequestName",
-			&error,
-			G_TYPE_STRING,
-			THD_SERVICE_NAME,
-                         G_TYPE_UINT,
-			0,
-			G_TYPE_INVALID,
-			G_TYPE_UINT,
-			&result,
-                         G_TYPE_INVALID)) {
-		thd_log_error("D-Bus.RequestName RPC failed:");
-		return THD_FATAL_ERROR;
-	}
-	thd_log_debug("RequestName returned %d.\n", result);
-	if (result != DBUS_REQUEST_NAME_REPLY_PRIMARY_OWNER) {
-		thd_log_error("Failed to get the primary well-known name:");
-		return THD_FATAL_ERROR;
-	}
-	value_obj = (PrefObject*)g_object_new(PREF_TYPE_OBJECT, NULL);
-	if (value_obj == NULL) {
-		thd_log_error("Failed to create one Value instance:");
-		return THD_FATAL_ERROR;
-	}
+		thd_log_debug("Registering the well-known name (%s)\n", THD_SERVICE_NAME);
+		// register the well-known name
+		if (!dbus_g_proxy_call(bus_proxy,
+				"RequestName",
+				&error,
+				G_TYPE_STRING,
+				THD_SERVICE_NAME,
+				G_TYPE_UINT,
+				0,
+				G_TYPE_INVALID,
+				G_TYPE_UINT,
+				&result,
+				G_TYPE_INVALID)) {
+			thd_log_error("D-Bus.RequestName RPC failed:");
+			return THD_FATAL_ERROR;
+		}
+		thd_log_debug("RequestName returned %d.\n", result);
+		if (result != DBUS_REQUEST_NAME_REPLY_PRIMARY_OWNER) {
+			thd_log_error("Failed to get the primary well-known name:");
+			return THD_FATAL_ERROR;
+		}
+		value_obj = (PrefObject*)g_object_new(PREF_TYPE_OBJECT, NULL);
+		if (value_obj == NULL) {
+			thd_log_error("Failed to create one Value instance:");
+			return THD_FATAL_ERROR;
+		}
 
-	thd_log_debug("Registering it on the D-Bus.\n");
-	dbus_g_connection_register_g_object(bus,
+		thd_log_debug("Registering it on the D-Bus.\n");
+		dbus_g_connection_register_g_object(bus,
                                       THD_SERVICE_OBJECT_PATH,
                                       G_OBJECT(value_obj));
-
+	}
 	if (!no_daemon) {
 		printf("Ready to serve requests: Daemonizing.. %d\n", thd_daemonize);
 		thd_log_debug("Ready to serve requests: Daemonizing..\n");
- 		if (daemon(0, 0) != 0) {
+
+ 		if (daemon(0, 1) != 0) {
 			thd_log_error("Failed to daemonize.\n");
 			return THD_FATAL_ERROR;
 		}
 	}
+	
+	if (use_thermal_sys_fs)
+		thd_engine = new cthd_engine_therm_sysfs();
+	else
+		thd_engine = new cthd_engine_dts();
+
+	// Initialize thermald objects
+	if (thd_engine->thd_engine_start() != THD_SUCCESS) {
+		thd_log_error("THD engine start failed: ");
+		closelog();
+		exit (1);
+	}
+
 	// Start service requests on the D-Bus
 	thd_log_debug("Start main loop\n");
 	g_main_loop_run(main_loop);
@@ -247,7 +269,7 @@ static int thd_dbus_server_proc(gboolean no_daemon)
 void sig_int_handler(int signum)
 {
 	// control+c handler
-	thd_engine.giveup_thermal_control();
+	thd_engine->giveup_thermal_control();
 	exit (1);
 }
 
@@ -259,19 +281,24 @@ int main (int argc, char *argv[])
 	gboolean log_debug = FALSE;
 	gboolean no_daemon = FALSE;
 	gboolean test_mode = FALSE;
+//	gboolean use_thermal_sys_fs = FALSE;
 	gint poll_interval = 0;
 	gboolean success;
 	GOptionContext *opt_ctx;
 
 	thd_daemonize = TRUE;
+	dbus_disable = FALSE;
 
 	GOptionEntry options[] = {
 		{ "version", 0, 0, G_OPTION_ARG_NONE, &show_version, N_("Print thermald version and exit"), NULL },
-		{ "no-daemon", 0, 0, G_OPTION_ARG_NONE, &no_daemon, N_("Don't become a daemon"), NULL },
+		{ "no-daemon", 0, 0, G_OPTION_ARG_NONE, &no_daemon, N_("Don't become a daemon: Default is daemon mode"), NULL },
 		{ "loglevel=info", 0, 0, G_OPTION_ARG_NONE, &log_info, N_("log severity: info level and up"), NULL },
 		{ "loglevel=debug", 0, 0, G_OPTION_ARG_NONE, &log_debug, N_("log severity: debug level and up: Max logging"), NULL },
 		{ "test-mode", 0, 0, G_OPTION_ARG_NONE, &test_mode, N_("Test Mode only: Allow non root user"), NULL },
-		{ "poll-interval", 0, 0, G_OPTION_ARG_INT, &poll_interval, N_("Poll interval in seconds: Poll for zone temperature changes ."), NULL },
+		{ "poll-interval", 0, 0, G_OPTION_ARG_INT, &poll_interval, N_("Poll interval in seconds: Poll for zone temperature changes. If want to disable polling set to zero."), NULL },
+		{ "dbus-disable", 0, 0, G_OPTION_ARG_NONE, &dbus_disable, N_("Disable Dbus, so that no one can connect!"), NULL },
+		{ "use-thermal-sysfs", 0, 0, G_OPTION_ARG_NONE, &use_thermal_sys_fs, N_("Use thermal sysfs instead of DTS sensors, default use dts."), NULL },
+
 		{NULL}
 	};
 
@@ -330,18 +357,12 @@ int main (int argc, char *argv[])
 		thd_poll_interval = poll_interval;
 	}
 	openlog("thermald", LOG_PID, LOG_USER | LOG_DAEMON | LOG_SYSLOG); // Don't care return val
+	//setlogmask(LOG_CRIT | LOG_ERR | LOG_WARNING | LOG_NOTICE | LOG_DEBUG | LOG_INFO);
 	thd_daemonize = !no_daemon;
 	g_log_set_handler( NULL, G_LOG_LEVEL_MASK, thd_logger, NULL );
 
 	if (no_daemon)
 		signal(SIGINT, sig_int_handler);
-
-	// Initialize thermald objects
-	if (thd_engine.thd_engine_start() != THD_SUCCESS) {
-		thd_log_error("THD engine start failed: ");
-		closelog();
-		exit (1);
-	}
 
 	// dbus glib processing begin
 	thd_dbus_server_proc(no_daemon);

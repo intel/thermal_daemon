@@ -22,8 +22,8 @@
  *
  */
 
-#ifndef THD_SYS_FS_H
-#define THD_SYS_FS_H
+#ifndef THD_SYS_FS_H_
+#define THD_SYS_FS_H_
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -34,8 +34,6 @@
 #include <iostream>
 #include <sstream>
 #include <string>
-
-#include "thermald.h"
 
 class csys_fs {
 private:
@@ -48,10 +46,12 @@ public:
 	/* write data to base path (dir) + provided path */
 	int write(const std::string &path, const std::string &buf);
 	int write(const std::string &path, unsigned int data);
+	int write(const std::string &path, unsigned int position, unsigned long long data);
 
 	/* read data from base path (dir) + provided path */
 	int read(const std::string &path, char *buf, int len);
 	int read(const std::string &path, std::string &buf);
+	int read(const std::string &path, unsigned int position, char *buf, int len);
 
 	const char *get_base_path() { return base_path.c_str(); }
 	int read_symbolic_link_value(const std::string &path, char *buf, int len);
@@ -60,4 +60,4 @@ public:
 	bool exists();
 };
 
-#endif
+#endif /* THD_SYS_FS_H_ */

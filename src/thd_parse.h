@@ -22,6 +22,7 @@
  *
  */
 #ifndef THD_PARSE_H
+#define THD_PARSE_H
 
 #include <string>
 #include <vector>

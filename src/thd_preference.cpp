@@ -24,13 +24,14 @@
 
 #include "thd_preference.h"
 
-cthd_preference::cthd_preference()
+cthd_preference::cthd_preference() :
+	old_preference(0)
 {
 	std::stringstream filename;
 	filename << TDCONFDIR << "/" << "thd_preference.conf";
         std::ifstream ifs(filename.str().c_str(), std::ifstream::in);
         if (!ifs.good()){
-		preference = PREF_PERFORMANCE;
+		preference = PREF_BALANCED;
         } else {
 		//ifs.read(reinterpret_cast < char * > (&preference), sizeof(preference));
 		ifs >> preference;
@@ -43,6 +44,9 @@ std::string cthd_preference::int_pref_to_string(int pref)
 	std::string perf_str;
 
 	switch (preference) {
+		case PREF_BALANCED:
+			perf_str = "FALLBACK";
+			break;
 		case PREF_PERFORMANCE:
 			perf_str = "PERFORMANCE";
 			break;
@@ -54,6 +58,7 @@ std::string cthd_preference::int_pref_to_string(int pref)
 			break;
 		default:
 			perf_str = "INVALID";
+			break;
 	}
 
 	return perf_str;
@@ -62,14 +67,17 @@ std::string cthd_preference::int_pref_to_string(int pref)
 int cthd_preference::string_pref_to_int(std::string& pref_str)
 {
 	int pref;
-	if (pref_str ==  "PERFORMANCE")
+
+	if (pref_str ==  "FALLBACK")
+		pref = PREF_BALANCED;
+	else if (pref_str ==  "PERFORMANCE")
 		pref = PREF_PERFORMANCE;
 	else if (pref_str == "ENERGY_CONSERVE")
 		pref = PREF_ENERGY_CONSERVE;
 	else if (pref_str == "DISABLE")
 		pref = PREF_DISABLED;
 	else
-		pref = PREF_INVALID;
+		pref = PREF_BALANCED;
 
 	return pref;
 }
@@ -94,10 +102,6 @@ bool cthd_preference::set_preference(const char *pref_str)
 	std::string str(pref_str);
 	int pref = string_pref_to_int(str);
 	
-	if (pref == PREF_INVALID) {
-		return FALSE; 
-	}
-
 	std::stringstream filename;
 	filename << TDCONFDIR << "/" << "thd_preference.conf";
 
@@ -123,7 +127,7 @@ bool cthd_preference::set_preference(const char *pref_str)
 
     std::ifstream ifs(filename.str().c_str(), std::ifstream::in);
     if (!ifs.good()){
-		preference = PREF_PERFORMANCE;
+		preference = PREF_BALANCED;
 	} else {
 		//ifs.read(reinterpret_cast < char * > (&preference), sizeof(preference));
 		ifs >> preference;
@@ -142,7 +146,7 @@ int cthd_preference::get_old_preference()
 	filename << TDCONFDIR << "/" << "thd_preference.conf.save";
 	std::ifstream ifs(filename.str().c_str(), std::ifstream::in);
 	if (!ifs.good()){
-		old_preference = PREF_PERFORMANCE;
+		old_preference = PREF_BALANCED;
 	} else {
 		//ifs.read(reinterpret_cast < char * > (&preference), sizeof(preference));
 		ifs >> old_preference;

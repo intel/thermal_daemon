@@ -1,6 +1,6 @@
 /*
- * thd_preference.h: Thermal preference class interface file
- *
+ * cthd_sysfs_cdev.cpp: thermal cooling class interface
+ *	for thermal sysfs
  * Copyright (C) 2012 Intel Corporation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or
@@ -22,38 +22,23 @@
  *
  */
 
-#ifndef THD_PREFERENCE_H
-#define THD_PREFERENCE_H
+#ifndef THD_CDEV_THERM_SYS_FS_H_
+#define THD_CDEV_THERM_SYS_FS_H_
 
-#include "thd_common.h"
-#include <string>
-#include <cstring>
-#include <sstream>
-#include <iostream>
-#include <fstream>
+#include "thd_cdev.h"
 
-enum {
-	PREF_BALANCED,
-	PREF_PERFORMANCE,
-	PREF_ENERGY_CONSERVE,
-	PREF_DISABLED
-};
-
-class cthd_preference {
+class cthd_sysfs_cdev : public cthd_cdev
+{
 private:
-	int preference;
-	int old_preference;
-	int string_pref_to_int(std::string& pref_str);
-	std::string int_pref_to_string(int pref);
+	bool use_custom_cdevs;
+	std::string custom_path_str;
 
 public:
-	cthd_preference();
-	bool set_preference(const char *pref);
-	std::string get_preference_str();
-	const char* get_preference_cstr();
-	int get_preference();
-	int get_old_preference();
-
+	cthd_sysfs_cdev(unsigned int _index, std::string control_path) : cthd_cdev(_index, control_path), use_custom_cdevs(false) {}
+	void set_curr_state(int state);
+	int get_curr_state();
+	int get_max_state();
+	int update();
 };
 
-#endif
+#endif /* THD_CDEV_THERM_SYS_FS_H_ */

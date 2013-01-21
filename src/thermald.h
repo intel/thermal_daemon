@@ -63,8 +63,8 @@
 #define THD_SERVICE_INTERFACE		"org.thermald.value"
 
 class cthd_engine;
-class cthd_engine_custom;
-extern cthd_engine_custom thd_engine;
+class cthd_engine_therm_sysfs;
+extern cthd_engine *thd_engine;
 extern int thd_poll_interval;
 
 #endif

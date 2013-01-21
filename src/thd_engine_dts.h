@@ -1,5 +1,5 @@
 /*
- * thd_preference.h: Thermal preference class interface file
+ * thd_engine_dts.h: thermal engine dts class interface
  *
  * Copyright (C) 2012 Intel Corporation. All rights reserved.
  *
@@ -22,38 +22,22 @@
  *
  */
 
-#ifndef THD_PREFERENCE_H
-#define THD_PREFERENCE_H
+#ifndef THD_ENGINE_DTS_H_
+#define THD_ENGINE_DTS_H_
 
-#include "thd_common.h"
-#include <string>
-#include <cstring>
-#include <sstream>
-#include <iostream>
-#include <fstream>
 
-enum {
-	PREF_BALANCED,
-	PREF_PERFORMANCE,
-	PREF_ENERGY_CONSERVE,
-	PREF_DISABLED
-};
+#include "thd_engine.h"
 
-class cthd_preference {
+class cthd_engine_dts: public cthd_engine
+{
 private:
-	int preference;
-	int old_preference;
-	int string_pref_to_int(std::string& pref_str);
-	std::string int_pref_to_string(int pref);
+	csys_fs 				thd_sysfs;
 
 public:
-	cthd_preference();
-	bool set_preference(const char *pref);
-	std::string get_preference_str();
-	const char* get_preference_cstr();
-	int get_preference();
-	int get_old_preference();
-
+	cthd_engine_dts() : thd_sysfs("/sys/devices/platform/coretemp.0/") {}
+	int read_thermal_zones();
+	int read_cooling_devices();
 };
 
-#endif
+
+#endif /* THD_ENGINE_DTS_H_ */

@@ -1,6 +1,6 @@
 /*
- * thd_preference.h: Thermal preference class interface file
- *
+ * thd_cdev_pstates.cpp: thermal cooling class implementation
+ *	using Turbo states
  * Copyright (C) 2012 Intel Corporation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or
@@ -22,38 +22,22 @@
  *
  */
 
-#ifndef THD_PREFERENCE_H
-#define THD_PREFERENCE_H
-
-#include "thd_common.h"
 #include <string>
-#include <cstring>
-#include <sstream>
-#include <iostream>
-#include <fstream>
+#include <vector>
+#include "thd_cdev_turbo_states.h"
 
-enum {
-	PREF_BALANCED,
-	PREF_PERFORMANCE,
-	PREF_ENERGY_CONSERVE,
-	PREF_DISABLED
-};
+void cthd_cdev_turbo_states::set_curr_state(int state)
+{
+	if (state == 1)
+		msr.disable_turbo();
+	else
+		msr.enable_turbo();
+	curr_state = state;
+}
 
-class cthd_preference {
-private:
-	int preference;
-	int old_preference;
-	int string_pref_to_int(std::string& pref_str);
-	std::string int_pref_to_string(int pref);
+int cthd_cdev_turbo_states::get_max_state()
+{
+	return turbo_states_cnt;
+}
 
-public:
-	cthd_preference();
-	bool set_preference(const char *pref);
-	std::string get_preference_str();
-	const char* get_preference_cstr();
-	int get_preference();
-	int get_old_preference();
 
-};
-
-#endif

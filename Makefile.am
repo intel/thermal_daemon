@@ -38,15 +38,21 @@ BUILT_SOURCES = \
 
 thermald_SOURCES = \
 		src/main.cpp \
-		src/thd_preference.cpp \
-		src/thd_sys_fs.cpp \
 		src/thd_engine.cpp \
-		src/thd_engine_custom.cpp \
-		src/thd_zone.cpp \
-		src/thd_zone_custom.cpp \
+		src/thd_engine_therm_sys_fs.cpp \
+		src/thd_engine_dts.cpp \
+		src/thd_cdev_pstates.cpp \
+		src/thd_cdev_turbo_states.cpp \
+		src/thd_cdev_therm_sys_fs.cpp \
+		src/thd_cdev_tstates.cpp \
+		src/thd_msr.cpp \
+		src/thd_sys_fs.cpp \
 		src/thd_trip_point.cpp \
-		src/thd_cdev.cpp \
-		src/thd_cdev_custom.cpp \
+		src/thd_zone.cpp \
+		src/thd_zone_dts.cpp \
+		src/thd_zone_therm_sys_fs.cpp \
+		src/thd_preference.cpp \
+		src/thd_model.cpp \
 		src/thd_parse.cpp \
 		src/thd_pid.cpp \
 		netlink-if/libnetlink.cpp \
