@@ -1,5 +1,6 @@
-/* thd_msr.h: thermal engine msr class interface
- *
+/*
+ * thd_cdev_pstates.h: thermal cooling class interface
+ *	using T states.
  * Copyright (C) 2012 Intel Corporation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or
@@ -20,42 +21,31 @@
  * Author Name <Srinivas.Pandruvada@linux.intel.com>
  *
  */
+#ifndef THD_CDEV_PSTATE_MSR_H_
+#define THD_CDEV_PSTATE_MSR_H_
 
-#ifndef THD_MSR_H
-#define THD_MSR_H
+#include "thd_cdev.h"
+#include "thd_msr.h"
 
-#include "thd_common.h"
-#include "thd_sys_fs.h"
-
-class cthd_msr {
+class cthd_cdev_pstate_msr : public cthd_cdev
+{
 private:
-	csys_fs msr_sysfs;
-	int no_of_cpus;
-	int get_no_cpus();
-	int read_msr(int cpu, unsigned int idx, unsigned long long *val);
-	int write_msr(int cpu, unsigned int idx, unsigned long long val);
+	int 				p_state_index;
+	cthd_msr			msr;
+	int cpu_start_index;
+	int cpu_end_index;
+	std::string			last_governor;
+	int	highest_freq_state;
+	int lowest_freq_state;
+	int control_begin();
+	int control_end();
 
 public:
-	cthd_msr();
-
-	bool check_turbo_status();
-	int enable_turbo();
-	int disable_turbo();
-
-	int	get_clock_mod_duty_cycle();
-	int set_clock_mod_duty_cycle(int state);
-
-	unsigned char get_min_freq();
-	unsigned char get_max_freq();
-	int inc_freq_state();
-	int dec_freq_state();
-	int set_freq_state(int state);
-
-	int set_perf_bias_performace();
-	int set_perf_bias_balaced();
-	int set_perf_bias_energy();
-
+	cthd_cdev_pstate_msr(unsigned int _index) : cthd_cdev(_index, "/sys/devices/system/cpu/"), p_state_index(0) {}
+	int init();
+	void set_curr_state(int state);
+	int get_max_state();
+	int update();
 };
 
-#endif
-
+#endif /* THD_CDEV_TSTATES_H_ */

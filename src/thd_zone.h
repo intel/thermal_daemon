@@ -56,7 +56,7 @@ public:
 	virtual ~cthd_zone() {}
 	void zone_temperature_notification(int type, int data);
 	int zone_update();
-	void update_zone_preference();;
+	virtual void update_zone_preference();;
 
 	virtual unsigned int read_zone_temp();
 	virtual int read_trip_points() = 0;

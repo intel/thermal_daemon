@@ -337,7 +337,6 @@ int cthd_nl_wrapper::genl_parse_event_message(const struct sockaddr_nl *who,
 
 			thd_log_debug("%15s[zone %d] %08x %08x\n", event->bus_id,
 					msg.zone, event->type, event->data);
-
 		}
 		return 0;
 	}

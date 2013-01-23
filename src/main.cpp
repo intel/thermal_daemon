@@ -69,7 +69,7 @@ static gboolean thd_daemonize;
 static gboolean dbus_disable;
 
 // poll mode
-int thd_poll_interval = 5;
+int thd_poll_interval = 4;//in seconds
 
 // Thermal engine
 cthd_engine *thd_engine;

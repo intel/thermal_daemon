@@ -34,9 +34,27 @@
 
 #define MSR_IA32_PERF_CTL						0x0199
 #define	TURBO_DISENGAGE_BIT						(1ULL << 32)
+#define PERF_CTL_CLK_SHIFT						(8)
+#define PERF_CTL_CLK_MASK						(0xff00)
+
+#define IA32_ENERGY_PERF_BIAS					0x01B0
+
+#define MSR_IA32_PLATFORM_INFO					0xCE
+#define MSR_IA32_PLATFORM_INFO_MIN_FREQ(value)	((value >> 40) & 0xFF)
+#define MSR_IA32_PLATFORM_INFO_MAX_FREQ(value)	((value >> 8) & 0xFF)
+
+#define MSR_TURBO_RATIO_LIMIT					0x1AD
+#define TURBO_RATIO_1C_MASK						0xFF
+#define TURBO_RATIO_2C_MASK						0xFF00
+#define TURBO_RATIO_2C_SHIFT					(8)
+#define TURBO_RATIO_3C_MASK						0xFF0000
+#define TURBO_RATIO_3C_SHIFT					(16)
+#define TURBO_RATIO_4C_MASK						0xFF000000
+#define TURBO_RATIO_4C_SHIFT					(24)
 
 cthd_msr::cthd_msr()
-	: msr_sysfs("/dev/cpu/")
+	: msr_sysfs("/dev/cpu/"),
+	  no_of_cpus(0)
 {
 }	
 
@@ -69,6 +87,9 @@ int cthd_msr::get_no_cpus()
 {
 	int count = 0;
 
+	if (no_of_cpus)
+		return no_of_cpus;
+
 	for(int i=0; i<64; ++i) {
 		std::stringstream file_name_str;
 
@@ -77,6 +98,7 @@ int cthd_msr::get_no_cpus()
 			count++;
 		}
 	}
+	no_of_cpus = count;
 
 	return count;
 }
@@ -220,4 +242,214 @@ int cthd_msr::get_clock_mod_duty_cycle()
 	}
 
 	return state;
+}
+
+unsigned char cthd_msr::get_min_freq()
+{
+	int ret;
+	unsigned char state;
+	unsigned long long val;
+
+	// Just get for cpu 0 and return
+	ret = read_msr(0, MSR_IA32_PLATFORM_INFO, &val);
+	if (ret < 0)
+		return THD_ERROR;
+
+	return MSR_IA32_PLATFORM_INFO_MIN_FREQ(val);
+}
+
+unsigned char cthd_msr::get_max_freq()
+{
+
+	int ret;
+	unsigned char state;
+	unsigned long long val;
+
+	// Read turbo ratios
+	ret = read_msr(0, MSR_TURBO_RATIO_LIMIT, &val);
+	if (ret < 0)
+		return THD_ERROR;
+	// We are in a thermal zone. that means we already running all cores at full speed
+	// So take the value for all 4 cores running
+	val &= TURBO_RATIO_4C_MASK;
+	if (val)
+		return val >> TURBO_RATIO_4C_SHIFT;
+	else {
+		// Just get for cpu 0 and return
+		ret = read_msr(0, MSR_IA32_PLATFORM_INFO, &val);
+		if (ret < 0)
+			return THD_ERROR;
+		return MSR_IA32_PLATFORM_INFO_MAX_FREQ(val);
+	}
+}
+
+int cthd_msr::dec_freq_state()
+{
+	int cpu_count = get_no_cpus();
+	unsigned long long val;
+	int ret;
+	int current_clock;
+
+	thd_log_info("dec freq \n");
+
+	for(int i=0; i<cpu_count; ++i) {
+		ret = read_msr(i, MSR_IA32_PERF_CTL, &val);
+		thd_log_debug("perf_ctl current %x\n", val);
+		if (ret < 0)
+			return THD_ERROR;
+
+		current_clock = (val >> 8) & 0xff;
+		current_clock--;
+
+		val = (current_clock << PERF_CTL_CLK_SHIFT);
+
+		thd_log_debug("perf_ctl write %x\n", val);
+		ret = write_msr(i, MSR_IA32_PERF_CTL, val);
+		if (ret < 0) {
+			thd_log_warn("per control msr failded to write\n");
+			return THD_ERROR;
+		}
+		ret = read_msr(i, MSR_IA32_PERF_CTL, &val);
+		thd_log_debug("perf_ctl read back %x\n", val);
+		if (ret < 0)
+			return THD_ERROR;
+
+	}
+
+	return THD_SUCCESS;
+}
+
+int cthd_msr::inc_freq_state()
+{
+	int cpu_count = get_no_cpus();
+	unsigned long long val;
+	int ret;
+	int current_clock;
+
+	thd_log_info("inc freq state \n");
+	for(int i=0; i<cpu_count; ++i) {
+		ret = read_msr(i, MSR_IA32_PERF_CTL, &val);
+		thd_log_debug("perf_ctl current %x\n", val);
+		if (ret < 0)
+			return THD_ERROR;
+
+		current_clock = (val >> 8) & 0xff;
+		current_clock++;
+
+		val = (current_clock << PERF_CTL_CLK_SHIFT);
+
+		thd_log_debug("perf_ctl write %x\n", val);
+		ret = write_msr(i, MSR_IA32_PERF_CTL, val);
+		if (ret < 0) {
+			thd_log_warn("per control msr failded to write\n");
+			return THD_ERROR;
+		}
+		ret = read_msr(i, MSR_IA32_PERF_CTL, &val);
+		thd_log_debug("perf_ctl read back %x\n", val);
+		if (ret < 0)
+			return THD_ERROR;
+
+	}
+
+	return THD_SUCCESS;
+}
+
+int cthd_msr::set_freq_state(int state)
+{
+	int cpu_count = get_no_cpus();
+	unsigned long long val;
+	int ret;
+
+	thd_log_info("set_freq_state \n");
+	for(int i=0; i<cpu_count; ++i) {
+
+		ret = read_msr(i, MSR_IA32_PERF_CTL, &val);
+		val &= ~PERF_CTL_CLK_MASK;
+		val |= (state << PERF_CTL_CLK_SHIFT);
+
+		thd_log_debug("perf_ctl write %x\n", val);
+		ret = write_msr(i, MSR_IA32_PERF_CTL, val);
+		if (ret < 0) {
+			thd_log_warn("per control msr failded to write\n");
+			return THD_ERROR;
+		}
+		ret = read_msr(i, MSR_IA32_PERF_CTL, &val);
+		thd_log_debug("perf_ctl read back %x\n", val);
+		if (ret < 0)
+			return THD_ERROR;
+
+	}
+}
+
+int cthd_msr::set_perf_bias_performace()
+{
+	int cpu_count = get_no_cpus();
+	unsigned long long val;
+	int ret;
+
+	thd_log_info("set_perf_bias_performace \n");
+	val = 0;
+	for(int i=0; i<cpu_count; ++i) {
+		ret = read_msr(i, IA32_ENERGY_PERF_BIAS, &val);
+		if (ret < 0) {
+			thd_log_warn("per control msr failed to read\n");
+			return THD_ERROR;
+		}
+		val &= ~0x0f;
+		ret = write_msr(i, IA32_ENERGY_PERF_BIAS, val);
+		if (ret < 0) {
+			thd_log_warn("per control msr failed to write\n");
+			return THD_ERROR;
+		}
+	}
+	return THD_SUCCESS;
+}
+
+int cthd_msr::set_perf_bias_balaced()
+{
+	int cpu_count = get_no_cpus();
+	unsigned long long val;
+	int ret;
+
+	thd_log_info("set_perf_bias_balaced \n");
+	for(int i=0; i<cpu_count; ++i) {
+		ret = read_msr(i, IA32_ENERGY_PERF_BIAS, &val);
+		if (ret < 0) {
+			thd_log_warn("per control msr failed to read\n");
+			return THD_ERROR;
+		}
+		val &= ~0x0f;
+		val |= 6;
+		ret = write_msr(i, IA32_ENERGY_PERF_BIAS, val);
+		if (ret < 0) {
+			thd_log_warn("per control msr failed to write\n");
+			return THD_ERROR;
+		}
+	}
+	return THD_SUCCESS;
+}
+
+int cthd_msr::set_perf_bias_energy()
+{
+
+	int cpu_count = get_no_cpus();
+	unsigned long long val;
+	int ret;
+
+	thd_log_info("set_perf_bias_energy \n");
+	for(int i=0; i<cpu_count; ++i) {
+		ret = read_msr(i, IA32_ENERGY_PERF_BIAS, &val);
+		if (ret < 0) {
+			thd_log_warn("per control msr failed to read\n");
+			return THD_ERROR;
+		}
+		val &= ~0x0f;
+		val |= 15;
+		ret = write_msr(i, IA32_ENERGY_PERF_BIAS, val);
+		if (ret < 0) {
+			thd_log_warn("per control msr failed to write\n");
+			return THD_ERROR;
+		}
+	}
+	return THD_SUCCESS;
 }

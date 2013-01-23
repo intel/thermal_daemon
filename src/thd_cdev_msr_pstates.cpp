@@ -1,0 +1,132 @@
+/*
+ * thd_cdev_pstates.cpp: thermal cooling class implementation
+ *	using T states.
+ * Copyright (C) 2012 Intel Corporation. All rights reserved.
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License version
+ * 2 as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+ * 02110-1301, USA.
+ *
+ *
+ * Author Name <Srinivas.Pandruvada@linux.intel.com>
+ *
+ */
+
+#include <string>
+#include <sstream>
+#include <vector>
+#include "thd_cdev_msr_pstates.h"
+
+
+int cthd_cdev_pstate_msr::init()
+{
+	thd_log_debug("pstate msr CPU present \n");
+	// Get number of CPUs
+	if (cdev_sysfs.exists("present")) {
+		std::string count_str;
+		size_t p0 = 0, p1;
+
+		cdev_sysfs.read("present", count_str);
+		p1 = count_str.find_first_of("-", p0);
+		std::string token1 = count_str.substr(p0, p1 - p0);
+		std::istringstream(token1) >> cpu_start_index;
+		std::string token2 = count_str.substr(p1+1);
+		std::istringstream(token2) >> cpu_end_index;
+	} else {
+		cpu_start_index = 0;
+		cpu_end_index = 0;
+		return THD_ERROR;
+	}
+	thd_log_debug("pstate msr CPU present %d-%d\n", cpu_start_index, cpu_end_index);
+
+	return THD_SUCCESS;
+}
+
+int cthd_cdev_pstate_msr::control_begin()
+{
+	std::string governor;
+
+	if (cdev_sysfs.exists("cpu0/cpufreq/scaling_governor"))
+		cdev_sysfs.read("cpu0/cpufreq/scaling_governor", governor);
+
+	if (governor == "userspace")
+		return THD_SUCCESS;
+
+	if (cdev_sysfs.exists("cpu0/cpufreq/scaling_governor"))
+		cdev_sysfs.read("cpu0/cpufreq/scaling_governor", last_governor);
+
+	for (int i=cpu_start_index; i<=cpu_end_index; ++i) {
+		std::stringstream str;
+		str << "cpu" << i << "/cpufreq/scaling_governor";
+		if (cdev_sysfs.exists(str.str())) {
+			cdev_sysfs.write(str.str(), "userspace");
+		}
+	}
+
+	return THD_SUCCESS;
+}
+
+int cthd_cdev_pstate_msr::control_end()
+{
+	for (int i=cpu_start_index; i<=cpu_end_index; ++i) {
+		std::stringstream str;
+		str << "cpu" << i << "/cpufreq/scaling_governor";
+		if (cdev_sysfs.exists(str.str())) {
+			cdev_sysfs.write(str.str(), last_governor);
+		}
+	}
+	return THD_SUCCESS;
+}
+
+void cthd_cdev_pstate_msr::set_curr_state(int state)
+{
+	int inc = 1;
+
+	if (state == p_state_index)
+		return;
+
+	if (state > p_state_index )
+		inc = 0;
+
+	if (state == 1)
+		control_begin();
+
+	p_state_index = state;
+
+	if (state == 1) {
+		// Set to highest non turbo frequency
+		msr.set_freq_state(highest_freq_state);
+	} else if (inc && curr_state != 1)
+		msr.inc_freq_state();
+	else if (inc == 0){
+		msr.dec_freq_state();
+	}
+	curr_state = state;
+
+	if (state == 0)
+		control_end();
+
+}
+
+int cthd_cdev_pstate_msr::get_max_state()
+{
+	highest_freq_state = msr.get_max_freq();
+	lowest_freq_state = msr.get_min_freq();
+
+	return (highest_freq_state - lowest_freq_state) ;
+}
+
+int cthd_cdev_pstate_msr::update()
+{
+	return init();
+}

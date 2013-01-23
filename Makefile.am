@@ -42,6 +42,7 @@ thermald_SOURCES = \
 		src/thd_engine_therm_sys_fs.cpp \
 		src/thd_engine_dts.cpp \
 		src/thd_cdev_pstates.cpp \
+		src/thd_cdev_msr_pstates.cpp \
 		src/thd_cdev_turbo_states.cpp \
 		src/thd_cdev_therm_sys_fs.cpp \
 		src/thd_cdev_tstates.cpp \
