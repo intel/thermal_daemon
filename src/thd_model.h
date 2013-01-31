@@ -50,7 +50,7 @@ private:
 	int delay_cnt;
 	bool max_temp_seen;
 	bool set_point_reached;
-		
+
 	unsigned int update_set_point();
 	void store_set_point();
 	unsigned int read_set_point();

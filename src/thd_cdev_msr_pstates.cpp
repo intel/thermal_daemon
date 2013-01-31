@@ -26,6 +26,7 @@
 #include <sstream>
 #include <vector>
 #include "thd_cdev_msr_pstates.h"
+#include "thd_engine_dts.h"
 
 
 int cthd_cdev_pstate_msr::init()
@@ -56,21 +57,36 @@ int cthd_cdev_pstate_msr::control_begin()
 {
 	std::string governor;
 
-	if (cdev_sysfs.exists("cpu0/cpufreq/scaling_governor"))
-		cdev_sysfs.read("cpu0/cpufreq/scaling_governor", governor);
+	if (cpu_index == -1) {
 
-	if (governor == "userspace")
-		return THD_SUCCESS;
+		if (cdev_sysfs.exists("cpu0/cpufreq/scaling_governor"))
+			cdev_sysfs.read("cpu0/cpufreq/scaling_governor", governor);
 
-	if (cdev_sysfs.exists("cpu0/cpufreq/scaling_governor"))
-		cdev_sysfs.read("cpu0/cpufreq/scaling_governor", last_governor);
+		if (governor == "userspace")
+			return THD_SUCCESS;
 
-	for (int i=cpu_start_index; i<=cpu_end_index; ++i) {
+		if (cdev_sysfs.exists("cpu0/cpufreq/scaling_governor"))
+			cdev_sysfs.read("cpu0/cpufreq/scaling_governor", last_governor);
+
+		for (int i=cpu_start_index; i<=cpu_end_index; ++i) {
+			std::stringstream str;
+			str << "cpu" << i << "/cpufreq/scaling_governor";
+			if (cdev_sysfs.exists(str.str())) {
+				cdev_sysfs.write(str.str(), "userspace");
+			}
+		}
+	} else {
 		std::stringstream str;
-		str << "cpu" << i << "/cpufreq/scaling_governor";
+		str << "cpu" << cpu_index << "/cpufreq/scaling_governor";
 		if (cdev_sysfs.exists(str.str())) {
+			cdev_sysfs.read(str.str(), governor);
+			if (governor == "userspace")
+				return THD_SUCCESS;
+			cdev_sysfs.read(str.str(), last_governor);
+
 			cdev_sysfs.write(str.str(), "userspace");
 		}
+
 	}
 
 	return THD_SUCCESS;
@@ -78,17 +94,26 @@ int cthd_cdev_pstate_msr::control_begin()
 
 int cthd_cdev_pstate_msr::control_end()
 {
-	for (int i=cpu_start_index; i<=cpu_end_index; ++i) {
+	if (cpu_index == -1) {
+		for (int i=cpu_start_index; i<=cpu_end_index; ++i) {
+			std::stringstream str;
+			str << "cpu" << i << "/cpufreq/scaling_governor";
+			if (cdev_sysfs.exists(str.str())) {
+				cdev_sysfs.write(str.str(), last_governor);
+			}
+		}
+	} else {
 		std::stringstream str;
-		str << "cpu" << i << "/cpufreq/scaling_governor";
+		str << "cpu" << cpu_index << "/cpufreq/scaling_governor";
 		if (cdev_sysfs.exists(str.str())) {
 			cdev_sysfs.write(str.str(), last_governor);
 		}
 	}
+
 	return THD_SUCCESS;
 }
 
-void cthd_cdev_pstate_msr::set_curr_state(int state)
+void cthd_cdev_pstate_msr::set_curr_state(int state, int arg)
 {
 	int inc = 1;
 
@@ -98,24 +123,73 @@ void cthd_cdev_pstate_msr::set_curr_state(int state)
 	if (state > p_state_index )
 		inc = 0;
 
-	if (state == 1)
+	if (state == 1) {
+		thd_log_debug("CTRL begin..\n");
 		control_begin();
-
-	p_state_index = state;
-
+	}
 	if (state == 1) {
 		// Set to highest non turbo frequency
-		msr.set_freq_state(highest_freq_state);
-	} else if (inc && curr_state != 1)
-		msr.inc_freq_state();
-	else if (inc == 0){
-		msr.dec_freq_state();
+		if (cpu_index == -1) {
+			int cpus = msr.get_no_cpus();
+			for (int i=0; i<cpus; ++i) {
+				if (thd_engine->apply_cpu_operation(i) == false)
+					continue;
+				msr.set_freq_state_per_cpu(i, highest_freq_state);
+				curr_state = state;
+				p_state_index = state;
+			}
+		}
+		else {
+			if (thd_engine->apply_cpu_operation(cpu_index)) {
+				msr.set_freq_state_per_cpu(cpu_index, highest_freq_state);
+				curr_state = state;
+				p_state_index = state;
+			}
+		}
+	} else if (inc && curr_state != 1) {
+		if (cpu_index == -1) {
+			int cpus = msr.get_no_cpus();
+			for (int i=0; i<cpus; ++i) {
+				if (thd_engine->apply_cpu_operation(i) == false)
+					continue;
+				msr.inc_freq_state_per_cpu(i);
+				curr_state = state;
+				p_state_index = state;
+			}
+		}
+		else {
+			if (thd_engine->apply_cpu_operation(cpu_index)) {
+				msr.inc_freq_state_per_cpu(cpu_index);
+				curr_state = state;
+				p_state_index = state;
+			}
+		}
+	} else if (inc == 0){
+		if (cpu_index == -1) {
+			int cpus = msr.get_no_cpus();
+			for (int i=0; i<cpus; ++i) {
+				if (thd_engine->apply_cpu_operation(i) == false)
+					continue;
+				msr.dec_freq_state_per_cpu(i);
+				curr_state = state;
+				p_state_index = state;
+			}
+		}
+		else {
+			if (thd_engine->apply_cpu_operation(cpu_index)) {
+				msr.dec_freq_state_per_cpu(cpu_index);
+				curr_state = state;
+				p_state_index = state;
+			}
+		}
+	} else {
+		curr_state = state;
+		p_state_index = state;
 	}
-	curr_state = state;
-
-	if (state == 0)
+	if (state == 0) {
+		thd_log_debug("CTRL end..\n");
 		control_end();
-
+	}
 }
 
 int cthd_cdev_pstate_msr::get_max_state()

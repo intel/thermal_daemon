@@ -23,8 +23,10 @@
  */
 
 #include "thd_engine.h"
+#include "thd_topology.h"
 
 static void *cthd_engine_thread(void *arg);
+static void *cthd_calibration_engine_thread(void *arg);
 
 cthd_engine::cthd_engine()
 	: poll_timeout_msec(-1),
@@ -36,7 +38,7 @@ cthd_engine::cthd_engine()
 	  status(true),
 	  thd_engine(NULL),
 	  parse_thermal_zone_success(false),
-	  parse_thermal_cdev_success(false),	
+	  parse_thermal_cdev_success(false),
 	  zone_count(0)
 {
 }
@@ -162,7 +164,7 @@ int cthd_engine::thd_engine_start()
                 {
                         /* Child process closes up input side of pipe */
                         close(wake_fds[1]);
-			cthd_engine_thread((void *)this);
+                        cthd_engine_thread((void *)this);
                 }
                 else
                 {
@@ -171,6 +173,12 @@ int cthd_engine::thd_engine_start()
                 }
 }
 #endif
+/// calibration thread
+	pthread_attr_init(&thd_attr);
+	pthread_attr_setdetachstate(&thd_attr, PTHREAD_CREATE_DETACHED);
+	ret = pthread_create(&cal_thd_engine, &thd_attr, cthd_calibration_engine_thread, (void *)this);
+
+//
 	// Netlink stuff
 	nl_wrapper.genl_acpi_family_open(this);
 	if (nl_wrapper.rtnl_fd() < 0) {
@@ -203,6 +211,28 @@ static void *cthd_engine_thread(void *arg)
 
 	obj->thd_engine_thread();
 
+	return NULL;
+}
+
+static void *cthd_calibration_engine_thread(void *arg)
+{
+	int ret;
+	cthd_topology topo;
+	cthd_engine *obj = (cthd_engine *)arg;
+
+	if (topo.check_config_saved()) {
+		thd_log_warn("Already calibrated\n");
+		return NULL;
+	}
+	for (;;) {
+		sleep(5);
+		ret = topo.calibrate();
+		if (ret == 0) {
+			obj->send_message(RELOAD_ZONES, 0, NULL);
+			break; // process done
+		}
+	}
+	thd_log_warn("Calibration thread exit\n");
 	return NULL;
 }
 
@@ -262,7 +292,11 @@ void cthd_engine::thermal_zone_change(message_capsul_t *msg)
 	thermal_zone_notify_t *pmsg = (thermal_zone_notify_t*)msg->msg;
 	for (i=0; i<zones.size(); ++i)	{
 		cthd_zone *zone = zones[i];
-		zone->zone_temperature_notification(pmsg->type, pmsg->data);
+		if (zone->zone_active_status())
+			zone->zone_temperature_notification(pmsg->type, pmsg->data);
+		else {
+			thd_log_debug("zone is not active\n");
+		}
 	}
 }
 
@@ -291,6 +325,13 @@ int cthd_engine::proc_message(message_capsul_t *msg)
 			thermal_zone_change(msg);
 			break;
 		case CALIBRATE:
+		{
+			cthd_topology topo;
+			topo.calibrate();
+		}
+			break;
+		case RELOAD_ZONES:
+			thd_engine_reload_zones();
 			break;
 		default:
 			break;
@@ -340,4 +381,21 @@ void cthd_engine::process_terminate()
 	thd_log_warn("termiating on user request ..\n");
 	giveup_thermal_control();
 	exit(0);
+}
+
+void cthd_engine::thd_engine_reload_zones()
+{
+	thd_log_warn(" Reloading zones\n");
+	for (int i=0; i<zones.size(); ++i)	{
+		cthd_zone *zone = zones[i];
+		delete zone;
+	}
+	zones.clear();
+
+	int ret = read_thermal_zones();
+	if (ret != THD_SUCCESS) {
+		thd_log_error("No thermal sensors found");
+		// This is a fatal error and daemon will exit
+		return THD_FATAL_ERROR;
+	}
 }

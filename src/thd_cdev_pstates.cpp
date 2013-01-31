@@ -23,6 +23,7 @@
  */
 
 #include "thd_cdev_pstates.h"
+#include "thd_engine_dts.h"
 
 int cthd_cdev_pstates::init()
 {
@@ -159,7 +160,7 @@ int cthd_cdev_pstates::control_end()
 	return THD_SUCCESS;
 }
 
-void cthd_cdev_pstates::set_curr_state(int state)
+void cthd_cdev_pstates::set_curr_state(int state, int arg)
 {
 	if (state == 1)
 		control_begin();
@@ -167,21 +168,38 @@ void cthd_cdev_pstates::set_curr_state(int state)
 	// p state control
 	//scaling_setspeed
 	if (state < cpufreqs.size()) {
-		for (int i=cpu_start_index; i<=cpu_end_index; ++i) {
-			std::stringstream str;
-			str << "cpu" << i << "/cpufreq/scaling_setspeed";
-			if (cdev_sysfs.exists(str.str())) {
-				std::stringstream speed;
-				speed << cpufreqs[state];
-				cdev_sysfs.write(str.str(), speed.str());
+		if (cpu_index == -1) {
+			for (int i=cpu_start_index; i<=cpu_end_index; ++i) {
+				if (thd_engine->apply_cpu_operation(i) == false)
+									continue;
+				std::stringstream str;
+				str << "cpu" << i << "/cpufreq/scaling_setspeed";
+				if (cdev_sysfs.exists(str.str())) {
+					std::stringstream speed;
+					speed << cpufreqs[state];
+					cdev_sysfs.write(str.str(), speed.str());
+				}
+				pstate_active_freq_index = state;
+				curr_state = state;
+			}
+		} else {
+			if (thd_engine->apply_cpu_operation(cpu_index)) {
+				std::stringstream str;
+				str << "cpu" << cpu_index << "/cpufreq/scaling_setspeed";
+				if (cdev_sysfs.exists(str.str())) {
+					std::stringstream speed;
+					speed << cpufreqs[state];
+					cdev_sysfs.write(str.str(), speed.str());
+				}
+				pstate_active_freq_index = state;
+				curr_state = state;
 			}
 		}
-		pstate_active_freq_index = state;
 		goto done;
 	}
 
 done:
-	curr_state = state;
+//	curr_state = state;
 
 	if (state == 0)
 		control_end();

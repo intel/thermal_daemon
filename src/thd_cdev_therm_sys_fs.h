@@ -35,7 +35,7 @@ private:
 
 public:
 	cthd_sysfs_cdev(unsigned int _index, std::string control_path) : cthd_cdev(_index, control_path), use_custom_cdevs(false) {}
-	void set_curr_state(int state);
+	void set_curr_state(int state, int arg);
 	int get_curr_state();
 	int get_max_state();
 	int update();

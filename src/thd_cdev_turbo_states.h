@@ -32,12 +32,13 @@ class cthd_cdev_turbo_states : public cthd_cdev
 private:
 	int 				t_state_index;
 	cthd_msr			msr;
+	int					cpu_index;
 
 public:
 	static const int turbo_states_cnt = 1;
-	cthd_cdev_turbo_states(unsigned int _index) : cthd_cdev(_index, "") {}
+	cthd_cdev_turbo_states(unsigned int _index, int _cpu_index) : cthd_cdev(_index, ""), cpu_index(_cpu_index) {}
 
-	void set_curr_state(int state);
+	void set_curr_state(int state, int arg);
 	int get_max_state();
 };
 

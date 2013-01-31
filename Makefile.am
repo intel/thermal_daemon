@@ -51,11 +51,13 @@ thermald_SOURCES = \
 		src/thd_trip_point.cpp \
 		src/thd_zone.cpp \
 		src/thd_zone_dts.cpp \
+		src/thd_zone_dts_sensor.cpp \
 		src/thd_zone_therm_sys_fs.cpp \
 		src/thd_preference.cpp \
 		src/thd_model.cpp \
 		src/thd_parse.cpp \
 		src/thd_pid.cpp \
+		src/thd_topology.cpp \
 		netlink-if/libnetlink.cpp \
 		netlink-if/thd_nl_wrapper.cpp
 

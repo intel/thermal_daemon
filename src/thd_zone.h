@@ -47,6 +47,7 @@ protected:
 	unsigned int 					zone_temp;
 	std::string						temperature_sysfs_path;
 	csys_fs 						zone_sysfs;
+	bool							zone_active;
 
 private:
 	void							thermal_zone_temp_change();
@@ -62,6 +63,9 @@ public:
 	virtual int read_trip_points() = 0;
 	virtual int read_cdev_trip_points() = 0;
 	virtual void set_temp_sensor_path() = 0;
+
+	void set_zone_active() { zone_active = true; };
+	bool zone_active_status() {return zone_active; };
 };
 
 #endif

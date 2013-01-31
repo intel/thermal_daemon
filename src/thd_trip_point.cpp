@@ -27,8 +27,8 @@
 #include "thd_trip_point.h"
 #include "thd_engine.h"
 
-cthd_trip_point::cthd_trip_point(int _index, trip_point_type_t _type, unsigned int _temp, unsigned int _hyst)
-		: index(_index), type(_type), temp(_temp), hyst(_hyst), control_type(PARALLEL) {
+cthd_trip_point::cthd_trip_point(int _index, trip_point_type_t _type, unsigned int _temp, unsigned int _hyst, int _arg)
+		: index(_index), type(_type), temp(_temp), hyst(_hyst), control_type(PARALLEL), arg(_arg) {
 	thd_log_debug("Add trip pt %d:%d:%d\n", type, temp, hyst);
 }
 
@@ -85,7 +85,7 @@ bool cthd_trip_point::thd_trip_point_check(unsigned int read_temp, int pref)
 			thd_log_debug("Trip point applicable >  %d:%d \n", index, temp);
 			on = 1;
 		}
-		else if ((read_temp - hyst) < temp) {
+		else if ((read_temp + hyst) < temp) {
 			thd_log_debug("Trip point applicable =<  %d:%d \n", index, temp);
 			off = 1;
 		}
@@ -108,7 +108,7 @@ bool cthd_trip_point::thd_trip_point_check(unsigned int read_temp, int pref)
 				// No scope of control with this cdev
 				continue;
 			}
-			cdev->thd_cdev_set_state(temp, read_temp, 1);
+			cdev->thd_cdev_set_state(temp, read_temp, 1, arg);
 			if (control_type == SEQUENTIAL) {
 				// Only one cdev activation
 				break;
@@ -127,7 +127,7 @@ bool cthd_trip_point::thd_trip_point_check(unsigned int read_temp, int pref)
 				// No scope of control with this cdev
 				continue;
 			}
-			cdev->thd_cdev_set_state(temp, read_temp, 0);
+			cdev->thd_cdev_set_state(temp, read_temp, 0, arg);
 			if (control_type == SEQUENTIAL) {
 				// Only one cdev activation
 				break;

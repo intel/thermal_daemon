@@ -44,6 +44,7 @@ typedef enum {
 	PREF_CHANGED,
 	THERMAL_ZONE_NOTIFY,
 	CALIBRATE,
+	RELOAD_ZONES,
 }message_name_t;
 
 // This defines whether the thermal control is entirey done by
@@ -78,6 +79,9 @@ private:
 	pthread_attr_t thd_attr;
 	pthread_cond_t thd_cond_var;
 	pthread_mutex_t thd_cond_mutex;
+
+	pthread_t cal_thd_engine;
+
 
 	struct pollfd poll_fds[THD_NUM_OF_POLL_FDS];
 	int write_pipe_fd;
@@ -122,6 +126,11 @@ public:
 
 	int use_custom_zones() { return parse_thermal_zone_success; }
 	int use_custom_cdevs() { return parse_thermal_cdev_success; }
+
+	static const int max_cpu_count = 64;
+	time_t	last_cpu_update[max_cpu_count];
+	virtual bool apply_cpu_operation(int cpu) {return false;}
+	void thd_engine_reload_zones();
 };
 
 #endif /* THD_ENGINE_H_ */

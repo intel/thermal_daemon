@@ -27,11 +27,11 @@
 #include "thd_engine_therm_sys_fs.h"
 #include "thd_cdev_therm_sys_fs.h"
 
-cthd_engine_therm_sysfs::cthd_engine_therm_sysfs() 
+cthd_engine_therm_sysfs::cthd_engine_therm_sysfs()
 	: thd_sysfs("/sys/class/thermal/"),
 	parser_init_done(false)
-{ 
-	parser_init(); 
+{
+	parser_init();
 }
 
 int cthd_engine_therm_sysfs::read_thermal_zones()
@@ -48,6 +48,7 @@ int cthd_engine_therm_sysfs::read_thermal_zones()
 	// Check for the presence of thermal zones
 	if (thd_sysfs.exists("thermal_zone")) {
 		cthd_sysfs_zone *zone = new cthd_sysfs_zone(count, "/sys/class/thermal/thermal_zone");
+		zone->set_zone_active();
 		zones.push_back(zone);
 		++count;
 	}
@@ -56,6 +57,7 @@ int cthd_engine_therm_sysfs::read_thermal_zones()
 		tzone << "thermal_zone" << i;
 		if (thd_sysfs.exists(tzone.str().c_str())) {
 			cthd_sysfs_zone *zone = new cthd_sysfs_zone(count, "/sys/class/thermal/thermal_zone");
+			zone->set_zone_active();
 			if (zone->zone_update() != THD_SUCCESS)
 				continue;
 			zones.push_back(zone);

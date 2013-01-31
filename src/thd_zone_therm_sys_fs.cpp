@@ -90,7 +90,7 @@ int cthd_sysfs_zone::read_trip_points()
 		else
 			trip_type = INVALID_TRIP_TYPE;
 		if (trip_type != INVALID_TRIP_TYPE) {
-			cthd_trip_point trip_pt(trip_point_cnt, trip_type, temp, hyst);
+			cthd_trip_point trip_pt(trip_point_cnt, trip_type, temp, hyst, 0);
 			trip_points.push_back(trip_pt);
 			++trip_point_cnt;
 		}
@@ -168,7 +168,7 @@ int cthd_sysfs_zone::read_xml_trip_points()
 			if (!trip_pt)
 				continue;
 
-			cthd_trip_point trip_pt_obj(trip_point_cnt, trip_pt->trip_pt_type, trip_pt->temperature, trip_pt->hyst);
+			cthd_trip_point trip_pt_obj(trip_point_cnt, trip_pt->trip_pt_type, trip_pt->temperature, trip_pt->hyst, 0);
 			trip_pt_obj.thd_trip_point_add_cdev_index(trip_pt->cool_dev_id);
 			trip_points.push_back(trip_pt_obj);
 			++trip_point_cnt;

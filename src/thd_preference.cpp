@@ -101,7 +101,7 @@ bool cthd_preference::set_preference(const char *pref_str)
 {
 	std::string str(pref_str);
 	int pref = string_pref_to_int(str);
-	
+
 	std::stringstream filename;
 	filename << TDCONFDIR << "/" << "thd_preference.conf";
 

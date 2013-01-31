@@ -40,6 +40,7 @@ protected:
 	csys_fs 		cdev_sysfs;
 	unsigned int 	trip_point;
 	std::string 	type_str;
+	unsigned int	sensor_mask;
 
 private:
 
@@ -50,23 +51,30 @@ public:
 		trip_point(0),
 		max_state(0),
 		min_state(0),
-		curr_state(0)
+		curr_state(0),
+		sensor_mask(0)
 	{}
 
-	virtual void thd_cdev_set_state(int set_point, int temperature, int state){
+	virtual void thd_cdev_set_state(int set_point, int temperature, int state, int arg){
 		thd_log_debug(">>thd_cdev_set_state index:%d state:%d\n", index, state);
 		curr_state = get_curr_state();
 		max_state = get_max_state();
 		thd_log_debug("thd_cdev_set_%d:curr state %d max state %d\n", index, curr_state, max_state);
 		if (state) {
 			if (curr_state < max_state) {
-				thd_log_debug("device:%s %d\n", type_str.c_str(), curr_state+1);
-				set_curr_state(curr_state + 1);
+				sensor_mask |= arg;
+				thd_log_debug("op->device:%s %d\n", type_str.c_str(), curr_state+1);
+				set_curr_state(curr_state + 1, arg);
 			}
 		} else {
 			if (curr_state > 0) {
-				thd_log_info("device:%s %d\n", type_str.c_str(), curr_state);
-				set_curr_state(curr_state - 1);
+				sensor_mask &= ~arg;
+				if (sensor_mask != 0) {
+					thd_log_debug("skip to reduce current state as this is controlled by two sensor actions and one is still on %x\n", sensor_mask);
+				} else {
+					thd_log_debug("op->device:%s %d\n", type_str.c_str(), curr_state-1);
+					set_curr_state(curr_state - 1, arg);
+				}
 			}
 		}
 		thd_log_info("Set : %d, %d, %d, %d, %d\n", set_point, temperature, index, get_curr_state(), max_state);
@@ -79,7 +87,7 @@ public:
 	virtual int init() {return 0;};
 	virtual int control_begin() {return 0;};
 	virtual int control_end() {return 0;};
-	virtual void set_curr_state(int state) {}
+	virtual void set_curr_state(int state, int arg) {}
 
 	virtual int get_curr_state()
 	{

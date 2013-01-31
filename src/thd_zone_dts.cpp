@@ -24,12 +24,11 @@
  */
 
 #include "thd_zone_dts.h"
-#include "thd_engine.h"
+#include "thd_engine_dts.h"
 #include "thd_msr.h"
 
 cthd_zone_dts::cthd_zone_dts(int index, std::string path)
 	: cthd_zone(index, path),
-	  sensor_mask(0),
 	  dts_sysfs(path.c_str()),
 	  trip_point_cnt(0)
 {
@@ -40,6 +39,7 @@ int	cthd_zone_dts::init()
 {
 	critical_temp = 0;
 	int temp;
+	cthd_engine_dts *engine = (cthd_engine_dts*)thd_engine;
 
 	for (int i=0; i<max_dts_sensors; ++i) {
 		std::stringstream temp_crit_str;
@@ -70,15 +70,43 @@ int	cthd_zone_dts::init()
 
 int cthd_zone_dts::read_trip_points()
 {
-	init();
+	cthd_msr msr;
 
-	cthd_trip_point trip_pt(trip_point_cnt, 0, set_point, def_hystersis);
-	trip_pt.thd_trip_point_set_control_type(SEQUENTIAL);
-	trip_pt.thd_trip_point_add_cdev_index(0);
-	trip_pt.thd_trip_point_add_cdev_index(1);
-	trip_pt.thd_trip_point_add_cdev_index(2);
-	trip_points.push_back(trip_pt);
-	trip_point_cnt++;
+	init();
+	cthd_engine_dts *thd_dts_engine = (cthd_engine_dts*)thd_engine;
+
+	unsigned int cpu_mask = thd_dts_engine->get_cpu_mask();
+	thd_log_info("Default DTS processing for cpus mask = %x\n", cpu_mask);
+
+	if (cpu_mask == thd_dts_engine->def_cpu_mask) {
+		cthd_trip_point trip_pt(trip_point_cnt, P_T_STATE, set_point, def_hystersis, 0xFF);
+		trip_pt.thd_trip_point_set_control_type(SEQUENTIAL);
+		trip_pt.thd_trip_point_add_cdev_index(0);
+		trip_pt.thd_trip_point_add_cdev_index(1);
+		trip_pt.thd_trip_point_add_cdev_index(2);
+		trip_points.push_back(trip_pt);
+		trip_point_cnt++;
+	} else {
+		unsigned int mask = 0x1;
+		int cnt = 0;
+		int cdev_index;
+		do {
+			if (cpu_mask & mask) {
+				cdev_index = cpu_to_cdev_index(cnt);
+				cthd_trip_point trip_pt(trip_point_cnt, P_T_STATE, set_point, def_hystersis, 0xFF);
+				trip_pt.thd_trip_point_set_control_type(SEQUENTIAL);
+				trip_pt.thd_trip_point_add_cdev_index(cdev_index);
+				trip_pt.thd_trip_point_add_cdev_index(cdev_index + 1);
+				trip_pt.thd_trip_point_add_cdev_index(cdev_index + 2);
+				trip_points.push_back(trip_pt);
+				trip_point_cnt++;
+			}
+			mask = (mask << 1);
+			cnt++;
+			if (cnt >= msr.get_no_cpus())
+				break;
+		} while(mask != 0);
+	}
 
 	return THD_SUCCESS;
 }
@@ -115,10 +143,11 @@ unsigned int cthd_zone_dts::read_zone_temp()
 	unsigned int mask = 0x1;
 	unsigned int temp;
 	int cnt = 0;
+	cthd_engine_dts *engine = (cthd_engine_dts*)thd_engine;
 
 	zone_temp = 0;
 	do {
-		if (sensor_mask & mask) {
+		if ( (sensor_mask & ~engine->sensor_mask) & mask) {
 			std::stringstream temp__input_str;
 			temp__input_str << "temp" << cnt << "_input";
 			if (dts_sysfs.exists(temp__input_str.str())) {
@@ -141,10 +170,16 @@ unsigned int cthd_zone_dts::read_zone_temp()
 		thd_log_debug("new set point %d \n", set_point);
 		update_trip_points();
 	}
-#if 0
+#if 1
 {
-	cthd_msr msr;
-	thd_log_debug("perf_status %X\n", msr.read_perf_status());
+//	cthd_msr msr;
+//	thd_log_debug("perf_status %X\n", msr.read_perf_status());
+
+	{
+
+	//	topology.learn_topology();
+
+	}
 }
 #endif
 

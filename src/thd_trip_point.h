@@ -54,9 +54,10 @@ private:
 	unsigned int 		hyst;
 	std::vector <cthd_cdev *> cdevs;
 	trip_control_type_t control_type;
+	int 				arg;
 
 public:
-	cthd_trip_point(int _index, trip_point_type_t _type, unsigned int _temp, unsigned int _hyst);
+	cthd_trip_point(int _index, trip_point_type_t _type, unsigned int _temp, unsigned int _hyst, int arg);
 	bool thd_trip_point_check(unsigned int read_temp, int pref);
 	void thd_trip_point_add_cdev(cthd_cdev &cdev);
 	int thd_trip_point_value() { return temp; }

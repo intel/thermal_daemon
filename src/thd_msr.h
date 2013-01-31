@@ -31,12 +31,13 @@ class cthd_msr {
 private:
 	csys_fs msr_sysfs;
 	int no_of_cpus;
-	int get_no_cpus();
 	int read_msr(int cpu, unsigned int idx, unsigned long long *val);
 	int write_msr(int cpu, unsigned int idx, unsigned long long val);
 
 public:
 	cthd_msr();
+
+	int get_no_cpus();
 
 	bool check_turbo_status();
 	int enable_turbo();
@@ -54,6 +55,16 @@ public:
 	int set_perf_bias_performace();
 	int set_perf_bias_balaced();
 	int set_perf_bias_energy();
+
+	int get_mperf_value(int cpu, unsigned long long *value);
+	int get_aperf_value(int cpu, unsigned long long *value);
+
+	int set_freq_state_per_cpu(int cpu, int state);
+	int inc_freq_state_per_cpu(int cpu);
+	int dec_freq_state_per_cpu(int cpu);
+	int set_clock_mod_duty_cycle_per_cpu(int cpu, int state);
+	int disable_turbo_per_cpu(int cpu);
+	int enable_turbo_per_cpu(int cpu);
 
 };
 

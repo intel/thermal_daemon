@@ -39,11 +39,12 @@ private:
 	int lowest_freq_state;
 	int control_begin();
 	int control_end();
+	int cpu_index;
 
 public:
-	cthd_cdev_pstate_msr(unsigned int _index) : cthd_cdev(_index, "/sys/devices/system/cpu/"), p_state_index(0) {}
+	cthd_cdev_pstate_msr(unsigned int _index, int _cpu_index) : cthd_cdev(_index, "/sys/devices/system/cpu/"), p_state_index(0), cpu_index(_cpu_index) {}
 	int init();
-	void set_curr_state(int state);
+	void set_curr_state(int state, int arg);
 	int get_max_state();
 	int update();
 };

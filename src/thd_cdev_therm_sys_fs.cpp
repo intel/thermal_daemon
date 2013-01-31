@@ -96,7 +96,7 @@ int cthd_sysfs_cdev::get_max_state()
 	return max_state;
 }
 
-void cthd_sysfs_cdev::set_curr_state(int state)
+void cthd_sysfs_cdev::set_curr_state(int state, int arg)
 {
 	if (use_custom_cdevs) {
 		csys_fs sys_fs("");

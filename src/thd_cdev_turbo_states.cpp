@@ -26,12 +26,20 @@
 #include <vector>
 #include "thd_cdev_turbo_states.h"
 
-void cthd_cdev_turbo_states::set_curr_state(int state)
+void cthd_cdev_turbo_states::set_curr_state(int state, int arg)
 {
-	if (state == 1)
-		msr.disable_turbo();
-	else
-		msr.enable_turbo();
+	if (state == 1) {
+		if (cpu_index == -1)
+			msr.disable_turbo();
+		else
+			msr.disable_turbo_per_cpu(cpu_index);
+	}
+	else {
+		if (cpu_index == -1)
+			msr.enable_turbo();
+		else
+			msr.enable_turbo_per_cpu(cpu_index);
+	}
 	curr_state = state;
 }
 

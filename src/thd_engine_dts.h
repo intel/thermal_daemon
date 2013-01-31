@@ -27,16 +27,25 @@
 
 
 #include "thd_engine.h"
+#include <time.h>
 
 class cthd_engine_dts: public cthd_engine
 {
 private:
 	csys_fs 				thd_sysfs;
+	unsigned int 			cpu_mask_remaining;
 
 public:
-	cthd_engine_dts() : thd_sysfs("/sys/devices/platform/coretemp.0/") {}
+	static const unsigned int def_cpu_mask = 0xffff;
+	unsigned int 			sensor_mask;
+
+	cthd_engine_dts() : thd_sysfs("/sys/devices/platform/coretemp.0/"), cpu_mask_remaining(def_cpu_mask), sensor_mask(0) {}
 	int read_thermal_zones();
 	int read_cooling_devices();
+	bool apply_cpu_operation(int cpu);
+	void remove_cpu_mask_from_default_processing(unsigned int mask);
+	unsigned int get_cpu_mask();
+
 };
 
 

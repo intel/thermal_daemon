@@ -110,7 +110,7 @@ void cthd_model::add_sample(unsigned int temperature)
 		delay_cnt = 0;
 	}
 	last_temp = temperature;
-	thd_log_info("update_set_point %u,%d,%u\n", last_temp, current_angle, set_point);
+	thd_log_debug("update_set_point %u,%d,%u\n", last_temp, current_angle, set_point);
 }
 
 void cthd_model::store_set_point()

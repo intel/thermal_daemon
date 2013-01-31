@@ -129,7 +129,7 @@ void cthd_pid::inc_cdevs_state()
 		cthd_cdev *cdev = thd_engine->thd_get_cdev_at_index(cdev_indexes[i]);
 		state = cdev->get_curr_state();
 		if ((state + 1) <= cdev->get_max_state()) {
-			cdev->set_curr_state(state+1);
+			cdev->set_curr_state(state+1, 0);
 		}
 	}
 }
@@ -142,7 +142,7 @@ void cthd_pid::dec_cdevs_state()
 		cthd_cdev *cdev = thd_engine->thd_get_cdev_at_index(cdev_indexes[i]);
 		state = cdev->get_curr_state();
 		if ((state - 1) >= 0) {
-			cdev->set_curr_state(state-1);
+			cdev->set_curr_state(state-1, 0);
 		}
 	}
 }
@@ -152,7 +152,7 @@ void cthd_pid::cdev_set_state(int state)
 	for (int i=0; i<cdev_indexes.size(); ++i) {
 		cthd_cdev *cdev = thd_engine->thd_get_cdev_at_index(cdev_indexes[i]);
 		if (state >= 0 && state <= cdev->get_max_state()) {
-			cdev->set_curr_state(state);
+			cdev->set_curr_state(state, 0);
 		}
 	}
 }
@@ -268,7 +268,7 @@ void cthd_pid::calibrate()
 
 	for (int i=0; i<cdev_indexes.size(); ++i) {
 		cthd_cdev *cdev = thd_engine->thd_get_cdev_at_index(cdev_indexes[i]);
-			cdev->set_curr_state(0);
+			cdev->set_curr_state(0, 0);
 	}
 
 	pthread_attr_init(&crazy_thread_attr);
@@ -371,7 +371,7 @@ void cthd_pid::open_loop_tune()
 					cthd_cdev *cdev = thd_engine->thd_get_cdev_at_index(cdev_indexes[i]);
 					state = cdev->get_max_state() * 10/100;
 					if (state > 0) {
-						cdev->set_curr_state(state);
+						cdev->set_curr_state(state, 0);
 					}
 				}
 				start = now;

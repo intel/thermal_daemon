@@ -31,32 +31,35 @@
 #include "thd_cdev_tstates.h"
 #include "thd_cdev_turbo_states.h"
 #include "thd_model.h"
+#include "thd_topology.h"
 
 class cthd_zone_dts :  public cthd_zone {
-private:
+protected:
 	csys_fs dts_sysfs;
 	int critical_temp;
 	int set_point;
 	int prev_set_point;
 	int trip_point_cnt;
-
 	unsigned int sensor_mask;
+
 	//cthd_cdev_pstates cdev_pstates;
+	cthd_topology topology;
 
 	cthd_model thd_model;
 
 	int	init();
 	int update_trip_points();
+	int cpu_to_cdev_index(int _index) {return (4+_index*4);}
 
 public:
 	static const int max_dts_sensors = sizeof(unsigned int) * 8;
-	static const int def_hystersis = 0; //2000;
+	static const int def_hystersis = 0;
 	cthd_zone_dts(int count, std::string path);
 
-	int read_trip_points();
+	virtual int read_trip_points();
 	int read_cdev_trip_points();
 	void set_temp_sensor_path();
-	unsigned int read_zone_temp();
+	virtual unsigned int read_zone_temp();
 	void update_zone_preference();
 
 };

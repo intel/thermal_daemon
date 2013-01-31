@@ -62,7 +62,7 @@ gboolean thd_dbus_interface_get_current_preference(PrefObject* obj, gdouble* val
 // Default log level
 static int thd_log_level = G_LOG_LEVEL_ERROR | G_LOG_LEVEL_CRITICAL | G_LOG_LEVEL_WARNING ;
 
-// Daemonize or not 
+// Daemonize or not
 static gboolean thd_daemonize;
 
 // Disable dbus
@@ -246,7 +246,7 @@ static int thd_dbus_server_proc(gboolean no_daemon)
 			return THD_FATAL_ERROR;
 		}
 	}
-	
+
 	if (use_thermal_sys_fs)
 		thd_engine = new cthd_engine_therm_sysfs();
 	else

@@ -28,7 +28,8 @@
 cthd_zone::cthd_zone(int _index, std::string control_path)
 	: index(_index),
 	  zone_sysfs(control_path.c_str()),
-	  zone_temp(0)
+	  zone_temp(0),
+	  zone_active(false)
 {
 	thd_log_debug("Added zone index:%d \n", index);
 }
@@ -100,6 +101,8 @@ int cthd_zone::zone_update()
 
 void cthd_zone::zone_temperature_notification(int type, int data)
 {
-	read_zone_temp();
-	thermal_zone_temp_change();
+	if (zone_active) {
+		read_zone_temp();
+		thermal_zone_temp_change();
+	}
 }
