@@ -28,6 +28,7 @@
 #include "thd_common.h"
 #include "thd_sys_fs.h"
 #include "thd_preference.h"
+#include <time.h>
 
 class cthd_cdev {
 
@@ -37,12 +38,23 @@ protected:
 	unsigned int 	curr_state;
 	unsigned int 	max_state;
 	unsigned int 	min_state;
-	csys_fs 		cdev_sysfs;
+	csys_fs 	cdev_sysfs;
 	unsigned int 	trip_point;
 	std::string 	type_str;
 	unsigned int	sensor_mask;
+	time_t		last_op_time;
+	int 		curr_pow;
+	int		base_pow_state;
 
 private:
+	unsigned int int_2_pow(int pow)
+	{
+		int i;
+		int _pow = 1;
+		for (i=0; i < pow; ++i)
+			_pow = _pow * 2;
+		return _pow;
+	}
 
 public:
 	cthd_cdev(unsigned int _index, std::string control_path) :
@@ -52,7 +64,10 @@ public:
 		max_state(0),
 		min_state(0),
 		curr_state(0),
-		sensor_mask(0)
+		sensor_mask(0),
+		last_op_time(0),
+		curr_pow(0),
+		base_pow_state(0)
 	{}
 
 	virtual void thd_cdev_set_state(int set_point, int temperature, int state, int arg){
@@ -62,11 +77,31 @@ public:
 		thd_log_debug("thd_cdev_set_%d:curr state %d max state %d\n", index, curr_state, max_state);
 		if (state) {
 			if (curr_state < max_state) {
+				int state = curr_state+1;
+				time_t tm;
+				time(&tm);
+				if ((tm - last_op_time) < thd_poll_interval + 1) {
+					if (curr_pow == 0) base_pow_state = curr_state;
+					++curr_pow;
+					state = base_pow_state + int_2_pow(curr_pow);
+					thd_log_debug("consecutive call, increment exponentially state %d\n", state);
+					if (state >= max_state) {
+						state = max_state;
+						curr_pow = 0;
+						curr_state = max_state;
+						last_op_time = tm;
+						thd_log_debug("Reached Max State: so return\n");
+						return;
+					}
+				} else
+					curr_pow = 0;
+				last_op_time = tm;
 				sensor_mask |= arg;
-				thd_log_debug("op->device:%s %d\n", type_str.c_str(), curr_state+1);
-				set_curr_state(curr_state + 1, arg);
+				thd_log_debug("op->device:%s %d\n", type_str.c_str(), state);
+				set_curr_state(state, arg);
 			}
 		} else {
+			curr_pow = 0;
 			if (curr_state > 0) {
 				sensor_mask &= ~arg;
 				if (sensor_mask != 0) {

@@ -115,77 +115,27 @@ int cthd_cdev_pstate_msr::control_end()
 
 void cthd_cdev_pstate_msr::set_curr_state(int state, int arg)
 {
-	int inc = 1;
-
-	if (state == p_state_index)
-		return;
-
-	if (state > p_state_index )
-		inc = 0;
-
 	if (state == 1) {
 		thd_log_debug("CTRL begin..\n");
 		control_begin();
 	}
-	if (state == 1) {
-		// Set to highest non turbo frequency
-		if (cpu_index == -1) {
-			int cpus = msr.get_no_cpus();
-			for (int i=0; i<cpus; ++i) {
-				if (thd_engine->apply_cpu_operation(i) == false)
-					continue;
-				msr.set_freq_state_per_cpu(i, highest_freq_state);
-				curr_state = state;
-				p_state_index = state;
-			}
+
+	if (cpu_index == -1) {
+		int cpus = msr.get_no_cpus();
+		for (int i=0; i<cpus; ++i) {
+			if (thd_engine->apply_cpu_operation(i) == false)
+				continue;
+			msr.set_freq_state_per_cpu(i, highest_freq_state - state);
+			curr_state = state;
 		}
-		else {
-			if (thd_engine->apply_cpu_operation(cpu_index)) {
-				msr.set_freq_state_per_cpu(cpu_index, highest_freq_state);
-				curr_state = state;
-				p_state_index = state;
-			}
-		}
-	} else if (inc && curr_state != 1) {
-		if (cpu_index == -1) {
-			int cpus = msr.get_no_cpus();
-			for (int i=0; i<cpus; ++i) {
-				if (thd_engine->apply_cpu_operation(i) == false)
-					continue;
-				msr.inc_freq_state_per_cpu(i);
-				curr_state = state;
-				p_state_index = state;
-			}
-		}
-		else {
-			if (thd_engine->apply_cpu_operation(cpu_index)) {
-				msr.inc_freq_state_per_cpu(cpu_index);
-				curr_state = state;
-				p_state_index = state;
-			}
-		}
-	} else if (inc == 0){
-		if (cpu_index == -1) {
-			int cpus = msr.get_no_cpus();
-			for (int i=0; i<cpus; ++i) {
-				if (thd_engine->apply_cpu_operation(i) == false)
-					continue;
-				msr.dec_freq_state_per_cpu(i);
-				curr_state = state;
-				p_state_index = state;
-			}
-		}
-		else {
-			if (thd_engine->apply_cpu_operation(cpu_index)) {
-				msr.dec_freq_state_per_cpu(cpu_index);
-				curr_state = state;
-				p_state_index = state;
-			}
-		}
-	} else {
-		curr_state = state;
-		p_state_index = state;
 	}
+	else {
+		if (thd_engine->apply_cpu_operation(cpu_index)) {
+			msr.set_freq_state_per_cpu(cpu_index, highest_freq_state - state);
+			curr_state = state;
+		}
+	}
+
 	if (state == 0) {
 		thd_log_debug("CTRL end..\n");
 		control_end();
@@ -194,13 +144,16 @@ void cthd_cdev_pstate_msr::set_curr_state(int state, int arg)
 
 int cthd_cdev_pstate_msr::get_max_state()
 {
-	highest_freq_state = msr.get_max_freq();
-	lowest_freq_state = msr.get_min_freq();
 
-	return (highest_freq_state - lowest_freq_state) ;
+	return max_state;
 }
 
 int cthd_cdev_pstate_msr::update()
 {
+	highest_freq_state = msr.get_max_freq();
+	lowest_freq_state = msr.get_min_freq();
+
+	max_state = highest_freq_state - lowest_freq_state ;
+
 	return init();
 }

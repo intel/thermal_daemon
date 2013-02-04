@@ -486,13 +486,15 @@ int cthd_msr::set_freq_state_per_cpu(int cpu, int state)
 	ret = read_msr(cpu, MSR_IA32_PERF_CTL, &val);
 	val &= ~PERF_CTL_CLK_MASK;
 	val |= (state << PERF_CTL_CLK_SHIFT);
-
+	thd_log_debug("perf_ctl current %x\n", val);
+	thd_log_debug("perf_ctl write %x\n", val);
 	ret = write_msr(cpu, MSR_IA32_PERF_CTL, val);
 	if (ret < 0) {
 		thd_log_warn("per control msr failded to write\n");
 		return THD_ERROR;
 	}
 	ret = read_msr(cpu, MSR_IA32_PERF_CTL, &val);
+	thd_log_debug("perf_ctl read back %x\n", val);
 	if (ret < 0)
 		return THD_ERROR;
 
