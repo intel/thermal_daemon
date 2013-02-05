@@ -29,7 +29,7 @@ class cthd_model {
 
 private:
 	static const int def_max_temperature = 100*1000;
-	static const unsigned int safety_margin = 3*1000;
+	static const unsigned int safety_margin = 0; //1*1000;
 	static const int angle_increment = 2;
 	static const int def_setpoint_delay_cnt = 3;
 	static const unsigned int max_compensation = 5000;
