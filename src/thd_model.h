@@ -50,6 +50,7 @@ private:
 	int delay_cnt;
 	bool max_temp_seen;
 	bool set_point_reached;
+	bool updated_set_point;
 
 	unsigned int update_set_point();
 	void store_set_point();
@@ -61,5 +62,5 @@ public:
 	void add_sample(unsigned int temperature);
 	void set_max_temperature(unsigned int temp);
 	unsigned int get_set_point() { return set_point; }
-	bool is_set_point_reached() { return set_point_reached; };
+	bool is_set_point_reached() { return (set_point_reached || updated_set_point); };
 };

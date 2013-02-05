@@ -41,7 +41,8 @@ cthd_model::cthd_model()
 	  current_angle(0),
 	  set_point_reached(false),
 	  delay_cnt(0),
-	  max_temp_seen(false)
+	  max_temp_seen(false),
+	  updated_set_point(false)
 {
 }
 
@@ -79,12 +80,19 @@ void cthd_model::add_sample(unsigned int temperature)
 	time_t tm;
 
 	time(&tm);
+	updated_set_point = false;
 	if (trend_increase_start==0 && temperature > hot_zone) {
 		trend_increase_start = tm;
 		thd_log_debug("Trend increase start %ld\n",  trend_increase_start);
 	} else if (trend_increase_start && temperature < hot_zone) {
+		unsigned int _set_point;
 		thd_log_debug("Trend increase stopped %ld\n",  trend_increase_start);
 		trend_increase_start = 0;
+		_set_point = read_set_point(); // Restore set point to a calculated max
+		if (_set_point > set_point) {
+			set_point = _set_point;
+			updated_set_point = true;
+		}
 	}
 	if (temperature >= max_temp) {
 		max_temp_reached = tm;
