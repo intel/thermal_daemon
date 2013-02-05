@@ -253,8 +253,16 @@ int cthd_topology::calibrate()
 	int i, j;
 
 	// Reset moving average
-	temp_data = new movinng_average_t[no_cpu];
-	memset(temp_data, 0, sizeof(*temp_data)*no_cpu);
+	temp_data = new movinng_average_t[no_sensors];
+	memset(temp_data, 0, sizeof(*temp_data)*no_sensors);
+
+	for (i=0; i<no_cpu; ++i) {
+		cpu_sensor_rel[i].sensor_id= -1;
+	}
+
+	for (i=0; i<no_sensors; ++i) {
+		sensor_cpu_rel[i].cpu_id = -1;
+	}
 
 	for (i=0; i<no_cpu; ++i) {
 		int max = 0;
@@ -269,7 +277,7 @@ int cthd_topology::calibrate()
 		}
 
 		designated_cpu = i;
-		memset(temp_data, 0, sizeof(*temp_data)*no_cpu);
+		memset(temp_data, 0, sizeof(*temp_data)*no_sensors);
 		pthread_attr_init(&thd_attr);
 		pthread_attr_setdetachstate(&thd_attr, PTHREAD_CREATE_DETACHED);
 		terminate_thread = false;
@@ -291,6 +299,8 @@ int cthd_topology::calibrate()
 
 		for(int j=0; j<no_sensors; ++j){
 			diff = temp_data[j].last_moving_average;
+			if (diff == 0)
+				continue;
 			if (max < diff) {
 				max = diff;
 				max_index = j;
