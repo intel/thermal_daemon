@@ -73,6 +73,9 @@ protected:
 private:
 	bool status;
 	control_mode_t control_mode;
+	int genuine_intel;
+	int has_invariant_tsc;
+	int has_aperf;
 
 	int preference;
 	pthread_t thd_engine;
@@ -97,10 +100,11 @@ private:
 	void process_terminate();
 
 public:
-	static const int cdev_pstate_index = 99;
 	static const int max_thermal_zones = 10;
 	static const int max_cool_devs = 50;
 	static const int def_poll_interval = 5000;
+	static const int soft_cdev_start_index = 100;
+
 	cthd_parse 	 parser;
 
 	cthd_engine();
@@ -109,6 +113,7 @@ public:
 	void thd_engine_thread();
 	int thd_engine_start();
 	int thd_engine_stop();
+	int check_cpu_id();
 
 	bool set_preference(const int pref);
 	void thd_engine_terminate();

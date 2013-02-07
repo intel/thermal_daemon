@@ -103,6 +103,8 @@ int cthd_engine::thd_engine_start()
 	int i, ret;
     	int wake_fds[2];
 
+	check_cpu_id();
+
 	ret = pipe(wake_fds);
 	if (ret) {
 		thd_log_error("Thermal sysfs: pipe creation failed %d: ", ret);
@@ -342,11 +344,11 @@ int cthd_engine::proc_message(message_capsul_t *msg)
 
 cthd_cdev* cthd_engine::thd_get_cdev_at_index(int index)
 {
-	if (index < cdev_cnt)
-		return cdevs[index];
-	else
-		return NULL;
-
+	for (int i=0; i<cdev_cnt; ++i) {
+		if (cdevs[i]->thd_cdev_get_index() == index)
+			return cdevs[i];
+	}
+	return NULL;
 }
 
 void cthd_engine::takeover_thermal_control()
@@ -398,4 +400,39 @@ void cthd_engine::thd_engine_reload_zones()
 		// This is a fatal error and daemon will exit
 		return THD_FATAL_ERROR;
 	}
+}
+
+int cthd_engine::check_cpu_id()
+{
+	// Copied from turbostat program
+	unsigned int eax, ebx, ecx, edx, max_level;
+	unsigned int fms, family, model, stepping;
+	genuine_intel = 0;
+
+	eax = ebx = ecx = edx = 0;
+
+	asm("cpuid" : "=a" (max_level), "=b" (ebx), "=c" (ecx), "=d" (edx) : "a" (0));
+
+	if (ebx == 0x756e6547 && edx == 0x49656e69 && ecx == 0x6c65746e)
+		genuine_intel = 1;
+	if (genuine_intel == 0) {
+		thd_log_error("Not supported CPU\n");
+		exit(1);
+	}
+	asm("cpuid" : "=a" (fms), "=c" (ecx), "=d" (edx) : "a" (1) : "ebx");
+	family = (fms >> 8) & 0xf;
+	model = (fms >> 4) & 0xf;
+	stepping = fms & 0xf;
+	if (family == 6 || family == 0xf)
+		model += ((fms >> 16) & 0xf) << 4;
+
+	thd_log_warn("%d CPUID levels; family:model:stepping 0x%x:%x:%x (%d:%d:%d)\n",
+			max_level, family, model, stepping, family, model, stepping);
+
+	if (!(edx & (1 << 5))) {
+		thd_log_error("CPUID: no MSR support\n");
+		exit(1);
+	}
+
+	return THD_SUCCESS;
 }

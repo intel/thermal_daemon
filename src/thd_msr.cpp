@@ -324,11 +324,9 @@ unsigned char cthd_msr::get_min_freq()
 	return MSR_IA32_PLATFORM_INFO_MIN_FREQ(val);
 }
 
-unsigned char cthd_msr::get_max_freq()
+unsigned char cthd_msr::get_max_turbo_freq()
 {
-
 	int ret;
-	unsigned char state;
 	unsigned long long val;
 
 	// Read turbo ratios
@@ -340,13 +338,20 @@ unsigned char cthd_msr::get_max_freq()
 	val &= TURBO_RATIO_4C_MASK;
 	if (val)
 		return val >> TURBO_RATIO_4C_SHIFT;
-	else {
-		// Just get for cpu 0 and return
-		ret = read_msr(0, MSR_IA32_PLATFORM_INFO, &val);
+
+	return 0;
+}
+
+unsigned char cthd_msr::get_max_freq()
+{
+	int ret;
+	unsigned long long val;
+
+	ret = read_msr(0, MSR_IA32_PLATFORM_INFO, &val);
 		if (ret < 0)
-			return THD_ERROR;
-		return MSR_IA32_PLATFORM_INFO_MAX_FREQ(val);
-	}
+		return THD_ERROR;
+
+	return MSR_IA32_PLATFORM_INFO_MAX_FREQ(val);
 }
 
 int cthd_msr::dec_freq_state_per_cpu(int cpu)
@@ -487,17 +492,17 @@ int cthd_msr::set_freq_state_per_cpu(int cpu, int state)
 	val &= ~PERF_CTL_CLK_MASK;
 	val |= (state << PERF_CTL_CLK_SHIFT);
 	thd_log_debug("perf_ctl current %x\n", val);
-	thd_log_debug("perf_ctl write %x\n", val);
 	ret = write_msr(cpu, MSR_IA32_PERF_CTL, val);
 	if (ret < 0) {
 		thd_log_warn("per control msr failded to write\n");
 		return THD_ERROR;
 	}
+#ifdef READ_BACK_VERIFY
 	ret = read_msr(cpu, MSR_IA32_PERF_CTL, &val);
 	thd_log_debug("perf_ctl read back %x\n", val);
 	if (ret < 0)
 		return THD_ERROR;
-
+#endif
 	return THD_SUCCESS;
 }
 
@@ -520,11 +525,12 @@ int cthd_msr::set_freq_state(int state)
 			thd_log_warn("per control msr failded to write\n");
 			return THD_ERROR;
 		}
+#ifdef READ_BACK_VERIFY
 		ret = read_msr(i, MSR_IA32_PERF_CTL, &val);
 		thd_log_debug("perf_ctl read back %x\n", val);
 		if (ret < 0)
 			return THD_ERROR;
-
+#endif
 	}
 }
 

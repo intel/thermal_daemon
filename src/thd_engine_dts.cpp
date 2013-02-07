@@ -29,8 +29,8 @@
 #include "thd_cdev_pstates.h"
 #include "thd_cdev_msr_pstates.h"
 #include "thd_cdev_turbo_states.h"
-
-#define TURBO_HIGH_PRIORITY
+#include "thd_cdev_therm_sys_fs.h"
+#include "thd_cdev_msr_turbo_states.h"
 
 int cthd_engine_dts::read_thermal_zones()
 {
@@ -65,35 +65,72 @@ int cthd_engine_dts::read_thermal_zones()
 	return THD_SUCCESS;
 }
 
-int cthd_engine_dts::read_cooling_devices()
+int cthd_engine_dts::find_cdev_power_clamp()
 {
-#ifdef TURBO_HIGH_PRIORITY
-	// Turbo sub states control including p states using MSRs
-	cthd_cdev_pstate_msr *cdevx = new cthd_cdev_pstate_msr(cdev_cnt, -1);
-	if (cdevx->update() == THD_SUCCESS) {
-			cdevs.push_back(cdevx);
-			++cdev_cnt;
+	csys_fs cdev_sysfs("/sys/class/thermal/");
+
+	for (int i=0; i<max_cool_devs; ++i) {
+		std::stringstream tcdev;
+		tcdev << "cooling_device" << i << "/type";
+		if (cdev_sysfs.exists(tcdev.str().c_str())) {
+			std::string type_str;
+			cdev_sysfs.read(tcdev.str(), type_str);
+			if (type_str == "intel_powerclamp") {
+				thd_log_debug("Found Intel power_camp: %s\n", type_str.c_str());
+
+				cthd_sysfs_cdev *cdev = new cthd_sysfs_cdev(i, "/sys/class/thermal/");
+				if (cdev->update() != THD_SUCCESS)
+					return THD_ERROR;
+				cdev->set_inc_dec_value(5);
+				cdev->set_down_adjust_control(true);
+				cdevs.push_back(cdev);
+				++cdev_cnt;
+				power_clamp_index = i;
+				break;
+			}
+		}
 	}
 
+	return THD_SUCCESS;
+}
+
+int cthd_engine_dts::read_cooling_devices()
+{
+	int _index = 0;
+
+	find_cdev_power_clamp();
+
+	// Turbo sub states control
+	cthd_cdev_msr_turbo_states *cdev_turbo = new cthd_cdev_msr_turbo_states(msr_turbo_states_index, -1);
+	if (cdev_turbo->update() == THD_SUCCESS) {
+		cdevs.push_back(cdev_turbo);
+		++cdev_cnt;
+	}
+	// P states control using MSRs
+	cthd_cdev_pstate_msr *cdevx = new cthd_cdev_pstate_msr(msr_p_states_index, -1);
+	if (cdevx->update() == THD_SUCCESS) {
+		cdevs.push_back(cdevx);
+		++cdev_cnt;
+	}
 	// Complete engage disengage turbo
-	cthd_cdev_turbo_states *cdev0 = new cthd_cdev_turbo_states(cdev_cnt, -1);
+	cthd_cdev_turbo_states *cdev0 = new cthd_cdev_turbo_states(turbo_on_off_index, -1);
 	if (cdev0->update() == THD_SUCCESS) {
 			cdevs.push_back(cdev0);
 			++cdev_cnt;
 	}
 
 	// P states control using cpufreq
-	cthd_cdev_pstates *cdev1 = new cthd_cdev_pstates(cdev_cnt, -1);
+	cthd_cdev_pstates *cdev1 = new cthd_cdev_pstates(cpufreq_index, -1);
 	if (cdev1->update() == THD_SUCCESS) {
-			cdevs.push_back(cdev1);
-			++cdev_cnt;
+		cdevs.push_back(cdev1);
+		++cdev_cnt;
 	}
 
 	// T states control
-	cthd_cdev_tstates *cdev2 = new cthd_cdev_tstates(cdev_cnt, -1);
+	cthd_cdev_tstates *cdev2 = new cthd_cdev_tstates(t_state_index, -1);
 	if (cdev2->update() == THD_SUCCESS) {
-			cdevs.push_back(cdev2);
-			++cdev_cnt;
+		cdevs.push_back(cdev2);
+		++cdev_cnt;
 	}
 
 	if (!cdev_cnt) {
@@ -111,29 +148,32 @@ int cthd_engine_dts::read_cooling_devices()
 		if (cpu_sysfs.exists(file_name_str.str())) {
 			last_cpu_update[i] = 0;
 
-			// Turbo sub states control including p states using MSRs
-			cthd_cdev_pstate_msr *cdevx = new cthd_cdev_pstate_msr(cdev_cnt, i);
+			// Turbo sub states control
+			cthd_cdev_msr_turbo_states *cdev_turbo = new cthd_cdev_msr_turbo_states(msr_turbo_states_index+max_cpu_count*(i+1), i);
+			if (cdev_turbo->update() == THD_SUCCESS) {
+					cdevs.push_back(cdev_turbo);
+					++cdev_cnt;
+			}
+			//p states using MSRs
+			cthd_cdev_pstate_msr *cdevx = new cthd_cdev_pstate_msr(msr_p_states_index+max_cpu_count*(i+1), i);
 			if (cdevx->update() == THD_SUCCESS) {
 					cdevs.push_back(cdevx);
 					++cdev_cnt;
 			}
-
 			// Complete engage disengage turbo
-			cthd_cdev_turbo_states *cdev0 = new cthd_cdev_turbo_states(cdev_cnt, i);
+			cthd_cdev_turbo_states *cdev0 = new cthd_cdev_turbo_states(turbo_on_off_index+max_cpu_count*(i+1), i);
 			if (cdev0->update() == THD_SUCCESS) {
 					cdevs.push_back(cdev0);
 					++cdev_cnt;
 			}
-
 			// P states control using cpufreq
-			cthd_cdev_pstates *cdev1 = new cthd_cdev_pstates(cdev_cnt, i);
+			cthd_cdev_pstates *cdev1 = new cthd_cdev_pstates(cpufreq_index+max_cpu_count*(i+1), i);
 			if (cdev1->update() == THD_SUCCESS) {
 					cdevs.push_back(cdev1);
 					++cdev_cnt;
 			}
-
 			// T states control
-			cthd_cdev_tstates *cdev2 = new cthd_cdev_tstates(cdev_cnt, i);
+			cthd_cdev_tstates *cdev2 = new cthd_cdev_tstates(t_state_index+max_cpu_count*(i+1), i);
 			if (cdev2->update() == THD_SUCCESS) {
 					cdevs.push_back(cdev2);
 					++cdev_cnt;
@@ -141,37 +181,6 @@ int cthd_engine_dts::read_cooling_devices()
 		}
 	}
 
-
-#else
-	cthd_cdev_pstate_msr *cdevx = new cthd_cdev_pstate_msr(cdev_cnt);
-	if (cdevx->update() == THD_SUCCESS) {
-			cdevs.push_back(cdevx);
-			++cdev_cnt;
-	}
-
-	cthd_cdev_pstates *cdev1 = new cthd_cdev_pstates(cdev_cnt);
-	if (cdev1->update() == THD_SUCCESS) {
-			cdevs.push_back(cdev1);
-			++cdev_cnt;
-	}
-	cthd_cdev_turbo_states *cdev0 = new cthd_cdev_turbo_states(cdev_cnt);
-	if (cdev0->update() == THD_SUCCESS) {
-			cdevs.push_back(cdev0);
-			++cdev_cnt;
-	}
-
-	// T states control
-	cthd_cdev_tstates *cdev2 = new cthd_cdev_tstates(cdev_cnt);
-	if (cdev2->update() == THD_SUCCESS) {
-			cdevs.push_back(cdev2);
-			++cdev_cnt;
-	}
-
-	if (!cdev_cnt) {
-		thd_log_error("Thermal DTS: No cooling devices: \n");
-		return THD_FATAL_ERROR;
-	}
-#endif
 	return THD_SUCCESS;
 }
 

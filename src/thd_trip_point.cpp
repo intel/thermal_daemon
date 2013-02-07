@@ -95,21 +95,20 @@ bool cthd_trip_point::thd_trip_point_check(unsigned int read_temp, int pref)
 	if (on != 1 && off != 1)
 		return TRUE;
 
-	int i;
+	int i, ret;
 	thd_log_debug("cdev size for this trippoint %d\n", cdevs.size());
 	if (on > 0){
 		for (i=0; i<cdevs.size(); ++i) {
 
 			cthd_cdev *cdev = cdevs[i];
 			thd_log_debug("cdev at index %d\n", cdev->thd_cdev_get_index());
-
-			if (control_type == SEQUENTIAL && (cdev->get_curr_state() >= cdev->get_max_state())) {
+			if (control_type == SEQUENTIAL && cdev->in_max_state()) {
 				thd_log_debug("Need to switch to next cdev \n");
 				// No scope of control with this cdev
 				continue;
 			}
-			cdev->thd_cdev_set_state(temp, read_temp, 1, arg);
-			if (control_type == SEQUENTIAL) {
+			ret = cdev->thd_cdev_set_state(temp, read_temp, 1, arg);
+			if (control_type == SEQUENTIAL && ret == THD_SUCCESS) {
 				// Only one cdev activation
 				break;
 			}
@@ -122,7 +121,7 @@ bool cthd_trip_point::thd_trip_point_check(unsigned int read_temp, int pref)
 			cthd_cdev *cdev = cdevs[i];
 			thd_log_debug("cdev at index %d\n", cdev->thd_cdev_get_index());
 
-			if (control_type == SEQUENTIAL && (cdev->get_curr_state() == 0)) {
+			if (control_type == SEQUENTIAL && (cdev->in_min_state())) {
 				thd_log_debug("Need to switch to next cdev \n");
 				// No scope of control with this cdev
 				continue;
@@ -143,9 +142,15 @@ void cthd_trip_point::thd_trip_point_add_cdev(cthd_cdev &cdev)
 	cdevs.push_back(&cdev);
 }
 
-void cthd_trip_point::thd_trip_point_add_cdev_index(int index)
+int cthd_trip_point::thd_trip_point_add_cdev_index(int _index)
 {
-
-	cthd_cdev *cdev = thd_engine->thd_get_cdev_at_index(index);
-	cdevs.push_back(cdev);
+	cthd_cdev *cdev = thd_engine->thd_get_cdev_at_index(_index);
+	if (cdev) {
+		cdevs.push_back(cdev);
+		return THD_SUCCESS;
+	}
+	else {
+		thd_log_warn("thd_trip_point_add_cdev_index not present %d\n", _index);
+		return THD_ERROR;
+	}
 }

@@ -62,7 +62,7 @@ public:
 	void thd_trip_point_add_cdev(cthd_cdev &cdev);
 	int thd_trip_point_value() { return temp; }
 	void thd_trip_update_set_point(unsigned int new_value) { temp = new_value; }
-	void thd_trip_point_add_cdev_index(int index);
+	int thd_trip_point_add_cdev_index(int _index);
 	void thd_trip_point_set_control_type(trip_control_type_t type) { control_type = type; }
 };
 

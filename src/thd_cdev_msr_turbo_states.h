@@ -1,6 +1,6 @@
 /*
- * thd_cdev_pstates.h: thermal cooling class interface
- *	using T states.
+ * thd_cdev_msr_turbo_states.h: thermal cooling class interface
+ *	using turbo states states.
  * Copyright (C) 2012 Intel Corporation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or
@@ -21,31 +21,32 @@
  * Author Name <Srinivas.Pandruvada@linux.intel.com>
  *
  */
-#ifndef THD_CDEV_PSTATE_MSR_H_
-#define THD_CDEV_PSTATE_MSR_H_
+#ifndef THD_CDEV_MSR_TURBO_STATES_H_
+#define THD_CDEV_MSR_TURBO_STATES_H_
 
-#include "thd_cdev.h"
-#include "thd_msr.h"
+#include "thd_cdev_msr_pstates.h"
 
-class cthd_cdev_pstate_msr : public cthd_cdev
+class cthd_cdev_msr_turbo_states : public cthd_cdev_pstate_msr
 {
-protected:
-	cthd_msr			msr;
-	int cpu_start_index;
-	int cpu_end_index;
-	std::string			last_governor;
-	int	highest_freq_state;
-	int lowest_freq_state;
-	int control_begin();
-	int control_end();
-	int cpu_index;
-	int	max_state;
+
 public:
-	cthd_cdev_pstate_msr(unsigned int _index, int _cpu_index) : cthd_cdev(_index, "/sys/devices/system/cpu/"), cpu_index(_cpu_index), max_state(0) {}
-	int init();
-	void set_curr_state(int state, int arg);
-	int get_max_state();
-	virtual int update();
+	cthd_cdev_msr_turbo_states(unsigned int _index, int _cpu_index) : cthd_cdev_pstate_msr(_index, _cpu_index)
+	{
+
+	}
+
+	int update()
+	{
+		highest_freq_state = msr.get_max_turbo_freq();
+		lowest_freq_state = msr.get_max_freq();
+		thd_log_debug("cthd_cdev_msr_turbo_states cpu_index %d min %x max %x\n", cpu_index, lowest_freq_state, highest_freq_state);
+
+		max_state = highest_freq_state - lowest_freq_state ;
+
+		return init();
+	}
 };
 
-#endif /* THD_CDEV_TSTATES_H_ */
+
+
+#endif /* THD_CDEV_MSR_TURBO_STATES_H_ */

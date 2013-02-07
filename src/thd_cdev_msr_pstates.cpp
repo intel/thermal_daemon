@@ -116,7 +116,7 @@ int cthd_cdev_pstate_msr::control_end()
 void cthd_cdev_pstate_msr::set_curr_state(int state, int arg)
 {
 	if (state == 1) {
-		thd_log_debug("CTRL begin..\n");
+		thd_log_debug("CTRL begin.. cpu_index = %d\n", cpu_index);
 		control_begin();
 	}
 
@@ -152,7 +152,7 @@ int cthd_cdev_pstate_msr::update()
 {
 	highest_freq_state = msr.get_max_freq();
 	lowest_freq_state = msr.get_min_freq();
-
+	thd_log_debug("cthd_cdev_pstate_msr min %x max %x\n", lowest_freq_state, highest_freq_state);
 	max_state = highest_freq_state - lowest_freq_state ;
 
 	return init();

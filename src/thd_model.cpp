@@ -65,10 +65,14 @@ unsigned int cthd_model::update_set_point()
 		arc_len = delta_x * tan(radians);
 		_setpoint = max_temp - (unsigned int)(arc_len - delta_y);
 		thd_log_info("** set point  x:%g y:%g arc_len:%g set_point %u\n", delta_x, delta_y, arc_len, _setpoint);
-		if (abs(set_point - _setpoint) > max_compensation)
+		if ((_setpoint < 0) || (abs(set_point - _setpoint) > max_compensation))
 			set_point -= max_compensation;
 		else
 			set_point = _setpoint;
+
+		if (set_point < hot_zone)
+			set_point = hot_zone;
+
 		current_angle += angle_increment;
 	}
 
@@ -92,6 +96,7 @@ void cthd_model::add_sample(unsigned int temperature)
 		if (_set_point > set_point) {
 			set_point = _set_point;
 			updated_set_point = true;
+			current_angle = 0;
 		}
 	}
 	if (temperature >= max_temp) {
