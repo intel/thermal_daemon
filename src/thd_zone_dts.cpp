@@ -84,7 +84,7 @@ int cthd_zone_dts::read_trip_points()
 	0xFF);
 		trip_pt.thd_trip_point_set_control_type(SEQUENTIAL);
 		trip_pt.thd_trip_point_add_cdev_index(thd_dts_engine->msr_turbo_states_index);
-		trip_pt.thd_trip_point_add_cdev_index(thd_dts_engine->msr_p_states_index);
+		trip_pt.thd_trip_point_add_cdev_index(thd_dts_engine->msr_p_states_index_limited);
 		trip_pt.thd_trip_point_add_cdev_index(thd_dts_engine->turbo_on_off_index);
 #ifdef CPU_FREQ
 		trip_pt.thd_trip_point_add_cdev_index(thd_dts_engine->cpufreq_index);
@@ -93,6 +93,7 @@ int cthd_zone_dts::read_trip_points()
 		{
 			trip_pt.thd_trip_point_add_cdev_index(thd_dts_engine->power_clamp_index);
 		}
+		trip_pt.thd_trip_point_add_cdev_index(thd_dts_engine->msr_p_states_index);
 		trip_pt.thd_trip_point_add_cdev_index(thd_dts_engine->t_state_index);
 		trip_points.push_back(trip_pt);
 		trip_point_cnt++;
@@ -112,7 +113,7 @@ int cthd_zone_dts::read_trip_points()
 				trip_pt.thd_trip_point_set_control_type(SEQUENTIAL);
 				trip_pt.thd_trip_point_add_cdev_index(thd_dts_engine
 	->msr_turbo_states_index + thd_dts_engine->max_cpu_count *(cnt + 1));
-				trip_pt.thd_trip_point_add_cdev_index(thd_dts_engine->msr_p_states_index +
+				trip_pt.thd_trip_point_add_cdev_index(thd_dts_engine->msr_p_states_index_limited +
 	thd_dts_engine->max_cpu_count *(cnt + 1));
 				trip_pt.thd_trip_point_add_cdev_index(thd_dts_engine->turbo_on_off_index +
 	thd_dts_engine->max_cpu_count *(cnt + 1));
@@ -124,6 +125,8 @@ int cthd_zone_dts::read_trip_points()
 				{
 					trip_pt.thd_trip_point_add_cdev_index(thd_dts_engine->power_clamp_index);
 				}
+				trip_pt.thd_trip_point_add_cdev_index(thd_dts_engine->msr_p_states_index +
+	thd_dts_engine->max_cpu_count *(cnt + 1));
 				trip_pt.thd_trip_point_add_cdev_index(thd_dts_engine->t_state_index +
 	thd_dts_engine->max_cpu_count *(cnt + 1));
 				trip_points.push_back(trip_pt);

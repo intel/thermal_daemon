@@ -50,9 +50,10 @@ public:
 
 	static const int msr_turbo_states_index = soft_cdev_start_index;
 	static const int msr_p_states_index = soft_cdev_start_index + 1;
-	static const int turbo_on_off_index = soft_cdev_start_index + 2;
-	static const int cpufreq_index = soft_cdev_start_index + 3;
-	static const int t_state_index = soft_cdev_start_index + 4;
+	static const int msr_p_states_index_limited = soft_cdev_start_index + 2;
+	static const int turbo_on_off_index = soft_cdev_start_index + 3;
+	static const int cpufreq_index = soft_cdev_start_index + 4;
+	static const int t_state_index = soft_cdev_start_index + 5;
 	int power_clamp_index; // dynamic based on thermal cdev
 };
 

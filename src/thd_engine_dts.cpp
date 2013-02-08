@@ -31,6 +31,7 @@
 #include "thd_cdev_turbo_states.h"
 #include "thd_cdev_therm_sys_fs.h"
 #include "thd_cdev_msr_turbo_states.h"
+#include "thd_cdev_msr_pstates_limited.h"
 
 int cthd_engine_dts::read_thermal_zones()
 {
@@ -116,6 +117,14 @@ int cthd_engine_dts::read_cooling_devices()
 	if(cdev_turbo->update() == THD_SUCCESS)
 	{
 		cdevs.push_back(cdev_turbo);
+		++cdev_cnt;
+	}
+	// Instead of going to min limit to half
+	cthd_cdev_pstate_msr_limited *cdevxx = new cthd_cdev_pstate_msr_limited(msr_p_states_index_limited,  -
+	1);
+	if(cdevxx->update() == THD_SUCCESS)
+	{
+		cdevs.push_back(cdevxx);
 		++cdev_cnt;
 	}
 	// P states control using MSRs
