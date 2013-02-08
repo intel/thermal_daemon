@@ -33,7 +33,8 @@ int cthd_cdev_pstate_msr::init()
 {
 	thd_log_debug("pstate msr CPU present \n");
 	// Get number of CPUs
-	if (cdev_sysfs.exists("present")) {
+	if(cdev_sysfs.exists("present"))
+	{
 		std::string count_str;
 		size_t p0 = 0, p1;
 
@@ -41,14 +42,17 @@ int cthd_cdev_pstate_msr::init()
 		p1 = count_str.find_first_of("-", p0);
 		std::string token1 = count_str.substr(p0, p1 - p0);
 		std::istringstream(token1) >> cpu_start_index;
-		std::string token2 = count_str.substr(p1+1);
+		std::string token2 = count_str.substr(p1 + 1);
 		std::istringstream(token2) >> cpu_end_index;
-	} else {
+	}
+	else
+	{
 		cpu_start_index = 0;
 		cpu_end_index = 0;
 		return THD_ERROR;
 	}
-	thd_log_debug("pstate msr CPU present %d-%d\n", cpu_start_index, cpu_end_index);
+	thd_log_debug("pstate msr CPU present %d-%d\n", cpu_start_index, cpu_end_index)
+	;
 
 	return THD_SUCCESS;
 }
@@ -57,30 +61,36 @@ int cthd_cdev_pstate_msr::control_begin()
 {
 	std::string governor;
 
-	if (cpu_index == -1) {
+	if(cpu_index ==  - 1)
+	{
 
-		if (cdev_sysfs.exists("cpu0/cpufreq/scaling_governor"))
+		if(cdev_sysfs.exists("cpu0/cpufreq/scaling_governor"))
 			cdev_sysfs.read("cpu0/cpufreq/scaling_governor", governor);
 
-		if (governor == "userspace")
+		if(governor == "userspace")
 			return THD_SUCCESS;
 
-		if (cdev_sysfs.exists("cpu0/cpufreq/scaling_governor"))
+		if(cdev_sysfs.exists("cpu0/cpufreq/scaling_governor"))
 			cdev_sysfs.read("cpu0/cpufreq/scaling_governor", last_governor);
 
-		for (int i=cpu_start_index; i<=cpu_end_index; ++i) {
+		for(int i = cpu_start_index; i <= cpu_end_index; ++i)
+		{
 			std::stringstream str;
 			str << "cpu" << i << "/cpufreq/scaling_governor";
-			if (cdev_sysfs.exists(str.str())) {
+			if(cdev_sysfs.exists(str.str()))
+			{
 				cdev_sysfs.write(str.str(), "userspace");
 			}
 		}
-	} else {
+	}
+	else
+	{
 		std::stringstream str;
 		str << "cpu" << cpu_index << "/cpufreq/scaling_governor";
-		if (cdev_sysfs.exists(str.str())) {
+		if(cdev_sysfs.exists(str.str()))
+		{
 			cdev_sysfs.read(str.str(), governor);
-			if (governor == "userspace")
+			if(governor == "userspace")
 				return THD_SUCCESS;
 			cdev_sysfs.read(str.str(), last_governor);
 
@@ -94,18 +104,24 @@ int cthd_cdev_pstate_msr::control_begin()
 
 int cthd_cdev_pstate_msr::control_end()
 {
-	if (cpu_index == -1) {
-		for (int i=cpu_start_index; i<=cpu_end_index; ++i) {
+	if(cpu_index ==  - 1)
+	{
+		for(int i = cpu_start_index; i <= cpu_end_index; ++i)
+		{
 			std::stringstream str;
 			str << "cpu" << i << "/cpufreq/scaling_governor";
-			if (cdev_sysfs.exists(str.str())) {
+			if(cdev_sysfs.exists(str.str()))
+			{
 				cdev_sysfs.write(str.str(), last_governor);
 			}
 		}
-	} else {
+	}
+	else
+	{
 		std::stringstream str;
 		str << "cpu" << cpu_index << "/cpufreq/scaling_governor";
-		if (cdev_sysfs.exists(str.str())) {
+		if(cdev_sysfs.exists(str.str()))
+		{
 			cdev_sysfs.write(str.str(), last_governor);
 		}
 	}
@@ -115,28 +131,34 @@ int cthd_cdev_pstate_msr::control_end()
 
 void cthd_cdev_pstate_msr::set_curr_state(int state, int arg)
 {
-	if (state == 1) {
+	if(state == 1)
+	{
 		thd_log_debug("CTRL begin.. cpu_index = %d\n", cpu_index);
 		control_begin();
 	}
 
-	if (cpu_index == -1) {
+	if(cpu_index ==  - 1)
+	{
 		int cpus = msr.get_no_cpus();
-		for (int i=0; i<cpus; ++i) {
-			if (thd_engine->apply_cpu_operation(i) == false)
+		for(int i = 0; i < cpus; ++i)
+		{
+			if(thd_engine->apply_cpu_operation(i) == false)
 				continue;
 			msr.set_freq_state_per_cpu(i, highest_freq_state - state);
 			curr_state = state;
 		}
 	}
-	else {
-		if (thd_engine->apply_cpu_operation(cpu_index)) {
+	else
+	{
+		if(thd_engine->apply_cpu_operation(cpu_index))
+		{
 			msr.set_freq_state_per_cpu(cpu_index, highest_freq_state - state);
 			curr_state = state;
 		}
 	}
 
-	if (state == 0) {
+	if(state == 0)
+	{
 		thd_log_debug("CTRL end..\n");
 		control_end();
 	}
@@ -152,8 +174,9 @@ int cthd_cdev_pstate_msr::update()
 {
 	highest_freq_state = msr.get_max_freq();
 	lowest_freq_state = msr.get_min_freq();
-	thd_log_debug("cthd_cdev_pstate_msr min %x max %x\n", lowest_freq_state, highest_freq_state);
-	max_state = highest_freq_state - lowest_freq_state ;
+	thd_log_debug("cthd_cdev_pstate_msr min %x max %x\n", lowest_freq_state,
+	highest_freq_state);
+	max_state = highest_freq_state - lowest_freq_state;
 
 	return init();
 }

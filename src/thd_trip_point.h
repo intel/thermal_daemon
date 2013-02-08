@@ -32,38 +32,46 @@
 
 #include <vector>
 
-typedef enum {
-	P_T_STATE,
-	CRITICAL,
-	HOT,
-	PASSIVE,
-	ACTIVE,
-	INVALID_TRIP_TYPE
-}trip_point_type_t;
+typedef enum
+{
+	P_T_STATE, CRITICAL, HOT, PASSIVE, ACTIVE, INVALID_TRIP_TYPE
+} trip_point_type_t;
 
-typedef enum {
-	PARALLEL, // All associated cdevs are activated together
-	SEQUENTIAL // one after other once the previous cdev reaches its max state
-}trip_control_type_t;
+typedef enum
+{
+	PARALLEL,  // All associated cdevs are activated together
+	SEQUENTIAL  // one after other once the previous cdev reaches its max state
+} trip_control_type_t;
 
-class cthd_trip_point {
+class cthd_trip_point
+{
 private:
-	int					index;
-	trip_point_type_t	type;
-	unsigned int 		temp;
-	unsigned int 		hyst;
-	std::vector <cthd_cdev *> cdevs;
+	int index;
+	trip_point_type_t type;
+	unsigned int temp;
+	unsigned int hyst;
+	std::vector < cthd_cdev * > cdevs;
 	trip_control_type_t control_type;
-	int 				arg;
+	int arg;
 
 public:
-	cthd_trip_point(int _index, trip_point_type_t _type, unsigned int _temp, unsigned int _hyst, int arg);
+	cthd_trip_point(int _index, trip_point_type_t _type, unsigned int _temp,
+	unsigned int _hyst, int arg);
 	bool thd_trip_point_check(unsigned int read_temp, int pref);
 	void thd_trip_point_add_cdev(cthd_cdev &cdev);
-	int thd_trip_point_value() { return temp; }
-	void thd_trip_update_set_point(unsigned int new_value) { temp = new_value; }
+	int thd_trip_point_value()
+	{
+		return temp;
+	}
+	void thd_trip_update_set_point(unsigned int new_value)
+	{
+		temp = new_value;
+	}
 	int thd_trip_point_add_cdev_index(int _index);
-	void thd_trip_point_set_control_type(trip_control_type_t type) { control_type = type; }
+	void thd_trip_point_set_control_type(trip_control_type_t type)
+	{
+		control_type = type;
+	}
 };
 
 #endif

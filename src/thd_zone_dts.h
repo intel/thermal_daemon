@@ -33,7 +33,8 @@
 #include "thd_model.h"
 #include "thd_topology.h"
 
-class cthd_zone_dts :  public cthd_zone {
+class cthd_zone_dts: public cthd_zone
+{
 protected:
 	csys_fs dts_sysfs;
 	int critical_temp;
@@ -47,12 +48,15 @@ protected:
 
 	cthd_model thd_model;
 
-	int	init();
+	int init();
 	int update_trip_points();
-	int cpu_to_cdev_index(int _index) {return (4+_index*4);}
+	int cpu_to_cdev_index(int _index)
+	{
+		return (4+_index * 4);
+	}
 
 public:
-	static const int max_dts_sensors = sizeof(unsigned int) * 8;
+	static const int max_dts_sensors = sizeof(unsigned int) *8;
 	static const int def_hystersis = 0;
 	cthd_zone_dts(int count, std::string path);
 

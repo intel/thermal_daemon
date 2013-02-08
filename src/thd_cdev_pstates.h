@@ -31,21 +31,22 @@
 #include "thd_msr.h"
 
 
-class cthd_cdev_pstates : public cthd_cdev
+class cthd_cdev_pstates: public cthd_cdev
 {
 private:
 
-	int					cpu_start_index;
-	int					cpu_end_index;
-	std::vector<int> 	cpufreqs;
-	int 				pstate_active_freq_index;
-	int					turbo_state;
-	cthd_msr			msr;
-	std::string			last_governor;
-	int 				cpu_index;
+	int cpu_start_index;
+	int cpu_end_index;
+	std::vector < int > cpufreqs;
+	int pstate_active_freq_index;
+	int turbo_state;
+	cthd_msr msr;
+	std::string last_governor;
+	int cpu_index;
 
 public:
-	cthd_cdev_pstates(unsigned int _index, int _cpu_index) : cthd_cdev(_index, "/sys/devices/system/cpu/"), cpu_index(_cpu_index) {}
+	cthd_cdev_pstates(unsigned int _index, int _cpu_index): cthd_cdev(_index, 
+	"/sys/devices/system/cpu/"), cpu_index(_cpu_index){}
 
 	int init();
 	int control_begin();

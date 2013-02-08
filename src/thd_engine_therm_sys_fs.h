@@ -31,12 +31,12 @@
 class cthd_engine_therm_sysfs: public cthd_engine
 {
 private:
-	csys_fs 	thd_sysfs;
-	bool		parser_init_done;
+	csys_fs thd_sysfs;
+	bool parser_init_done;
 
-	void		parser_init();
-	int		read_xml_thermal_zones();
-	int		read_xml_cooling_device();
+	void parser_init();
+	int read_xml_thermal_zones();
+	int read_xml_cooling_device();
 
 public:
 	cthd_engine_therm_sysfs();

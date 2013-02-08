@@ -25,11 +25,8 @@
 #include "thd_zone.h"
 
 
-cthd_zone::cthd_zone(int _index, std::string control_path)
-	: index(_index),
-	  zone_sysfs(control_path.c_str()),
-	  zone_temp(0),
-	  zone_active(false)
+cthd_zone::cthd_zone(int _index, std::string control_path): index(_index),
+	zone_sysfs(control_path.c_str()), zone_temp(0), zone_active(false)
 {
 	thd_log_debug("Added zone index:%d \n", index);
 }
@@ -40,8 +37,10 @@ unsigned int cthd_zone::read_zone_temp()
 	std::string buffer;
 
 	thd_log_debug("read_zone_temp \n");
-	if (!sysfs.exists(temperature_sysfs_path)) {
-		thd_log_warn("read_zone_temp: No temp sysfs for reading temp: %s\n", temperature_sysfs_path.c_str());
+	if(!sysfs.exists(temperature_sysfs_path))
+	{
+		thd_log_warn("read_zone_temp: No temp sysfs for reading temp: %s\n",
+	temperature_sysfs_path.c_str());
 		return zone_temp;
 	}
 	sysfs.read(temperature_sysfs_path, buffer);
@@ -57,8 +56,9 @@ void cthd_zone::thermal_zone_temp_change()
 	cthd_preference thd_pref;
 
 	count = trip_points.size();
-	for (i=count -1; i >= 0; --i)	{
-		cthd_trip_point& trip_point = trip_points[i];
+	for(i = count - 1; i >= 0; --i)
+	{
+		cthd_trip_point &trip_point = trip_points[i];
 		trip_point.thd_trip_point_check(zone_temp, thd_pref.get_preference());
 	}
 }
@@ -71,12 +71,14 @@ void cthd_zone::update_zone_preference()
 
 	thd_log_debug("update_zone_preference\n");
 	count = trip_points.size();
-	for (i=count -1; i >= 0; --i)	{
+	for(i = count - 1; i >= 0; --i)
+	{
 		cthd_trip_point trip_point = trip_points[i];
 		trip_point.thd_trip_point_check(0, thd_pref.get_old_preference());
 	}
 
-	for (i=count -1; i >= 0; --i)	{
+	for(i = count - 1; i >= 0; --i)
+	{
 		cthd_trip_point trip_point = trip_points[i];
 		trip_point.thd_trip_point_check(read_zone_temp(), thd_pref.get_preference());
 	}
@@ -87,11 +89,11 @@ int cthd_zone::zone_update()
 	int ret;
 
 	ret = read_trip_points();
-	if (ret != THD_SUCCESS)
+	if(ret != THD_SUCCESS)
 		return THD_ERROR;
 
 	ret = read_cdev_trip_points();
-	if (ret != THD_SUCCESS)
+	if(ret != THD_SUCCESS)
 		return THD_ERROR;
 
 	set_temp_sensor_path();
@@ -101,7 +103,8 @@ int cthd_zone::zone_update()
 
 void cthd_zone::zone_temperature_notification(int type, int data)
 {
-	if (zone_active) {
+	if(zone_active)
+	{
 		read_zone_temp();
 		thermal_zone_temp_change();
 	}

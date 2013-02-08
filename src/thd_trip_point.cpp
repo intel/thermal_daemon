@@ -27,44 +27,52 @@
 #include "thd_trip_point.h"
 #include "thd_engine.h"
 
-cthd_trip_point::cthd_trip_point(int _index, trip_point_type_t _type, unsigned int _temp, unsigned int _hyst, int _arg)
-		: index(_index), type(_type), temp(_temp), hyst(_hyst), control_type(PARALLEL), arg(_arg) {
+cthd_trip_point::cthd_trip_point(int _index, trip_point_type_t _type, unsigned
+	int _temp, unsigned int _hyst, int _arg): index(_index), type(_type), temp
+	(_temp), hyst(_hyst), control_type(PARALLEL), arg(_arg)
+{
 	thd_log_debug("Add trip pt %d:%d:%d\n", type, temp, hyst);
 }
 
 bool cthd_trip_point::thd_trip_point_check(unsigned int read_temp, int pref)
 {
-	int on = -1;
-	int off = -1;
-	int pid_state = -1;
+	int on =  - 1;
+	int off =  - 1;
+	int pid_state =  - 1;
 	bool apply = false;
 
-	if (read_temp == 0) {
+	if(read_temp == 0)
+	{
 		thd_log_warn("TEMP == 0 pref: %d\n", pref);
 	}
 
-	if (type == CRITICAL) {
-		if (read_temp >= temp) {
+	if(type == CRITICAL)
+	{
+		if(read_temp >= temp)
+		{
 			thd_log_warn("critical temp reached \n");
 			sync();
 			reboot(RB_POWER_OFF);
 		}
 	}
 
-	switch (pref) {
+	switch(pref)
+	{
 		case PREF_DISABLED:
 			return FALSE;
 			break;
 
 		case PREF_PERFORMANCE:
-			if (type == ACTIVE) {
+			if(type == ACTIVE)
+			{
 				apply = true;
 				thd_log_debug("Active Trip point applicable \n");
 			}
 			break;
 
 		case PREF_ENERGY_CONSERVE:
-			if (type == PASSIVE) {
+			if(type == PASSIVE)
+			{
 				apply = true;
 				thd_log_debug("Passive Trip point applicable \n");
 			}
@@ -75,59 +83,72 @@ bool cthd_trip_point::thd_trip_point_check(unsigned int read_temp, int pref)
 	}
 
 	// P state control are always affective
-	if (type == P_T_STATE) {
+	if(type == P_T_STATE)
+	{
 		apply = true;
 		thd_log_debug("P T states Trip point applicable \n");
 	}
 
-	if (apply) {
-		if (read_temp >= temp) {
+	if(apply)
+	{
+		if(read_temp >= temp)
+		{
 			thd_log_debug("Trip point applicable >  %d:%d \n", index, temp);
 			on = 1;
 		}
-		else if ((read_temp + hyst) < temp) {
+		else if((read_temp + hyst) < temp)
+		{
 			thd_log_debug("Trip point applicable =<  %d:%d \n", index, temp);
 			off = 1;
 		}
-	} else
+	}
+	else
 		return FALSE;
 
-	if (on != 1 && off != 1)
+	if(on != 1 && off != 1)
 		return TRUE;
 
 	int i, ret;
 	thd_log_debug("cdev size for this trippoint %d\n", cdevs.size());
-	if (on > 0){
-		for (i=0; i<cdevs.size(); ++i) {
+	if(on > 0)
+	{
+		for(i = 0; i < cdevs.size(); ++i)
+		{
 
 			cthd_cdev *cdev = cdevs[i];
 			thd_log_debug("cdev at index %d\n", cdev->thd_cdev_get_index());
-			if (control_type == SEQUENTIAL && cdev->in_max_state()) {
+			if(control_type == SEQUENTIAL && cdev->in_max_state())
+			{
 				thd_log_debug("Need to switch to next cdev \n");
 				// No scope of control with this cdev
 				continue;
 			}
 			ret = cdev->thd_cdev_set_state(temp, read_temp, 1, arg);
-			if (control_type == SEQUENTIAL && ret == THD_SUCCESS) {
+			if(control_type == SEQUENTIAL && ret == THD_SUCCESS)
+			{
 				// Only one cdev activation
 				break;
 			}
 		}
 	}
 
-	if (off > 0){
-		for (i=cdevs.size()-1; i>=0; --i) {
+	if(off > 0)
+	{
+		for(i = cdevs.size() - 1; i >= 0; --i)
+		{
 
 			cthd_cdev *cdev = cdevs[i];
 			thd_log_debug("cdev at index %d\n", cdev->thd_cdev_get_index());
 
-			if (control_type == SEQUENTIAL && (cdev->in_min_state())) {
+			if(control_type == SEQUENTIAL && (cdev->in_min_state()))
+			{
 				thd_log_debug("Need to switch to next cdev \n");
 				// No scope of control with this cdev
 				continue;
 			}
 			cdev->thd_cdev_set_state(temp, read_temp, 0, arg);
-			if (control_type == SEQUENTIAL) {
+			if(control_type == SEQUENTIAL)
+			{
 				// Only one cdev activation
 				break;
 			}
@@ -145,11 +166,13 @@ void cthd_trip_point::thd_trip_point_add_cdev(cthd_cdev &cdev)
 int cthd_trip_point::thd_trip_point_add_cdev_index(int _index)
 {
 	cthd_cdev *cdev = thd_engine->thd_get_cdev_at_index(_index);
-	if (cdev) {
+	if(cdev)
+	{
 		cdevs.push_back(cdev);
 		return THD_SUCCESS;
 	}
-	else {
+	else
+	{
 		thd_log_warn("thd_trip_point_add_cdev_index not present %d\n", _index);
 		return THD_ERROR;
 	}

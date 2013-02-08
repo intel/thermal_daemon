@@ -29,17 +29,21 @@
 
 void cthd_cdev_tstates::set_curr_state(int state, int arg)
 {
-	if (cpu_index == -1) {
+	if(cpu_index ==  - 1)
+	{
 		int cpus = msr.get_no_cpus();
-		for (int i=0; i<cpus; ++i) {
-			if (thd_engine->apply_cpu_operation(i) == false)
+		for(int i = 0; i < cpus; ++i)
+		{
+			if(thd_engine->apply_cpu_operation(i) == false)
 				continue;
 			msr.set_clock_mod_duty_cycle_per_cpu(i, state);
 			curr_state = state;
 		}
 	}
-	else {
-		if (thd_engine->apply_cpu_operation(cpu_index) == true) {
+	else
+	{
+		if(thd_engine->apply_cpu_operation(cpu_index) == true)
+		{
 			msr.set_clock_mod_duty_cycle_per_cpu(cpu_index, state);
 			curr_state = state;
 		}
@@ -50,5 +54,3 @@ int cthd_cdev_tstates::get_max_state()
 {
 	return t_states_cnt;
 }
-
-

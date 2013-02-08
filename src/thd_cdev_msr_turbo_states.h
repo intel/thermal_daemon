@@ -26,12 +26,12 @@
 
 #include "thd_cdev_msr_pstates.h"
 
-class cthd_cdev_msr_turbo_states : public cthd_cdev_pstate_msr
+class cthd_cdev_msr_turbo_states: public cthd_cdev_pstate_msr
 {
 
 public:
-	cthd_cdev_msr_turbo_states(unsigned int _index, int _cpu_index) : cthd_cdev_pstate_msr(_index, _cpu_index)
-	{
+	cthd_cdev_msr_turbo_states(unsigned int _index, int _cpu_index):
+	cthd_cdev_pstate_msr(_index, _cpu_index){
 
 	}
 
@@ -39,9 +39,10 @@ public:
 	{
 		highest_freq_state = msr.get_max_turbo_freq();
 		lowest_freq_state = msr.get_max_freq();
-		thd_log_debug("cthd_cdev_msr_turbo_states cpu_index %d min %x max %x\n", cpu_index, lowest_freq_state, highest_freq_state);
+		thd_log_debug("cthd_cdev_msr_turbo_states cpu_index %d min %x max %x\n",
+	cpu_index, lowest_freq_state, highest_freq_state);
 
-		max_state = highest_freq_state - lowest_freq_state ;
+		max_state = highest_freq_state - lowest_freq_state;
 
 		return init();
 	}

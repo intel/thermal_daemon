@@ -68,4 +68,3 @@ extern cthd_engine *thd_engine;
 extern int thd_poll_interval;
 
 #endif
-

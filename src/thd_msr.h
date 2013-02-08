@@ -27,7 +27,8 @@
 #include "thd_common.h"
 #include "thd_sys_fs.h"
 
-class cthd_msr {
+class cthd_msr
+{
 private:
 	csys_fs msr_sysfs;
 	int no_of_cpus;
@@ -43,7 +44,7 @@ public:
 	int enable_turbo();
 	int disable_turbo();
 
-	int	get_clock_mod_duty_cycle();
+	int get_clock_mod_duty_cycle();
 	int set_clock_mod_duty_cycle(int state);
 
 	unsigned char get_min_freq();
@@ -71,4 +72,3 @@ public:
 };
 
 #endif
-

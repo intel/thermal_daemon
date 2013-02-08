@@ -27,16 +27,17 @@
 #include "thd_cdev.h"
 #include "thd_msr.h"
 
-class cthd_cdev_tstates : public cthd_cdev
+class cthd_cdev_tstates: public cthd_cdev
 {
 private:
-	int 				t_state_index;
-	cthd_msr			msr;
-	int					cpu_index;
+	int t_state_index;
+	cthd_msr msr;
+	int cpu_index;
 
 public:
 	static const int t_states_cnt = 7;
-	cthd_cdev_tstates(unsigned int _index, int _cpu_index) : cthd_cdev(_index, ""), cpu_index(_cpu_index) {}
+	cthd_cdev_tstates(unsigned int _index, int _cpu_index): cthd_cdev(_index, ""),
+	cpu_index(_cpu_index){}
 
 	void set_curr_state(int state, int arg);
 	int get_max_state();

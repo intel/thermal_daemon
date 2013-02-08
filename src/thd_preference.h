@@ -32,25 +32,24 @@
 #include <iostream>
 #include <fstream>
 
-enum {
-	PREF_BALANCED,
-	PREF_PERFORMANCE,
-	PREF_ENERGY_CONSERVE,
-	PREF_DISABLED
+enum
+{
+	PREF_BALANCED, PREF_PERFORMANCE, PREF_ENERGY_CONSERVE, PREF_DISABLED
 };
 
-class cthd_preference {
+class cthd_preference
+{
 private:
 	int preference;
 	int old_preference;
-	int string_pref_to_int(std::string& pref_str);
+	int string_pref_to_int(std::string &pref_str);
 	std::string int_pref_to_string(int pref);
 
 public:
 	cthd_preference();
 	bool set_preference(const char *pref);
 	std::string get_preference_str();
-	const char* get_preference_cstr();
+	const char *get_preference_cstr();
 	int get_preference();
 	int get_old_preference();
 

@@ -28,14 +28,16 @@
 
 void cthd_cdev_turbo_states::set_curr_state(int state, int arg)
 {
-	if (state == 1) {
-		if (cpu_index == -1)
+	if(state == 1)
+	{
+		if(cpu_index ==  - 1)
 			msr.disable_turbo();
 		else
 			msr.disable_turbo_per_cpu(cpu_index);
 	}
-	else {
-		if (cpu_index == -1)
+	else
+	{
+		if(cpu_index ==  - 1)
 			msr.enable_turbo();
 		else
 			msr.enable_turbo_per_cpu(cpu_index);
@@ -47,5 +49,3 @@ int cthd_cdev_turbo_states::get_max_state()
 {
 	return turbo_states_cnt;
 }
-
-

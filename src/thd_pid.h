@@ -32,8 +32,9 @@
 #define DWATT_HIGH (.95)
 #define DWATT_LOW  (.01)
 
-typedef struct {
-	double kp;  /* Controller gain from Dialog Box */
+typedef struct
+{
+	double kp; /* Controller gain from Dialog Box */
 	double ki; /* Time-constant for I action from Dialog Box */
 	double kd; /* Time-constant for D action from Dialog Box */
 	double ts;
@@ -51,35 +52,36 @@ typedef struct {
 
 	double t_target;
 	double y_k;
-}pid_params_t;
+} pid_params_t;
 
-class cthd_pid {
+class cthd_pid
+{
 
 private:
-	csys_fs 		cdev_sysfs;
-	int		 		last_time;
-	float 			err_sum, last_err;
-	float 			kp, ki, kd;
-	std::vector <int> 	cdev_indexes;
+	csys_fs cdev_sysfs;
+	int last_time;
+	float err_sum, last_err;
+	float kp, ki, kd;
+	std::vector < int > cdev_indexes;
 
-	int				cal_set_pt_active;
-	int				last_temp;
-	int				stable_cnt;
-	int				cal_high_temp;
-	int				cal_low_temp;
+	int cal_set_pt_active;
+	int last_temp;
+	int stable_cnt;
+	int cal_high_temp;
+	int cal_low_temp;
 
 
 	pthread_attr_t crazy_thread_attr;
-	pthread_t 	crazy_running_thread;
-	bool		calibrated;
-	std::string	sensor_path;
+	pthread_t crazy_running_thread;
+	bool calibrated;
+	std::string sensor_path;
 
-	int 		getMilliCount();
+	int getMilliCount();
 	unsigned int read_zone_temp();
-	void	inc_cdevs_state();
-	void	dec_cdevs_state();
-	void	cdev_set_state(int state);
-	int  activate_cdev(int temp, int set_point);
+	void inc_cdevs_state();
+	void dec_cdevs_state();
+	void cdev_set_state(int state);
+	int activate_cdev(int temp, int set_point);
 
 public:
 	static const int calibration_set_point = 75000;
@@ -91,7 +93,7 @@ public:
 	void set_pid_params(float Kp, float Ki, float Kd);
 	void calibrate();
 	int update_pid(int temp, int setpoint);
-	void 		close_loop_tune();
+	void close_loop_tune();
 
 	void add_sensor_path(std::string path);
 	void add_cdev_index(int index);
@@ -99,13 +101,13 @@ public:
 	void print_pid_constants();
 
 	//
-		double xk_1;	// Previous value of xk
-		double lpf, lpf_1, lpf_2;
-		static const int Ts = 5;
-		pid_params_t p_param;
-		void init_pid_controller();
-		double get_pid_output(double set_point, double xk, int state);
-		void open_loop_tune();
+	double xk_1; // Previous value of xk
+	double lpf, lpf_1, lpf_2;
+	static const int Ts = 5;
+	pid_params_t p_param;
+	void init_pid_controller();
+	double get_pid_output(double set_point, double xk, int state);
+	void open_loop_tune();
 	//
 
 };

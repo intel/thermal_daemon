@@ -25,10 +25,11 @@
 #include "thermald.h"
 #include <vector>
 
-class cthd_model {
+class cthd_model
+{
 
 private:
-	static const int def_max_temperature = 100*1000;
+	static const int def_max_temperature = 100 * 1000;
 	static const unsigned int safety_margin = 0; //1*1000;
 	static const int angle_increment = 2;
 	static const int def_setpoint_delay_cnt = 3;
@@ -61,6 +62,12 @@ public:
 
 	void add_sample(unsigned int temperature);
 	void set_max_temperature(unsigned int temp);
-	unsigned int get_set_point() { return set_point; }
-	bool is_set_point_reached() { return (set_point_reached || updated_set_point); };
+	unsigned int get_set_point()
+	{
+		return set_point;
+	}
+	bool is_set_point_reached()
+	{
+		return (set_point_reached || updated_set_point);
+	};
 };

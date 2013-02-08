@@ -33,39 +33,48 @@
 
 #include <vector>
 
-typedef struct {
+typedef struct
+{
 	int zone;
 	int type;
 	unsigned int data;
-}thermal_zone_notify_t;
+} thermal_zone_notify_t;
 
-class cthd_zone {
+class cthd_zone
+{
 
 protected:
-	int 							index;
-	std::vector <cthd_trip_point> 	trip_points;
-	unsigned int 					zone_temp;
-	std::string						temperature_sysfs_path;
-	csys_fs 						zone_sysfs;
-	bool							zone_active;
+	int index;
+	std::vector < cthd_trip_point > trip_points;
+	unsigned int zone_temp;
+	std::string temperature_sysfs_path;
+	csys_fs zone_sysfs;
+	bool zone_active;
 
 private:
-	void							thermal_zone_temp_change();
+	void thermal_zone_temp_change();
 
 public:
 	cthd_zone(int _index, std::string control_path);
-	virtual ~cthd_zone() {}
+	virtual ~cthd_zone(){}
 	void zone_temperature_notification(int type, int data);
 	int zone_update();
-	virtual void update_zone_preference();;
+	virtual void update_zone_preference();
+	;
 
 	virtual unsigned int read_zone_temp();
 	virtual int read_trip_points() = 0;
 	virtual int read_cdev_trip_points() = 0;
 	virtual void set_temp_sensor_path() = 0;
 
-	void set_zone_active() { zone_active = true; };
-	bool zone_active_status() {return zone_active; };
+	void set_zone_active()
+	{
+		zone_active = true;
+	};
+	bool zone_active_status()
+	{
+		return zone_active;
+	};
 };
 
 #endif

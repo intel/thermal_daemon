@@ -38,37 +38,35 @@
 #define MAX_MSG_SIZE 		512
 #define THD_NUM_OF_POLL_FDS	10
 
-typedef enum {
-	WAKEUP,
-	TERMINATE,
-	PREF_CHANGED,
-	THERMAL_ZONE_NOTIFY,
-	CALIBRATE,
-	RELOAD_ZONES,
-}message_name_t;
+typedef enum
+{
+	WAKEUP, TERMINATE, PREF_CHANGED, THERMAL_ZONE_NOTIFY, CALIBRATE, RELOAD_ZONES, 
+} message_name_t;
 
 // This defines whether the thermal control is entirey done by
 // this daemon or it just complements, what is done in kernel
-typedef enum {
-	COMPLEMENTRY,
-	EXCLUSIVE,
-}control_mode_t;
+typedef enum
+{
+	COMPLEMENTRY, EXCLUSIVE, 
+} control_mode_t;
 
-typedef struct {
+typedef struct
+{
 	message_name_t msg_id;
-	int			msg_size;
+	int msg_size;
 	unsigned long msg[MAX_MSG_SIZE];
-}message_capsul_t;
+} message_capsul_t;
 
-class cthd_engine {
+class cthd_engine
+{
 
 protected:
-	std::vector <cthd_zone *> zones;
-	std::vector <cthd_cdev *> cdevs;
-	int			cdev_cnt;
-	int 			zone_count;
-	bool 			parse_thermal_zone_success;
-	bool			parse_thermal_cdev_success;
+	std::vector < cthd_zone * > zones;
+	std::vector < cthd_cdev * > cdevs;
+	int cdev_cnt;
+	int zone_count;
+	bool parse_thermal_zone_success;
+	bool parse_thermal_cdev_success;
 
 private:
 	bool status;
@@ -105,11 +103,14 @@ public:
 	static const int def_poll_interval = 5000;
 	static const int soft_cdev_start_index = 100;
 
-	cthd_parse 	 parser;
+	cthd_parse parser;
 
 	cthd_engine();
-	virtual ~cthd_engine() {}
-	void set_control_mode(control_mode_t mode) {control_mode = mode;}
+	virtual ~cthd_engine(){}
+	void set_control_mode(control_mode_t mode)
+	{
+		control_mode = mode;
+	}
 	void thd_engine_thread();
 	int thd_engine_start();
 	int thd_engine_stop();
@@ -126,15 +127,30 @@ public:
 	void takeover_thermal_control();
 	void giveup_thermal_control();
 
-	virtual int read_thermal_zones() { return 0; };
-	virtual int read_cooling_devices() {return 0;};
+	virtual int read_thermal_zones()
+	{
+		return 0;
+	};
+	virtual int read_cooling_devices()
+	{
+		return 0;
+	};
 
-	int use_custom_zones() { return parse_thermal_zone_success; }
-	int use_custom_cdevs() { return parse_thermal_cdev_success; }
+	int use_custom_zones()
+	{
+		return parse_thermal_zone_success;
+	}
+	int use_custom_cdevs()
+	{
+		return parse_thermal_cdev_success;
+	}
 
 	static const int max_cpu_count = 64;
-	time_t	last_cpu_update[max_cpu_count];
-	virtual bool apply_cpu_operation(int cpu) {return false;}
+	time_t last_cpu_update[max_cpu_count];
+	virtual bool apply_cpu_operation(int cpu)
+	{
+		return false;
+	}
 	void thd_engine_reload_zones();
 };
 

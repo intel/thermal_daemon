@@ -32,19 +32,15 @@
 class cthd_engine_dts: public cthd_engine
 {
 private:
-	csys_fs			thd_sysfs;
-	unsigned int	cpu_mask_remaining;
+	csys_fs thd_sysfs;
+	unsigned int cpu_mask_remaining;
 
 public:
 	static const unsigned int def_cpu_mask = 0xffff;
-	unsigned int 			sensor_mask;
+	unsigned int sensor_mask;
 
-	cthd_engine_dts() :
-		thd_sysfs("/sys/devices/platform/coretemp.0/"),
-		cpu_mask_remaining(def_cpu_mask),
-		sensor_mask(0),
-		power_clamp_index(-1)
-		{}
+	cthd_engine_dts(): thd_sysfs("/sys/devices/platform/coretemp.0/"),
+	cpu_mask_remaining(def_cpu_mask), sensor_mask(0), power_clamp_index( - 1){}
 	int read_thermal_zones();
 	int read_cooling_devices();
 	bool apply_cpu_operation(int cpu);
@@ -53,10 +49,10 @@ public:
 	int find_cdev_power_clamp();
 
 	static const int msr_turbo_states_index = soft_cdev_start_index;
-	static const int msr_p_states_index = soft_cdev_start_index+1;
-	static const int turbo_on_off_index = soft_cdev_start_index+2;
-	static const int cpufreq_index = soft_cdev_start_index+3;
-	static const int t_state_index = soft_cdev_start_index+4;
+	static const int msr_p_states_index = soft_cdev_start_index + 1;
+	static const int turbo_on_off_index = soft_cdev_start_index + 2;
+	static const int cpufreq_index = soft_cdev_start_index + 3;
+	static const int t_state_index = soft_cdev_start_index + 4;
 	int power_clamp_index; // dynamic based on thermal cdev
 };
 

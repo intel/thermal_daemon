@@ -32,34 +32,38 @@
 
 #define mov_average_window	15
 
-typedef struct {
+typedef struct
+{
 	unsigned long long mperf;
 	unsigned long long tsc;
-}per_cpu_perf_data_t;
+} per_cpu_perf_data_t;
 
-typedef struct {
+typedef struct
+{
 	unsigned int samples[mov_average_window];
 	int num_samples;
 	unsigned int current_total;
 	int last_moving_average;
-}movinng_average_t;
+} movinng_average_t;
 
-typedef struct {
+typedef struct
+{
 	int sensor_id;
-}cpu_sensor_relate_t;
+} cpu_sensor_relate_t;
 
-typedef struct {
+typedef struct
+{
 	int cpu_id;
-}sensor_cpu_relate_t;
+} sensor_cpu_relate_t;
 
 class cthd_topology
 {
 
 private:
 	static const int measurment_time = mov_average_window;
-	cthd_msr	msr;
-	int 		no_cpu;
-	int			no_sensors;
+	cthd_msr msr;
+	int no_cpu;
+	int no_sensors;
 	per_cpu_perf_data_t *perf_data;
 
 	movinng_average_t *temp_data;
@@ -73,20 +77,26 @@ private:
 
 	void add(movinng_average_t *pdata, int index, unsigned int value)
 	{
-		if (pdata[index].num_samples < mov_average_window) {
+		if(pdata[index].num_samples < mov_average_window)
+		{
 			pdata[index].samples[pdata[index].num_samples++] = value;
 			pdata[index].current_total += value;
-		} else {
-			unsigned int& oldest = pdata[index].samples[pdata[index].num_samples++ % mov_average_window];
+		}
+		else
+		{
+			unsigned int &oldest = pdata[index].samples[pdata[index].num_samples++ %
+	mov_average_window];
 			pdata[index].current_total += value - oldest;
 			oldest = value;
 		}
 	}
 
-	unsigned int moving_average(movinng_average_t *pdata, int index, unsigned int value)
+	unsigned int moving_average(movinng_average_t *pdata, int index, unsigned int
+	value)
 	{
 		add(pdata, index, value);
-		return pdata[index].current_total / std::min(pdata[index].num_samples, mov_average_window);
+		return pdata[index].current_total / std::min(pdata[index].num_samples,
+	mov_average_window);
 	}
 	void store_configuration(int index, unsigned int mask);
 
@@ -101,7 +111,7 @@ public:
 	pthread_t temp_thread;
 	pthread_t cal_engine;
 	pthread_attr_t thd_attr;
-	int		designated_cpu;
+	int designated_cpu;
 	bool terminate_thread;
 	bool cal_failed;
 	void test_function(cthd_topology *obj);
