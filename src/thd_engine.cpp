@@ -235,7 +235,7 @@ static void *cthd_calibration_engine_thread(void *arg)
 	}
 	for(;;)
 	{
-		sleep(5);
+		sleep(60);
 		ret = topo.calibrate();
 		if(ret == 0)
 		{
