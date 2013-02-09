@@ -139,7 +139,25 @@ int cthd_zone_dts::read_trip_points()
 		}
 		while(mask != 0);
 	}
-
+	{
+		int cnt = 0;
+		unsigned int mask = 0x1;
+		do
+		{
+			if((sensor_mask & ~thd_dts_engine->sensor_mask) &mask)
+			{
+				std::stringstream temp_input_str;
+				temp_input_str << "temp" << cnt << "_input";
+				if(dts_sysfs.exists(temp_input_str.str()))
+				{
+					sensor_sysfs.push_back(temp_input_str.str());
+				}
+			}
+			mask = (mask << 1);
+			cnt++;
+		}
+		while(mask != 0);
+	}
 	return THD_SUCCESS;
 }
 
@@ -173,32 +191,19 @@ void cthd_zone_dts::set_temp_sensor_path(){
 
 unsigned int cthd_zone_dts::read_zone_temp()
 {
-	unsigned int mask = 0x1;
 	unsigned int temp;
-	int cnt = 0;
-	cthd_engine_dts *engine = (cthd_engine_dts*)thd_engine;
+	int cnt = sensor_sysfs.size();
 
 	zone_temp = 0;
-	do
+
+	for(int i=0; i<cnt; ++i)
 	{
-		if((sensor_mask &~engine->sensor_mask) &mask)
-		{
-			std::stringstream temp__input_str;
-			temp__input_str << "temp" << cnt << "_input";
-			if(dts_sysfs.exists(temp__input_str.str()))
-			{
-				std::string temp_str;
-				dts_sysfs.read(temp__input_str.str(), temp_str);
-				std::istringstream(temp_str) >> temp;
-				if(zone_temp == 0 || temp > zone_temp)
-					zone_temp = temp;
-				thd_log_debug("dts %d: temp %u zone_temp %u\n", cnt, temp, zone_temp);
-			}
-		}
-		mask = (mask << 1);
-		cnt++;
+		dts_sysfs.read(sensor_sysfs[i], &temp);
+		if(zone_temp == 0 || temp > zone_temp)
+			zone_temp = temp;
+		thd_log_debug("dts %d: temp %u zone_temp %u\n", i, temp, zone_temp);
+
 	}
-	while(mask != 0);
 
 	thd_model.add_sample(zone_temp);
 	if(thd_model.is_set_point_reached())
@@ -208,18 +213,6 @@ unsigned int cthd_zone_dts::read_zone_temp()
 		thd_log_debug("new set point %d \n", set_point);
 		update_trip_points();
 	}
-#if 1
-	{
-		//	cthd_msr msr;
-		//	thd_log_debug("perf_status %X\n", msr.read_perf_status());
-
-		{
-
-			//	topology.learn_topology();
-
-		}
-	}
-#endif 
 
 	return zone_temp;
 }

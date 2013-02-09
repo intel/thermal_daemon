@@ -126,9 +126,7 @@ unsigned int cthd_zone_dts_sensor::read_zone_temp()
 	temp_input_str << "temp" << index << "_input";
 	if(dts_sysfs.exists(temp_input_str.str()))
 	{
-		std::string temp_str;
-		dts_sysfs.read(temp_input_str.str(), temp_str);
-		std::istringstream(temp_str) >> zone_temp;
+		dts_sysfs.read(temp_input_str.str(), &zone_temp);
 		thd_log_debug("dts_sensor %d: zone_temp %u\n", index, zone_temp);
 	}
 

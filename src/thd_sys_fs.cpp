@@ -23,6 +23,8 @@
  */
 
 #include "thd_sys_fs.h"
+#include "thd_common.h"
+#include <stdlib.h>
 
 int csys_fs::write(const std::string &path, const std::string &buf)
 {
@@ -86,6 +88,23 @@ int csys_fs::read(const std::string &path, unsigned int position, char *buf,
 		return  - errno;
 
 	int ret = ::read(fd, buf, len);
+	close(fd);
+
+	return ret;
+}
+
+int csys_fs::read(const std::string &path, unsigned int *ptr_val)
+{
+	std::string p = base_path + path;
+	char str[16];
+	int ret;
+
+	int fd = ::open(p.c_str(), O_RDONLY);
+	if(fd < 0)
+		return  - errno;
+	ret = ::read(fd, str, sizeof(str));
+	if (ret > 0)
+		*ptr_val = atoi(str);
 	close(fd);
 
 	return ret;

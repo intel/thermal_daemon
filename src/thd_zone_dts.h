@@ -32,6 +32,7 @@
 #include "thd_cdev_turbo_states.h"
 #include "thd_model.h"
 #include "thd_topology.h"
+#include <vector>
 
 class cthd_zone_dts: public cthd_zone
 {
@@ -47,6 +48,7 @@ protected:
 	cthd_topology topology;
 
 	cthd_model thd_model;
+	std::vector <std::string> sensor_sysfs;
 
 	int init();
 	int update_trip_points();
