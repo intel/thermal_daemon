@@ -104,6 +104,7 @@ int cthd_engine::thd_engine_start()
 
 	check_cpu_id();
 
+	// Pipe is used for communication between two processes
 	ret = pipe(wake_fds);
 	if(ret)
 	{
@@ -387,6 +388,9 @@ void cthd_engine::takeover_thermal_control()
 
 void cthd_engine::giveup_thermal_control()
 {
+	if(control_mode != EXCLUSIVE)
+		return;
+
 	csys_fs sysfs("/sys/class/thermal/");
 
 	for(int i = 0; i < zones.size(); ++i)
