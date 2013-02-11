@@ -63,7 +63,8 @@ gboolean thd_dbus_interface_get_current_preference(PrefObject *obj, gdouble
 
 // Default log level
 static int thd_log_level = G_LOG_LEVEL_ERROR | G_LOG_LEVEL_CRITICAL |
-	G_LOG_LEVEL_WARNING;
+	G_LOG_LEVEL_WARNING |
+	G_LOG_LEVEL_MESSAGE | G_LOG_LEVEL_INFO;
 
 // Daemonize or not
 static gboolean thd_daemonize;
