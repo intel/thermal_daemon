@@ -1,5 +1,7 @@
 include $(GLIB_MAKEFILE)
 
+SUBDIRS = data
+
 INCLUDES= -I@top_srcdir@
 
 ACLOCAL_AMFLAGS = 
@@ -66,6 +68,6 @@ thd-dbus-interface.h: $(top_srcdir)/src/thd-dbus_interface.xml
 
 CLEANFILES = $(BUILT_SOURCES)
 
-install: install-am
+install: install-am install-data
 	echo "copy default xml config"
 	cp thermal-conf.xml ${tdconfdir} 
