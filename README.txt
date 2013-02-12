@@ -11,12 +11,28 @@ Build
 
 	autoreconf --install
 	 ./configure
-	make prefix=/var/tmp
-	(prefix can be removed, it will require permission to copy to usr/local/bin and other folders)
-	make install 
-	(If desired)
+	make
+	sudo make install 
 
-3: What it is doing?
+3
+- start service
+	sudo systemctl start thermald.service
+- Get status
+	sudo systemctl status thermald.service
+- Stop service
+	sudo systemctl stop thermald.service
+
+4. Terminate using DBUS I/F
+	sudo test/test_pref.sh
+		and select "TERMINATE" choice. 
+
+5:  What it is doing?
+Version 0.4
+- Added power clamp driver interface
+- Added per cpu controls by trying to calibrate in the background to learn sensor cpu relationship
+- Optimized p states and turbo states and cleaned up
+- systemd and service start stop interface
+
 Version 0.3
 - Added P states t states turbo states as the cooling methods
 - No longer depend on any thermal sysfs, zone cooling device by default
