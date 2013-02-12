@@ -1,0 +1,14 @@
+[Unit]
+Description=Thermal Daemon Service
+After=syslog.target
+
+[Service]
+Type=dbus
+BusName=org.freedesktop.thermald
+ExecStart=/usr/local/bin/thermald
+StandardError=null
+
+[Install]
+WantedBy=multi-user.target
+Alias=dbus-org.freedesktop.thermald.service
+

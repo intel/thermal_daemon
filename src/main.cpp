@@ -198,7 +198,7 @@ static int thd_dbus_server_proc(gboolean no_daemon)
 	}
 	if(!dbus_disable)
 	{
-		bus = dbus_g_bus_get(DBUS_BUS_SESSION, &error);
+		bus = dbus_g_bus_get(DBUS_BUS_SYSTEM, &error);
 		if(error != NULL)
 		{
 			thd_log_error("Couldn't connect to session bus: %s:", error->message);
@@ -220,7 +220,7 @@ static int thd_dbus_server_proc(gboolean no_daemon)
 	THD_SERVICE_NAME, G_TYPE_UINT, 0, G_TYPE_INVALID, G_TYPE_UINT,  &result,
 	G_TYPE_INVALID))
 		{
-			thd_log_error("D-Bus.RequestName RPC failed:");
+			thd_log_error("D-Bus.RequestName RPC failed: %s\n", error->message);
 			return THD_FATAL_ERROR;
 		}
 		thd_log_debug("RequestName returned %d.\n", result);

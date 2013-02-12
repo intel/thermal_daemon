@@ -58,9 +58,9 @@
 
 // Dbus related
 /* Well-known name for this service. */
-#define THD_SERVICE_NAME        	"org.thermald.control"
-#define THD_SERVICE_OBJECT_PATH 	"/org/thermald/settings"
-#define THD_SERVICE_INTERFACE		"org.thermald.value"
+#define THD_SERVICE_NAME        	"org.freedesktop.thermald"
+#define THD_SERVICE_OBJECT_PATH 	"/org/freedesktop/thermald"
+#define THD_SERVICE_INTERFACE		"org.freedesktop.thermald"
 
 class cthd_engine;
 class cthd_engine_therm_sysfs;

@@ -19,6 +19,29 @@ AC_SUBST(tdbinary, "$sbindir/$PACKAGE", [Binary executable])
 AC_SUBST(tdconfdir, "$sysconfdir/$PACKAGE", [Configuration directory])
 AC_SUBST(tdrundir, "$localstatedir/run/$PACKAGE", [Runtime state directory])
 
+# systemd support.
+AC_ARG_WITH([systemd],
+  AS_HELP_STRING([--with-systemd], [support systemd socket activation]),
+  [], [with_systemd=check])
+have_systemd=no
+if test "x$with_systemd" != "xno"; then
+  PKG_CHECK_MODULES(systemd, [libsystemd-daemon],
+    [AC_DEFINE(HAVE_SYSTEMD, 1, [Define if systemd is available])
+    have_systemd=yes],
+  have_systemd=no)
+  if test "x$have_systemd" = xno -a "x$with_systemd" = xyes; then
+    AC_MSG_ERROR([systemd support requested but libraries not found])
+  fi
+fi
+AM_CONDITIONAL(HAVE_SYSTEMD, [test "x$have_systemd" = "xyes"])
+
+AC_ARG_WITH([systemdsystemunitdir],
+        AS_HELP_STRING([--with-systemdsystemunitdir=DIR], [Directory for systemd service files]),
+        [], [with_systemdsystemunitdir=$($PKG_CONFIG --variable=systemdsystemunitdir systemd)])
+if test "x$with_systemdsystemunitdir" != xno -a "x$have_systemd" != xno; then
+        AC_SUBST([systemdsystemunitdir], [$with_systemdsystemunitdir])
+fi
+
 # print configuration
 echo
 echo "System paths:"
@@ -62,6 +85,7 @@ AC_C_CONST
 AC_C_INLINE
 AC_TYPE_SIZE_T
 
-AC_CONFIG_FILES([Makefile])
+AC_CONFIG_FILES([Makefile
+data/Makefile])
 
 AC_OUTPUT

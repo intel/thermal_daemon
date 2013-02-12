@@ -5,7 +5,7 @@
   "http://standards.freedesktop.org/dbus/1.0/introspect.dtd">
 
 <node>
-  <interface name="org.thermald.value">
+  <interface name="org.freedesktop.thermald">
 
     <!-- SetCurrentPreference(G_TYPE_STRING new_pref): 
     preference string values:

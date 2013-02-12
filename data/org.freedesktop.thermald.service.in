@@ -1,0 +1,5 @@
+[D-BUS Service]
+Name=org.freedesktop.thermald
+Exec=/bin/false
+User=root
+SystemdService=dbus-org.freedesktop.thermald.service
