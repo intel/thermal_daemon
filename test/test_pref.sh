@@ -11,22 +11,22 @@ echo -n " Enter thermald preference [1..3]: "
 read opt_no
 
 case $opt_no in
-0) dbus-send --dest=org.freedesktop.thermald /org/freedesktop/thermald org.freedesktop.thermald.SetCurrentPreference string:"FALLBACK"
+0) dbus-send --system --dest=org.freedesktop.thermald /org/freedesktop/thermald org.freedesktop.thermald.SetCurrentPreference string:"FALLBACK"
 ;;
 
-1) dbus-send --dest=org.freedesktop.thermald /org/freedesktop/thermald org.freedesktop.thermald.SetCurrentPreference string:"PERFORMANCE"
+1) dbus-send --system --dest=org.freedesktop.thermald /org/freedesktop/thermald org.freedesktop.thermald.SetCurrentPreference string:"PERFORMANCE"
 ;;
 
-2) dbus-send --dest=org.freedesktop.thermald /org/freedesktop/thermald org.freedesktop.thermald.SetCurrentPreference string:"ENERGY_CONSERVE"
+2) dbus-send --system --dest=org.freedesktop.thermald /org/freedesktop/thermald org.freedesktop.thermald.SetCurrentPreference string:"ENERGY_CONSERVE"
 ;;
 
-3) dbus-send --dest=org.freedesktop.thermald /org/freedesktop/thermald org.freedesktop.thermald.SetCurrentPreference string:"DISABLE"
+3) dbus-send --system --dest=org.freedesktop.thermald /org/freedesktop/thermald org.freedesktop.thermald.SetCurrentPreference string:"DISABLE"
 ;;
 
-4) dbus-send --dest=org.freedesktop.thermald /org/freedesktop/thermald org.freedesktop.thermald.Calibrate string:"CALIBRATE"
+4) dbus-send --system --dest=org.freedesktop.thermald /org/freedesktop/thermald org.freedesktop.thermald.Calibrate string:"CALIBRATE"
 ;;
 
-5) dbus-send --dest=org.freedesktop.thermald /org/freedesktop/thermald org.freedesktop.thermald.Terminate string:"TERMINATE"
+5) dbus-send --system --dest=org.freedesktop.thermald /org/freedesktop/thermald org.freedesktop.thermald.Terminate string:"TERMINATE"
 ;;
 
 *) echo "Invalid option"
