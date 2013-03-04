@@ -31,6 +31,7 @@
 #include "thd_engine.h"
 #include "thd_engine_therm_sys_fs.h"
 #include "thd_engine_dts.h"
+#include "thd_parse.h"
 
 #if !defined(TD_DIST_VERSION)
 #define TD_DIST_VERSION PACKAGE_VERSION
@@ -255,8 +256,25 @@ static int thd_dbus_server_proc(gboolean no_daemon)
 	if(use_thermal_sys_fs)
 		thd_engine = new cthd_engine_therm_sysfs();
 	else
-		thd_engine = new cthd_engine_dts();
+	{
+		cthd_parse parser;
+		bool matched = false;
 
+		// if there is XML config for this platform
+		// Use this instead of default DTS sensor and associated cdevs
+		if(parser.parser_init() == THD_SUCCESS)
+		{
+			if(parser.start_parse() == THD_SUCCESS)
+			{
+				matched = parser.platform_matched();
+				thd_log_warn("UUID matched, so will load zones and cdevs from thermal-conf.xml\n");
+			}
+		}
+		if (matched)
+			thd_engine = new cthd_engine_therm_sysfs();
+		else
+			thd_engine = new cthd_engine_dts();
+	}
 	// Initialize thermald objects
 	if(thd_engine->thd_engine_start() != THD_SUCCESS)
 	{
