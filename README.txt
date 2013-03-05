@@ -27,6 +27,11 @@ Build
 		and select "TERMINATE" choice. 
 
 5:  What it is doing?
+Version 0.5
+- License update to GPL v2 or later
+- Change dbus session bus to system
+- Load thermal-conf.xml data if exact UUID  match
+
 Version 0.4
 - Added power clamp driver interface
 - Added per cpu controls by trying to calibrate in the background to learn sensor cpu relationship
