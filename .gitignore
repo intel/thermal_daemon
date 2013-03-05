@@ -28,7 +28,6 @@ autom4te.cache
 intltool-*
 gtk-doc.make
 TAGS
-COPYING
 INSTALL
 ABOUT-NLS
 *.pc
