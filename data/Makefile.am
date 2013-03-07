@@ -28,6 +28,6 @@ EXTRA_DIST = \
 CLEANFILES = thermald.service org.freedesktop.thermald.service
 
 install-data:
-	cp thermald.service.in /usr/lib/systemd/system/thermald.service
-	cp org.freedesktop.thermald.service.in /usr/share/dbus-1/system-services/org.freedesktop.thermald.service
-	cp org.freedesktop.thermald.conf /etc/dbus-1/system.d/
+	cp thermald.service.in $(systemdsystemunitdir)/thermald.service
+	cp org.freedesktop.thermald.service.in $(servicedir)/org.freedesktop.thermald.service
+	cp org.freedesktop.thermald.conf $(DBUS_SYS_DIR)/ 

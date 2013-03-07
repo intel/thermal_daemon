@@ -9,8 +9,8 @@ Install
 2
 Build
 
-	autoreconf --install
-	 ./configure
+	./autogen.sh	
+	 ./configure prefix=/usr
 	make
 	sudo make install 
 
