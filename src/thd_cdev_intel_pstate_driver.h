@@ -1,6 +1,6 @@
 /*
- * thd_cdev_msr_turbo_states.h: thermal cooling class interface
- *	using turbo states states.
+ * thd_sysfs_intel_pstate_driver.h: thermal cooling class interface
+ *	using Intel p state driver
  * Copyright (C) 2012 Intel Corporation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or
@@ -21,33 +21,32 @@
  * Author Name <Srinivas.Pandruvada@linux.intel.com>
  *
  */
-#ifndef THD_CDEV_MSR_TURBO_STATES_H_
-#define THD_CDEV_MSR_TURBO_STATES_H_
 
-#include "thd_cdev_msr_pstates.h"
+#ifndef THD_CDEV_INTEL_PSATATE_DRIVER_H_
+#define THD_CDEV_INTEL_PSATATE_DRIVER_H_
 
-class cthd_cdev_msr_turbo_states: public cthd_cdev_pstate_msr
+#include "thd_cdev.h"
+#include "thd_msr.h"
+
+class cthd_intel_p_state_cdev: public cthd_cdev
 {
+private:
+	cthd_msr msr;
+
+	int highest_turbo_freq_state;
+	int lowest_freq_state;
+	int lowest_turbo_freq_state;
+	int min_compensation;
+	float unit_value;
+	int max_offset;
 
 public:
-	cthd_cdev_msr_turbo_states(unsigned int _index, int _cpu_index):
-	cthd_cdev_pstate_msr(_index, _cpu_index){
-
-	}
-
-	int update()
-	{
-		highest_freq_state = msr.get_min_turbo_freq();
-		lowest_freq_state = msr.get_max_freq();
-		thd_log_debug("cthd_cdev_msr_turbo_states cpu_index %d min %x max %x\n",
-	cpu_index, lowest_freq_state, highest_freq_state);
-
-		max_state = highest_freq_state - lowest_freq_state;
-
-		return init();
-	}
+	cthd_intel_p_state_cdev(unsigned int _index, std::string control_path)
+		: cthd_cdev(_index, control_path), unit_value(1), min_compensation(0), max_offset(0) {};
+	void set_curr_state(int state, int arg);
+	int get_max_state();
+	int update();
 };
 
 
-
-#endif /* THD_CDEV_MSR_TURBO_STATES_H_ */
+#endif /* THD_CDEV_INTEL_PSATATE_DRIVER_H_ */

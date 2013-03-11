@@ -48,6 +48,7 @@ thermald_SOURCES = \
 		src/thd_cdev_turbo_states.cpp \
 		src/thd_cdev_therm_sys_fs.cpp \
 		src/thd_cdev_tstates.cpp \
+		src/thd_cdev_intel_pstate_driver.cpp \
 		src/thd_msr.cpp \
 		src/thd_sys_fs.cpp \
 		src/thd_trip_point.cpp \

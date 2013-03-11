@@ -337,7 +337,7 @@ unsigned char cthd_msr::get_min_freq()
 	return MSR_IA32_PLATFORM_INFO_MIN_FREQ(val);
 }
 
-unsigned char cthd_msr::get_max_turbo_freq()
+unsigned char cthd_msr::get_min_turbo_freq()
 {
 	int ret;
 	unsigned long long val;
@@ -353,6 +353,22 @@ unsigned char cthd_msr::get_max_turbo_freq()
 		return val >> TURBO_RATIO_4C_SHIFT;
 
 	return 0;
+}
+
+unsigned char cthd_msr::get_max_turbo_freq()
+{
+	int ret;
+	unsigned long long val;
+
+	// Read turbo ratios
+	ret = read_msr(0, MSR_TURBO_RATIO_LIMIT, &val);
+	if(ret < 0)
+		return THD_ERROR;
+	// We are in a thermal zone. that means we already running all cores at full speed
+	// So take the value for all 4 cores running
+	val &= 0xff;
+
+	return val;
 }
 
 unsigned char cthd_msr::get_max_freq()

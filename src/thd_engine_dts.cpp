@@ -32,6 +32,7 @@
 #include "thd_cdev_therm_sys_fs.h"
 #include "thd_cdev_msr_turbo_states.h"
 #include "thd_cdev_msr_pstates_limited.h"
+#include "thd_cdev_intel_pstate_driver.h"
 
 int cthd_engine_dts::read_thermal_zones()
 {
@@ -75,6 +76,8 @@ int cthd_engine_dts::read_thermal_zones()
 
 int cthd_engine_dts::find_cdev_power_clamp()
 {
+	bool found = false;
+
 	csys_fs cdev_sysfs("/sys/class/thermal/");
 
 	for(int i = 0; i < max_cool_devs; ++i)
@@ -97,9 +100,30 @@ int cthd_engine_dts::find_cdev_power_clamp()
 				cdevs.push_back(cdev);
 				++cdev_cnt;
 				power_clamp_index = i;
+				found = true;
 				break;
 			}
 		}
+	}
+
+	if (found)
+		return THD_SUCCESS;
+	else
+		return THD_ERROR;
+}
+
+int cthd_engine_dts::check_intel_p_state_driver()
+{
+	csys_fs cdev_sysfs("/sys/devices/system/cpu/intel_pstate/");
+	if (cdev_sysfs.exists())
+	{
+		thd_log_info("Found Intel pstate driver \n");
+		cthd_intel_p_state_cdev *cdev = new cthd_intel_p_state_cdev(intel_pstate_control_index, "/sys/devices/system/cpu/intel_pstate/");
+		if(cdev->update() != THD_SUCCESS)
+			return THD_ERROR;
+		cdevs.push_back(cdev);
+		++cdev_cnt;
+		intel_pstate_driver_index = 0;
 	}
 
 	return THD_SUCCESS;
@@ -110,6 +134,7 @@ int cthd_engine_dts::read_cooling_devices()
 	int _index = 0;
 
 	find_cdev_power_clamp();
+	check_intel_p_state_driver();
 
 	// Turbo sub states control
 	cthd_cdev_msr_turbo_states *cdev_turbo = new cthd_cdev_msr_turbo_states

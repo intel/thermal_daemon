@@ -38,7 +38,7 @@ public:
 
 	int update()
 	{
-		highest_freq_state = msr.get_max_turbo_freq();
+		highest_freq_state = msr.get_min_turbo_freq();
 		lowest_freq_state = msr.get_min_freq();
 		thd_log_debug("cthd_cdev_pstate_msr_limited original cpu_index %d min %x max %x\n",
 	cpu_index, lowest_freq_state, highest_freq_state);

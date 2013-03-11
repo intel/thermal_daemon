@@ -49,6 +49,7 @@ public:
 
 	unsigned char get_min_freq();
 	unsigned char get_max_freq();
+	unsigned char get_min_turbo_freq();
 	unsigned char get_max_turbo_freq();
 
 	int inc_freq_state();

@@ -68,13 +68,19 @@ int cthd_zone_dts_sensor::read_trip_points()
 			cthd_trip_point trip_pt(trip_point_cnt, P_T_STATE, set_point, def_hystersis,
 	index);
 			trip_pt.thd_trip_point_set_control_type(SEQUENTIAL);
-
-			trip_pt.thd_trip_point_add_cdev_index(thd_dts_engine->msr_turbo_states_index
-	+ thd_dts_engine->max_cpu_count *(cnt + 1));
-			trip_pt.thd_trip_point_add_cdev_index(thd_dts_engine->msr_p_states_index_limited +
-	thd_dts_engine->max_cpu_count *(cnt + 1));
+			if (thd_dts_engine->intel_pstate_driver_index != -1)
+			{
+				trip_pt.thd_trip_point_add_cdev_index(thd_dts_engine->intel_pstate_control_index);
+			}
+			else
+			{
+				trip_pt.thd_trip_point_add_cdev_index(thd_dts_engine->msr_turbo_states_index
+						+ thd_dts_engine->max_cpu_count *(cnt + 1));
+				trip_pt.thd_trip_point_add_cdev_index(thd_dts_engine->msr_p_states_index_limited +
+						thd_dts_engine->max_cpu_count *(cnt + 1));
+			}
 			trip_pt.thd_trip_point_add_cdev_index(thd_dts_engine->turbo_on_off_index +
-	thd_dts_engine->max_cpu_count *(cnt + 1));
+					thd_dts_engine->max_cpu_count *(cnt + 1));
 #ifdef CPU_FREQ
 			trip_pt.thd_trip_point_add_cdev_index(thd_dts_engine->cpufreq_index +
 	thd_dts_engine->max_cpu_count *(cnt + 1));
@@ -83,8 +89,9 @@ int cthd_zone_dts_sensor::read_trip_points()
 			{
 				trip_pt.thd_trip_point_add_cdev_index(thd_dts_engine->power_clamp_index);
 			}
-			trip_pt.thd_trip_point_add_cdev_index(thd_dts_engine->msr_p_states_index +
-	thd_dts_engine->max_cpu_count *(cnt + 1));
+			if (thd_dts_engine->intel_pstate_driver_index == -1)
+				trip_pt.thd_trip_point_add_cdev_index(thd_dts_engine->msr_p_states_index +
+						thd_dts_engine->max_cpu_count *(cnt + 1));
 			trip_pt.thd_trip_point_add_cdev_index(thd_dts_engine->t_state_index +
 	thd_dts_engine->max_cpu_count *(cnt + 1));
 
@@ -105,13 +112,11 @@ int cthd_zone_dts_sensor::read_trip_points()
 	{
 		cthd_engine_dts *engine = (cthd_engine_dts*)thd_engine;
 
-		thd_log_debug("engine->sensor_mask before %x index %x \n", engine
-	->sensor_mask, index);
+		thd_log_debug("engine->sensor_mask before %x index %x \n", engine->sensor_mask, index);
 
 		engine->sensor_mask |= (1 << index);
 		thd_log_debug("engine->sensor_mask %x\n", engine->sensor_mask);
-		((cthd_engine_dts*)thd_engine)->remove_cpu_mask_from_default_processing
-	(cpu_mask);
+		((cthd_engine_dts*)thd_engine)->remove_cpu_mask_from_default_processing(cpu_mask);
 	}
 	return THD_SUCCESS;
 }
