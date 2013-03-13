@@ -1,6 +1,6 @@
 /*
- * cthd_sysfs_cdev.cpp: thermal cooling class interface
- *	for thermal sysfs
+ * cthd_cdev_rapl.h: thermal cooling class interface
+ *	using RAPL
  * Copyright (C) 2012 Intel Corporation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or
@@ -22,24 +22,20 @@
  *
  */
 
-#ifndef THD_CDEV_THERM_SYS_FS_H_
-#define THD_CDEV_THERM_SYS_FS_H_
+#ifndef THD_CDEV_RAPL_H_
+#define THD_CDEV_RAPL_H_
 
-#include "thd_cdev.h"
+#include "thd_cdev_therm_sys_fs.h"
 
-class cthd_sysfs_cdev: public cthd_cdev
+class cthd_sysfs_cdev_rapl: public cthd_sysfs_cdev
 {
-protected:
-	bool use_custom_cdevs;
-	std::string custom_path_str;
+private:
 
 public:
-	cthd_sysfs_cdev(unsigned int _index, std::string control_path): cthd_cdev
-	(_index, control_path), use_custom_cdevs(false){}
-	virtual void set_curr_state(int state, int arg);
-	virtual int get_curr_state();
-	virtual int get_max_state();
-	virtual int update();
+	cthd_sysfs_cdev_rapl(unsigned int _index, std::string control_path):
+		cthd_sysfs_cdev(_index, control_path) {}
+	void set_curr_state(int state, int arg);
+	int get_curr_state();
 };
 
-#endif /* THD_CDEV_THERM_SYS_FS_H_ */
+#endif /* THD_CDEV_RAPL_H_ */

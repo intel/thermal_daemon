@@ -33,6 +33,7 @@
 #include "thd_cdev_msr_turbo_states.h"
 #include "thd_cdev_msr_pstates_limited.h"
 #include "thd_cdev_intel_pstate_driver.h"
+#include "thd_cdev_rapl.h"
 
 int cthd_engine_dts::read_thermal_zones()
 {
@@ -112,6 +113,53 @@ int cthd_engine_dts::find_cdev_power_clamp()
 		return THD_ERROR;
 }
 
+int cthd_engine_dts::find_cdev_rapl()
+{
+	bool found = false;
+
+	csys_fs cdev_sysfs("/sys/class/thermal/");
+
+	for(int i = 0; i < max_cool_devs; ++i)
+	{
+		std::stringstream tcdev;
+		tcdev << "cooling_device" << i << "/type";
+		if(cdev_sysfs.exists(tcdev.str().c_str()))
+		{
+			std::string type_str;
+			cdev_sysfs.read(tcdev.str(), type_str);
+			if(type_str == "intel_rapl")
+			{
+				std::stringstream device;
+
+				device << "cooling_device" << i << "/device/domain_name";
+				std::string device_str;
+				cdev_sysfs.read(device.str(), device_str);
+
+				thd_log_debug("Found Intel RAPL: type :%s device name :%s\n", type_str.c_str(), device_str.c_str());
+				if(device_str != "package")
+					return THD_ERROR;
+
+				cthd_sysfs_cdev *cdev = new cthd_sysfs_cdev_rapl(i, "/sys/class/thermal/");
+				if(cdev->update() != THD_SUCCESS)
+					return THD_ERROR;
+				cdev->set_inc_dec_value(1000);
+				cdevs.push_back(cdev);
+				++cdev_cnt;
+				intel_rapl_index = i;
+				thd_log_debug("Intel RAPL index = %d\n", intel_rapl_index);
+
+				found = true;
+				break;
+			}
+		}
+	}
+
+	if (found)
+		return THD_SUCCESS;
+	else
+		return THD_ERROR;
+}
+
 int cthd_engine_dts::check_intel_p_state_driver()
 {
 	csys_fs cdev_sysfs("/sys/devices/system/cpu/intel_pstate/");
@@ -133,6 +181,7 @@ int cthd_engine_dts::read_cooling_devices()
 {
 	int _index = 0;
 
+	find_cdev_rapl();
 	find_cdev_power_clamp();
 	check_intel_p_state_driver();
 

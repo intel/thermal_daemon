@@ -1,6 +1,6 @@
 /*
- * cthd_sysfs_cdev.cpp: thermal cooling class interface
- *	for thermal sysfs
+ * cthd_cdev_rapl.cpp: thermal cooling class implementation
+ *	using RAPL
  * Copyright (C) 2012 Intel Corporation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or
@@ -21,25 +21,38 @@
  * Author Name <Srinivas.Pandruvada@linux.intel.com>
  *
  */
+#include "thd_cdev_rapl.h"
 
-#ifndef THD_CDEV_THERM_SYS_FS_H_
-#define THD_CDEV_THERM_SYS_FS_H_
-
-#include "thd_cdev.h"
-
-class cthd_sysfs_cdev: public cthd_cdev
+void cthd_sysfs_cdev_rapl::set_curr_state(int state, int arg)
 {
-protected:
-	bool use_custom_cdevs;
-	std::string custom_path_str;
 
-public:
-	cthd_sysfs_cdev(unsigned int _index, std::string control_path): cthd_cdev
-	(_index, control_path), use_custom_cdevs(false){}
-	virtual void set_curr_state(int state, int arg);
-	virtual int get_curr_state();
-	virtual int get_max_state();
-	virtual int update();
-};
+	std::stringstream tc_state_dev;
+	tc_state_dev << "cooling_device" << index << "/cur_state";
+	if(cdev_sysfs.exists(tc_state_dev.str()))
+	{
+		std::stringstream state_str;
+		int new_state;
 
-#endif /* THD_CDEV_THERM_SYS_FS_H_ */
+		if (state < inc_dec_val)
+		{
+			new_state = 0;
+			curr_state = 0;
+		}
+		else
+		{
+			new_state = max_state - state;
+			curr_state = state;
+		}
+		state_str << new_state;
+		thd_log_debug("set cdev state index %d state %d\n", index, state);
+		cdev_sysfs.write(tc_state_dev.str(), state_str.str());
+	}
+	else
+		curr_state = 0;
+
+}
+
+int cthd_sysfs_cdev_rapl::get_curr_state()
+{
+	return curr_state;
+}

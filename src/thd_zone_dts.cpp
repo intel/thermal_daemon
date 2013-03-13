@@ -92,6 +92,10 @@ int cthd_zone_dts::read_trip_points()
 			trip_pt.thd_trip_point_add_cdev_index(thd_dts_engine->msr_turbo_states_index);
 			trip_pt.thd_trip_point_add_cdev_index(thd_dts_engine->msr_p_states_index_limited);
 		}
+		if (thd_dts_engine->intel_rapl_index != -1)
+		{
+			trip_pt.thd_trip_point_add_cdev_index(thd_dts_engine->intel_rapl_index);
+		}
 		trip_pt.thd_trip_point_add_cdev_index(thd_dts_engine->turbo_on_off_index);
 #ifdef CPU_FREQ
 		trip_pt.thd_trip_point_add_cdev_index(thd_dts_engine->cpufreq_index);
@@ -129,6 +133,10 @@ int cthd_zone_dts::read_trip_points()
 							->msr_turbo_states_index + thd_dts_engine->max_cpu_count *(cnt + 1));
 					trip_pt.thd_trip_point_add_cdev_index(thd_dts_engine->msr_p_states_index_limited +
 							thd_dts_engine->max_cpu_count *(cnt + 1));
+				}
+				if (thd_dts_engine->intel_rapl_index != -1)
+				{
+					trip_pt.thd_trip_point_add_cdev_index(thd_dts_engine->intel_rapl_index);
 				}
 				trip_pt.thd_trip_point_add_cdev_index(thd_dts_engine->turbo_on_off_index +
 							thd_dts_engine->max_cpu_count *(cnt + 1));

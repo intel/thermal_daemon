@@ -40,13 +40,15 @@ public:
 	unsigned int sensor_mask;
 
 	cthd_engine_dts(): thd_sysfs("/sys/devices/platform/coretemp.0/"),
-	cpu_mask_remaining(def_cpu_mask), sensor_mask(0), power_clamp_index( - 1), intel_pstate_driver_index(-1) {}
+	cpu_mask_remaining(def_cpu_mask), sensor_mask(0), power_clamp_index( - 1),
+	intel_pstate_driver_index(-1), intel_rapl_index(-1) {}
 	int read_thermal_zones();
 	int read_cooling_devices();
 	bool apply_cpu_operation(int cpu);
 	void remove_cpu_mask_from_default_processing(unsigned int mask);
 	unsigned int get_cpu_mask();
 	int find_cdev_power_clamp();
+	int find_cdev_rapl();
 	int check_intel_p_state_driver();
 
 	static const int msr_turbo_states_index = soft_cdev_start_index;
@@ -59,6 +61,7 @@ public:
 
 	int power_clamp_index; // dynamic based on thermal cdev
 	int intel_pstate_driver_index;
+	int intel_rapl_index;
 };
 
 
