@@ -28,7 +28,7 @@
 #include "thd_msr.h"
 
 cthd_zone_dts::cthd_zone_dts(int index, std::string path): cthd_zone(index,
-	path), dts_sysfs(path.c_str()), trip_point_cnt(0){
+	path), dts_sysfs(path.c_str()), trip_point_cnt(0), sensor_mask(0){
 
 }
 

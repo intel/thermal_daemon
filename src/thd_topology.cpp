@@ -135,11 +135,11 @@ cthd_topology::cthd_topology()
 	no_cpu = msr.get_no_cpus();
 	no_sensors = no_cpu + 2; // Just for safety
 	perf_data = new per_cpu_perf_data_t[no_cpu];
-	memset(perf_data, 0, sizeof(perf_data));
-	temp_data = new movinng_average_t[no_cpu];
-	memset(temp_data, 0, sizeof(*temp_data) *no_cpu);
+	memset(perf_data, 0, sizeof(*perf_data) * no_cpu);
+	temp_data = new movinng_average_t[no_sensors];
+	memset(temp_data, 0, sizeof(*temp_data) * no_sensors);
 	perf_samples = new movinng_average_t[no_cpu];
-	memset(perf_samples, 0, sizeof(*perf_samples) *no_cpu);
+	memset(perf_samples, 0, sizeof(*perf_samples) * no_cpu);
 	cpu_sensor_rel = new cpu_sensor_relate_t[no_cpu];
 	for(int i = 0; i < no_cpu; ++i)
 	{
@@ -155,10 +155,11 @@ cthd_topology::cthd_topology()
 
 cthd_topology::~cthd_topology()
 {
-	delete temp_data;
-	delete perf_samples;
-	delete perf_data;
-	delete cpu_sensor_rel;
+	delete[] temp_data;
+	delete[] perf_samples;
+	delete[] perf_data;
+	delete[] cpu_sensor_rel;
+	delete[] sensor_cpu_rel;
 }
 
 unsigned long long cthd_topology::rdtsc(void)
@@ -267,8 +268,7 @@ int cthd_topology::calibrate()
 	int i, j;
 
 	// Reset moving average
-	temp_data = new movinng_average_t[no_sensors];
-	memset(temp_data, 0, sizeof(*temp_data) *no_sensors);
+	memset(temp_data, 0, sizeof(*temp_data) * no_sensors);
 
 	for(i = 0; i < no_cpu; ++i)
 	{

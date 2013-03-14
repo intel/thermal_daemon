@@ -45,7 +45,8 @@ void cthd_sysfs_cdev_rapl::set_curr_state(int state, int arg)
 		}
 		state_str << new_state;
 		thd_log_debug("set cdev state index %d state %d\n", index, state);
-		cdev_sysfs.write(tc_state_dev.str(), state_str.str());
+		if (cdev_sysfs.write(tc_state_dev.str(), state_str.str()) < 0)
+			curr_state = (state == 0) ? 0 : max_state;
 	}
 	else
 		curr_state = 0;

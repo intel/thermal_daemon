@@ -28,21 +28,26 @@
 
 void cthd_cdev_turbo_states::set_curr_state(int state, int arg)
 {
+	int ret = THD_ERROR;
+
 	if(state == 1)
 	{
 		if(cpu_index ==  - 1)
-			msr.disable_turbo();
+			ret = msr.disable_turbo();
 		else
-			msr.disable_turbo_per_cpu(cpu_index);
+			ret = msr.disable_turbo_per_cpu(cpu_index);
 	}
 	else
 	{
 		if(cpu_index ==  - 1)
-			msr.enable_turbo();
+			ret = msr.enable_turbo();
 		else
-			msr.enable_turbo_per_cpu(cpu_index);
+			ret = msr.enable_turbo_per_cpu(cpu_index);
 	}
-	curr_state = state;
+	if (ret == THD_SUCCESS)
+		curr_state = state;
+	else
+		curr_state = (state == 0) ? 0 : max_state;
 }
 
 int cthd_cdev_turbo_states::get_max_state()

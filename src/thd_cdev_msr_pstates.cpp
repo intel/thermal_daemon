@@ -144,16 +144,20 @@ void cthd_cdev_pstate_msr::set_curr_state(int state, int arg)
 		{
 			if(thd_engine->apply_cpu_operation(i) == false)
 				continue;
-			msr.set_freq_state_per_cpu(i, highest_freq_state - state);
-			curr_state = state;
+			if(msr.set_freq_state_per_cpu(i, highest_freq_state - state) == THD_SUCCESS)
+				curr_state = state;
+			else
+				curr_state = (state == 0) ? 0 : max_state;
 		}
 	}
 	else
 	{
 		if(thd_engine->apply_cpu_operation(cpu_index))
 		{
-			msr.set_freq_state_per_cpu(cpu_index, highest_freq_state - state);
-			curr_state = state;
+			if(msr.set_freq_state_per_cpu(cpu_index, highest_freq_state - state)  == THD_SUCCESS)
+				curr_state = state;
+			else
+				curr_state = (state == 0) ? 0 : max_state;
 		}
 	}
 

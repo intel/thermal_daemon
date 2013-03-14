@@ -439,7 +439,7 @@ int cthd_msr::dec_freq_state()
 		ret = write_msr(i, MSR_IA32_PERF_CTL, val);
 		if(ret < 0)
 		{
-			thd_log_warn("per control msr failded to write\n");
+			thd_log_warn("per control msr failed to write\n");
 			return THD_ERROR;
 		}
 		ret = read_msr(i, MSR_IA32_PERF_CTL, &val);
@@ -492,6 +492,8 @@ int cthd_msr::inc_freq_state()
 	for(int i = 0; i < cpu_count; ++i)
 	{
 		ret = read_msr(i, MSR_IA32_PERF_CTL, &val);
+		if (ret < 0)
+			return THD_ERROR;
 		thd_log_debug("perf_ctl current %x\n", val);
 		if(ret < 0)
 			return THD_ERROR;
@@ -524,6 +526,8 @@ int cthd_msr::set_freq_state_per_cpu(int cpu, int state)
 	int ret;
 
 	ret = read_msr(cpu, MSR_IA32_PERF_CTL, &val);
+	if (ret < 0)
+		return THD_ERROR;
 	val &= ~PERF_CTL_CLK_MASK;
 	val |= (state << PERF_CTL_CLK_SHIFT);
 	thd_log_debug("perf_ctl current %x\n", val);
@@ -553,6 +557,9 @@ int cthd_msr::set_freq_state(int state)
 	{
 
 		ret = read_msr(i, MSR_IA32_PERF_CTL, &val);
+		if (ret < 0)
+			return THD_ERROR;
+
 		val &= ~PERF_CTL_CLK_MASK;
 		val |= (state << PERF_CTL_CLK_SHIFT);
 

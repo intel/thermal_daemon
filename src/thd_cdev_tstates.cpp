@@ -36,16 +36,20 @@ void cthd_cdev_tstates::set_curr_state(int state, int arg)
 		{
 			if(thd_engine->apply_cpu_operation(i) == false)
 				continue;
-			msr.set_clock_mod_duty_cycle_per_cpu(i, state);
-			curr_state = state;
+			if (msr.set_clock_mod_duty_cycle_per_cpu(i, state) == THD_SUCCESS)
+				curr_state = state;
+			else
+				curr_state = (state == 0) ? 0 : max_state;
 		}
 	}
 	else
 	{
 		if(thd_engine->apply_cpu_operation(cpu_index) == true)
 		{
-			msr.set_clock_mod_duty_cycle_per_cpu(cpu_index, state);
-			curr_state = state;
+			if (msr.set_clock_mod_duty_cycle_per_cpu(cpu_index, state) == THD_SUCCESS)
+				curr_state = state;
+			else
+				curr_state = (state == 0) ? 0 : max_state;
 		}
 	}
 }

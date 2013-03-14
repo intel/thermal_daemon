@@ -42,6 +42,12 @@ public:
 	cthd_engine_dts(): thd_sysfs("/sys/devices/platform/coretemp.0/"),
 	cpu_mask_remaining(def_cpu_mask), sensor_mask(0), power_clamp_index( - 1),
 	intel_pstate_driver_index(-1), intel_rapl_index(-1) {}
+	~cthd_engine_dts() {
+		for (int i=0; i<zones.size(); ++i)
+			delete zones[i];
+		for (int i=0; i<cdevs.size(); ++i)
+			delete cdevs[i];
+	}
 	int read_thermal_zones();
 	int read_cooling_devices();
 	bool apply_cpu_operation(int cpu);
