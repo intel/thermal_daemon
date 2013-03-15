@@ -96,7 +96,7 @@ int cthd_engine_dts::find_cdev_power_clamp()
 				cthd_sysfs_cdev *cdev = new cthd_sysfs_cdev(i, "/sys/class/thermal/");
 				if(cdev->update() != THD_SUCCESS)
 					return THD_ERROR;
-				cdev->set_inc_dec_value(5);
+				cdev->set_inc_dec_value(power_clamp_reduction_percent);
 				cdev->set_down_adjust_control(true);
 				cdevs.push_back(cdev);
 				++cdev_cnt;
@@ -139,14 +139,22 @@ int cthd_engine_dts::find_cdev_rapl()
 				if(device_str != "package")
 					return THD_ERROR;
 
-				cthd_sysfs_cdev *cdev = new cthd_sysfs_cdev_rapl(i, "/sys/class/thermal/");
+				cthd_sysfs_cdev_rapl *cdev = new cthd_sysfs_cdev_rapl(i, "/sys/class/thermal/");
 				if(cdev->update() != THD_SUCCESS)
 					return THD_ERROR;
-				cdev->set_inc_dec_value(1000);
 				cdevs.push_back(cdev);
 				++cdev_cnt;
 				intel_rapl_index = i;
 				thd_log_debug("Intel RAPL index = %d\n", intel_rapl_index);
+
+				cthd_sysfs_cdev_rapl_limited *cdev1 = new cthd_sysfs_cdev_rapl_limited(intel_rapl_limited_control_index, i, "/sys/class/thermal/");
+				cdev1->set_inc_dec_value(1000);
+				if(cdev1->update() != THD_SUCCESS)
+					return THD_ERROR;
+				cdevs.push_back(cdev1);
+				++cdev_cnt;
+				intel_rapl_index_limited = intel_rapl_limited_control_index;
+				thd_log_debug("Intel RAPL index limited = %d\n", intel_rapl_index_limited);
 
 				found = true;
 				break;

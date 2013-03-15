@@ -95,6 +95,7 @@ int cthd_intel_p_state_cdev::update()
 	curr_state = max_state - curr_state/unit_value;
 	if (curr_state < 0)
 		curr_state = 0;
+	max_state = max_state/intel_pstate_limit_ratio;
 	thd_log_debug("cooling dev index:%d, curr_state:%d, max_state:%d, unit:%f, min_com:%d, type:%s\n", index, curr_state, max_state, unit_value, min_compensation, type_str.c_str());
 
 	return THD_SUCCESS;

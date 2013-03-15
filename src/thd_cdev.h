@@ -144,7 +144,7 @@ public:
 		return THD_SUCCESS;
 	};
 
-	int thd_cdev_get_index()
+	virtual int thd_cdev_get_index()
 	{
 		return index;
 	}

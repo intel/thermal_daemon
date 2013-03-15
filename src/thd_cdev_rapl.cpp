@@ -40,11 +40,11 @@ void cthd_sysfs_cdev_rapl::set_curr_state(int state, int arg)
 		}
 		else
 		{
-			new_state = max_state - state;
+			new_state = phy_max - state;
 			curr_state = state;
 		}
 		state_str << new_state;
-		thd_log_debug("set cdev state index %d state %d\n", index, state);
+		thd_log_debug("set cdev state index %d state %d wr:%d\n", index, state, new_state);
 		if (cdev_sysfs.write(tc_state_dev.str(), state_str.str()) < 0)
 			curr_state = (state == 0) ? 0 : max_state;
 	}
@@ -56,4 +56,19 @@ void cthd_sysfs_cdev_rapl::set_curr_state(int state, int arg)
 int cthd_sysfs_cdev_rapl::get_curr_state()
 {
 	return curr_state;
+}
+
+int cthd_sysfs_cdev_rapl::get_max_state()
+{
+	return max_state;
+}
+
+int cthd_sysfs_cdev_rapl::update()
+{
+	int ret = cthd_sysfs_cdev::update();
+	phy_max = max_state;
+	set_inc_dec_value(phy_max * (float)rapl_power_dec_percent/100);
+	max_state = max_state/rapl_low_limit_ratio;
+	thd_log_debug("RAPL max limit %d increment: %d\n", max_state, inc_dec_val);
+	return ret;
 }
