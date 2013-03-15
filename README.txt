@@ -27,6 +27,12 @@ Build
 		and select "TERMINATE" choice. 
 
 5:  What it is doing?
+Version 0.6
+- Use Intel P state driver to control P states
+- Use RAPL cooling device
+- Fix valgrind reported errors and cleanup
+- Add document
+
 Version 0.5
 - License update to GPL v2 or later
 - Change dbus session bus to system
@@ -64,9 +70,4 @@ Version 0.1
 - Read temprature via netlink notification or via polling configurable via command line
 - Once a trip point is crossed, activate the associate cooling devices. Start with min tstate to max tstate for each cooling device.
 - Based on active or passive settings it decides the cooling devices
-
-To be done:
-- Change some pointers to references
-- PID auto calibration for Kp, Ki, Kd.
-- ??
 
