@@ -65,7 +65,7 @@ Example below specifies
 <ThermalConfiguration>
 <Platform>
 <Name>Intel IvyBridge UltraBook SDV</Name>
-<uuid>C4850803-A624-C485-0803-A624C4850803</uuid>
+<uuid>dummy-C4850803-A624-C485-0803-A624C4850803</uuid>
 <Preference>PERFORMANCE</Preference>
 <!-- Either PERFORMANCE or QUIET 
 <Preference>QUIET</Preference>
@@ -284,7 +284,7 @@ Example below specifies
 </Platform>
 <Platform>
 	<Name>SandyBridge Platform</Name>
-	<uuid>001320F9-BE92-0013-20F9-BE92001320F9</uuid>
+	<uuid>dummy-001320F9-BE92-0013-20F9-BE92001320F9</uuid>
 	<Preference>PERFORMANCE</Preference>
 
 	<ThermalZones>
