@@ -32,7 +32,7 @@ class cthd_sysfs_cdev_rapl: public cthd_sysfs_cdev
 protected:
 	int phy_max;
 public:
-	static const int rapl_low_limit_ratio = 2;
+	static const int rapl_low_limit_percent = 25;
 	static const int rapl_power_dec_percent = 5;
 
 	cthd_sysfs_cdev_rapl(unsigned int _index, std::string control_path):

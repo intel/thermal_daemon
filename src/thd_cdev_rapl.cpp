@@ -69,7 +69,9 @@ int cthd_sysfs_cdev_rapl::update()
 	int ret = cthd_sysfs_cdev::update();
 	phy_max = max_state;
 	set_inc_dec_value(phy_max * (float)rapl_power_dec_percent/100);
-	max_state = max_state/rapl_low_limit_ratio;
+
+	max_state -= (float)max_state * rapl_low_limit_percent/100;
+//	max_state = (float)max_state/(rapl_low_limit_ratio);
 	thd_log_debug("RAPL max limit %d increment: %d\n", max_state, inc_dec_val);
 
 	// Set time window to match polling interval
