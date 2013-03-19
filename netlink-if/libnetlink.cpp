@@ -126,14 +126,14 @@ int rtnl_dump_request(struct rtnl_handle *rth, int type, void *req, int len)
 	struct nlmsghdr nlh;
 	struct sockaddr_nl nladdr;
 	struct iovec iov[2] = {
-		{ .iov_base = &nlh, .iov_len = sizeof(nlh) },
-		{ .iov_base = req, .iov_len = len }
+		{ iov_base : &nlh, iov_len : sizeof(nlh) },
+		{ iov_base : req, iov_len : len }
 	};
 	struct msghdr msg = {
-		.msg_name = &nladdr,
-		.msg_namelen = 	sizeof(nladdr),
-		.msg_iov = iov,
-		.msg_iovlen = 2,
+		msg_name : &nladdr,
+		msg_namelen : 	sizeof(nladdr),
+		msg_iov : iov,
+		msg_iovlen : 2,
 	};
 
 	memset(&nladdr, 0, sizeof(nladdr));
@@ -157,10 +157,10 @@ int rtnl_dump_filter(struct rtnl_handle *rth,
 	struct sockaddr_nl nladdr;
 	struct iovec iov;
 	struct msghdr msg = {
-		.msg_name = &nladdr,
-		.msg_namelen = sizeof(nladdr),
-		.msg_iov = &iov,
-		.msg_iovlen = 1,
+		msg_name : &nladdr,
+		msg_namelen : sizeof(nladdr),
+		msg_iov : &iov,
+		msg_iovlen : 1,
 	};
 	char buf[16384];
 
@@ -239,14 +239,14 @@ int rtnl_talk(struct rtnl_handle *rtnl, struct nlmsghdr *n, pid_t peer,
 	struct nlmsghdr *h;
 	struct sockaddr_nl nladdr;
 	struct iovec iov = {
-		.iov_base = (void*) n,
-		.iov_len = n->nlmsg_len
+		iov_base : (void*) n,
+		iov_len : n->nlmsg_len
 	};
 	struct msghdr msg = {
-		.msg_name = &nladdr,
-		.msg_namelen = sizeof(nladdr),
-		.msg_iov = &iov,
-		.msg_iovlen = 1,
+		msg_name : &nladdr,
+		msg_namelen : sizeof(nladdr),
+		msg_iov : &iov,
+		msg_iovlen : 1,
 	};
 	char   buf[16384];
 
@@ -362,10 +362,10 @@ int rtnl_listen(struct rtnl_handle *rtnl,
 	struct sockaddr_nl nladdr;
 	struct iovec iov;
 	struct msghdr msg = {
-		.msg_name = &nladdr,
-		.msg_namelen = sizeof(nladdr),
-		.msg_iov = &iov,
-		.msg_iovlen = 1,
+		msg_name : &nladdr,
+		msg_namelen : sizeof(nladdr),
+		msg_iov : &iov,
+		msg_iovlen : 1,
 	};
 	char   buf[8192];
 
@@ -599,10 +599,10 @@ int rtnl_read(struct rtnl_handle *rtnl,
 	struct sockaddr_nl nladdr;
 	struct iovec iov;
 	struct msghdr msg = {
-		.msg_name = &nladdr,
-		.msg_namelen = sizeof(nladdr),
-		.msg_iov = &iov,
-		.msg_iovlen = 1,
+		msg_name : &nladdr,
+		msg_namelen : sizeof(nladdr),
+		msg_iov : &iov,
+		msg_iovlen : 1,
 	};
 	char   buf[8192];
 
