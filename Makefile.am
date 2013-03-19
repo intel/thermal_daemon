@@ -41,6 +41,7 @@ BUILT_SOURCES = \
 thermald_SOURCES = \
 		src/main.cpp \
 		src/thd_engine.cpp \
+		src/thd_cdev.cpp \
 		src/thd_engine_therm_sys_fs.cpp \
 		src/thd_engine_dts.cpp \
 		src/thd_cdev_pstates.cpp \
