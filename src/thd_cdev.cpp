@@ -42,7 +42,7 @@ curr_state, max_state);
 			int state = curr_state + inc_dec_val;
 			time_t tm;
 			time(&tm);
-			if((tm - last_op_time) < (thd_engine->get_poll_timeout_ms() + 1))
+			if((tm - last_op_time) < (thd_engine->get_poll_timeout_sec() + 1))
 			{
 				if(curr_pow == 0)
 					base_pow_state = curr_state;

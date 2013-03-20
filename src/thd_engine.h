@@ -152,6 +152,7 @@ public:
 		return false;
 	}
 	int get_poll_timeout_ms() { return poll_timeout_msec; }
+	int get_poll_timeout_sec() { return poll_timeout_msec/1000; }
 	void thd_engine_reload_zones();
 };
 
