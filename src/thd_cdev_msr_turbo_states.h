@@ -38,7 +38,17 @@ public:
 	int update()
 	{
 		highest_freq_state = msr.get_min_turbo_freq();
+		if (highest_freq_state == THD_ERROR)
+		{
+			thd_log_warn("update: Read MSR failed");
+			return THD_ERROR;
+		}
 		lowest_freq_state = msr.get_max_freq();
+		if (lowest_freq_state == THD_ERROR)
+		{
+			thd_log_warn("update: Read MSR failed");
+			return THD_ERROR;
+		}
 		thd_log_debug("cthd_cdev_msr_turbo_states cpu_index %d min %x max %x\n",
 	cpu_index, lowest_freq_state, highest_freq_state);
 
