@@ -68,8 +68,22 @@ int cthd_engine_dts::read_thermal_zones()
 
 	if(!count)
 	{
-		thd_log_error("Thermal DTS: No Zones present: \n");
-		return THD_FATAL_ERROR;
+		// No coretemp sysfs exist, try hwmon
+		thd_log_warn("Thermal DTS: No coretemp sysfs, trying hwmon \n");
+
+		cthd_zone_dts *zone = new cthd_zone_dts(count,
+		"/sys/class/hwmon/hwmon0/");
+		zone->set_zone_active();
+		if(zone->zone_update() == THD_SUCCESS)
+		{
+			zones.push_back(zone);
+			++count;
+		}
+		if (!count)
+		{
+			thd_log_error("Thermal DTS or hwmon: No Zones present: \n");
+			return THD_FATAL_ERROR;
+		}
 	}
 
 	return THD_SUCCESS;

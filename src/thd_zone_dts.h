@@ -60,6 +60,7 @@ protected:
 public:
 	static const int max_dts_sensors = sizeof(unsigned int) *8;
 	static const int def_hystersis = 0;
+	static const int def_offset_from_critical = 10000;
 	cthd_zone_dts(int count, std::string path);
 
 	virtual int read_trip_points();
