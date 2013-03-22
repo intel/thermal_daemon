@@ -37,6 +37,7 @@ int cthd_zone_dts::init()
 	critical_temp = 0;
 	int temp;
 	cthd_engine_dts *engine = (cthd_engine_dts*)thd_engine;
+	bool found = false;
 
 	for(int i = 0; i < max_dts_sensors; ++i)
 	{
@@ -55,7 +56,13 @@ int cthd_zone_dts::init()
 			std::istringstream(temp_str) >> temp;
 			if(critical_temp == 0 || temp < critical_temp)
 				critical_temp = temp;
+			found = true;
 		}
+	}
+	if(!found)
+	{
+		thd_log_error("DTS temperature path not found \n");
+		return THD_ERROR;
 	}
 	thd_log_debug("Core temp DTS :critical %d\n", critical_temp);
 
@@ -72,7 +79,8 @@ int cthd_zone_dts::read_trip_points()
 	cthd_msr msr;
 	int _index = 0;
 
-	init();
+	if (init() != THD_SUCCESS)
+		return THD_ERROR;
 	cthd_engine_dts *thd_dts_engine = (cthd_engine_dts*)thd_engine;
 
 	unsigned int cpu_mask = thd_dts_engine->get_cpu_mask();
@@ -100,7 +108,7 @@ int cthd_zone_dts::read_trip_points()
 		trip_pt.thd_trip_point_add_cdev_index(thd_dts_engine->turbo_on_off_index);
 #ifdef CPU_FREQ
 		trip_pt.thd_trip_point_add_cdev_index(thd_dts_engine->cpufreq_index);
-#endif 
+#endif
 		if(thd_dts_engine->power_clamp_index !=  - 1)
 		{
 			trip_pt.thd_trip_point_add_cdev_index(thd_dts_engine->power_clamp_index);
@@ -133,7 +141,7 @@ int cthd_zone_dts::read_trip_points()
 #ifdef CPU_FREQ
 				trip_pt.thd_trip_point_add_cdev_index(thd_dts_engine->cpufreq_index +
 	thd_dts_engine->max_cpu_count *(cnt + 1));
-#endif 
+#endif
 				if(thd_dts_engine->power_clamp_index !=  - 1)
 				{
 					trip_pt.thd_trip_point_add_cdev_index(thd_dts_engine->power_clamp_index);
