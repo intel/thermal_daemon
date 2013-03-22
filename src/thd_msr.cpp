@@ -542,7 +542,7 @@ int cthd_msr::set_freq_state_per_cpu(int cpu, int state)
 	thd_log_debug("perf_ctl read back %x\n", val);
 	if(ret < 0)
 		return THD_ERROR;
-#endif 
+#endif
 	return THD_SUCCESS;
 }
 
@@ -575,7 +575,7 @@ int cthd_msr::set_freq_state(int state)
 		thd_log_debug("perf_ctl read back %x\n", val);
 		if(ret < 0)
 			return THD_ERROR;
-#endif 
+#endif
 	}
 }
 

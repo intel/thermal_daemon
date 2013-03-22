@@ -46,7 +46,7 @@ int cthd_engine_dts::read_thermal_zones()
 
 		if(thd_sysfs.exists(temp_crit_str.str()))
 		{
-			cthd_zone_dts_sensor *zone = new cthd_zone_dts_sensor(count, i, 
+			cthd_zone_dts_sensor *zone = new cthd_zone_dts_sensor(count, i,
 	"/sys/devices/platform/coretemp.0/");
 			if(zone->zone_update() == THD_SUCCESS)
 			{
@@ -57,7 +57,7 @@ int cthd_engine_dts::read_thermal_zones()
 		}
 	}
 
-	cthd_zone_dts *zone = new cthd_zone_dts(count, 
+	cthd_zone_dts *zone = new cthd_zone_dts(count,
 	"/sys/devices/platform/coretemp.0/");
 	zone->set_zone_active();
 	if(zone->zone_update() == THD_SUCCESS)
