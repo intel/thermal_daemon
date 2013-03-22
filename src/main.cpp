@@ -71,7 +71,7 @@ static int thd_log_level = G_LOG_LEVEL_ERROR | G_LOG_LEVEL_CRITICAL |
 static gboolean thd_daemonize;
 
 // Disable dbus
-static gboolean dbus_disable;
+static gboolean dbus_enable;
 
 // poll mode
 int thd_poll_interval = 4; //in seconds
@@ -197,7 +197,7 @@ static int thd_dbus_server_proc(gboolean no_daemon)
 		thd_log_error("Couldn't create GMainLoop:");
 		return THD_FATAL_ERROR;
 	}
-	if(!dbus_disable)
+	if(dbus_enable)
 	{
 		bus = dbus_g_bus_get(DBUS_BUS_SYSTEM, &error);
 		if(error != NULL)
@@ -313,7 +313,7 @@ int main(int argc, char *argv[])
 	GOptionContext *opt_ctx;
 
 	thd_daemonize = TRUE;
-	dbus_disable = FALSE;
+	dbus_enable = FALSE;
 
 	GOptionEntry options[] = 
 	{
@@ -348,8 +348,8 @@ int main(int argc, char *argv[])
 		}
 		, 
 		{
-			"dbus-disable", 0, 0, G_OPTION_ARG_NONE, &dbus_disable, N_(
-	"Disable Dbus, so that no one can connect!"), NULL
+			"dbus-enable", 0, 0, G_OPTION_ARG_NONE, &dbus_enable, N_(
+	"Enable Dbus."), NULL
 		}
 		, 
 		{
