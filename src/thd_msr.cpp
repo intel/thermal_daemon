@@ -67,6 +67,10 @@ int cthd_msr::read_msr(int cpu, unsigned int idx, unsigned long long *val)
 	{
 		ret = msr_sysfs.read(file_name_str.str(), idx, (char*)val, sizeof(*val));
 	}
+	if(ret < 0)
+	{
+		thd_log_warn("MSR READ Failed \n");
+	}
 
 	return ret;
 }
@@ -79,6 +83,10 @@ int cthd_msr::write_msr(int cpu, unsigned int idx, unsigned long long val)
 	if(msr_sysfs.exists(file_name_str.str()))
 	{
 		ret = msr_sysfs.write(file_name_str.str(), idx, val);
+	}
+	if(ret < 0)
+	{
+		thd_log_warn("MSR WRITE Failed \n");
 	}
 
 	return ret;
@@ -323,7 +331,7 @@ int cthd_msr::get_clock_mod_duty_cycle()
 	return state;
 }
 
-unsigned char cthd_msr::get_min_freq()
+int cthd_msr::get_min_freq()
 {
 	int ret;
 	unsigned char state;
@@ -337,7 +345,7 @@ unsigned char cthd_msr::get_min_freq()
 	return MSR_IA32_PLATFORM_INFO_MIN_FREQ(val);
 }
 
-unsigned char cthd_msr::get_min_turbo_freq()
+int cthd_msr::get_min_turbo_freq()
 {
 	int ret;
 	unsigned long long val;
@@ -355,7 +363,7 @@ unsigned char cthd_msr::get_min_turbo_freq()
 	return 0;
 }
 
-unsigned char cthd_msr::get_max_turbo_freq()
+int cthd_msr::get_max_turbo_freq()
 {
 	int ret;
 	unsigned long long val;
@@ -371,7 +379,7 @@ unsigned char cthd_msr::get_max_turbo_freq()
 	return val;
 }
 
-unsigned char cthd_msr::get_max_freq()
+int cthd_msr::get_max_freq()
 {
 	int ret;
 	unsigned long long val;

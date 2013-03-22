@@ -47,10 +47,10 @@ public:
 	int get_clock_mod_duty_cycle();
 	int set_clock_mod_duty_cycle(int state);
 
-	unsigned char get_min_freq();
-	unsigned char get_max_freq();
-	unsigned char get_min_turbo_freq();
-	unsigned char get_max_turbo_freq();
+	int get_min_freq();
+	int get_max_freq();
+	int get_min_turbo_freq();
+	int get_max_turbo_freq();
 
 	int inc_freq_state();
 	int dec_freq_state();

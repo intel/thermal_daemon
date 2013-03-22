@@ -68,26 +68,31 @@ int cthd_zone_dts_sensor::read_trip_points()
 			cthd_trip_point trip_pt(trip_point_cnt, P_T_STATE, set_point, def_hystersis,
 	index);
 			trip_pt.thd_trip_point_set_control_type(SEQUENTIAL);
-			trip_pt.thd_trip_point_add_cdev_index(thd_dts_engine->msr_turbo_states_index
+			if (thd_dts_engine->msr_control_present > 0)
+			{
+				trip_pt.thd_trip_point_add_cdev_index(thd_dts_engine->msr_turbo_states_index
 						+ thd_dts_engine->max_cpu_count *(cnt + 1));
-			trip_pt.thd_trip_point_add_cdev_index(thd_dts_engine->msr_p_states_index_limited +
+				trip_pt.thd_trip_point_add_cdev_index(thd_dts_engine->msr_p_states_index_limited +
 						thd_dts_engine->max_cpu_count *(cnt + 1));
-			trip_pt.thd_trip_point_add_cdev_index(thd_dts_engine->turbo_on_off_index +
+				trip_pt.thd_trip_point_add_cdev_index(thd_dts_engine->turbo_on_off_index +
 					thd_dts_engine->max_cpu_count *(cnt + 1));
-#ifdef CPU_FREQ
-			trip_pt.thd_trip_point_add_cdev_index(thd_dts_engine->cpufreq_index +
-	thd_dts_engine->max_cpu_count *(cnt + 1));
-#endif
-
+			}
+			else
+			{
+				trip_pt.thd_trip_point_add_cdev_index(thd_dts_engine->cpufreq_index +
+					thd_dts_engine->max_cpu_count *(cnt + 1));
+			}
 			if(thd_dts_engine->power_clamp_index !=  - 1)
 			{
 				trip_pt.thd_trip_point_add_cdev_index(thd_dts_engine->power_clamp_index);
 			}
-			trip_pt.thd_trip_point_add_cdev_index(thd_dts_engine->msr_p_states_index +
+			if (thd_dts_engine->msr_control_present > 0)
+			{
+				trip_pt.thd_trip_point_add_cdev_index(thd_dts_engine->msr_p_states_index +
 					thd_dts_engine->max_cpu_count *(cnt + 1));
-			trip_pt.thd_trip_point_add_cdev_index(thd_dts_engine->t_state_index +
-	thd_dts_engine->max_cpu_count *(cnt + 1));
-
+				trip_pt.thd_trip_point_add_cdev_index(thd_dts_engine->t_state_index +
+					thd_dts_engine->max_cpu_count *(cnt + 1));
+			}
 			trip_points.push_back(trip_pt);
 			trip_point_cnt++;
 			cnt++;
