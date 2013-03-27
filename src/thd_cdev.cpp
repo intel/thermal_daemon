@@ -42,7 +42,7 @@ curr_state, max_state);
 			int state = curr_state + inc_dec_val;
 			time_t tm;
 			time(&tm);
-			if((tm - last_op_time) < (thd_engine->get_poll_timeout_sec() + 1))
+			if((tm - last_op_time) < (thd_engine->def_poll_interval/1000 + 1))
 			{
 				if(curr_pow == 0)
 					base_pow_state = curr_state;
@@ -56,8 +56,6 @@ state);
 					curr_pow = 0;
 					curr_state = max_state;
 					last_op_time = tm;
-					//						thd_log_debug("Reached Max State: so return\n");
-					//						return THD_ERROR;
 				}
 			}
 			else

@@ -307,8 +307,7 @@ int main(int argc, char *argv[])
 	gboolean log_debug = FALSE;
 	gboolean no_daemon = FALSE;
 	gboolean test_mode = FALSE;
-	//	gboolean use_thermal_sys_fs = FALSE;
-	gint poll_interval = 0;
+	gint poll_interval = -1;
 	gboolean success;
 	GOptionContext *opt_ctx;
 
@@ -421,11 +420,12 @@ int main(int argc, char *argv[])
 	{
 		thd_log_level |= G_LOG_LEVEL_MESSAGE | G_LOG_LEVEL_INFO | G_LOG_LEVEL_DEBUG;
 	}
-	if(poll_interval)
+	if(poll_interval >= 0)
 	{
 		fprintf(stdout, "Polling enabled: %d\n", poll_interval);
 		thd_poll_interval = poll_interval;
 	}
+
 	openlog("thermald", LOG_PID, LOG_USER | LOG_DAEMON | LOG_SYSLOG); 
 	// Don't care return val
 	//setlogmask(LOG_CRIT | LOG_ERR | LOG_WARNING | LOG_NOTICE | LOG_DEBUG | LOG_INFO);
