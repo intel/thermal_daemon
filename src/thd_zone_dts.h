@@ -39,6 +39,7 @@ class cthd_zone_dts: public cthd_zone
 protected:
 	csys_fs dts_sysfs;
 	int critical_temp;
+	int max_temp;
 	int set_point;
 	int prev_set_point;
 	int trip_point_cnt;
@@ -61,6 +62,8 @@ public:
 	static const int max_dts_sensors = sizeof(unsigned int) *8;
 	static const int def_hystersis = 0;
 	static const int def_offset_from_critical = 10000;
+	static const int def_critical_temp = 100000;
+
 	cthd_zone_dts(int count, std::string path);
 
 	virtual int read_trip_points();

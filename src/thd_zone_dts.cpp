@@ -39,6 +39,9 @@ int cthd_zone_dts::init()
 	cthd_engine_dts *engine = (cthd_engine_dts*)thd_engine;
 	bool found = false;
 
+	max_temp = 0;
+	critical_temp = 0;
+
 	for(int i = 0; i < max_dts_sensors; ++i)
 	{
 		std::stringstream temp_crit_str;
@@ -46,6 +49,16 @@ int cthd_zone_dts::init()
 
 		temp_crit_str << "temp" << i << "_crit";
 		temp_max_str << "temp" << i << "_max";
+
+		if(dts_sysfs.exists(temp_crit_str.str()))
+		{
+			std::string temp_str;
+			dts_sysfs.read(temp_crit_str.str(), temp_str);
+			std::istringstream(temp_str) >> temp;
+			if(critical_temp == 0 || temp < critical_temp)
+				critical_temp = temp;
+
+		}
 
 		if(dts_sysfs.exists(temp_max_str.str()))
 		{
@@ -56,8 +69,8 @@ int cthd_zone_dts::init()
 			std::string temp_str;
 			dts_sysfs.read(temp_max_str.str(), temp_str);
 			std::istringstream(temp_str) >> temp;
-			if(critical_temp == 0 || temp < critical_temp)
-				critical_temp = temp;
+			if(max_temp == 0 || temp < max_temp)
+				max_temp = temp;
 			found = true;
 		} else if(dts_sysfs.exists(temp_crit_str.str()))
 		{
@@ -70,8 +83,8 @@ int cthd_zone_dts::init()
 			std::istringstream(temp_str) >> temp;
 			// Adjust offset from critical (target temperature for cooling)
 			temp = temp - def_offset_from_critical;
-			if(critical_temp == 0 || temp < critical_temp)
-				critical_temp = temp;
+			if(max_temp == 0 || temp < max_temp)
+				max_temp = temp;
 			found = true;
 		}
 	}
@@ -80,9 +93,9 @@ int cthd_zone_dts::init()
 		thd_log_error("DTS temperature path not found \n");
 		return THD_ERROR;
 	}
-	thd_log_debug("Core temp DTS :critical %d\n", critical_temp);
+	thd_log_debug("Core temp DTS :critical %d, max %d\n", critical_temp, max_temp);
 
-	thd_model.set_max_temperature(critical_temp);
+	thd_model.set_max_temperature(max_temp);
 	prev_set_point = set_point = thd_model.get_set_point();
 
 	update_zone_preference();
