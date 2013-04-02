@@ -58,6 +58,8 @@ protected:
 		return (4+_index * 4);
 	}
 
+	int update_thresholds(int thres_1, int thres_2);
+
 public:
 	static const int max_dts_sensors = sizeof(unsigned int) *8;
 	static const int def_hystersis = 0;

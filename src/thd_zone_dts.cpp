@@ -103,6 +103,45 @@ int cthd_zone_dts::init()
 	return THD_SUCCESS;
 }
 
+int cthd_zone_dts::update_thresholds(int thres_1, int thres_2)
+{
+	int ret = THD_SUCCESS;
+
+	thd_log_info("Setting thresholds %d:%d\n", thres_1, thres_2);
+	for(int i = 0; i < max_dts_sensors; ++i)
+	{
+		std::stringstream threshold_1_str;
+		std::stringstream threshold_2_str;
+
+		threshold_1_str << "temp" << i << "_notify_threshold_1";
+		threshold_2_str << "temp" << i << "_notify_threshold_2";
+		if(dts_sysfs.exists(threshold_1_str.str()))
+		{
+			std::stringstream thres_str;
+			thres_str << thres_1;
+			thd_log_info("Writing %s to %s \n", threshold_1_str.str().c_str(),
+					thres_str.str().c_str());
+			dts_sysfs.write(threshold_1_str.str(), thres_str.str());
+		}
+		else
+		{
+			ret = THD_ERROR;
+		}
+
+		if(dts_sysfs.exists(threshold_2_str.str()))
+		{
+			std::stringstream thres_str;
+			thres_str << thres_2;
+			dts_sysfs.write(threshold_2_str.str(), thres_str.str());
+		}
+		else
+		{
+			ret = THD_ERROR;
+		}
+	}
+	return ret;
+}
+
 int cthd_zone_dts::read_trip_points()
 {
 	cthd_msr msr;
