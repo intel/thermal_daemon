@@ -57,6 +57,12 @@ typedef struct
 	unsigned long msg[MAX_MSG_SIZE];
 } message_capsul_t;
 
+typedef struct
+{
+	unsigned int family;
+	unsigned int model;
+}supported_ids_t;
+
 class cthd_engine
 {
 

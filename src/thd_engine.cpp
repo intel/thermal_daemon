@@ -446,12 +446,23 @@ void cthd_engine::thd_engine_reload_zones()
 	}
 }
 
+// Add any tested platform ids in this table
+static supported_ids_t id_table[] {
+		{6, 0x2a}, // Sandybridge
+		{6, 0x3a}, // IvyBridge
+		{6, 0x45}, // Haswell ULT */
+
+		{0, 0} // Last Invalid entry
+};
+
 int cthd_engine::check_cpu_id()
 {
 	// Copied from turbostat program
 	unsigned int eax, ebx, ecx, edx, max_level;
 	unsigned int fms, family, model, stepping;
 	genuine_intel = 0;
+	int i;
+	bool valid = false;
 
 	eax = ebx = ecx = edx = 0;
 
@@ -473,6 +484,21 @@ int cthd_engine::check_cpu_id()
 
 	thd_log_warn("%d CPUID levels; family:model:stepping 0x%x:%x:%x (%d:%d:%d)\n",
 	max_level, family, model, stepping, family, model, stepping);
+
+	while(id_table[i].family)
+	{
+		if (id_table[i].family == family && id_table[i].model == model)
+		{
+			valid = true;
+			break;
+		}
+		i++;
+	}
+	if (!valid)
+	{
+		thd_log_error("Unsupported Family %d model %d !\n", family, model);
+		exit(1);
+	}
 
 	if(!(edx &(1 << 5)))
 	{
