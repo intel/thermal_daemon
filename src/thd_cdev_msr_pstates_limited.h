@@ -22,6 +22,12 @@
  *
  */
 
+/* This inherits cthd_cdev_psr and does, control using MSRs. But
+ * it will not go to lowest p state, but limit to half.
+ * This way some other cooling device can be used instead
+ * of reducing to lowest p state.
+ */
+
 #ifndef THD_CDEV_MSR_PSTATES_LIMITED_H_
 #define THD_CDEV_MSR_PSTATES_LIMITED_H_
 

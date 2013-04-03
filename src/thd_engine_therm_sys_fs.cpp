@@ -27,6 +27,11 @@
 #include "thd_engine_therm_sys_fs.h"
 #include "thd_cdev_therm_sys_fs.h"
 
+/* Implements ACPI style thermal zone. If there is a UUID match, this will
+ * load each trip ponts and cooling device ids from XML.
+ *
+ */
+
 cthd_engine_therm_sysfs::cthd_engine_therm_sysfs(): thd_sysfs(
 	"/sys/class/thermal/"), parser_init_done(false)
 {

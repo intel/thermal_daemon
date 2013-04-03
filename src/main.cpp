@@ -24,6 +24,19 @@
  * which parses command line arguments, set up dbus server and log related
  * functions.
  */
+
+/* This implements main() function. This will parse command line options and
+ * a new instance of cthd_engine object. By default it will create a engine
+ * which uses dts engine, which DTS sensor and use P states to control
+ * temperature, without any configuration. Alternatively if the
+ * thermal-conf.xml has exact UUID match then it can use the zones and
+ * cooling devices defined it to control thermals. This file will allow fine
+ * tune ACPI thermal config or create new thermal config using custom
+ * sensors.
+ * Dbus interface allows user to switch between active/passive thermal controls
+ * if the thermal-conf.xml defines parameters.
+ */
+
 #include <syslog.h>
 #include <signal.h>
 #include "thermald.h"

@@ -22,6 +22,19 @@
  *
  */
 
+/*
+ * This is parent class for all cooling devices. Most of the functions
+ * are implemented in interface file except set state.
+ * set_state uses the interface to get the current state, max state and
+ * set the device state.
+ * When state = 0, it causes reduction in the cooling device state
+ * when state = 1, it increments cooling device state
+ * When increments, it goes step by step, unless it finds that the temperature
+ * can't be controlled by previous state with in def_poll_interval, otherwise
+ * it will increase exponentially.
+ * Reduction is always uses step by step to reduce ping pong affect.
+ *
+ */
 
 #include "thd_cdev.h"
 #include "thd_engine.h"

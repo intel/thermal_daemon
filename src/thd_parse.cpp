@@ -22,6 +22,10 @@
  *
  */
 
+/* Parser to parse thermal configuration file. This uses libxml2 API.
+ *
+ */
+
 #include "thd_parse.h"
 #include <stdlib.h>
 #include "thd_sys_fs.h"

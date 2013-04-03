@@ -23,6 +23,15 @@
  * This implementation allows to use core temperature interface.
  */
 
+/* Implementation of DTS sensor Zone. This
+ * - Identifies DTS sensors, and use maximum reported temperature to control
+ * - Prioritize the cooling device order
+ * - Sets one control point starting from target temperature (max) not critical.
+ * Very first time it reaches this temperature cthd_model, calculates a set point when
+ * cooling device needs to be activated.
+ *
+ */
+
 #include "thd_zone_dts.h"
 #include "thd_engine_dts.h"
 #include "thd_msr.h"

@@ -24,6 +24,12 @@
 #include "thd_cdev_therm_sys_fs.h"
 #include "thd_engine.h"
 
+/* This uses ACPI style thermal sysfs interface to set states.
+ * It expects, max_state. curr_state in thermal sysfs and uses
+ * these sysfs-files to control.
+ *
+ */
+
 int cthd_sysfs_cdev::update()
 {
 

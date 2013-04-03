@@ -22,6 +22,10 @@
  *
  */
 
+/* Control P states using cpufreq. Each step reduces to next lower frequency
+ *
+ */
+
 #include "thd_cdev_pstates.h"
 #include "thd_engine_dts.h"
 

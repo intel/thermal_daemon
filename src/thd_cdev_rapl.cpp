@@ -24,6 +24,11 @@
 #include "thd_cdev_rapl.h"
 #include "thd_engine.h"
 
+/* This uses Intel RAPL driver to cool the system. RAPL driver show
+ * mas thermal spec power in max_state. Each state can compensate
+ * rapl_power_dec_percent, from the max state.
+ *
+ */
 void cthd_sysfs_cdev_rapl::set_curr_state(int state, int arg)
 {
 

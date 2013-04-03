@@ -23,6 +23,10 @@
  * This implementation allows to use core temperature interface.
  */
 
+/* Used to control P state of an individual CPU.
+ * It uses the DTS to CPU relationship stored during self calibration process.
+ */
+
 #include "thd_zone_dts_sensor.h"
 #include "thd_engine_dts.h"
 

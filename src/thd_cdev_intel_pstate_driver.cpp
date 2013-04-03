@@ -25,7 +25,14 @@
 #include "thd_cdev_intel_pstate_driver.h"
 
 /*
- contents of "/sys/devices/system/cpu/intel_pstate/"
+ * This implementation allows to control get max state and
+ * set current state of using Intel P state driver
+ * P state drives uses a percent count. 100% means full
+ * performance, setting anything lower limits performance.
+ * Each lower state reduces performance by unit value.
+ * unit value is calculated using number of possible p states
+ * . Each step reduces bye one p state.
+ *  Contents of "/sys/devices/system/cpu/intel_pstate/"
 	max_perf_pct,  min_perf_pct,  no_turbo
  */
 

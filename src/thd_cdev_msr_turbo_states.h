@@ -21,6 +21,11 @@
  * Author Name <Srinivas.Pandruvada@linux.intel.com>
  *
  */
+
+/*This inherits cthd_cdev_psr and does, control using MSRs. But it
+ * will limit to only turbo frequency range.
+*/
+
 #ifndef THD_CDEV_MSR_TURBO_STATES_H_
 #define THD_CDEV_MSR_TURBO_STATES_H_
 

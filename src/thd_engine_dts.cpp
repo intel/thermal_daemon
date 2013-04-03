@@ -35,8 +35,15 @@
 #include "thd_cdev_intel_pstate_driver.h"
 #include "thd_cdev_rapl.h"
 
-// Currently only supporting one physical package. As this daemon is
-// targeting portable clients/laptops, which tend to have one physical package.
+/* This implements control using DTS sensor. It uses DTS sensor sysfs and
+ * uses P and T states to control temperature. \
+ * It looks for all the available cooling devices, if present then it assigns
+ * an ID. These IDS are used in the zones to prioritize the order of cooling
+ * methods.
+ * Currently only supporting one physical package. As this daemon is
+ * targeting portable clients/laptops, which tend to have one physical package.
+ */
+
 int cthd_engine_dts::read_thermal_zones()
 {
 	int count = zone_count;

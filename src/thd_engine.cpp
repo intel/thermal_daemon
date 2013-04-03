@@ -22,6 +22,15 @@
  *
  */
 
+/* This class acts as the parent class of all thermal engines. Main functions are:
+ * - Initialization
+ * - Read cooling devices and thermal zones(sensors), which can be overridden in child
+ * - Starts a poll loop, All the thermal processing happens in this thread's context
+ * - Message processing loop
+ * - If either a poll interval is expired or notified via netlink, it schedules a
+ *   a change notification on the associated cthd_zone to read and process.
+ */
+
 #include "thd_engine.h"
 #include "thd_topology.h"
 

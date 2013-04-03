@@ -33,14 +33,7 @@ and cooling devices.
 or invalid trip points
 3. Non ACPI detectable sensor and cooling devices, so thermal zone
 information
-4. Virtual zones: Decision based on sensors present in multiple zones.
-For example
-if temperature in ZONE1 and ZONE2 combined exceeds a trip point,
-then take action. You can also specify simple equation
-2*ZONE1 + 3*ZONE2 + 10 for temerature capculation and fire associated
-cooling devices for this virtual zone.
-5. Specify ACPI passive cooling clock throttling constants
-6. Specify constants for using PID controller for passive cooling
+4. Specify ACPI passive cooling clock throttling constants
 
 Caveats:
 Using DMI UUID to identify a platform. What else can we use?
@@ -136,13 +129,6 @@ Example below specifies
 		<ThermalZone>
 			<Name>Zone1</Name>
 			<Sensor_path>/sys/class/thermal/thermal_zone1/temp</Sensor_path>
-<!-- PID Control paramaters setting
-			<PidControl>
-				<Kp>1</Kp>
-				<Ki>0</Ki>
-				<Kd>0</Kd>
-			</PidControl>
--->
 			<TripPoints>
 				<TripPoint>
 					<Temperature>95000</Temperature>

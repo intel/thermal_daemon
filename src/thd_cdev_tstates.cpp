@@ -27,6 +27,10 @@
 #include "thd_cdev_tstates.h"
 #include "thd_engine_dts.h"
 
+/* This uses T states to control It uses MSR to set clock mode duty cycle.
+ *
+ */
+
 void cthd_cdev_tstates::set_curr_state(int state, int arg)
 {
 	if(cpu_index ==  - 1)

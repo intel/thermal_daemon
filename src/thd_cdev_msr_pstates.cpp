@@ -28,6 +28,12 @@
 #include "thd_cdev_msr_pstates.h"
 #include "thd_engine_dts.h"
 
+/* Controls p states using direly MSRs. If there is no Intel P state driver
+ * this acts as alternative.
+ * When it takes control it will switch to "userspace" governor so that
+ * it can control and restores later at the end.
+ *
+ */
 
 int cthd_cdev_pstate_msr::init()
 {

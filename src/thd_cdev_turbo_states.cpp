@@ -22,6 +22,10 @@
  *
  */
 
+/* This implementation allow to engage disengage turbo state.
+ *
+ */
+
 #include <string>
 #include <vector>
 #include "thd_cdev_turbo_states.h"

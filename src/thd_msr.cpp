@@ -21,6 +21,11 @@
  *
  */
 
+/* Abstracts all the MSR accesses for the thermal daemon. There shouldn't be any
+ * MSR access other module.
+ *
+ */
+
 #include "thd_msr.h"
 
 // MSR defines used in this module

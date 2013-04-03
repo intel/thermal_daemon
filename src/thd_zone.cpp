@@ -22,6 +22,15 @@
  *
  */
 
+/* This class implements parent thermal zone/sensor. It is included
+ * in a thermal engine. During initialization, it establishes a
+ * relationship between cooling devices and trip points (where
+ * some action needs to be taken).
+ * When it gets a notification for a change, it reads the temperature
+ * from sensors and uses cthd_trip point to schedule action on the event
+ * if required.
+ */
+
 #include "thd_zone.h"
 
 

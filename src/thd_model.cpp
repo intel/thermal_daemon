@@ -32,6 +32,11 @@
 #include <iostream>
 #include <fstream>
 
+/* This implements the compensation amount based on the slope and time spent
+ * on top 20 percent of target temperature zone.
+ *
+ */
+
 cthd_model::cthd_model(): trend_increase_start(0), max_temp(def_max_temperature)
 	, set_point(def_max_temperature), last_temp(0), max_temp_reached(0),
 	current_angle(0), set_point_reached(false), delay_cnt(0), max_temp_seen
