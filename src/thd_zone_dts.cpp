@@ -197,6 +197,7 @@ int cthd_zone_dts::read_trip_points()
 		{
 			if(cpu_mask &mask)
 			{
+				thd_log_debug("Add default processing for %x\n", cpu_mask & mask);
 				cdev_index = cpu_to_cdev_index(cnt);
 				cthd_trip_point trip_pt(trip_point_cnt, P_T_STATE, set_point, def_hystersis,
 	0xFF);
@@ -227,8 +228,10 @@ int cthd_zone_dts::read_trip_points()
 			}
 			mask = (mask << 1);
 			cnt++;
-			if(cnt >= msr.get_no_cpus())
+			if(cnt >= msr.get_no_cpus()) {
+				thd_log_debug("default mask processing done at cnt=%d\n", cnt);
 				break;
+			}
 		}
 		while(mask != 0);
 	}

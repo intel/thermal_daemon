@@ -95,8 +95,8 @@ int cthd_zone_dts_sensor::read_trip_points()
 			}
 			trip_points.push_back(trip_pt);
 			trip_point_cnt++;
-			cnt++;
 		}
+		++cnt;
 		mask = (mask << 1);
 	}
 	while(mask != 0);

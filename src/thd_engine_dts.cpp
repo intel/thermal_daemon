@@ -35,27 +35,42 @@
 #include "thd_cdev_intel_pstate_driver.h"
 #include "thd_cdev_rapl.h"
 
+// Currently only supporting one physical package. As this daemon is
+// targeting portable clients/laptops, which tend to have one physical package.
 int cthd_engine_dts::read_thermal_zones()
 {
 	int count = zone_count;
 
-	for(int i = 0; i < cthd_zone_dts::max_dts_sensors; ++i)
-	{
-		std::stringstream temp_crit_str;
-		temp_crit_str << "temp" << i << "_max";
+#ifdef PER_CPU_P_STATE_CONTROL
+	if (intel_pstate_driver_index == -1) {
+		// If Intel p state driver is present, it removes per cpu
+		// governor, so can't control P state for individual CPU
 
-		if(thd_sysfs.exists(temp_crit_str.str()))
+		// core cpu readings start from temp2.., temp1 is for package.
+		// For per CPU compensation, we want to address individual cores
+		for(int i = 2; i < cthd_zone_dts::max_dts_sensors; ++i)
 		{
-			cthd_zone_dts_sensor *zone = new cthd_zone_dts_sensor(count, i,
-	"/sys/devices/platform/coretemp.0/");
-			if(zone->zone_update() == THD_SUCCESS)
+			std::stringstream temp_crit_str;
+			temp_crit_str << "temp" << i << "_max";
+
+			if(thd_sysfs.exists(temp_crit_str.str()))
 			{
-				thd_log_info("DTS sensor %d present\n", i);
-				zones.push_back(zone);
-				++count;
+				cthd_zone_dts_sensor *zone = new cthd_zone_dts_sensor(count, i,
+						"/sys/devices/platform/coretemp.0/");
+				if(zone->zone_update() == THD_SUCCESS)
+				{
+					thd_log_info("DTS sensor %d present\n", i);
+					zones.push_back(zone);
+					++count;
+				}
 			}
 		}
 	}
+	else
+	{
+		thd_log_info("Intel P state governor, will not allow per cpu P states\n ");
+	}
+#endif
 
 	cthd_zone_dts *zone = new cthd_zone_dts(count,
 	"/sys/devices/platform/coretemp.0/");
@@ -295,6 +310,16 @@ int cthd_engine_dts::read_cooling_devices()
 			if(cdev_turbo->update() == THD_SUCCESS)
 			{
 				cdevs.push_back(cdev_turbo);
+				++cdev_cnt;
+			}
+			else
+				msr_control_present = -1;
+
+			cthd_cdev_pstate_msr_limited *cdevxx = new cthd_cdev_pstate_msr_limited(msr_p_states_index_limited +
+					max_cpu_count *(i + 1), i);
+			if(cdevxx->update() == THD_SUCCESS)
+			{
+				cdevs.push_back(cdevxx);
 				++cdev_cnt;
 			}
 			else

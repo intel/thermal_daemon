@@ -178,13 +178,14 @@ int cthd_engine::thd_engine_start()
 			close(wake_fds[0]);
 		}
 	}
-#endif 
-	/// calibration thread
+#endif
+#ifdef PER_CPU_P_STATE_CONTROL
+	// calibration thread
 	pthread_attr_init(&thd_attr);
 	pthread_attr_setdetachstate(&thd_attr, PTHREAD_CREATE_DETACHED);
 	ret = pthread_create(&cal_thd_engine, &thd_attr,
 	cthd_calibration_engine_thread, (void*)this);
-
+#endif
 	//
 	// Netlink stuff
 	nl_wrapper.genl_acpi_family_open(this);
@@ -223,6 +224,7 @@ static void *cthd_engine_thread(void *arg)
 	return NULL;
 }
 
+#ifdef PER_CPU_P_STATE_CONTROL
 static void *cthd_calibration_engine_thread(void *arg)
 {
 	int ret;
@@ -247,6 +249,7 @@ static void *cthd_calibration_engine_thread(void *arg)
 	thd_log_warn("Calibration thread exit\n");
 	return NULL;
 }
+#endif
 
 void cthd_engine::send_message(message_name_t msg_id, int size, unsigned char
 	*msg)
@@ -298,7 +301,9 @@ void cthd_engine::thd_engine_terminate()
 
 void cthd_engine::thd_engine_calibrate()
 {
+#ifdef PER_CPU_P_STATE_CONTROL
 	send_message(CALIBRATE, 0, NULL);
+#endif
 }
 
 void cthd_engine::thermal_zone_change(message_capsul_t *msg)
@@ -344,12 +349,14 @@ int cthd_engine::proc_message(message_capsul_t *msg)
 			}
 			thermal_zone_change(msg);
 			break;
+#ifdef PER_CPU_P_STATE_CONTROL
 		case CALIBRATE:
 			{
 				cthd_topology topo;
 				topo.calibrate();
 			}
 			break;
+#endif
 		case RELOAD_ZONES:
 			thd_engine_reload_zones();
 			break;

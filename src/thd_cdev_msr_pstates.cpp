@@ -31,7 +31,7 @@
 
 int cthd_cdev_pstate_msr::init()
 {
-	thd_log_debug("pstate msr CPU present \n");
+	thd_log_debug("pstate msr Index = %d CPU %d\n", index, cpu_index);
 	// Get number of CPUs
 	if(cdev_sysfs.exists("present"))
 	{

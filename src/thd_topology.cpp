@@ -92,7 +92,8 @@ void cthd_topology::temp_function()
 {
 	int i;
 
-	for(i = 0; i < no_cpu; ++i)
+	// core temp sensor index starts at 2
+	for(i = 2; i < no_sensors; ++i)
 	{
 		check_temperature(i);
 	}
