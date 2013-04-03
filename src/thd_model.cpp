@@ -63,6 +63,7 @@ unsigned int cthd_model::update_set_point()
 	57.2957795 *radians);
 		arc_len = delta_x * tan(radians);
 		_setpoint = max_temp - (unsigned int)(arc_len - delta_y);
+		_setpoint = _setpoint - _setpoint%1000;
 		thd_log_info("** set point  x:%g y:%g arc_len:%g set_point %u\n", delta_x,
 	delta_y, arc_len, _setpoint);
 		if((_setpoint < 0) || (abs(set_point - _setpoint) > max_compensation))
