@@ -1,11 +1,19 @@
-1.
+Prerequisites:
+	Kernel: Need kernel with "Intel P State driver", Intel Power clamp driver (Already in Kernel version 3.9.rc1)
+	KERNEL should be built with CONFIG_X86_MSR, so that x86 MSR can be read/write from user space.
+	If there is no MSR support or Intel P state driver, then it will only use cpufreq to control P states.
+
+Building and executing on Fedora
+1. 
 Install
-	automake
-	gcc
-	gcc-c++
-	glib-devel
-	dbus-glib-devel	
-	libxml2-devel
+
+	yum install automake
+	yum install gcc
+	yum install gcc-c++
+	yum install glib-devel
+	yum install dbus-glib-devel	
+	yum install libxml2-devel
+
 2
 Build
 
@@ -26,7 +34,42 @@ Build
 	sudo test/test_pref.sh
 		and select "TERMINATE" choice. 
 
-5:  What it is doing?
+
+
+Building on Ubuntu
+1. Install
+	sudo apt-get install autoconf
+	sudo apt-get install g++
+	sudo apt-get install libglib2.0-dev
+	sudo apt-get install libdbus-1-dev
+	sudo apt-get install libdbus-glib-1-dev
+	sudo apt-get install libxml2-dev
+
+2
+Build
+
+	./autogen.sh	
+	 ./configure prefix=/usr
+	make
+	sudo make install 
+(It will give error for systemd configuration, but ignore)
+cp data/thermald.conf /etc/init/
+3.
+Use "sudo start thermald" to start
+Use "sudo stop thermald" to stop
+
+-------------------------------------------
+
+Releases
+
+version 0.7
+- Conditional per cpu control
+- Family id check
+- If no max use offset from critical temperature
+- Switch to hwmon if there is no coretemp
+- Error handling if MSR support is not enabled in kernel
+- Code clean up and comments
+
 Version 0.6
 - Use Intel P state driver to control P states
 - Use RAPL cooling device
