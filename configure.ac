@@ -27,16 +27,14 @@ AC_SUBST(tdbinary, "$sbindir/$PACKAGE", [Binary executable])
 AC_SUBST(tdconfdir, "$sysconfdir/$PACKAGE", [Configuration directory])
 AC_SUBST(tdrundir, "$localstatedir/run/$PACKAGE", [Runtime state directory])
 
+PKG_PROG_PKG_CONFIG
 AC_ARG_WITH([systemdsystemunitdir],
-        AS_HELP_STRING([--with-systemdsystemunitdir=DIR], [Directory for systemd service files]))
-# default location
-AS_IF([test -z "$with_systemdsystemunitdir"],
-	with_systemdsystemunitdir="\$(prefix)/lib/systemd/system")
-AS_IF([test -z "$with_systemdsystemunitdir"], with_systemdsystemunitdir=no)
-AM_CONDITIONAL(HAVE_SYSTEMD, [test "$with_systemdsystemunitdir" != no])
-if test "$with_systemdsystemunitdir" != no; then
+        AS_HELP_STRING([--with-systemdsystemunitdir=DIR], [Directory for systemd service files]),
+        [], [with_systemdsystemunitdir=$($PKG_CONFIG --variable=systemdsystemunitdir systemd)])
+if test "x$with_systemdsystemunitdir" != xno; then
         AC_SUBST([systemdsystemunitdir], [$with_systemdsystemunitdir])
 fi
+AM_CONDITIONAL(HAVE_SYSTEMD, [test -n "$with_systemdsystemunitdir" -a "x$with_systemdsystemunitdir" != xno ])
 
 # print configuration
 echo
