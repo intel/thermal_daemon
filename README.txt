@@ -1,7 +1,10 @@
 Prerequisites:
-	Kernel: Need kernel with "Intel P State driver", Intel Power clamp driver (Already in Kernel version 3.9.rc1)
-	KERNEL should be built with CONFIG_X86_MSR, so that x86 MSR can be read/write from user space.
-	If there is no MSR support or Intel P state driver, then it will only use cpufreq to control P states.
+	Kernel
+		Need kernel with "Intel P State driver", to use Intel P state driver to cool the system.
+		Intel Power clamp driver: To use Idle injection to cool the system
+		CONFIG_X86_MSR, so that x86 MSR can be read/write from user space for using P/T states MSRs.
+	Default
+		If none of the above available cpufreq to control P states.
 
 Building and executing on Fedora
 1. 

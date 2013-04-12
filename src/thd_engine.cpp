@@ -472,8 +472,7 @@ int cthd_engine::check_cpu_id()
 		genuine_intel = 1;
 	if(genuine_intel == 0)
 	{
-		thd_log_error("Not supported CPU\n");
-		exit(1);
+		thd_log_warn("Not running on a genuine Intel CPU!\n");
 	}
 	asm("cpuid": "=a"(fms), "=c"(ecx), "=d"(edx): "a"(1): "ebx");
 	family = (fms >> 8) &0xf;
@@ -496,14 +495,12 @@ int cthd_engine::check_cpu_id()
 	}
 	if (!valid)
 	{
-		thd_log_error("Unsupported Family %d model %d !\n", family, model);
-		exit(1);
+		thd_log_warn(" No support RAPL and Intel P state driver\n");
 	}
 
 	if(!(edx &(1 << 5)))
 	{
-		thd_log_error("CPUID: no MSR support\n");
-		exit(1);
+		thd_log_warn("No MSR supported on processor \n");
 	}
 
 	return THD_SUCCESS;
