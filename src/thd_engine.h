@@ -80,6 +80,7 @@ private:
 	int genuine_intel;
 	int has_invariant_tsc;
 	int has_aperf;
+	bool proc_list_matched;
 
 	int preference;
 	pthread_t thd_engine;
@@ -160,6 +161,7 @@ public:
 	int get_poll_timeout_ms() { return poll_timeout_msec; }
 	int get_poll_timeout_sec() { return poll_timeout_msec/1000; }
 	void thd_engine_reload_zones();
+	bool processor_id_match() { return proc_list_matched; };
 };
 
 #endif /* THD_ENGINE_H_ */

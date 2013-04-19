@@ -219,47 +219,53 @@ int cthd_engine_dts::read_cooling_devices()
 	find_cdev_power_clamp();
 	check_intel_p_state_driver();
 
-	// Turbo sub states control
-	cthd_cdev_msr_turbo_states *cdev_turbo = new cthd_cdev_msr_turbo_states
-	(msr_turbo_states_index,  - 1);
-	if(cdev_turbo->update() == THD_SUCCESS)
-	{
-		cdevs.push_back(cdev_turbo);
-		++cdev_cnt;
+	if (processor_id_match()) {
+		// Turbo sub states control
+		cthd_cdev_msr_turbo_states *cdev_turbo = new cthd_cdev_msr_turbo_states
+				(msr_turbo_states_index,  - 1);
+		if(cdev_turbo->update() == THD_SUCCESS)
+		{
+			cdevs.push_back(cdev_turbo);
+			++cdev_cnt;
+		}
+		else
+			msr_control_present = -1;
+		// Instead of going to min limit to half
+		cthd_cdev_pstate_msr_limited *cdevxx = new cthd_cdev_pstate_msr_limited(msr_p_states_index_limited,  -
+				1);
+		if(cdevxx->update() == THD_SUCCESS)
+		{
+			cdevs.push_back(cdevxx);
+			++cdev_cnt;
+		}
+		else
+			msr_control_present = -1;
+		// P states control using MSRs
+		cthd_cdev_pstate_msr *cdevx = new cthd_cdev_pstate_msr(msr_p_states_index,  -
+					1);
+		if(cdevx->update() == THD_SUCCESS)
+		{
+			cdevs.push_back(cdevx);
+			++cdev_cnt;
+		}
+		else
+			msr_control_present = -1;
+		// Complete engage disengage turbo
+		cthd_cdev_turbo_states *cdev0 = new cthd_cdev_turbo_states(turbo_on_off_index,
+				- 1);
+		if(cdev0->update() == THD_SUCCESS)
+		{
+			cdevs.push_back(cdev0);
+			++cdev_cnt;
+		}
+		else
+			msr_control_present = -1;
 	}
 	else
-		msr_control_present = -1;
-	// Instead of going to min limit to half
-	cthd_cdev_pstate_msr_limited *cdevxx = new cthd_cdev_pstate_msr_limited(msr_p_states_index_limited,  -
-	1);
-	if(cdevxx->update() == THD_SUCCESS)
 	{
-		cdevs.push_back(cdevxx);
-		++cdev_cnt;
-	}
-	else
+		thd_log_info("Not a sandybridge and above architecture \n");
 		msr_control_present = -1;
-	// P states control using MSRs
-	cthd_cdev_pstate_msr *cdevx = new cthd_cdev_pstate_msr(msr_p_states_index,  -
-	1);
-	if(cdevx->update() == THD_SUCCESS)
-	{
-		cdevs.push_back(cdevx);
-		++cdev_cnt;
 	}
-	else
-		msr_control_present = -1;
-	// Complete engage disengage turbo
-	cthd_cdev_turbo_states *cdev0 = new cthd_cdev_turbo_states(turbo_on_off_index,
-	- 1);
-	if(cdev0->update() == THD_SUCCESS)
-	{
-		cdevs.push_back(cdev0);
-		++cdev_cnt;
-	}
-	else
-		msr_control_present = -1;
-
 	// P states control using cpufreq
 	cthd_cdev_pstates *cdev1 = new cthd_cdev_pstates(cpufreq_index,  - 1);
 	if(cdev1->update() == THD_SUCCESS)
@@ -300,53 +306,56 @@ int cthd_engine_dts::read_cooling_devices()
 		if(cpu_sysfs.exists(file_name_str.str()))
 		{
 			last_cpu_update[i] = 0;
+			if (processor_id_match()) {
+				// Turbo sub states control
+				cthd_cdev_msr_turbo_states *cdev_turbo = new cthd_cdev_msr_turbo_states
+						(msr_turbo_states_index + max_cpu_count *(i + 1), i);
+				if(cdev_turbo->update() == THD_SUCCESS)
+				{
+					cdevs.push_back(cdev_turbo);
+					++cdev_cnt;
+				}
+				else
+					msr_control_present = -1;
 
-			// Turbo sub states control
-			cthd_cdev_msr_turbo_states *cdev_turbo = new cthd_cdev_msr_turbo_states
-	(msr_turbo_states_index + max_cpu_count *(i + 1), i);
-			if(cdev_turbo->update() == THD_SUCCESS)
-			{
-				cdevs.push_back(cdev_turbo);
-				++cdev_cnt;
-			}
-			else
-				msr_control_present = -1;
+				cthd_cdev_pstate_msr_limited *cdevxx = new cthd_cdev_pstate_msr_limited(msr_p_states_index_limited +
+						max_cpu_count *(i + 1), i);
+				if(cdevxx->update() == THD_SUCCESS)
+				{
+					cdevs.push_back(cdevxx);
+					++cdev_cnt;
+				}
+				else
+					msr_control_present = -1;
 
-			cthd_cdev_pstate_msr_limited *cdevxx = new cthd_cdev_pstate_msr_limited(msr_p_states_index_limited +
-					max_cpu_count *(i + 1), i);
-			if(cdevxx->update() == THD_SUCCESS)
-			{
-				cdevs.push_back(cdevxx);
-				++cdev_cnt;
-			}
-			else
-				msr_control_present = -1;
+				//p states
+				cthd_cdev_pstate_msr *cdevx = new cthd_cdev_pstate_msr(msr_p_states_index +
+							max_cpu_count *(i + 1), i);
+				if(cdevx->update() == THD_SUCCESS)
+				{
+					cdevs.push_back(cdevx);
+					++cdev_cnt;
+				}
+				else
+					msr_control_present = -1;
 
-			//p states
-			cthd_cdev_pstate_msr *cdevx = new cthd_cdev_pstate_msr(msr_p_states_index +
-	max_cpu_count *(i + 1), i);
-			if(cdevx->update() == THD_SUCCESS)
-			{
-				cdevs.push_back(cdevx);
-				++cdev_cnt;
-			}
-			else
-				msr_control_present = -1;
-
-			// Complete engage disengage turbo
-			cthd_cdev_turbo_states *cdev0 = new cthd_cdev_turbo_states
-	(turbo_on_off_index + max_cpu_count *(i + 1), i);
-			if(cdev0->update() == THD_SUCCESS)
-			{
-				cdevs.push_back(cdev0);
-				++cdev_cnt;
+				// Complete engage disengage turbo
+				cthd_cdev_turbo_states *cdev0 = new cthd_cdev_turbo_states
+							(turbo_on_off_index + max_cpu_count *(i + 1), i);
+				if(cdev0->update() == THD_SUCCESS)
+				{
+					cdevs.push_back(cdev0);
+					++cdev_cnt;
+				}
+				else
+					msr_control_present = -1;
 			}
 			else
 				msr_control_present = -1;
 
 			// P states control using cpufreq
 			cthd_cdev_pstates *cdev1 = new cthd_cdev_pstates(cpufreq_index +
-	max_cpu_count *(i + 1), i);
+													max_cpu_count *(i + 1), i);
 			if(cdev1->update() == THD_SUCCESS)
 			{
 				cdevs.push_back(cdev1);
@@ -354,7 +363,7 @@ int cthd_engine_dts::read_cooling_devices()
 			}
 			// T states control
 			cthd_cdev_tstates *cdev2 = new cthd_cdev_tstates(t_state_index +
-	max_cpu_count *(i + 1), i);
+										max_cpu_count *(i + 1), i);
 			if(cdev2->update() == THD_SUCCESS)
 			{
 				cdevs.push_back(cdev2);

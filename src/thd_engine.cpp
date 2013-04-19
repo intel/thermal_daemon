@@ -464,6 +464,7 @@ int cthd_engine::check_cpu_id()
 	int i;
 	bool valid = false;
 
+	proc_list_matched = false;
 	eax = ebx = ecx = edx = 0;
 
 	asm("cpuid": "=a"(max_level), "=b"(ebx), "=c"(ecx), "=d"(edx): "a"(0));
@@ -488,6 +489,7 @@ int cthd_engine::check_cpu_id()
 	{
 		if (id_table[i].family == family && id_table[i].model == model)
 		{
+			proc_list_matched = true;
 			valid = true;
 			break;
 		}
