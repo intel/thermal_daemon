@@ -76,22 +76,7 @@ int cthd_sysfs_cdev_rapl::update()
 	set_inc_dec_value(phy_max * (float)rapl_power_dec_percent/100);
 
 	max_state -= (float)max_state * rapl_low_limit_percent/100;
-//	max_state = (float)max_state/(rapl_low_limit_ratio);
 	thd_log_debug("RAPL max limit %d increment: %d\n", max_state, inc_dec_val);
-
-	// Set time window to match polling interval
-	std::stringstream tm_window_dev;
-	tm_window_dev << "cooling_device" << index << "/device/time_window1";
-	if(cdev_sysfs.exists(tm_window_dev.str()))
-	{
-		std::stringstream tm_window;
-		tm_window << (thd_engine->get_poll_timeout_ms() - 200); // 200 ms before poll timeout
-		thd_log_debug("RAPL time_window1: %d\n", thd_engine->get_poll_timeout_ms() - 200);
-		if (cdev_sysfs.write(tm_window_dev.str(), tm_window.str()) < 0)
-		{
-			thd_log_warn("Can't set RAPL time_window1\n");
-		}
-	}
 
 	return ret;
 }

@@ -163,18 +163,8 @@ int cthd_engine_dts::find_cdev_rapl()
 		{
 			std::string type_str;
 			cdev_sysfs.read(tcdev.str(), type_str);
-			if(type_str == "intel_rapl")
+			if(type_str == "rapl_pkg_0")
 			{
-				std::stringstream device;
-
-				device << "cooling_device" << i << "/device/domain_name";
-				std::string device_str;
-				cdev_sysfs.read(device.str(), device_str);
-
-				thd_log_debug("Found Intel RAPL: type :%s device name :%s\n", type_str.c_str(), device_str.c_str());
-				if(device_str != "package")
-					return THD_ERROR;
-
 				cthd_sysfs_cdev_rapl *cdev = new cthd_sysfs_cdev_rapl(i, "/sys/class/thermal/");
 				if(cdev->update() != THD_SUCCESS)
 					return THD_ERROR;
