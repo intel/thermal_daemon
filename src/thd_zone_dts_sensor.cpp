@@ -31,7 +31,7 @@
 #include "thd_engine_dts.h"
 
 cthd_zone_dts_sensor::cthd_zone_dts_sensor(int count, int _index, std::string
-	path): cthd_zone_dts(count, path), index(_index), conf_present(false){
+	path): cthd_zone_dts(count, path, 0), index(_index), conf_present(false){
 
 }
 

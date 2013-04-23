@@ -44,6 +44,7 @@ protected:
 	int prev_set_point;
 	int trip_point_cnt;
 	unsigned int sensor_mask;
+	int phy_package_id;
 
 	//cthd_cdev_pstates cdev_pstates;
 	cthd_topology topology;
@@ -66,7 +67,7 @@ public:
 	static const int def_offset_from_critical = 10000;
 	static const int def_critical_temp = 100000;
 
-	cthd_zone_dts(int count, std::string path);
+	cthd_zone_dts(int count, std::string path, int package_id);
 
 	virtual int read_trip_points();
 	int read_cdev_trip_points();

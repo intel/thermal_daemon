@@ -41,7 +41,11 @@ public:
 
 	cthd_engine_dts(): thd_sysfs("/sys/devices/platform/coretemp.0/"),
 	cpu_mask_remaining(def_cpu_mask), sensor_mask(0), power_clamp_index( - 1),
-	intel_pstate_driver_index(-1), intel_rapl_index(-1), intel_rapl_index_limited(-1), msr_control_present(1) {}
+	intel_pstate_driver_index(-1),intel_rapl_index_limited(-1), msr_control_present(1)
+	{
+		for (int i=0; i<max_package_support; ++i)
+			intel_rapl_index[i] = -1;
+	}
 	~cthd_engine_dts() {
 		for (int i=0; i<zones.size(); ++i)
 			delete zones[i];
@@ -57,6 +61,7 @@ public:
 	int find_cdev_rapl();
 	int check_intel_p_state_driver();
 
+	static const int max_package_support = 1024;
 	static const int power_clamp_reduction_percent = 5;
 	static const int msr_turbo_states_index = soft_cdev_start_index;
 	static const int msr_p_states_index = soft_cdev_start_index + 1;
@@ -66,11 +71,13 @@ public:
 	static const int t_state_index = soft_cdev_start_index + 5;
 	static const int intel_pstate_control_index = soft_cdev_start_index + 6;
 	static const int intel_rapl_limited_control_index = soft_cdev_start_index + 7;
+	static const int package_index_multiplier = 2; // Each cdev for different cdev will be at
+													// soft_cdev_start_index * package_index_multiplier
 
 	int msr_control_present;
 	int power_clamp_index; // dynamic based on thermal cdev
 	int intel_pstate_driver_index;
-	int intel_rapl_index;
+	int intel_rapl_index[max_package_support];
 	int intel_rapl_index_limited; // same function as intel_rapl_index, but limited states
 };
 

@@ -36,9 +36,9 @@
 #include "thd_engine_dts.h"
 #include "thd_msr.h"
 
-cthd_zone_dts::cthd_zone_dts(int index, std::string path): cthd_zone(index,
-	path), dts_sysfs(path.c_str()), trip_point_cnt(0), sensor_mask(0){
-
+cthd_zone_dts::cthd_zone_dts(int index, std::string path, int package_id): cthd_zone(index,
+	path), dts_sysfs(path.c_str()), trip_point_cnt(0), sensor_mask(0), phy_package_id(package_id){
+	thd_log_debug("zone dts syfs: %s, package id %d \n", path.c_str(), package_id);
 }
 
 int cthd_zone_dts::init()
@@ -169,9 +169,10 @@ int cthd_zone_dts::read_trip_points()
 	0xFF);
 		trip_pt.thd_trip_point_set_control_type(SEQUENTIAL);
 
-		if (thd_dts_engine->intel_rapl_index != -1)
+		if (thd_dts_engine->intel_rapl_index[phy_package_id] != -1)
 		{
-			trip_pt.thd_trip_point_add_cdev_index(thd_dts_engine->intel_rapl_index);
+			thd_log_debug("ZONE DTS add RAPL id %d \n", thd_dts_engine->intel_rapl_index[phy_package_id]);
+			trip_pt.thd_trip_point_add_cdev_index(thd_dts_engine->intel_rapl_index[phy_package_id]);
 		}
 		if (thd_dts_engine->intel_pstate_driver_index != -1)
 		{

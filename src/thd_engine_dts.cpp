@@ -35,6 +35,10 @@
 #include "thd_cdev_intel_pstate_driver.h"
 #include "thd_cdev_rapl.h"
 
+#include <dirent.h>
+#include <errno.h>
+#include <sys/types.h>
+
 /* This implements control using DTS sensor. It uses DTS sensor sysfs and
  * uses P and T states to control temperature. \
  * It looks for all the available cooling devices, if present then it assigns
@@ -79,13 +83,28 @@ int cthd_engine_dts::read_thermal_zones()
 	}
 #endif
 
-	cthd_zone_dts *zone = new cthd_zone_dts(count,
-	"/sys/devices/platform/coretemp.0/");
-	zone->set_zone_active();
-	if(zone->zone_update() == THD_SUCCESS)
+
+	DIR *dir;
+	struct dirent *entry;
+	const std::string base_path = "/sys/devices/platform/";
+
+	if ((dir = opendir(base_path.c_str())) != NULL)
 	{
-		zones.push_back(zone);
-		++count;
+		while ((entry = readdir(dir)) != NULL)
+		{
+			if (!strncmp(entry->d_name, "coretemp.", strlen("coretemp.")))
+			{
+				cthd_zone_dts *zone = new cthd_zone_dts(count,
+						base_path+entry->d_name+"/", atoi(entry->d_name+strlen("coretemp.")));
+				zone->set_zone_active();
+				if(zone->zone_update() == THD_SUCCESS)
+				{
+					zones.push_back(zone);
+					++count;
+				}
+			}
+		}
+		closedir(dir);
 	}
 
 	if(!count)
@@ -94,7 +113,7 @@ int cthd_engine_dts::read_thermal_zones()
 		thd_log_warn("Thermal DTS: No coretemp sysfs, trying hwmon \n");
 
 		cthd_zone_dts *zone = new cthd_zone_dts(count,
-		"/sys/class/hwmon/hwmon0/");
+				"/sys/class/hwmon/hwmon0/", 0);
 		zone->set_zone_active();
 		if(zone->zone_update() == THD_SUCCESS)
 		{
@@ -162,29 +181,36 @@ int cthd_engine_dts::find_cdev_rapl()
 		if(cdev_sysfs.exists(tcdev.str().c_str()))
 		{
 			std::string type_str;
+			std::string rapl_str = "rapl_pkg_";
 			cdev_sysfs.read(tcdev.str(), type_str);
-			if(type_str == "rapl_pkg_0")
-			{
-				cthd_sysfs_cdev_rapl *cdev = new cthd_sysfs_cdev_rapl(i, "/sys/class/thermal/");
-				if(cdev->update() != THD_SUCCESS)
-					return THD_ERROR;
-				cdevs.push_back(cdev);
-				++cdev_cnt;
-				intel_rapl_index = i;
-				thd_log_debug("Intel RAPL index = %d\n", intel_rapl_index);
 
-				cthd_sysfs_cdev_rapl_limited *cdev1 = new cthd_sysfs_cdev_rapl_limited(intel_rapl_limited_control_index, i, "/sys/class/thermal/");
-				cdev1->set_inc_dec_value(1000);
-				if(cdev1->update() != THD_SUCCESS)
-					return THD_ERROR;
-				cdevs.push_back(cdev1);
-				++cdev_cnt;
-				intel_rapl_index_limited = intel_rapl_limited_control_index;
-				thd_log_debug("Intel RAPL index limited = %d\n", intel_rapl_index_limited);
-
-				found = true;
-				break;
+			unsigned found = type_str.find(rapl_str);
+			if (found == (unsigned)std::string::npos) {
+					continue;
 			}
+			std::string package_index_str = type_str.substr(rapl_str.length());
+			int package_index = atoi(package_index_str.c_str());
+			if (package_index >= max_package_support)
+				continue;
+			cthd_sysfs_cdev_rapl *cdev = new cthd_sysfs_cdev_rapl(i, "/sys/class/thermal/", package_index);
+			if(cdev->update() != THD_SUCCESS)
+				return THD_ERROR;
+			cdevs.push_back(cdev);
+			++cdev_cnt;
+			intel_rapl_index[package_index] = i;
+			thd_log_debug("Intel RAPL index = %d\n", intel_rapl_index[package_index]);
+
+			cthd_sysfs_cdev_rapl_limited *cdev1 = new cthd_sysfs_cdev_rapl_limited(intel_rapl_limited_control_index * (package_index+1),
+														i, "/sys/class/thermal/", package_index);
+			cdev1->set_inc_dec_value(1000);
+			if(cdev1->update() != THD_SUCCESS)
+				return THD_ERROR;
+			cdevs.push_back(cdev1);
+			++cdev_cnt;
+			intel_rapl_index_limited = intel_rapl_limited_control_index;
+			thd_log_debug("Intel RAPL index limited = %d\n", intel_rapl_index_limited * (package_index+1));
+
+			found = true;
 		}
 	}
 

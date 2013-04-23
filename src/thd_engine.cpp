@@ -449,6 +449,7 @@ void cthd_engine::thd_engine_reload_zones()
 // Add any tested platform ids in this table
 static supported_ids_t id_table[] {
 		{6, 0x2a}, // Sandybridge
+		{6, 0x2d}, // Sandybridge
 		{6, 0x3a}, // IvyBridge
 		{6, 0x45}, // Haswell ULT */
 
