@@ -42,6 +42,7 @@ private:
 
 public:
 	static const int intel_pstate_limit_ratio = 2;
+	static const int default_max_state = 10;
 	cthd_intel_p_state_cdev(unsigned int _index, std::string control_path)
 		: cthd_cdev(_index, control_path), unit_value(1), min_compensation(0), max_offset(0) {};
 	void set_curr_state(int state, int arg);

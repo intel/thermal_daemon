@@ -83,13 +83,13 @@ int cthd_intel_p_state_cdev::update()
 	}
 	highest_turbo_freq_state = msr.get_max_turbo_freq();
 	if (highest_turbo_freq_state == THD_ERROR)
-		return THD_ERROR;
+		goto default_settings;
 	lowest_turbo_freq_state = msr.get_min_turbo_freq();
 	if (lowest_turbo_freq_state == THD_ERROR)
-		return THD_ERROR;
+		goto default_settings;
 	lowest_freq_state = msr.get_min_freq();
 	if (lowest_freq_state == THD_ERROR)
-		return THD_ERROR;
+		goto default_settings;
 	max_state = highest_turbo_freq_state;
 	type_str = "intel_pstate_driver";
 	min_compensation = highest_turbo_freq_state - lowest_turbo_freq_state;
@@ -103,6 +103,16 @@ int cthd_intel_p_state_cdev::update()
 	if (curr_state < 0)
 		curr_state = 0;
 	max_state = max_state/intel_pstate_limit_ratio;
+	thd_log_debug("cooling dev index:%d, curr_state:%d, max_state:%d, unit:%f, min_com:%d, type:%s\n", index, curr_state, max_state, unit_value, min_compensation, type_str.c_str());
+
+	return THD_SUCCESS;
+
+default_settings:
+	thd_log_info("Use Default pstate drv settings\n");
+	max_state = default_max_state;
+	min_compensation = 0;
+	unit_value = 100 / max_state;
+	curr_state = 0;
 	thd_log_debug("cooling dev index:%d, curr_state:%d, max_state:%d, unit:%f, min_com:%d, type:%s\n", index, curr_state, max_state, unit_value, min_compensation, type_str.c_str());
 
 	return THD_SUCCESS;
