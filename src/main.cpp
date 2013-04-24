@@ -257,7 +257,7 @@ static int thd_dbus_server_proc(gboolean no_daemon)
 	if(!no_daemon)
 	{
 		printf("Ready to serve requests: Daemonizing.. %d\n", thd_daemonize);
-		thd_log_debug("Ready to serve requests: Daemonizing..\n");
+		thd_log_info("thermald ver %s: Ready to serve requests: Daemonizing..\n", TD_DIST_VERSION);
 
 		if(daemon(0, 1) != 0)
 		{

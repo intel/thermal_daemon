@@ -65,6 +65,11 @@ Use "sudo stop thermald" to stop
 
 Releases
 
+version 0.8
+- Fix RAPL PATH, which is submitted upstream
+- Handle case when there is no MSR access from user mode
+- Allow non Intel CPUs 
+
 version 0.7
 - Conditional per cpu control
 - Family id check
