@@ -62,6 +62,7 @@ thermald_SOURCES = \
 		src/thd_model.cpp \
 		src/thd_parse.cpp \
 		src/thd_topology.cpp \
+		src/thd_kobj_uevent.cpp \
 		netlink-if/libnetlink.cpp \
 		netlink-if/thd_nl_wrapper.cpp
 

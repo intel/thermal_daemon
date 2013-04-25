@@ -79,7 +79,20 @@ void cthd_engine::thd_engine_thread()
 			thd_log_debug("Netlink message\n");
 			nl_wrapper.genl_message_indication();
 		}
-		if(poll_fds[wakeup_fd].revents &POLLIN)
+		if(poll_fds[1].revents & POLLIN)
+		{
+			// Kobj uevent
+			thd_log_debug("kobj uevent\n");
+			if (kobj_uevent.check_for_event())
+			{
+				for(i = 0; i < zones.size(); ++i)
+				{
+					cthd_zone *zone = zones[i];
+					zone->zone_temperature_notification(0, 0);
+				}
+			}
+		}
+		if(poll_fds[wakeup_fd].revents & POLLIN)
 		{
 			message_capsul_t msg;
 
@@ -153,6 +166,28 @@ int cthd_engine::thd_engine_start()
 		return THD_FATAL_ERROR;
 	}
 
+	// Netlink stuff
+	nl_wrapper.genl_acpi_family_open(this);
+	if(nl_wrapper.rtnl_fd() < 0)
+	{
+		thd_log_warn("Invalid rtnl handle\n");
+		goto skip_nl;
+	}
+	poll_fds[0].fd = nl_wrapper.rtnl_fd();
+	poll_fds[0].events = POLLIN;
+	poll_fds[0].revents = 0;
+skip_nl:
+	poll_fds[1].fd = kobj_uevent.kobj_uevent_open();
+	if(poll_fds[1].fd < 0)
+	{
+		thd_log_warn("Invalid kobj_uevent handle\n");
+		goto skip_kobj;
+	}
+	thd_log_info("FD = %d\n", poll_fds[1].fd);
+	kobj_uevent.register_dev_path("/devices/virtual/thermal/thermal_zone");
+	poll_fds[1].events = POLLIN;
+	poll_fds[1].revents = 0;
+skip_kobj:
 #if 0
 	// TO BE DONE...
 	// There seems to be a bug in using pthread in daemon
@@ -195,18 +230,6 @@ int cthd_engine::thd_engine_start()
 	ret = pthread_create(&cal_thd_engine, &thd_attr,
 	cthd_calibration_engine_thread, (void*)this);
 #endif
-	//
-	// Netlink stuff
-	nl_wrapper.genl_acpi_family_open(this);
-	if(nl_wrapper.rtnl_fd() < 0)
-	{
-		thd_log_warn("Invalid rtnl handle\n");
-		return  - 1;
-	}
-	poll_fds[0].fd = nl_wrapper.rtnl_fd();
-	poll_fds[0].events = POLLIN;
-	poll_fds[0].revents = 0;
-
 	cthd_preference thd_pref;
 	preference = thd_pref.get_preference();
 	thd_log_info("Current user preference is %d\n", preference);
