@@ -33,7 +33,6 @@
 #include "thd_zone.h"
 #include "thd_cdev.h"
 #include "thd_parse.h"
-#include "thd_nl_wrapper.h"
 #include "thd_kobj_uevent.h"
 
 #define MAX_MSG_SIZE 		512
@@ -97,7 +96,6 @@ private:
 	int wakeup_fd;
 	int poll_timeout_msec;
 
-	cthd_nl_wrapper nl_wrapper;
 	cthd_kobj_uevent kobj_uevent;
 
 	int proc_message(message_capsul_t *msg);

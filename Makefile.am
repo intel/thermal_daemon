@@ -12,7 +12,6 @@ AM_CXXFLAGS = ${DBUS_CFLAGS}\
 		$(XML_CFLAGS) \
 		-DTDRUNDIR=\"$(tdrundir)\" \
 		-DTDCONFDIR=\"$(tdconfdir)\" \
-		-I netlink-if \
 		-I src \
 		-fpermissive \
 		-fopenmp
@@ -62,9 +61,7 @@ thermald_SOURCES = \
 		src/thd_model.cpp \
 		src/thd_parse.cpp \
 		src/thd_topology.cpp \
-		src/thd_kobj_uevent.cpp \
-		netlink-if/libnetlink.cpp \
-		netlink-if/thd_nl_wrapper.cpp
+		src/thd_kobj_uevent.cpp
 
 thd-dbus-interface.h: $(top_srcdir)/src/thd-dbus_interface.xml
 	$(AM_V_GEN) dbus-binding-tool --prefix=thd_dbus_interface --mode=glib-server --output=$@ $<
