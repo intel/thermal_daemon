@@ -118,7 +118,7 @@ bool cthd_trip_point::thd_trip_point_check(unsigned int read_temp, int pref)
 
 			cthd_cdev *cdev = cdevs[i];
 			thd_log_debug("cdev at index %d\n", cdev->thd_cdev_get_index());
-			if(control_type == SEQUENTIAL && cdev->in_max_state())
+			if(cdev->in_max_state())
 			{
 				thd_log_debug("Need to switch to next cdev \n");
 				// No scope of control with this cdev
@@ -141,7 +141,7 @@ bool cthd_trip_point::thd_trip_point_check(unsigned int read_temp, int pref)
 			cthd_cdev *cdev = cdevs[i];
 			thd_log_debug("cdev at index %d\n", cdev->thd_cdev_get_index());
 
-			if(control_type == SEQUENTIAL && (cdev->in_min_state()))
+			if(cdev->in_min_state())
 			{
 				thd_log_debug("Need to switch to next cdev \n");
 				// No scope of control with this cdev
