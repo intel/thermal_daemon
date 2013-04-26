@@ -174,11 +174,7 @@ int cthd_engine::thd_engine_start()
 	poll_fds[0].events = POLLIN;
 	poll_fds[0].revents = 0;
 skip_kobj:
-#if 0
-	// TO BE DONE...
-	// There seems to be a bug in using pthread in daemon
-	// need to look at this later
-
+#ifndef DISABLE_PTHREAD
 	// condition variable
 	pthread_cond_init(&thd_cond_var, NULL);
 	pthread_mutex_init(&thd_cond_mutex, NULL);
