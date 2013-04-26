@@ -185,13 +185,13 @@ int cthd_cdev_pstate_msr::update()
 	highest_freq_state = msr.get_max_freq();
 	if (highest_freq_state == THD_ERROR)
 	{
-		thd_log_warn("update: Read MSR failed");
+		thd_log_warn("update: Read MSR failed \n");
 		return THD_ERROR;
 	}
 	lowest_freq_state = msr.get_min_freq();
 	if (lowest_freq_state == THD_ERROR)
 	{
-		thd_log_warn("update: Read MSR failed");
+		thd_log_warn("update: Read MSR failed \n");
 		return THD_ERROR;
 	}
 	thd_log_debug("cthd_cdev_pstate_msr min %x max %x\n", lowest_freq_state,
