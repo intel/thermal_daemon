@@ -3,6 +3,7 @@ Prerequisites:
 		Need kernel with "Intel P State driver", to use Intel P state driver to cool the system.
 		Intel Power clamp driver: To use Idle injection to cool the system
 		CONFIG_X86_MSR, so that x86 MSR can be read/write from user space for using P/T states MSRs.
+		RAPL driver is submitted to Linux kernel and under review.
 	Default
 		If none of the above available cpufreq to control P states.
 
@@ -64,6 +65,11 @@ Use "sudo stop thermald" to stop
 -------------------------------------------
 
 Releases
+
+version 0.9
+- Replaced netlink with uevents
+- Fix issue with pre-configured thermal data to control daemon
+- Use pthreads
 
 version 0.8
 - Fix RAPL PATH, which is submitted upstream
