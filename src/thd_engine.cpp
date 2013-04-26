@@ -33,6 +33,9 @@
 
 #include "thd_engine.h"
 #include "thd_topology.h"
+#include <dirent.h>
+#include <errno.h>
+#include <sys/types.h>
 
 static void *cthd_engine_thread(void *arg);
 static void *cthd_calibration_engine_thread(void *arg);
@@ -396,15 +399,40 @@ void cthd_engine::takeover_thermal_control()
 {
 	csys_fs sysfs("/sys/class/thermal/");
 
-	for(int i = 0; i < zones.size(); ++i)
-	{
-		std::stringstream mode;
-		mode << "thermal_zone" << i << "/mode";
-		if(sysfs.exists(mode.str().c_str()))
-		{
-			sysfs.write(mode.str(), "disabled");
-		}
+	DIR *dir;
+	struct dirent *entry;
+	const std::string base_path = "/sys/class/thermal/";
 
+	if ((dir = opendir(base_path.c_str())) != NULL)
+	{
+		while ((entry = readdir(dir)) != NULL)
+		{
+			if (!strncmp(entry->d_name, "thermal_zone", strlen("thermal_zone")))
+			{
+				int i;
+
+				i = atoi(entry->d_name+strlen("thermal_zone"));
+				std::stringstream policy;
+				std::stringstream type;
+				std::string type_val;
+				std::string curr_policy;
+
+				type << "thermal_zone" << i << "/type";
+				if(sysfs.exists(type.str().c_str()))
+				{
+					sysfs.read(type.str(), type_val);
+				}
+				if (type_val != "acpitz")
+					continue;
+				policy << "thermal_zone" << i << "/policy";
+				if(sysfs.exists(policy.str().c_str()))
+				{
+					sysfs.read(policy.str(), curr_policy);
+					zone_preferences.push_back(curr_policy);
+					sysfs.write(policy.str(), "user_space");
+				}
+			}
+		}
 	}
 }
 
@@ -415,13 +443,36 @@ void cthd_engine::giveup_thermal_control()
 
 	csys_fs sysfs("/sys/class/thermal/");
 
-	for(int i = 0; i < zones.size(); ++i)
+	DIR *dir;
+	struct dirent *entry;
+	const std::string base_path = "/sys/class/thermal/";
+	int cnt = 0;
+	if ((dir = opendir(base_path.c_str())) != NULL)
 	{
-		std::stringstream mode;
-		mode << "thermal_zone" << i << "/mode";
-		if(sysfs.exists(mode.str().c_str()))
+		while ((entry = readdir(dir)) != NULL)
 		{
-			sysfs.write(mode.str(), "enabled");
+			if (!strncmp(entry->d_name, "thermal_zone", strlen("thermal_zone")))
+			{
+				int i;
+
+				i = atoi(entry->d_name+strlen("thermal_zone"));
+				std::stringstream policy;
+				std::stringstream type;
+				std::string type_val;
+
+				type << "thermal_zone" << i << "/type";
+				if(sysfs.exists(type.str().c_str()))
+				{
+					sysfs.read(type.str(), type_val);
+				}
+				if (type_val != "acpitz")
+					continue;
+				policy << "thermal_zone" << i << "/policy";
+				if(sysfs.exists(policy.str().c_str()))
+				{
+					sysfs.write(policy.str(), zone_preferences[cnt++]);
+				}
+			}
 		}
 	}
 }

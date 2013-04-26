@@ -89,7 +89,7 @@ private:
 	pthread_mutex_t thd_cond_mutex;
 
 	pthread_t cal_thd_engine;
-
+	std::vector <std::string > zone_preferences;
 
 	struct pollfd poll_fds[THD_NUM_OF_POLL_FDS];
 	int write_pipe_fd;
