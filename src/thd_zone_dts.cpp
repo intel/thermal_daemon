@@ -107,8 +107,6 @@ int cthd_zone_dts::init()
 	thd_model.set_max_temperature(max_temp);
 	prev_set_point = set_point = thd_model.get_set_point();
 
-	update_zone_preference();
-
 	return THD_SUCCESS;
 }
 
@@ -321,28 +319,4 @@ unsigned int cthd_zone_dts::read_zone_temp()
 	}
 
 	return zone_temp;
-}
-
-void cthd_zone_dts::update_zone_preference()
-{
-	cthd_preference thd_pref;
-	int pref;
-	cthd_msr msr;
-
-	pref = thd_pref.get_preference();
-	switch(pref)
-	{
-		case PREF_BALANCED:
-			msr.set_perf_bias_balaced();
-			break;
-		case PREF_PERFORMANCE:
-			msr.set_perf_bias_performace();
-			break;
-		case PREF_ENERGY_CONSERVE:
-			msr.set_perf_bias_energy();
-			break;
-		default:
-			break;
-	}
-	cthd_zone::update_zone_preference();
 }

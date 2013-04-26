@@ -31,7 +31,7 @@ cthd_preference::cthd_preference(): old_preference(0)
 	std::ifstream ifs(filename.str().c_str(), std::ifstream::in);
 	if(!ifs.good())
 	{
-		preference = PREF_BALANCED;
+		preference = PREF_PERFORMANCE;
 	}
 	else
 	{
@@ -47,9 +47,6 @@ std::string cthd_preference::int_pref_to_string(int pref)
 
 	switch(preference)
 	{
-		case PREF_BALANCED:
-			perf_str = "FALLBACK";
-			break;
 		case PREF_PERFORMANCE:
 			perf_str = "PERFORMANCE";
 			break;
@@ -71,16 +68,14 @@ int cthd_preference::string_pref_to_int(std::string &pref_str)
 {
 	int pref;
 
-	if(pref_str == "FALLBACK")
-		pref = PREF_BALANCED;
-	else if(pref_str == "PERFORMANCE")
+	if(pref_str == "PERFORMANCE")
 		pref = PREF_PERFORMANCE;
 	else if(pref_str == "ENERGY_CONSERVE")
 		pref = PREF_ENERGY_CONSERVE;
 	else if(pref_str == "DISABLE")
 		pref = PREF_DISABLED;
 	else
-		pref = PREF_BALANCED;
+		pref = PREF_PERFORMANCE;
 
 	return pref;
 }
@@ -133,7 +128,7 @@ bool cthd_preference::set_preference(const char *pref_str)
 	std::ifstream ifs(filename.str().c_str(), std::ifstream::in);
 	if(!ifs.good())
 	{
-		preference = PREF_BALANCED;
+		preference = PREF_PERFORMANCE;
 	}
 	else
 	{
@@ -156,7 +151,7 @@ int cthd_preference::get_old_preference()
 	std::ifstream ifs(filename.str().c_str(), std::ifstream::in);
 	if(!ifs.good())
 	{
-		old_preference = PREF_BALANCED;
+		old_preference = PREF_PERFORMANCE;
 	}
 	else
 	{

@@ -73,7 +73,6 @@ public:
 	int read_cdev_trip_points();
 	void set_temp_sensor_path();
 	virtual unsigned int read_zone_temp();
-	void update_zone_preference();
 
 };
 
