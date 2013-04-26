@@ -56,6 +56,7 @@ bool cthd_trip_point::thd_trip_point_check(unsigned int read_temp, int pref)
 		}
 	}
 
+	thd_log_debug("pref %d type %d\n", pref, type);
 	switch(pref)
 	{
 		case PREF_DISABLED:

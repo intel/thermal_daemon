@@ -254,9 +254,9 @@ int cthd_parse::parse_new_platform_info(xmlNode * a_node, xmlDoc *doc, thermal_i
 				info_ptr->name.assign((const char*)tmp_value);
 			} else if (!strcmp(cur_node->name, "Preference")) {
 				if (!strcmp(tmp_value, "PERFORMANCE"))
-					info_ptr->default_prefernce = ACTIVE;
+					info_ptr->default_prefernce = PREF_PERFORMANCE;
 				else
-					info_ptr->default_prefernce = PASSIVE;
+					info_ptr->default_prefernce = PREF_ENERGY_CONSERVE;
 			} else if (!strcmp(cur_node->name, "ThermalZones")) {
 				parse_thermal_zones(cur_node->children, doc, info_ptr);
 			} else if (!strcmp(cur_node->name, "CoolingDevices")) {
@@ -444,4 +444,15 @@ bool cthd_parse::get_pid_values(int zone_index, int *Kp, int *Ki, int *Kd)
 	}
 
 	return false;
+}
+
+int cthd_parse::set_default_preference()
+{
+	cthd_preference thd_pref;
+	int ret;
+
+	if (thermal_info_list[matched_thermal_info_index].default_prefernce == PREF_PERFORMANCE)
+		ret = thd_pref.set_preference("PERFORMANCE");
+	else
+		ret = thd_pref.set_preference("ENERGY_CONSERVE");
 }

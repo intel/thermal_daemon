@@ -157,6 +157,8 @@ int cthd_engine_therm_sysfs::read_xml_thermal_zones()
 			{
 				return THD_ERROR;
 			}
+			parser.set_default_preference();
+			zone->set_zone_active();
 			zones.push_back(zone);
 			++count;
 		}

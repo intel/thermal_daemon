@@ -65,7 +65,7 @@ typedef struct {
 typedef struct {
 	std::string name;
 	std::string uuid;
-	trip_point_type_t default_prefernce;
+	int default_prefernce;
 	std::vector <thermal_zone_t> zones;
 	std::vector <cooling_dev_t> cooling_devs;
 }thermal_info_t;
@@ -100,6 +100,7 @@ public:
 	int zone_count() { return thermal_info_list[matched_thermal_info_index].zones.size();}
 	int cdev_count() { return thermal_info_list[matched_thermal_info_index].cooling_devs.size();}
 
+	int set_default_preference();
 	int trip_count(int zone_index);
 	bool pid_status(int zone_index);
 	bool get_pid_values(int zone_index, int *Kp, int *Ki, int *Kd);

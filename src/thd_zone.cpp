@@ -54,7 +54,7 @@ unsigned int cthd_zone::read_zone_temp()
 	}
 	sysfs.read(temperature_sysfs_path, buffer);
 	std::istringstream(buffer) >> zone_temp;
-	thd_log_info("Zone temp %u \n", zone_temp);
+	thd_log_debug("Zone temp %u \n", zone_temp);
 
 	return zone_temp;
 }

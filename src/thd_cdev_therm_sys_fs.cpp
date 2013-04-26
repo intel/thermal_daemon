@@ -124,6 +124,7 @@ void cthd_sysfs_cdev::set_curr_state(int state, int arg)
 		{
 			std::stringstream state_str;
 			state_str << state;
+			thd_log_debug("set sysfs cdev state index %d state %d\n", index, state);
 			sys_fs.write(custom_path_str, state_str.str());
 			return ;
 		}
