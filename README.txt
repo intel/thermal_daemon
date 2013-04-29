@@ -65,6 +65,9 @@ Use "sudo stop thermald" to stop
 -------------------------------------------
 
 Releases
+Release 1.0
+- Tested on multiple platforms
+- Using PID
 
 version 0.9
 - Replaced netlink with uevents
