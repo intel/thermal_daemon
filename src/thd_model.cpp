@@ -37,47 +37,94 @@
  *
  */
 
-cthd_model::cthd_model(): trend_increase_start(0), max_temp(def_max_temperature)
+cthd_model::cthd_model(bool use_pid): trend_increase_start(0), max_temp(def_max_temperature)
 	, set_point(def_max_temperature), last_temp(0), max_temp_reached(0),
 	current_angle(0), set_point_reached(false), delay_cnt(0), max_temp_seen
-	(false), updated_set_point(false){}
-
-unsigned int cthd_model::update_set_point()
+	(false), updated_set_point(false), use_pid_param(use_pid), set_point_delay_start(0)
 {
-
-	double slope;
-	double delta_x = (max_temp_reached - trend_increase_start) *1000;
-	double delta_y = max_temp - hot_zone;
-	unsigned int _setpoint;
-	double radians;
-	double arc_len;
-
-	if(delta_y > 0 && delta_x > 0)
+	if (use_pid)
 	{
-		slope = delta_y / delta_x;
-		radians = atan(slope);
-		thd_log_info("current slope %g angle before %g (%g degree)\n", slope, radians,
-	57.2957795 *radians);
-		radians += (0.01746 *(current_angle + angle_increment));
-		thd_log_info("current slope %g angle before %g (%g degree)\n", slope, radians,
-	57.2957795 *radians);
-		arc_len = delta_x * tan(radians);
-		_setpoint = max_temp - (unsigned int)(arc_len - delta_y);
-		_setpoint = _setpoint - _setpoint%1000;
-		thd_log_info("** set point  x:%g y:%g arc_len:%g set_point %u\n", delta_x,
-	delta_y, arc_len, _setpoint);
+		// set default pid parameters
+		kp = 0.5;
+		ki = kd = 0.0001;
+		last_time = 0;
+		err_sum = 0.0;
+		last_err = 0.0;
+	}
+}
+
+unsigned int cthd_model::update_set_point(unsigned int curr_temp)
+{
+	if (!use_pid_param)
+	{
+		double slope;
+		double delta_x = (max_temp_reached - trend_increase_start) *1000;
+		double delta_y = max_temp - hot_zone;
+		unsigned int _setpoint;
+		double radians;
+		double arc_len;
+
+		if(delta_y > 0 && delta_x > 0)
+		{
+			slope = delta_y / delta_x;
+			radians = atan(slope);
+			thd_log_info("current slope %g angle before %g (%g degree)\n", slope, radians,
+				57.2957795 *radians);
+			radians += (0.01746 *(current_angle + angle_increment));
+			thd_log_info("current slope %g angle before %g (%g degree)\n", slope, radians,
+				57.2957795 *radians);
+			arc_len = delta_x * tan(radians);
+			_setpoint = max_temp - (unsigned int)(arc_len - delta_y);
+			_setpoint = _setpoint - _setpoint%1000;
+			thd_log_info("** set point  x:%g y:%g arc_len:%g set_point %u\n", delta_x,
+				delta_y, arc_len, _setpoint);
+			if((_setpoint < 0) || (abs(set_point - _setpoint) > max_compensation))
+				set_point -= max_compensation;
+			else
+				set_point = _setpoint;
+
+			if(set_point < hot_zone)
+				set_point = hot_zone;
+
+			current_angle += angle_increment;
+		}
+
+		return set_point;
+	}
+	else
+	{
+		double output;
+		double d_err = 0;
+		unsigned int _setpoint;
+
+		time_t now;
+		time(&now);
+		if(last_time == 0)
+			last_time = now;
+		time_t timeChange = (now - last_time);
+
+		int error = curr_temp - max_temp;
+		err_sum += (error *timeChange);
+		if (timeChange)
+			d_err = (error - last_err) / timeChange;
+		else
+			d_err = 0.0;
+
+		/*Compute PID Output*/
+		output = kp * error + ki * err_sum + kd * d_err;
+		_setpoint = max_temp - (unsigned int)output;
+		thd_log_info("update_pid %d %d %d %g %u\n", now, last_time, error, output, set_point);
 		if((_setpoint < 0) || (abs(set_point - _setpoint) > max_compensation))
 			set_point -= max_compensation;
 		else
 			set_point = _setpoint;
 
-		if(set_point < hot_zone)
-			set_point = hot_zone;
+		/*Remember some variables for next time*/
+		last_err = error;
+		last_time = now;
 
-		current_angle += angle_increment;
+		return set_point;
 	}
-
-	return set_point;
 }
 
 void cthd_model::add_sample(unsigned int temperature)
@@ -102,6 +149,9 @@ void cthd_model::add_sample(unsigned int temperature)
 			set_point = _set_point;
 			updated_set_point = true;
 			current_angle = 0;
+			// Reset PID params
+			err_sum = last_err = 0.0;
+			last_time = 0;
 		}
 	}
 	if(temperature >= max_temp)
@@ -112,7 +162,7 @@ void cthd_model::add_sample(unsigned int temperature)
 		if(!max_temp_seen)
 		{
 			unsigned int _set_point;
-			update_set_point();
+			update_set_point(temperature);
 			_set_point = read_set_point();
 			// Update only if the current set point is more than
 			// the stored one.
@@ -121,15 +171,20 @@ void cthd_model::add_sample(unsigned int temperature)
 			max_temp_seen = true;
 		}
 		// Give some time to cooling device to cool, after that set next set point
-		if(delay_cnt > def_setpoint_delay_cnt && (last_temp < temperature))
-			update_set_point();
+		if(set_point_delay_start &&
+			(tm - set_point_delay_start) >= set_point_delay_tm &&
+						(last_temp < temperature))
+			update_set_point(temperature);
 		delay_cnt++;
+		if (!set_point_delay_start)
+			set_point_delay_start = tm;
 		set_point_reached = true;
 	}
 	else
 	{
 		set_point_reached = false;
 		delay_cnt = 0;
+		set_point_delay_start = 0;
 	}
 	last_temp = temperature;
 	thd_log_debug("update_set_point %u,%d,%u\n", last_temp, current_angle,

@@ -24,6 +24,7 @@
 
 #include "thermald.h"
 #include <vector>
+#include <time.h>
 
 class cthd_model
 {
@@ -35,7 +36,7 @@ private:
 	static const int def_setpoint_delay_cnt = 3;
 	static const unsigned int max_compensation = 5000;
 	static const unsigned int hot_zone_percent = 20; //20%
-
+	static const time_t set_point_delay_tm	= 4 * 3; // 12 seconds
 
 	unsigned int max_temp;
 	unsigned int hot_zone;
@@ -44,6 +45,7 @@ private:
 	time_t trend_increase_start;
 	time_t trend_decrease_start;
 	time_t max_temp_reached;
+	time_t set_point_delay_start;
 
 	unsigned int set_point;
 
@@ -53,12 +55,16 @@ private:
 	bool set_point_reached;
 	bool updated_set_point;
 
-	unsigned int update_set_point();
+	unsigned int update_set_point(unsigned int curr_temp);
 	void store_set_point();
 	unsigned int read_set_point();
 
+	double kp, ki, kd, err_sum, last_err;
+	time_t last_time;
+	bool use_pid_param;
+
 public:
-	cthd_model();
+	cthd_model(bool use_pid=false);
 
 	void add_sample(unsigned int temperature);
 	void set_max_temperature(unsigned int temp);
