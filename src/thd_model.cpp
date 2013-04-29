@@ -113,7 +113,7 @@ unsigned int cthd_model::update_set_point(unsigned int curr_temp)
 		/*Compute PID Output*/
 		output = kp * error + ki * err_sum + kd * d_err;
 		_setpoint = max_temp - (unsigned int)output;
-		thd_log_info("update_pid %d %d %d %g %u\n", now, last_time, error, output, set_point);
+		thd_log_info("update_pid %d %d %d %g %u\n", now, last_time, error, output, _setpoint);
 		if((_setpoint < 0) || (abs(set_point - _setpoint) > max_compensation))
 			set_point -= max_compensation;
 		else
@@ -154,7 +154,7 @@ void cthd_model::add_sample(unsigned int temperature)
 			last_time = 0;
 		}
 	}
-	if(temperature >= max_temp)
+	if(temperature > max_temp)
 	{
 		max_temp_reached = tm;
 		// Very first time when we reached max temp

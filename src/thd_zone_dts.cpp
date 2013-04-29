@@ -37,7 +37,8 @@
 #include "thd_msr.h"
 
 cthd_zone_dts::cthd_zone_dts(int index, std::string path, int package_id): cthd_zone(index,
-	path), dts_sysfs(path.c_str()), trip_point_cnt(0), sensor_mask(0), phy_package_id(package_id){
+	path), dts_sysfs(path.c_str()), trip_point_cnt(0), sensor_mask(0), phy_package_id(package_id),
+	thd_model(true) {
 	thd_log_debug("zone dts syfs: %s, package id %d \n", path.c_str(), package_id);
 }
 
