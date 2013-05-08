@@ -21,13 +21,16 @@ edit = sed \
 	-e 's|@sysconfdir[@]|$(sysconfdir)|g' \
 	-e 's|@localstatedir[@]|$(localstatedir)|g'
 
+dbusservicedir = $(DBUS_SYS_DIR)
+dbusservice_DATA = org.freedesktop.thermald.conf
+
+tdconfigdir = $(tdconfdir)
+tdconfig_DATA = thermal-conf.xml
+
 EXTRA_DIST = \
 	thermald.service.in \
-	org.freedesktop.thermald.service.in
+	org.freedesktop.thermald.service.in \
+	$(dbusservice_DATA) \
+	$(tdconfig_DATA)
 
 CLEANFILES = thermald.service org.freedesktop.thermald.service
-
-install-data:
-	cp thermald.service.in $(systemdsystemunitdir)/thermald.service
-	cp org.freedesktop.thermald.service.in $(servicedir)/org.freedesktop.thermald.service
-	cp org.freedesktop.thermald.conf $(DBUS_SYS_DIR)/ 
