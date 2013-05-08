@@ -63,6 +63,8 @@ thermald_SOURCES = \
 		src/thd_topology.cpp \
 		src/thd_kobj_uevent.cpp
 
+man1_MANS = man/thermald.1
+
 thd-dbus-interface.h: $(top_srcdir)/src/thd-dbus_interface.xml
 	$(AM_V_GEN) dbus-binding-tool --prefix=thd_dbus_interface --mode=glib-server --output=$@ $<
 

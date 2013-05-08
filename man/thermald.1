@@ -1,0 +1,69 @@
+.\" thermald (1) manual page
+.\"
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\"
+.\" The GNU General Public License's references to "object code"
+.\" and "executables" are to be interpreted as the output of any
+.\" document formatting or typesetting system, including
+.\" intermediate and printed output.
+.\"
+.\" This manual is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public Licence along
+.\" with this manual; if not, write to the Free Software Foundation, Inc.,
+.\" 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+.\"
+.\" Copyright (C) 2012 Intel Corporation. All rights reserved.
+.\"
+.TH thermald "1" "8 May 2013"
+
+.SH NAME
+thermald \- start Linux thermal daemon
+.SH SYNOPSIS
+.B thermald
+.RI " [ " OPTIONS " ]
+
+.SH DESCRIPTION
+.B thermald
+is a Linux daemon to prevent CPU from overheating. This daemon monitors
+CPU temperature and apply compensation using best available cooling
+methods.
+
+.SH OPTIONS
+.TP
+.B \-h, \-\-help
+Show help options.
+.TP
+.B \-\-version
+Print thermald version and exit.
+.TP
+.B \-\-no-daemon
+Don't become a daemon: Default is daemon mode.
+.TP
+.B \-\-loglevel=info
+log severity: info level and up.
+.TP
+.B \-\-loglevel=debug
+log severity: debug level and up: Max logging.
+.TP
+.B \-\-test-mode
+Test Mode only: Allow non root user.
+.TP
+.B \-\-poll-interval
+Poll interval in seconds: Poll for zone temperature changes.
+If want to disable polling set to zero.
+.TP
+.B \-\-dbus-enable
+Enable Dbus.
+.TP
+.B \-\-use-thermal-sysfs
+Use thermal sysfs, default use digital temperature sensor
+and pre-compiled cooling devices in order.
+.TP
+
