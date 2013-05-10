@@ -8,11 +8,10 @@ m4_define([td_version],
 AC_INIT([thermald], [td_version], [http://bugzilla.gnome.org/enter_bug_cgi?product=thermald], [thermald])
 
 AC_CONFIG_AUX_DIR(build-aux)
-AC_CONFIG_MACRO_DIR([m4])
+AC_CONFIG_HEADERS([config.h])
 
 AM_INIT_AUTOMAKE([1.11 foreign no-define])
 AM_MAINTAINER_MODE([enable])
-AM_CONFIG_HEADER(config.h)
 
 AC_ARG_WITH(dbus-sys-dir, AS_HELP_STRING([--with-dbus-sys-dir=DIR], [where D-BUS system.d directory is]))
 if test -n "$with_dbus_sys_dir" ; then
