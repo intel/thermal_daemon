@@ -62,7 +62,7 @@ int cthd_parse::parser_init()
 int cthd_parse::parse_new_trip_point(xmlNode * a_node, xmlDoc *doc, trip_point_t *trip_pt)
 {
 	xmlNode *cur_node = NULL;
-	unsigned char *tmp_value;
+	char *tmp_value;
 
 	trip_pt->cool_dev_id = 0;
 	trip_pt->temperature = 0;
@@ -71,17 +71,17 @@ int cthd_parse::parse_new_trip_point(xmlNode * a_node, xmlDoc *doc, trip_point_t
 	for (cur_node = a_node; cur_node; cur_node = cur_node->next) {
 		if (cur_node->type == XML_ELEMENT_NODE) {
 			DEBUG_PARSER_PRINT("node type: Element, name: %s value: %s\n", cur_node->name, xmlNodeListGetString(doc, cur_node->xmlChildrenNode, 1));
-			tmp_value = (unsigned char*)xmlNodeListGetString(doc, cur_node->xmlChildrenNode, 1);
-			if (!strcmp(cur_node->name, "Temperature")) {
+			tmp_value = (char *)xmlNodeListGetString(doc, cur_node->xmlChildrenNode, 1);
+			if (!strcmp((const char*)cur_node->name, "Temperature")) {
 				trip_pt->temperature = atoi(tmp_value);
 			}
-			if (!strcmp(cur_node->name, "Hyst")) {
+			if (!strcmp((const char*)cur_node->name, "Hyst")) {
 				trip_pt->hyst = atoi(tmp_value);
 			}
-			if (!strcmp(cur_node->name, "CoolingDevice")) {
+			if (!strcmp((const char*)cur_node->name, "CoolingDevice")) {
 				trip_pt->cool_dev_id = atoi(tmp_value);
 			}
-			if (!strcmp(cur_node->name, "type")) {
+			if (!strcmp((const char*)cur_node->name, "type")) {
 				if (!strcmp(tmp_value, "active"))
 					trip_pt->trip_pt_type = ACTIVE;
 				else if (!strcmp(tmp_value, "passive"))
@@ -105,9 +105,9 @@ int cthd_parse::parse_trip_points(xmlNode * a_node, xmlDoc *doc, thermal_zone_t 
 	for (cur_node = a_node; cur_node; cur_node = cur_node->next) {
 		if (cur_node->type == XML_ELEMENT_NODE) {
 			DEBUG_PARSER_PRINT("node type: Element, name: %s value: %s\n", cur_node->name, xmlNodeListGetString(doc, cur_node->xmlChildrenNode, 1));
-			if (!strcmp(cur_node->name, "TripPoint")) {
+			if (!strcmp((const char*)cur_node->name, "TripPoint")) {
 				trip_pt.cool_dev_id = trip_pt.hyst = trip_pt.temperature = 0;
-				trip_pt.trip_pt_type = 0;
+				trip_pt.trip_pt_type = P_T_STATE;
 				if (parse_new_trip_point(cur_node->children, doc, &trip_pt) == THD_SUCCESS)
 					info_ptr->trip_pts.push_back(trip_pt);
 			}
@@ -120,17 +120,17 @@ int cthd_parse::parse_trip_points(xmlNode * a_node, xmlDoc *doc, thermal_zone_t 
 int cthd_parse::parse_pid_values(xmlNode * a_node, xmlDoc *doc, thermal_zone_t *info_ptr)
 {
 	xmlNode *cur_node = NULL;
-	unsigned char *tmp_value;
+	char *tmp_value;
 
 	for (cur_node = a_node; cur_node; cur_node = cur_node->next) {
 		if (cur_node->type == XML_ELEMENT_NODE) {
 			DEBUG_PARSER_PRINT("node type: Element, name: %s value: %s\n", cur_node->name, xmlNodeListGetString(doc, cur_node->xmlChildrenNode, 1));
-			tmp_value = (unsigned char*)xmlNodeListGetString(doc, cur_node->xmlChildrenNode, 1);
-			if (!strcmp(cur_node->name, "Kp")) {
+			tmp_value = (char*)xmlNodeListGetString(doc, cur_node->xmlChildrenNode, 1);
+			if (!strcmp((const char*)cur_node->name, "Kp")) {
 				info_ptr->pid.Kp = atof(tmp_value);
-			} else if (!strcmp(cur_node->name, "Kd")) {
+			} else if (!strcmp((const char*)cur_node->name, "Kd")) {
 				info_ptr->pid.Kd = atof(tmp_value);
-			} else if (!strcmp(cur_node->name, "Ki")) {
+			} else if (!strcmp((const char*)cur_node->name, "Ki")) {
 				info_ptr->pid.Ki = atof(tmp_value);
 			}
 		}
@@ -142,24 +142,24 @@ int cthd_parse::parse_pid_values(xmlNode * a_node, xmlDoc *doc, thermal_zone_t *
 int cthd_parse::parse_new_zone(xmlNode * a_node, xmlDoc *doc, thermal_zone_t *info_ptr)
 {
 	xmlNode *cur_node = NULL;
-	unsigned char *tmp_value;
+	char *tmp_value;
 
 	info_ptr->enable_pid = false;
 
 	for (cur_node = a_node; cur_node; cur_node = cur_node->next) {
 		if (cur_node->type == XML_ELEMENT_NODE) {
 			DEBUG_PARSER_PRINT("node type: Element, name: %s value: %s\n", cur_node->name, xmlNodeListGetString(doc, cur_node->xmlChildrenNode, 1));
-			tmp_value = (unsigned char*)xmlNodeListGetString(doc, cur_node->xmlChildrenNode, 1);
-			if (!strcmp(cur_node->name, "TripPoints")) {
+			tmp_value = (char*)xmlNodeListGetString(doc, cur_node->xmlChildrenNode, 1);
+			if (!strcmp((const char*)cur_node->name, "TripPoints")) {
 				parse_trip_points(cur_node->children, doc, info_ptr);
 			}
-			else if (!strcmp(cur_node->name, "Name"))
+			else if (!strcmp((const char*)cur_node->name, "Name"))
 					info_ptr->name.assign(tmp_value);
-			else if (!strcmp(cur_node->name, "Sensor_path"))
+			else if (!strcmp((const char*)cur_node->name, "Sensor_path"))
 					info_ptr->path.assign(tmp_value);
-			else if (!strcmp(cur_node->name, "Relationship"))
+			else if (!strcmp((const char*)cur_node->name, "Relationship"))
 					info_ptr->relationship.assign(tmp_value);
-			else if (!strcmp(cur_node->name, "PidControl")) {
+			else if (!strcmp((const char*)cur_node->name, "PidControl")) {
 				info_ptr->enable_pid = true;
 				parse_pid_values(cur_node->children, doc, info_ptr);
 			}
@@ -172,22 +172,22 @@ int cthd_parse::parse_new_zone(xmlNode * a_node, xmlDoc *doc, thermal_zone_t *in
 int cthd_parse::parse_new_cooling_dev(xmlNode * a_node, xmlDoc *doc, cooling_dev_t *cdev)
 {
 	xmlNode *cur_node = NULL;
-	unsigned char *tmp_value;
+	char *tmp_value;
 
 	cdev->max_state = cdev->min_state = 0;
 	for (cur_node = a_node; cur_node; cur_node = cur_node->next) {
 		if (cur_node->type == XML_ELEMENT_NODE) {
 			DEBUG_PARSER_PRINT("node type: Element, name: %s value: %s\n", cur_node->name, xmlNodeListGetString(doc, cur_node->xmlChildrenNode, 1));
-			tmp_value = (unsigned char*)xmlNodeListGetString(doc, cur_node->xmlChildrenNode, 1);
-			if (!strcmp(cur_node->name, "Index")) {
+			tmp_value = (char*)xmlNodeListGetString(doc, cur_node->xmlChildrenNode, 1);
+			if (!strcmp((const char *)cur_node->name, "Index")) {
 				cdev->index = atoi(tmp_value);
-			} else if (!strcmp(cur_node->name, "Type")) {
+			} else if (!strcmp((const char *)cur_node->name, "Type")) {
 				cdev->type_string.assign((const char*)tmp_value);
-			} else if (!strcmp(cur_node->name, "Path")) {
+			} else if (!strcmp((const char *)cur_node->name, "Path")) {
 				cdev->path_str.assign((const char*)tmp_value);
-			} else if (!strcmp(cur_node->name, "MinState")) {
+			} else if (!strcmp((const char *)cur_node->name, "MinState")) {
 				cdev->min_state = atoi(tmp_value);
-			} else if (!strcmp(cur_node->name, "MaxState")) {
+			} else if (!strcmp((const char *)cur_node->name, "MaxState")) {
 				cdev->max_state = atoi(tmp_value);
 			}
 		}
@@ -204,7 +204,7 @@ int cthd_parse::parse_cooling_devs(xmlNode * a_node, xmlDoc *doc, thermal_info_t
 	for (cur_node = a_node; cur_node; cur_node = cur_node->next) {
 		if (cur_node->type == XML_ELEMENT_NODE) {
 			DEBUG_PARSER_PRINT("node type: Element, name: %s value: %s\n", cur_node->name, xmlNodeListGetString(doc, cur_node->xmlChildrenNode, 1));
-			if (!strcmp(cur_node->name, "CoolingDevice")) {
+			if (!strcmp((const char*)cur_node->name, "CoolingDevice")) {
 				cdev.index = cdev.max_state = cdev.min_state = 0;
 				cdev.path_str.clear();
 				cdev.type_string.clear();
@@ -225,7 +225,7 @@ int cthd_parse::parse_thermal_zones(xmlNode * a_node, xmlDoc *doc, thermal_info_
 	for (cur_node = a_node; cur_node; cur_node = cur_node->next) {
 		if (cur_node->type == XML_ELEMENT_NODE) {
 			DEBUG_PARSER_PRINT("node type: Element, name: %s value: %s\n", cur_node->name, xmlNodeListGetString(doc, cur_node->xmlChildrenNode, 1));
-			if (!strcmp(cur_node->name, "ThermalZone")) {
+			if (!strcmp((const char*)cur_node->name, "ThermalZone")) {
 				zone.name.clear();
 				zone.path.clear();
 				zone.relationship.clear();
@@ -242,24 +242,24 @@ int cthd_parse::parse_thermal_zones(xmlNode * a_node, xmlDoc *doc, thermal_info_
 int cthd_parse::parse_new_platform_info(xmlNode * a_node, xmlDoc *doc, thermal_info_t *info_ptr)
 {
 	xmlNode *cur_node = NULL;
-	unsigned char *tmp_value;
+	char *tmp_value;
 
 	for (cur_node = a_node; cur_node; cur_node = cur_node->next) {
 		if (cur_node->type == XML_ELEMENT_NODE) {
 			DEBUG_PARSER_PRINT("node type: Element, name: %s value: %s\n", cur_node->name, xmlNodeListGetString(doc, cur_node->xmlChildrenNode, 1));
-			tmp_value = (unsigned char*)xmlNodeListGetString(doc, cur_node->xmlChildrenNode, 1);
-			if (!strcmp(cur_node->name, "uuid")) {
+			tmp_value = (char*)xmlNodeListGetString(doc, cur_node->xmlChildrenNode, 1);
+			if (!strcmp((const char*)cur_node->name, "uuid")) {
 				info_ptr->uuid.assign((const char*)tmp_value);
-			} else if (!strcmp(cur_node->name, "Name")) {
+			} else if (!strcmp((const char*)cur_node->name, "Name")) {
 				info_ptr->name.assign((const char*)tmp_value);
-			} else if (!strcmp(cur_node->name, "Preference")) {
+			} else if (!strcmp((const char*)cur_node->name, "Preference")) {
 				if (!strcmp(tmp_value, "PERFORMANCE"))
 					info_ptr->default_prefernce = PREF_PERFORMANCE;
 				else
 					info_ptr->default_prefernce = PREF_ENERGY_CONSERVE;
-			} else if (!strcmp(cur_node->name, "ThermalZones")) {
+			} else if (!strcmp((const char*)cur_node->name, "ThermalZones")) {
 				parse_thermal_zones(cur_node->children, doc, info_ptr);
-			} else if (!strcmp(cur_node->name, "CoolingDevices")) {
+			} else if (!strcmp((const char*)cur_node->name, "CoolingDevices")) {
 				parse_cooling_devs(cur_node->children, doc, info_ptr);
 			}
 		}
@@ -278,7 +278,7 @@ int cthd_parse::parse_new_platform(xmlNode * a_node, xmlDoc *doc, thermal_info_t
 		if (cur_node->type == XML_ELEMENT_NODE) {
 			DEBUG_PARSER_PRINT("node type: Element, name: %s value: %s\n", cur_node->name, xmlNodeListGetString(doc, cur_node->xmlChildrenNode, 1));
 			tmp_value = (unsigned char*)xmlNodeListGetString(doc, cur_node->xmlChildrenNode, 1);
-			if (!strcmp(cur_node->name, "Platform")) {
+			if (!strcmp((const char*)cur_node->name, "Platform")) {
 				info.cooling_devs.clear();
 				info.zones.clear();
 				parse_new_platform_info(cur_node->children, doc, &info);
@@ -297,7 +297,7 @@ int cthd_parse::parse_new_thermal_conf(xmlNode * a_node, xmlDoc *doc, thermal_in
 	for (cur_node = a_node; cur_node; cur_node = cur_node->next) {
 		if (cur_node->type == XML_ELEMENT_NODE) {
 			DEBUG_PARSER_PRINT("node type: Element, name: %s value: %s\n", cur_node->name, xmlNodeListGetString(doc, cur_node->xmlChildrenNode, 1));
-			if (!strcmp(cur_node->name, "ThermalConfiguration")) {
+			if (!strcmp((const char*)cur_node->name, "ThermalConfiguration")) {
 				parse_new_platform(cur_node->children, doc, info_ptr);
 			}
 		}
@@ -314,7 +314,7 @@ int cthd_parse::parse(xmlNode * a_node, xmlDoc *doc)
 	for (cur_node = a_node; cur_node; cur_node = cur_node->next) {
 		if (cur_node->type == XML_ELEMENT_NODE) {
 			DEBUG_PARSER_PRINT("node type: Element, name: %s value: %s\n", cur_node->name, xmlNodeListGetString(doc, cur_node->xmlChildrenNode, 1));
-			if (!strcmp(cur_node->name, "ThermalConfiguration")) {
+			if (!strcmp((const char*)cur_node->name, "ThermalConfiguration")) {
 				parse_new_platform(cur_node->children, doc, &info);
 			}
 		}

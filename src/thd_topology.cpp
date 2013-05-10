@@ -24,7 +24,7 @@
 #include "thd_topology.h"
 
 
-#define _GNU_SOURCE
+//#define _GNU_SOURCE
 #include <stdio.h>
 #include <unistd.h>
 #include <sys/types.h>
@@ -72,7 +72,7 @@ void cthd_topology::test_function(cthd_topology *obj)
 	}
 }
 
-static void load_thread_loop(void *arg)
+static void *load_thread_loop(void *arg)
 {
 	cthd_topology *obj = (cthd_topology*)arg;
 	cpu_set_t set;
@@ -83,9 +83,11 @@ static void load_thread_loop(void *arg)
 	if(sched_setaffinity(gettid(), sizeof(cpu_set_t), &set))
 	{
 		perror("sched_setaffinity");
-		return ;
+		return NULL;
 	}
 	obj->test_function(obj);
+
+	return NULL;
 }
 
 void cthd_topology::temp_function()
@@ -99,7 +101,7 @@ void cthd_topology::temp_function()
 	}
 }
 
-static void temp_thread_loop(void *arg)
+static void *temp_thread_loop(void *arg)
 {
 	cthd_topology *obj = (cthd_topology*)arg;
 	cpu_set_t set;
@@ -112,7 +114,7 @@ static void temp_thread_loop(void *arg)
 	if(sched_setaffinity(gettid(), sizeof(cpu_set_t), &set))
 	{
 		perror("sched_setaffinity");
-		return ;
+		return NULL;
 	}
 	obj->cal_failed = false;
 	for(;;)
@@ -129,6 +131,7 @@ static void temp_thread_loop(void *arg)
 		}
 		obj->temp_function();
 	}
+	return NULL;
 }
 
 cthd_topology::cthd_topology()
