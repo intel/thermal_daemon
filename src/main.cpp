@@ -415,7 +415,7 @@ int main(int argc, char *argv[])
 		exit(0);
 	}
 
-	if(getuid() != 0 && !test_mode)
+	if(geteuid() != 0 && !test_mode)
 	{
 		fprintf(stderr, _("You must be root to run thermald!\n"));
 		exit(1);
