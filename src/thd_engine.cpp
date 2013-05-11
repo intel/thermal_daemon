@@ -42,7 +42,7 @@ static void *cthd_calibration_engine_thread(void *arg);
 
 cthd_engine::cthd_engine(): poll_timeout_msec( - 1), wakeup_fd(0), control_mode
 	(COMPLEMENTRY), write_pipe_fd(0), cdev_cnt(0), preference(0), status(true),
-	thd_engine(NULL), parse_thermal_zone_success(false),
+	parse_thermal_zone_success(false),
 	parse_thermal_cdev_success(false), zone_count(0){}
 
 void cthd_engine::thd_engine_thread()
@@ -170,7 +170,7 @@ int cthd_engine::thd_engine_start()
 		goto skip_kobj;
 	}
 	thd_log_info("FD = %d\n", poll_fds[0].fd);
-	kobj_uevent.register_dev_path("/devices/virtual/thermal/thermal_zone");
+	kobj_uevent.register_dev_path((char *)"/devices/virtual/thermal/thermal_zone");
 	poll_fds[0].events = POLLIN;
 	poll_fds[0].revents = 0;
 skip_kobj:
@@ -495,18 +495,18 @@ void cthd_engine::thd_engine_reload_zones()
 	{
 		thd_log_error("No thermal sensors found");
 		// This is a fatal error and daemon will exit
-		return THD_FATAL_ERROR;
+		return;
 	}
 }
 
 // Add any tested platform ids in this table
-static supported_ids_t id_table[] {
-		{6, 0x2a}, // Sandybridge
-		{6, 0x2d}, // Sandybridge
-		{6, 0x3a}, // IvyBridge
-		{6, 0x45}, // Haswell ULT */
+static supported_ids_t id_table[] = {
+		{.family=6, .model=0x2a}, // Sandybridge
+		{.family=6, .model=0x2d}, // Sandybridge
+		{.family=6, .model=0x3a}, // IvyBridge
+		{.family=6, .model=0x45}, // Haswell ULT */
 
-		{0, 0} // Last Invalid entry
+		{.family=0, .model=0} // Last Invalid entry
 };
 
 int cthd_engine::check_cpu_id()
