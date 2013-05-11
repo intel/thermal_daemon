@@ -48,7 +48,7 @@
 
 #if !defined(TD_DIST_VERSION)
 #define TD_DIST_VERSION PACKAGE_VERSION
-#endif 
+#endif
 
 typedef struct
 {
@@ -107,7 +107,7 @@ static void pref_object_class_init(PrefObjectClass *_class)
 {
 	g_assert(_class != NULL);
 
-	dbus_g_object_type_install_info(PREF_TYPE_OBJECT, 
+	dbus_g_object_type_install_info(PREF_TYPE_OBJECT,
 	&dbus_glib_thd_dbus_interface_object_info);
 }
 
@@ -327,48 +327,49 @@ int main(int argc, char *argv[])
 	thd_daemonize = TRUE;
 	dbus_enable = FALSE;
 
-	GOptionEntry options[] = 
+	GOptionEntry options[] =
 	{
 		{
 			"version", 0, 0, G_OPTION_ARG_NONE, &show_version, N_(
-	"Print thermald version and exit"), NULL
+			"Print thermald version and exit"), NULL
 		}
-		, 
+		,
 		{
 			"no-daemon", 0, 0, G_OPTION_ARG_NONE, &no_daemon, N_(
-	"Don't become a daemon: Default is daemon mode"), NULL
+			"Don't become a daemon: Default is daemon mode"), NULL
 		}
-		, 
+		,
 		{
 			"loglevel=info", 0, 0, G_OPTION_ARG_NONE, &log_info, N_(
-	"log severity: info level and up"), NULL
+			"log severity: info level and up"), NULL
 		}
-		, 
+		,
 		{
 			"loglevel=debug", 0, 0, G_OPTION_ARG_NONE, &log_debug, N_(
-	"log severity: debug level and up: Max logging"), NULL
+			"log severity: debug level and up: Max logging"), NULL
 		}
-		, 
+		,
 		{
 			"test-mode", 0, 0, G_OPTION_ARG_NONE, &test_mode, N_(
-	"Test Mode only: Allow non root user"), NULL
+			"Test Mode only: Allow non root user"), NULL
 		}
-		, 
+		,
 		{
 			"poll-interval", 0, 0, G_OPTION_ARG_INT, &poll_interval, N_(
-	"Poll interval in seconds: Poll for zone temperature changes. If want to disable polling set to zero."), NULL
+			"Poll interval in seconds: Poll for zone temperature changes. "
+			"If want to disable polling set to zero."), NULL
 		}
-		, 
+		,
 		{
 			"dbus-enable", 0, 0, G_OPTION_ARG_NONE, &dbus_enable, N_(
-	"Enable Dbus."), NULL
+			"Enable Dbus."), NULL
 		}
-		, 
+		,
 		{
 			"use-thermal-sysfs", 0, 0, G_OPTION_ARG_NONE, &use_thermal_sys_fs, N_(
-	"Use thermal sysfs instead of DTS sensors, default use dts."), NULL
+			"Use thermal sysfs instead of DTS sensors, default use dts."), NULL
 		}
-		, 
+		,
 
 		{
 			NULL
@@ -395,7 +396,8 @@ int main(int argc, char *argv[])
 	g_option_context_add_main_entries(opt_ctx, options, NULL);
 
 	g_option_context_set_summary(opt_ctx, _(
-	"Thermal monitors all temerature sensor and decide best action based on the temrature readings and user preferences."));
+		"Thermal daemon monitors temperature sensors and decides the best action "
+		"based on the temperature readings and user preferences."));
 
 	success = g_option_context_parse(opt_ctx, &argc, &argv, NULL);
 	g_option_context_free(opt_ctx);
@@ -403,7 +405,7 @@ int main(int argc, char *argv[])
 	if(!success)
 	{
 		fprintf(stderr, _(
-	"Invalid option.  Please use --help to see a list of valid options.\n"));
+			"Invalid option.  Please use --help to see a list of valid options.\n"));
 		exit(1);
 	}
 
@@ -439,7 +441,7 @@ int main(int argc, char *argv[])
 		thd_poll_interval = poll_interval;
 	}
 
-	openlog("thermald", LOG_PID, LOG_USER | LOG_DAEMON | LOG_SYSLOG); 
+	openlog("thermald", LOG_PID, LOG_USER | LOG_DAEMON | LOG_SYSLOG);
 	// Don't care return val
 	//setlogmask(LOG_CRIT | LOG_ERR | LOG_WARNING | LOG_NOTICE | LOG_DEBUG | LOG_INFO);
 	thd_daemonize = !no_daemon;
@@ -455,4 +457,3 @@ int main(int argc, char *argv[])
 	closelog();
 	exit(success ? 0 : 1);
 }
-
