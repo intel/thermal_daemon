@@ -141,52 +141,8 @@ int cthd_cdev_pstates::init()
 	return THD_SUCCESS;
 }
 
-int cthd_cdev_pstates::control_begin()
-{
-	std::string governor;
-
-	if(cdev_sysfs.exists("cpu0/cpufreq/scaling_governor"))
-		cdev_sysfs.read("cpu0/cpufreq/scaling_governor", governor);
-
-	if(governor == "userspace")
-		return THD_SUCCESS;
-
-	if(cdev_sysfs.exists("cpu0/cpufreq/scaling_governor"))
-		cdev_sysfs.read("cpu0/cpufreq/scaling_governor", last_governor);
-
-	for(int i = cpu_start_index; i <= cpu_end_index; ++i)
-	{
-		std::stringstream str;
-		str << "cpu" << i << "/cpufreq/scaling_governor";
-		if(cdev_sysfs.exists(str.str()))
-		{
-			cdev_sysfs.write(str.str(), "userspace");
-		}
-	}
-
-	return THD_SUCCESS;
-}
-
-int cthd_cdev_pstates::control_end()
-{
-	for(int i = cpu_start_index; i <= cpu_end_index; ++i)
-	{
-		std::stringstream str;
-		str << "cpu" << i << "/cpufreq/scaling_governor";
-		if(cdev_sysfs.exists(str.str()))
-		{
-			cdev_sysfs.write(str.str(), last_governor);
-		}
-	}
-
-	return THD_SUCCESS;
-}
-
 void cthd_cdev_pstates::set_curr_state(int state, int arg)
 {
-	if(state == 1)
-		control_begin();
-
 	// p state control
 	//scaling_setspeed
 	if(state < cpufreqs.size())
@@ -198,7 +154,7 @@ void cthd_cdev_pstates::set_curr_state(int state, int arg)
 				if(thd_engine->apply_cpu_operation(i) == false)
 					continue;
 				std::stringstream str;
-				str << "cpu" << i << "/cpufreq/scaling_setspeed";
+				str << "cpu" << i << "/cpufreq/scaling_max_freq";
 				if(cdev_sysfs.exists(str.str()))
 				{
 					std::stringstream speed;
@@ -214,7 +170,7 @@ void cthd_cdev_pstates::set_curr_state(int state, int arg)
 			if(thd_engine->apply_cpu_operation(cpu_index))
 			{
 				std::stringstream str;
-				str << "cpu" << cpu_index << "/cpufreq/scaling_setspeed";
+				str << "cpu" << cpu_index << "/cpufreq/scaling_max_freq";
 				if(cdev_sysfs.exists(str.str()))
 				{
 					std::stringstream speed;
@@ -225,14 +181,8 @@ void cthd_cdev_pstates::set_curr_state(int state, int arg)
 				curr_state = state;
 			}
 		}
-		goto done;
 	}
 
-	done: 
-	//	curr_state = state;
-
-	if(state == 0)
-		control_end();
 }
 
 int cthd_cdev_pstates::get_max_state()
