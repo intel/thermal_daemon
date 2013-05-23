@@ -49,8 +49,6 @@ public:
 	"/sys/devices/system/cpu/"), cpu_index(_cpu_index){}
 
 	int init();
-	int control_begin();
-	int control_end();
 	void set_curr_state(int state, int arg);
 	int get_max_state();
 	int update();

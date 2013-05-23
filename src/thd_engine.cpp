@@ -501,12 +501,12 @@ void cthd_engine::thd_engine_reload_zones()
 
 // Add any tested platform ids in this table
 static supported_ids_t id_table[] = {
-		{.family=6, .model=0x2a}, // Sandybridge
-		{.family=6, .model=0x2d}, // Sandybridge
-		{.family=6, .model=0x3a}, // IvyBridge
-		{.family=6, .model=0x45}, // Haswell ULT */
+		{6, 0x2a}, // Sandybridge
+		{6, 0x2d}, // Sandybridge
+		{6, 0x3a}, // IvyBridge
+		{6, 0x45}, // Haswell ULT */
 
-		{.family=0, .model=0} // Last Invalid entry
+		{0, 0} // Last Invalid entry
 };
 
 int cthd_engine::check_cpu_id()
