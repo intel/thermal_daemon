@@ -45,7 +45,7 @@ unsigned int cthd_zone::read_zone_temp()
 	csys_fs sysfs;
 	std::string buffer;
 
-	thd_log_debug("read_zone_temp \n");
+	thd_log_debug("read_zone_temp %s\n", temperature_sysfs_path.c_str());
 	if(!sysfs.exists(temperature_sysfs_path))
 	{
 		thd_log_warn("read_zone_temp: No temp sysfs for reading temp: %s\n",

@@ -345,6 +345,72 @@ Example below specifies
 	</CoolingDevices>
 </Platform>
 
+<!-- 	EXAMPLE CONF FILE
+Example using a non thermal zone temperature sysfs
+-->
+<Platform>
+	<Name>Asus Ultrabook Platform</Name>
+	<uuid>dummy-0BAE5980-01A6-81E1-3575-5404A62D3DB1</uuid>
+	<Preference>QUIET</Preference>
+	<ThermalZones>
+		<ThermalZone>
+			<Name>Zone0</Name>
+			<Sensor_path>/sys/devices/platform/coretemp.0/temp1_input</Sensor_path>
+			<TripPoints>
+				<TripPoint>
+					<Temperature> 70000 </Temperature>
+					<CoolingDevice>0</CoolingDevice>
+					<type>passive</type>
+				</TripPoint>
+				<TripPoint>
+					<Temperature> 70000 </Temperature>
+					<CoolingDevice>1</CoolingDevice>
+					<type>passive</type>
+				</TripPoint>
+				<TripPoint>
+					<Temperature> 70000 </Temperature>
+					<CoolingDevice>2</CoolingDevice>
+					<type>passive</type>
+				</TripPoint>
+				<TripPoint>
+					<Temperature> 70000 </Temperature>
+					<CoolingDevice>3</CoolingDevice>
+					<type>passive</type>
+				</TripPoint>
+			</TripPoints>
+		</ThermalZone>
+	</ThermalZones>
+	<CoolingDevices>
+		<CoolingDevice>
+			<Index>0</Index>
+			<Type>Processor</Type>
+			<Path>/sys/class/thermal/cooling_device0/cur_state</Path>
+			<MinState>0</MinState>
+			<MaxState>10</MaxState>
+		</CoolingDevice>
+		<CoolingDevice>
+			<Index>1</Index>
+			<Type>Processor</Type>
+			<Path>/sys/class/thermal/cooling_device1/cur_state</Path>
+			<MinState>0</MinState>
+			<MaxState>10</MaxState>
+		</CoolingDevice>
+		<CoolingDevice>
+			<Index>2</Index>
+			<Type>Processor</Type>
+			<Path>/sys/class/thermal/cooling_device2/cur_state</Path>
+			<MinState>0</MinState>
+			<MaxState>10</MaxState>
+		</CoolingDevice>
+		<CoolingDevice>
+			<Index>3</Index>
+			<Type>Processor</Type>
+			<Path>/sys/class/thermal/cooling_device3/cur_state</Path>
+			<MinState>0</MinState>
+			<MaxState>10</MaxState>
+		</CoolingDevice>
+	</CoolingDevices>
+</Platform>
 </ThermalConfiguration>
 <!-- END -->
 

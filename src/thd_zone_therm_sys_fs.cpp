@@ -195,8 +195,8 @@ int cthd_sysfs_zone::read_xml_trip_points()
 		}
 		if(trip_point_cnt)
 		{
-			return THD_SUCCESS;
 			using_custom_zone = true;
+			return THD_SUCCESS;
 		}
 	}
 	return THD_ERROR;
