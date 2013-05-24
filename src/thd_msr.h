@@ -32,11 +32,12 @@ class cthd_msr
 private:
 	csys_fs msr_sysfs;
 	int no_of_cpus;
-	int read_msr(int cpu, unsigned int idx, unsigned long long *val);
-	int write_msr(int cpu, unsigned int idx, unsigned long long val);
 
 public:
 	cthd_msr();
+
+	int read_msr(int cpu, unsigned int idx, unsigned long long *val);
+	int write_msr(int cpu, unsigned int idx, unsigned long long val);
 
 	int get_no_cpus();
 

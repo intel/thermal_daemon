@@ -173,6 +173,11 @@ int cthd_zone_dts::read_trip_points()
 			thd_log_debug("ZONE DTS add RAPL id %d \n", thd_dts_engine->intel_rapl_index[phy_package_id]);
 			trip_pt.thd_trip_point_add_cdev_index(thd_dts_engine->intel_rapl_index[phy_package_id]);
 		}
+		else if (thd_dts_engine->msr_control_present > 0)
+		{
+			trip_pt.thd_trip_point_add_cdev_index(thd_dts_engine->msr_rapl_index);
+		}
+
 		if (thd_dts_engine->intel_pstate_driver_index != -1)
 		{
 			trip_pt.thd_trip_point_add_cdev_index(thd_dts_engine->intel_pstate_control_index);

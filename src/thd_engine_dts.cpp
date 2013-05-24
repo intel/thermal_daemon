@@ -34,6 +34,7 @@
 #include "thd_cdev_msr_pstates_limited.h"
 #include "thd_cdev_intel_pstate_driver.h"
 #include "thd_cdev_rapl.h"
+#include "thd_cdev_msr_rapl.h"
 
 #include <dirent.h>
 #include <errno.h>
@@ -246,6 +247,15 @@ int cthd_engine_dts::read_cooling_devices()
 	check_intel_p_state_driver();
 
 	if (processor_id_match()) {
+
+		cthd_cdev_rapl_msr *cdev_rapl = new cthd_cdev_rapl_msr(msr_rapl_index,  -
+					1);
+		if(cdev_rapl->update() == THD_SUCCESS)
+		{
+			cdevs.push_back(cdev_rapl);
+			++cdev_cnt;
+		}
+
 		// Turbo sub states control
 		cthd_cdev_msr_turbo_states *cdev_turbo = new cthd_cdev_msr_turbo_states
 				(msr_turbo_states_index,  - 1);
