@@ -63,7 +63,8 @@ thermald_SOURCES = \
 		src/thd_topology.cpp \
 		src/thd_kobj_uevent.cpp \
 		src/thd_rapl_interface.cpp \
-		src/thd_cdev_msr_rapl.cpp
+		src/thd_cdev_msr_rapl.cpp \
+		src/thd_cdev_order_parser.cpp
 
 
 man1_MANS = man/thermald.1

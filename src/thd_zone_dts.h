@@ -60,6 +60,7 @@ protected:
 	}
 
 	int update_thresholds(int thres_1, int thres_2);
+	int parse_cdev_order();
 
 public:
 	static const int max_dts_sensors = sizeof(unsigned int) *8;
@@ -68,6 +69,7 @@ public:
 	static const int def_critical_temp = 100000;
 
 	cthd_zone_dts(int count, std::string path, int package_id);
+	int load_cdev_xml(cthd_trip_point &trip_pt, std::vector <std::string> &list);
 
 	virtual int read_trip_points();
 	int read_cdev_trip_points();

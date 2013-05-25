@@ -35,6 +35,7 @@
 #include "thd_zone_dts.h"
 #include "thd_engine_dts.h"
 #include "thd_msr.h"
+#include "thd_cdev_order_parser.h"
 
 cthd_zone_dts::cthd_zone_dts(int index, std::string path, int package_id): cthd_zone(index,
 	path), dts_sysfs(path.c_str()), trip_point_cnt(0), sensor_mask(0), phy_package_id(package_id),
@@ -150,10 +151,127 @@ int cthd_zone_dts::update_thresholds(int thres_1, int thres_2)
 	return ret;
 }
 
+int cthd_zone_dts::load_cdev_xml(cthd_trip_point &trip_pt, std::vector <std::string> &list)
+{
+	cthd_engine_dts *thd_dts_engine = (cthd_engine_dts*)thd_engine;
+
+	for (int i = 0; i < list.size(); ++i) {
+		thd_log_debug("- %s\n", list[i].c_str());
+		if (list[i] == "CDEV_INTEL_RAPL_DRIVER")
+		{
+			if (thd_dts_engine->intel_rapl_index[phy_package_id] != -1)
+			{
+				thd_log_debug("ZONE DTS add RAPL id %d \n", thd_dts_engine->intel_rapl_index[phy_package_id]);
+				trip_pt.thd_trip_point_add_cdev_index(thd_dts_engine->intel_rapl_index[phy_package_id]);
+			}
+		}
+		else if (list[i] == "CDEV_RAPL")
+		{
+			if (thd_dts_engine->msr_control_present > 0)
+			{
+				thd_log_debug("add trip CDEV_RAPL %d\n", thd_dts_engine->msr_rapl_index);
+				trip_pt.thd_trip_point_add_cdev_index(thd_dts_engine->msr_rapl_index);
+			}
+		}
+		else if (list[i] == "CDEV_INTEL_PSTATE_DRIVER")
+		{
+			if (thd_dts_engine->intel_pstate_driver_index != -1)
+			{
+				thd_log_debug("add trip CDEV_INTEL_PSTATE_DRIVER %d\n", thd_dts_engine->intel_pstate_control_index);
+				trip_pt.thd_trip_point_add_cdev_index(thd_dts_engine->intel_pstate_control_index);
+			}
+		}
+		else if (list[i] == "CDEV_MSR_TURBO_STATES")
+		{
+			if (thd_dts_engine->intel_pstate_driver_index == -1 && thd_dts_engine->msr_control_present > 0)
+			{
+				thd_log_debug("add trip CDEV_MSR_TURBO_STATES %d\n", thd_dts_engine->msr_turbo_states_index);
+				trip_pt.thd_trip_point_add_cdev_index(thd_dts_engine->msr_turbo_states_index);
+			}
+		}
+		else if (list[i] == "CDEV_MSR_PSTATES_PARTIAL")
+		{
+			if (thd_dts_engine->intel_pstate_driver_index == -1 && thd_dts_engine->msr_control_present > 0)
+			{
+				thd_log_debug("add trip CDEV_MSR_PSTATES_PARTIAL %d\n", thd_dts_engine->msr_p_states_index_limited);
+				trip_pt.thd_trip_point_add_cdev_index(thd_dts_engine->msr_p_states_index_limited);
+			}
+		}
+		else if (list[i] == "CDEV_TURBO_ON_OFF")
+		{
+			if (thd_dts_engine->intel_pstate_driver_index == -1 && thd_dts_engine->msr_control_present > 0)
+			{
+				thd_log_debug("add trip CDEV_TURBO_ON_OFF %d\n", thd_dts_engine->turbo_on_off_index);
+ 				trip_pt.thd_trip_point_add_cdev_index(thd_dts_engine->turbo_on_off_index);
+			}
+		}
+		else if (list[i] == "CDEV_CPU_FREQ")
+		{
+			thd_log_debug("add trip CDEV_CPU_FREQ %d\n", thd_dts_engine->cpufreq_index);
+			trip_pt.thd_trip_point_add_cdev_index(thd_dts_engine->cpufreq_index);
+		}
+		else if (list[i] == "CDEV_POWER_CLAMP")
+		{
+			if(thd_dts_engine->power_clamp_index !=  - 1)
+			{
+				thd_log_debug("add trip CDEV_POWER_CLAMP %d\n", thd_dts_engine->power_clamp_index);
+				trip_pt.thd_trip_point_add_cdev_index(thd_dts_engine->power_clamp_index);
+			}
+		}
+		else if (list[i] == "CDEV_MSR_PSTATES")
+		{
+			if (thd_dts_engine->intel_pstate_driver_index == -1 && thd_dts_engine->msr_control_present > 0)
+			{
+				thd_log_debug("add trip CDEV_PSTATES %d\n", thd_dts_engine->msr_p_states_index_limited);
+				trip_pt.thd_trip_point_add_cdev_index(thd_dts_engine->msr_p_states_index_limited);
+			}
+		}
+		else if (list[i] == "CDEV_T_STATES")
+		{
+			if (thd_dts_engine->msr_control_present > 0)
+			{
+				thd_log_debug("add trip CDEV_T_STATES %d\n", thd_dts_engine->t_state_index);
+				trip_pt.thd_trip_point_add_cdev_index(thd_dts_engine->t_state_index);
+			}
+		}
+	}			
+
+}
+
+int cthd_zone_dts::parse_cdev_order()
+{
+	cthd_cdev_order_parse parser;
+	std::vector <std::string> order_list;
+	int ret = THD_ERROR;
+
+
+	if((ret = parser.parser_init()) == THD_SUCCESS)
+	{
+		if((ret = parser.start_parse()) == THD_SUCCESS)
+		{
+			ret = parser.get_order_list(order_list);
+			if (ret == THD_SUCCESS)
+			{
+				cthd_trip_point trip_pt(trip_point_cnt, P_T_STATE, set_point, def_hystersis,
+							0xFF);
+				trip_pt.thd_trip_point_set_control_type(SEQUENTIAL);
+				load_cdev_xml(trip_pt, order_list);
+				trip_points.push_back(trip_pt);
+				trip_point_cnt++;
+			}
+		}
+		parser.parser_deinit();
+		return ret;
+	}
+
+	return ret;	
+}
+
 int cthd_zone_dts::read_trip_points()
 {
 	cthd_msr msr;
 	int _index = 0;
+	int ret;
 
 	if (init() != THD_SUCCESS)
 		return THD_ERROR;
@@ -164,6 +282,12 @@ int cthd_zone_dts::read_trip_points()
 
 	if(cpu_mask == thd_dts_engine->def_cpu_mask)
 	{
+
+		ret = parse_cdev_order();
+		if (ret == THD_SUCCESS) {
+			thd_log_info("CDEVS order specified in thermal-cdev-order.xml\n");
+			goto cdev_loaded;
+		}
 		cthd_trip_point trip_pt(trip_point_cnt, P_T_STATE, set_point, def_hystersis,
 	0xFF);
 		trip_pt.thd_trip_point_set_control_type(SEQUENTIAL);
@@ -249,6 +373,7 @@ int cthd_zone_dts::read_trip_points()
 		}
 		while(mask != 0);
 	}
+cdev_loaded:
 	{
 		int cnt = 0;
 		unsigned int mask = 0x1;

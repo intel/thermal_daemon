@@ -25,7 +25,8 @@ dbusservicedir = $(DBUS_SYS_DIR)
 dbusservice_DATA = org.freedesktop.thermald.conf
 
 tdconfigdir = $(tdconfdir)
-tdconfig_DATA = thermal-conf.xml
+tdconfig_DATA = thermal-conf.xml \
+	thermal-cdev-order.xml
 
 EXTRA_DIST = \
 	thermald.service.in \

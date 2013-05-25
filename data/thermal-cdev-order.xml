@@ -1,0 +1,33 @@
+
+<!-- 
+Specifies the order of compensation to cool system.
+There is a default already implemented in the code, but
+this file can be used to change order
+
+The Following cooling device can present
+CDEV_INTEL_RAPL_DRIVER
+CDEV_MSR_RAPL
+CDEV_INTEL_PSTATE_DRIVER
+CDEV_MSR_TURBO_STATES
+CDEV_MSR_PSTATES_PARTIAL
+CDEV_TURBO_ON_OFF
+CDEV_CPU_FREQ
+CDEV_POWER_CLAMP
+CDEV_MSR_PSTATES
+CDEV_T_STATES
+-->
+
+<CoolingDeviceOrder>
+	<!-- Specify Cooling device order -->
+	<CoolingDevice>CDEV_INTEL_RAPL_DRIVER</CoolingDevice>
+	<CoolingDevice>CDEV_RAPL</CoolingDevice>
+	<CoolingDevice>CDEV_INTEL_PSTATE_DRIVER</CoolingDevice>
+	<CoolingDevice>CDEV_MSR_TURBO_STATES</CoolingDevice>
+	<CoolingDevice>CDEV_MSR_PSTATES_PARTIAL</CoolingDevice>
+	<CoolingDevice>CDEV_TURBO_ON_OFF</CoolingDevice>
+	<CoolingDevice>CDEV_POWER_CLAMP</CoolingDevice>
+	<CoolingDevice>CDEV_CPU_FREQ</CoolingDevice>
+	<CoolingDevice>CDEV_MSR_PSTATES</CoolingDevice>
+	<CoolingDevice>CDEV_T_STATES</CoolingDevice>
+</CoolingDeviceOrder>
+
