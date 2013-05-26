@@ -1,9 +1,9 @@
 Prerequisites:
 	Kernel
 		Need kernel with "Intel P State driver", to use Intel P state driver to cool the system.
-		Intel Power clamp driver: To use Idle injection to cool the system
-		CONFIG_X86_MSR, so that x86 MSR can be read/write from user space for using P/T states MSRs.
-		RAPL driver is submitted to Linux kernel and under review.
+		Intel Power clamp driver: To use Idle injection to cool the system.
+		CONFIG_X86_MSR, so that x86 MSR can be read/write from user space to control P-States.
+
 	Default
 		If none of the above available cpufreq to control P states.
 
@@ -65,6 +65,15 @@ Use "sudo stop thermald" to stop
 -------------------------------------------
 
 Releases
+Release 1.01
+- Implement RAPL using MSRs.
+- User can configure cooling device order via XML config file
+- Fix sensor path configuration for thermal-conf.xml, so that user cn specify custom sensor paths
+- Use CPU max scaling frequency to control CPU Frequencies
+- RPM generation scripts
+- Build and formatting fixes from Alexander Bersenev
+
+
 Release 1.0
 - Tested on multiple platforms
 - Using PID
