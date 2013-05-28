@@ -17,6 +17,10 @@
       <arg type="s" name="new_pref" direction="in"/>
     </method>
 
+    <method name="SetUserSetPoint">
+      <arg type="s" name="user_set_point_in_milli_degree_celsius" direction="in"/>
+    </method>
+
     <!-- GetCurrentPreference: Returns the current preference -->
     <method name="GetCurrentPreference">
       <arg type="s" name="cur_pref" direction="out"/>

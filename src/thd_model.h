@@ -54,10 +54,12 @@ private:
 	bool max_temp_seen;
 	bool set_point_reached;
 	bool updated_set_point;
+	bool user_forced_set_point_change;
 
 	unsigned int update_set_point(unsigned int curr_temp);
 	void store_set_point();
 	unsigned int read_set_point();
+	unsigned int read_user_set_max_temp();
 
 	double kp, ki, kd, err_sum, last_err;
 	time_t last_time;
@@ -68,6 +70,8 @@ public:
 
 	void add_sample(unsigned int temperature);
 	void set_max_temperature(unsigned int temp);
+	bool update_user_set_max_temp();
+
 	unsigned int get_set_point()
 	{
 		return set_point;

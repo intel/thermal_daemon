@@ -71,6 +71,7 @@ public:
 	cthd_zone_dts(int count, std::string path, int package_id);
 	int load_cdev_xml(cthd_trip_point &trip_pt, std::vector <std::string> &list);
 
+	virtual void update_zone_preference();
 	virtual int read_trip_points();
 	int read_cdev_trip_points();
 	void set_temp_sensor_path();

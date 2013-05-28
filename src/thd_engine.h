@@ -126,6 +126,7 @@ public:
 	bool set_preference(const int pref);
 	void thd_engine_terminate();
 	void thd_engine_calibrate();
+	int thd_engine_set_user_set_point(const char *user_set_point);
 
 	cthd_cdev *thd_get_cdev_at_index(int index);
 

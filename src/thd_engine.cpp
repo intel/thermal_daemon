@@ -36,6 +36,7 @@
 #include <dirent.h>
 #include <errno.h>
 #include <sys/types.h>
+#include <locale>
 
 static void *cthd_engine_thread(void *arg);
 static void *cthd_calibration_engine_thread(void *arg);
@@ -318,6 +319,30 @@ void cthd_engine::thd_engine_calibrate()
 #ifdef PER_CPU_P_STATE_CONTROL
 	send_message(CALIBRATE, 0, NULL);
 #endif
+}
+
+int cthd_engine::thd_engine_set_user_set_point(const char *user_set_point)
+{
+	std::string str(user_set_point);
+
+	thd_log_debug("thd_engine_set_user_set_point %s\n", user_set_point);
+
+	std::locale loc;
+	if (std::isdigit(str[0],loc) == 0)
+	{
+		thd_log_warn("thd_engine_set_user_set_point Invalid set point\n");
+		return;
+	}
+	std::stringstream filename;
+	filename << TDCONFDIR << "/" << "thd_user_set_point.conf";
+
+	std::ofstream fout(filename.str().c_str());
+	if(!fout.good())
+	{
+		return FALSE;
+	}
+	fout << str;
+	fout.close();
 }
 
 void cthd_engine::thermal_zone_change(message_capsul_t *msg)

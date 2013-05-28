@@ -40,7 +40,8 @@
 cthd_model::cthd_model(bool use_pid): trend_increase_start(0), max_temp(def_max_temperature)
 	, set_point(def_max_temperature), last_temp(0), max_temp_reached(0),
 	current_angle(0), set_point_reached(false), delay_cnt(0), max_temp_seen
-	(false), updated_set_point(false), use_pid_param(use_pid), set_point_delay_start(0)
+	(false), updated_set_point(false), use_pid_param(use_pid), set_point_delay_start(0),
+	user_forced_set_point_change(false)
 {
 	if (use_pid)
 	{
@@ -186,6 +187,11 @@ void cthd_model::add_sample(unsigned int temperature)
 		delay_cnt = 0;
 		set_point_delay_start = 0;
 	}
+	if (user_forced_set_point_change)
+	{
+		user_forced_set_point_change = false;
+		set_point_reached = true;
+	}
 	last_temp = temperature;
 	thd_log_debug("update_set_point %u,%d,%u\n", last_temp, current_angle,
 	set_point);
@@ -225,10 +231,14 @@ unsigned int cthd_model::read_set_point()
 void cthd_model::set_max_temperature(unsigned int temp)
 {
 	unsigned int _set_point;
+	unsigned int user_defined_max;
 
 	max_temp = temp - safety_margin;
+	user_defined_max = read_user_set_max_temp();
+	if (user_defined_max > 0)
+		max_temp = user_defined_max;
 	_set_point = read_set_point();
-	if(_set_point > 0)
+	if(_set_point > 0 && _set_point < max_temp)
 	{
 		set_point = _set_point;
 	}
@@ -237,4 +247,49 @@ void cthd_model::set_max_temperature(unsigned int temp)
 		set_point = max_temp;
 	}
 	hot_zone = max_temp - ((max_temp *hot_zone_percent) / 100);
+}
+
+bool cthd_model::update_user_set_max_temp()
+{
+	std::stringstream filename;
+	bool present = false;
+	unsigned int _set_point;
+	unsigned int temp;
+
+	filename << TDCONFDIR << "/" << "thd_user_set_point.conf";
+	std::ifstream ifs(filename.str().c_str(), std::ifstream::in);
+	if(ifs.good())
+	{
+		ifs >> temp;
+		if (temp > 1000)
+		{
+			max_temp = temp;
+			set_point = max_temp;
+			hot_zone = max_temp - ((max_temp *hot_zone_percent) / 100);
+			store_set_point();
+			present = true;
+			user_forced_set_point_change = true;
+			thd_log_info("User forced maximum temperature is %u\n", max_temp);
+		}
+	}
+	ifs.close();
+
+	return present;
+}
+
+unsigned int cthd_model::read_user_set_max_temp()
+{
+	std::stringstream filename;
+	unsigned int user_max = 0;
+
+	filename << TDCONFDIR << "/" << "thd_user_set_point.conf";
+	std::ifstream ifs(filename.str().c_str(), std::ifstream::in);
+	if(ifs.good())
+	{
+		ifs >> user_max;
+		thd_log_info("User defined max temperature %u\n", user_max);
+	}
+	ifs.close();
+
+	return user_max;
 }

@@ -451,3 +451,9 @@ unsigned int cthd_zone_dts::read_zone_temp()
 
 	return zone_temp;
 }
+
+void cthd_zone_dts::update_zone_preference()
+{
+	thd_model.update_user_set_max_temp();
+	cthd_zone::update_zone_preference();
+}

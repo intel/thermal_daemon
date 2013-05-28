@@ -72,6 +72,8 @@ gboolean thd_dbus_interface_set_current_preference(PrefObject *obj, gint
 	*value_out, GError **error);
 gboolean thd_dbus_interface_get_current_preference(PrefObject *obj, gdouble
 	*value_out, GError **error);
+gboolean thd_dbus_interface_set_user_set_point(PrefObject *obj, gdouble
+	*value_out, GError **error);
 // This is a generated file, which expects the above prototypes
 #include "thd-dbus-interface.h"
 
@@ -151,6 +153,18 @@ gboolean thd_dbus_interface_terminate(PrefObject *obj, gint *value_out, GError
 {
 	thd_engine->thd_engine_terminate();
 	return TRUE;
+}
+
+gboolean thd_dbus_interface_set_user_set_point(PrefObject *obj, gdouble
+	*value_out, GError **error)
+{
+	int ret;
+	thd_log_debug("thd_dbus_interface_set_user_set_point %s\n", (char*)
+	value_out);
+	g_assert(obj != NULL);
+	cthd_preference thd_pref;
+	if (thd_engine->thd_engine_set_user_set_point((char*)value_out) == THD_SUCCESS)
+		thd_engine->send_message(PREF_CHANGED, 0, NULL);
 }
 
 // g_log handler. All logs will be directed here
