@@ -331,7 +331,7 @@ int cthd_engine::thd_engine_set_user_set_point(const char *user_set_point)
 	if (std::isdigit(str[0],loc) == 0)
 	{
 		thd_log_warn("thd_engine_set_user_set_point Invalid set point\n");
-		return;
+		return THD_ERROR;
 	}
 	std::stringstream filename;
 	filename << TDCONFDIR << "/" << "thd_user_set_point.conf";
@@ -339,10 +339,12 @@ int cthd_engine::thd_engine_set_user_set_point(const char *user_set_point)
 	std::ofstream fout(filename.str().c_str());
 	if(!fout.good())
 	{
-		return FALSE;
+		return THD_ERROR;
 	}
 	fout << str;
 	fout.close();
+
+	return THD_SUCCESS;
 }
 
 void cthd_engine::thermal_zone_change(message_capsul_t *msg)
