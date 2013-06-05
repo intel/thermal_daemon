@@ -18,6 +18,8 @@
 <!ELEMENT Path (#PCDATA)>
 <!ELEMENT MinState (#PCDATA)>
 <!ELEMENT MaxState (#PCDATA)>
+<!ELEMENT IncDecStep (#PCDATA)>
+<!ELEMENT AutoOffMode (#PCDATA)>
 <!ELEMENT CoolingDevice (#PCDATA|Index|Type|Path|MinState|MaxState)*>
 <!ELEMENT CoolingDevices (CoolingDevice)+>
 <!ELEMENT Platform (Name,uuid,Preference,ThermalZones,CoolingDevices)>
@@ -266,7 +268,8 @@ Example below specifies
 			<MaxState>16</MaxState>
 		</CoolingDevice>
 	<!-- Cooling Devices End -->
-	</CoolingDevices>
+	</CoolingDevices>E0B-A601-E181-3575-5404A62D3DB1
+13 CPUID levels; family:mo
 </Platform>
 <Platform>
 	<Name>SandyBridge Platform</Name>
@@ -350,13 +353,18 @@ Example using a non thermal zone temperature sysfs
 -->
 <Platform>
 	<Name>Asus Ultrabook Platform</Name>
-	<uuid>dummy-0BAE5980-01A6-81E1-3575-5404A62D3DB1</uuid>
+	<uuid>dummy-8059AE0B-A601-E181-3575-5404A62D3DB1</uuid>
 	<Preference>QUIET</Preference>
 	<ThermalZones>
 		<ThermalZone>
 			<Name>Zone0</Name>
 			<Sensor_path>/sys/devices/platform/coretemp.0/temp1_input</Sensor_path>
 			<TripPoints>
+				<TripPoint>
+					<Temperature> 60000 </Temperature>
+					<CoolingDevice>4</CoolingDevice>
+					<type>passive</type>
+				</TripPoint>
 				<TripPoint>
 					<Temperature> 70000 </Temperature>
 					<CoolingDevice>0</CoolingDevice>
@@ -408,6 +416,15 @@ Example using a non thermal zone temperature sysfs
 			<Path>/sys/class/thermal/cooling_device3/cur_state</Path>
 			<MinState>0</MinState>
 			<MaxState>10</MaxState>
+		</CoolingDevice>
+		<CoolingDevice>
+			<Index>4</Index>
+			<Type>intel_powerclamp</Type>
+			<Path>/sys/class/thermal/cooling_device4/cur_state</Path>
+			<MinState>0</MinState>
+			<IncDecStep>5</IncDecStep>
+			<AutoOffMode>1</AutoOffMode>
+			<MaxState>50</MaxState>
 		</CoolingDevice>
 	</CoolingDevices>
 </Platform>

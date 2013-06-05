@@ -175,6 +175,8 @@ int cthd_parse::parse_new_cooling_dev(xmlNode * a_node, xmlDoc *doc, cooling_dev
 	char *tmp_value;
 
 	cdev->max_state = cdev->min_state = 0;
+	cdev->inc_dec_step = 1 ;
+	cdev->auto_down_control = false;
 	for (cur_node = a_node; cur_node; cur_node = cur_node->next) {
 		if (cur_node->type == XML_ELEMENT_NODE) {
 			DEBUG_PARSER_PRINT("node type: Element, name: %s value: %s\n", cur_node->name, xmlNodeListGetString(doc, cur_node->xmlChildrenNode, 1));
@@ -189,6 +191,13 @@ int cthd_parse::parse_new_cooling_dev(xmlNode * a_node, xmlDoc *doc, cooling_dev
 				cdev->min_state = atoi(tmp_value);
 			} else if (!strcmp((const char *)cur_node->name, "MaxState")) {
 				cdev->max_state = atoi(tmp_value);
+			} else if (!strcmp((const char *)cur_node->name, "IncDecStep")) {
+				cdev->inc_dec_step = atoi(tmp_value);
+			} else if (!strcmp((const char *)cur_node->name, "AutoOffMode")) {
+				if (atoi(tmp_value))
+					cdev->auto_down_control = true;
+				else
+					cdev->auto_down_control = false;
 			}
 		}
 	}
@@ -206,6 +215,8 @@ int cthd_parse::parse_cooling_devs(xmlNode * a_node, xmlDoc *doc, thermal_info_t
 			DEBUG_PARSER_PRINT("node type: Element, name: %s value: %s\n", cur_node->name, xmlNodeListGetString(doc, cur_node->xmlChildrenNode, 1));
 			if (!strcmp((const char*)cur_node->name, "CoolingDevice")) {
 				cdev.index = cdev.max_state = cdev.min_state = 0;
+				cdev.inc_dec_step = 1;
+				cdev.auto_down_control = false;
 				cdev.path_str.clear();
 				cdev.type_string.clear();
 				parse_new_cooling_dev(cur_node->children, doc, &cdev);
@@ -367,6 +378,8 @@ void cthd_parse::dump_thermal_conf()
 			thd_log_info("\t\tName: %s\n", thermal_info_list[i].cooling_devs[l].path_str.c_str());
 			thd_log_info("\t\tMin: %d\n", thermal_info_list[i].cooling_devs[l].min_state);
 			thd_log_info("\t\tMax: %d\n", thermal_info_list[i].cooling_devs[l].max_state);
+			thd_log_info("\t\tStep: %d\n", thermal_info_list[i].cooling_devs[l].inc_dec_step);
+			thd_log_info("\t\tAutoDownControl: %d\n", thermal_info_list[i].cooling_devs[l].auto_down_control);
 			thd_log_info("\t\ttype: %s\n", thermal_info_list[i].cooling_devs[l].type_string.c_str());
 		}
 	}

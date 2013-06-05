@@ -58,6 +58,8 @@ typedef struct {
 	int index;
 	int min_state;
 	int max_state;
+	int inc_dec_step;
+	bool auto_down_control;
 	std::string type_string;
 	std::string path_str;
 }cooling_dev_t;

@@ -45,6 +45,8 @@ int cthd_sysfs_cdev::update()
 			custom_path_str = cdev->path_str;
 			min_state = cdev->min_state;
 			max_state = cdev->max_state;
+			inc_dec_val = cdev->inc_dec_step;
+			auto_down_adjust = cdev->auto_down_control;
 			if(sys_fs.exists(custom_path_str))
 			{
 				std::string state_str;
