@@ -322,7 +322,8 @@ void sig_int_handler(int signum)
 {
 	// control+c handler
 	thd_engine->giveup_thermal_control();
-	delete thd_engine;
+	thd_engine->thd_engine_terminate();
+	sleep(1);
 	exit(1);
 }
 
