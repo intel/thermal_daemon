@@ -268,8 +268,7 @@ Example below specifies
 			<MaxState>16</MaxState>
 		</CoolingDevice>
 	<!-- Cooling Devices End -->
-	</CoolingDevices>E0B-A601-E181-3575-5404A62D3DB1
-13 CPUID levels; family:mo
+	</CoolingDevices>
 </Platform>
 <Platform>
 	<Name>SandyBridge Platform</Name>
@@ -353,18 +352,13 @@ Example using a non thermal zone temperature sysfs
 -->
 <Platform>
 	<Name>Asus Ultrabook Platform</Name>
-	<uuid>dummy-8059AE0B-A601-E181-3575-5404A62D3DB1</uuid>
+	<uuid>dummy-0BAE5980-01A6-81E1-3575-5404A62D3DB1</uuid>
 	<Preference>QUIET</Preference>
 	<ThermalZones>
 		<ThermalZone>
 			<Name>Zone0</Name>
 			<Sensor_path>/sys/devices/platform/coretemp.0/temp1_input</Sensor_path>
 			<TripPoints>
-				<TripPoint>
-					<Temperature> 60000 </Temperature>
-					<CoolingDevice>4</CoolingDevice>
-					<type>passive</type>
-				</TripPoint>
 				<TripPoint>
 					<Temperature> 70000 </Temperature>
 					<CoolingDevice>0</CoolingDevice>
