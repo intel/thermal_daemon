@@ -40,7 +40,7 @@
 
 typedef enum
 {
-	WAKEUP, TERMINATE, PREF_CHANGED, THERMAL_ZONE_NOTIFY, CALIBRATE, RELOAD_ZONES, 
+	WAKEUP, TERMINATE, PREF_CHANGED, THERMAL_ZONE_NOTIFY, CALIBRATE, RELOAD_ZONES, POLL_ENABLE, POLL_DISABLE
 } message_name_t;
 
 // This defines whether the thermal control is entirey done by
@@ -134,7 +134,8 @@ public:
 
 	void takeover_thermal_control();
 	void giveup_thermal_control();
-
+	void thd_engine_poll_enable();
+	void thd_engine_poll_disable();
 	virtual int read_thermal_zones()
 	{
 		return 0;

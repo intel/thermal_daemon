@@ -39,7 +39,7 @@
 
 cthd_zone_dts::cthd_zone_dts(int index, std::string path, int package_id): cthd_zone(index,
 	path), dts_sysfs(path.c_str()), trip_point_cnt(0), sensor_mask(0), phy_package_id(package_id),
-	thd_model(true) {
+	thd_model(true), pkg_thres_th_zone(-1) {
 	thd_log_debug("zone dts syfs: %s, package id %d \n", path.c_str(), package_id);
 }
 
@@ -109,46 +109,18 @@ int cthd_zone_dts::init()
 	thd_model.set_max_temperature(max_temp);
 	prev_set_point = set_point = thd_model.get_set_point();
 
-	return THD_SUCCESS;
-}
-
-int cthd_zone_dts::update_thresholds(int thres_1, int thres_2)
-{
-	int ret = THD_SUCCESS;
-
-	thd_log_info("Setting thresholds %d:%d\n", thres_1, thres_2);
-	for(int i = 0; i < max_dts_sensors; ++i)
+	pkg_thres_th_zone = check_for_package_temp_thermal_zone();
+	if(pkg_thres_th_zone > 0)
 	{
-		std::stringstream threshold_1_str;
-		std::stringstream threshold_2_str;
+		thd_log_info("DTS package temp thermal zone found\n");
+		set_package_temp_thermal_zone_thres(pkg_thres_th_zone,
+				thd_model.get_hot_zone_trigger_point(), 0);
+		set_package_temp_zone_policy(pkg_thres_th_zone, "user_space");
+	} else
+		thd_log_info("DTS package temp thermal zone not found, Requires polling !!\n");
 
-		threshold_1_str << "temp" << i << "_notify_threshold_1";
-		threshold_2_str << "temp" << i << "_notify_threshold_2";
-		if(dts_sysfs.exists(threshold_1_str.str()))
-		{
-			std::stringstream thres_str;
-			thres_str << thres_1;
-			thd_log_info("Writing %s to %s \n", threshold_1_str.str().c_str(),
-					thres_str.str().c_str());
-			dts_sysfs.write(threshold_1_str.str(), thres_str.str());
-		}
-		else
-		{
-			ret = THD_ERROR;
-		}
 
-		if(dts_sysfs.exists(threshold_2_str.str()))
-		{
-			std::stringstream thres_str;
-			thres_str << thres_2;
-			dts_sysfs.write(threshold_2_str.str(), thres_str.str());
-		}
-		else
-		{
-			ret = THD_ERROR;
-		}
-	}
-	return ret;
+	return THD_SUCCESS;
 }
 
 int cthd_zone_dts::load_cdev_xml(cthd_trip_point &trip_pt, std::vector <std::string> &list)
@@ -410,7 +382,12 @@ int cthd_zone_dts::update_trip_points()
 			break;
 		}
 	}
-
+	if(pkg_thres_th_zone > 0)
+	{
+		thd_log_info("Updating temp notify thresholds \n");
+		set_package_temp_thermal_zone_thres(pkg_thres_th_zone,
+				thd_model.get_hot_zone_trigger_point(), 0);
+	}
 	return THD_SUCCESS;
 }
 
@@ -448,7 +425,13 @@ unsigned int cthd_zone_dts::read_zone_temp()
 		thd_log_debug("new set point %d \n", set_point);
 		update_trip_points();
 	}
-
+	if(pkg_thres_th_zone > 0)
+	{
+		if(zone_temp > thd_model.get_hot_zone_trigger_point())
+			thd_engine->thd_engine_poll_enable();
+		else
+			thd_engine->thd_engine_poll_disable();
+	}
 	return zone_temp;
 }
 
@@ -456,4 +439,74 @@ void cthd_zone_dts::update_zone_preference()
 {
 	thd_model.update_user_set_max_temp();
 	cthd_zone::update_zone_preference();
+}
+
+int cthd_zone_dts::check_for_package_temp_thermal_zone()
+{
+	int index = -1;
+
+	csys_fs cdev_sysfs("/sys/class/thermal/");
+
+	for(int i = 0; i < max_dts_sensors; ++i)
+	{
+		std::stringstream tcdev;
+		tcdev << "thermal_zone" << i << "/type";
+		if(cdev_sysfs.exists(tcdev.str().c_str()))
+		{
+			std::string type_str;
+			cdev_sysfs.read(tcdev.str(), type_str);
+			thd_log_debug("check_for_package_temp_thermal_zone: %s\n", type_str.c_str());
+			if (!type_str.compare(0, 9, "pkg-temp-"))
+			{
+				thd_log_debug("!check_for_package_temp_thermal_zone: %s\n", type_str.c_str());
+				index = i;
+				break;
+			}
+		}
+	}
+
+	return index;
+}
+
+int cthd_zone_dts::set_package_temp_thermal_zone_thres(int zone, int thres_0, int thres_1)
+{
+	std::stringstream tcdev0;
+	std::stringstream tcdev1;
+	csys_fs cdev_sysfs("/sys/class/thermal/");
+	std::stringstream thres0;
+	std::stringstream thres1;
+	int error = THD_ERROR;
+
+	thres0 << thres_0;
+	tcdev0 << "thermal_zone" << zone << "/trip_point_0_temp";
+	if(cdev_sysfs.exists(tcdev0.str().c_str()))
+	{
+		cdev_sysfs.write(tcdev0.str(), thres0.str());
+		error = THD_SUCCESS;
+	}
+	thres1 << thres_1;
+	tcdev1 << "thermal_zone" << zone << "/trip_point_1_temp";
+	if(cdev_sysfs.exists(tcdev1.str().c_str()))
+	{
+		cdev_sysfs.write(tcdev1.str(), thres1.str());
+		error = THD_SUCCESS;
+	}
+
+	return error;
+}
+
+int cthd_zone_dts::set_package_temp_zone_policy(int zone, std::string policy)
+{
+	csys_fs cdev_sysfs("/sys/class/thermal/");
+	int error = THD_ERROR;
+	std::stringstream policy_sysfs;
+
+	policy_sysfs << "thermal_zone" << zone << "/policy";
+	if(cdev_sysfs.exists(policy_sysfs.str().c_str()))
+	{
+		cdev_sysfs.write(policy_sysfs.str(), policy);
+		error = THD_SUCCESS;
+	}
+
+	return error;
 }

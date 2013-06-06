@@ -76,6 +76,12 @@ public:
 	{
 		return set_point;
 	}
+
+	unsigned int get_hot_zone_trigger_point()
+	{
+		return hot_zone;
+	}
+
 	bool is_set_point_reached()
 	{
 		return (set_point_reached || updated_set_point);

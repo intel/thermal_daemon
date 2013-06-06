@@ -401,6 +401,14 @@ int cthd_engine::proc_message(message_capsul_t *msg)
 		case RELOAD_ZONES:
 			thd_engine_reload_zones();
 			break;
+		case POLL_ENABLE:
+			if (!thd_poll_interval)
+				poll_timeout_msec = def_poll_interval;
+			break;
+		case POLL_DISABLE:
+			if (!thd_poll_interval)
+				poll_timeout_msec = -1;
+			break;
 		default:
 			break;
 	}
@@ -505,6 +513,16 @@ void cthd_engine::process_terminate()
 	thd_log_warn("termiating on user request ..\n");
 	giveup_thermal_control();
 	exit(0);
+}
+
+void cthd_engine::thd_engine_poll_enable()
+{
+	send_message(POLL_ENABLE, 0, NULL);
+}
+
+void cthd_engine::thd_engine_poll_disable()
+{
+	send_message(POLL_DISABLE, 0, NULL);
 }
 
 void cthd_engine::thd_engine_reload_zones()

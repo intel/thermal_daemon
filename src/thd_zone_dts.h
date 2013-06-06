@@ -61,6 +61,10 @@ protected:
 
 	int update_thresholds(int thres_1, int thres_2);
 	int parse_cdev_order();
+	int check_for_package_temp_thermal_zone();
+	int set_package_temp_thermal_zone_thres(int zone, int thres_0, int thres_1);
+	int set_package_temp_zone_policy(int zone, std::string policy);
+	int pkg_thres_th_zone;
 
 public:
 	static const int max_dts_sensors = sizeof(unsigned int) *8;
