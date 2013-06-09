@@ -2,7 +2,7 @@ include $(GLIB_MAKEFILE)
 
 SUBDIRS = data
 
-INCLUDES= -I@top_srcdir@
+INCLUDES= -I@top_srcdir@/src
 
 ACLOCAL_AMFLAGS = 
 
