@@ -40,7 +40,6 @@ private:
 
 public:
 	cthd_engine_therm_sysfs();
-	~cthd_engine_therm_sysfs();
 	int read_thermal_zones();
 	int read_cooling_devices();
 };

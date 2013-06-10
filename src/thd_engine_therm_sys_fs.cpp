@@ -38,14 +38,6 @@ cthd_engine_therm_sysfs::cthd_engine_therm_sysfs(): thd_sysfs(
 	parser_init();
 }
 
-cthd_engine_therm_sysfs::~cthd_engine_therm_sysfs()
-{
-	for (int i=0; i<zones.size(); ++i)
-		delete zones[i];
-	for (int i=0; i<cdevs.size(); ++i)
-		delete cdevs[i];
-}
-
 int cthd_engine_therm_sysfs::read_thermal_zones()
 {
 	int count = zone_count;

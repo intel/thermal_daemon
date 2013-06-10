@@ -473,6 +473,7 @@ int cthd_zone_dts::check_for_package_temp_thermal_zone()
 				}
 			}
 		}
+		closedir(dir);
 	}
 
 	return index;

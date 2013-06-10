@@ -44,7 +44,23 @@ static void *cthd_calibration_engine_thread(void *arg);
 cthd_engine::cthd_engine(): poll_timeout_msec( - 1), wakeup_fd(0), control_mode
 	(COMPLEMENTRY), write_pipe_fd(0), cdev_cnt(0), preference(0), status(true),
 	parse_thermal_zone_success(false),
-	parse_thermal_cdev_success(false), zone_count(0), thz_last_time(0){}
+	parse_thermal_cdev_success(false), zone_count(0), thz_last_time(0), terminate(false){}
+
+cthd_engine::~cthd_engine()
+{
+	int i;
+
+	for(i = 0; i < zones.size(); ++i)
+	{
+		delete zones[i];
+	}
+	zones.erase(zones.begin(), zones.begin() + i - 1);
+	for(i = 0; i < cdevs.size(); ++i)
+	{
+		delete cdevs[i];
+	}
+	cdevs.erase(cdevs.begin(), cdevs.begin() + i - 1);
+}
 
 void cthd_engine::thd_engine_thread()
 {
@@ -54,7 +70,8 @@ void cthd_engine::thd_engine_thread()
 	thd_log_info("thd_engine_thread begin\n");
 	for(;;)
 	{
-
+		if (terminate)
+			break;
 		n = poll(poll_fds, THD_NUM_OF_POLL_FDS, poll_timeout_msec);
 		thd_log_debug("poll exit %d \n", n);
 		if(n < 0)
@@ -75,7 +92,6 @@ void cthd_engine::thd_engine_thread()
 				cthd_zone *zone = zones[i];
 				zone->zone_temperature_notification(0, 0);
 			}
-			//			zone_dts.zone_temperature_notification(0, 0);
 		}
 		if(poll_fds[0].revents & POLLIN)
 		{
@@ -282,6 +298,8 @@ void cthd_engine::send_message(message_name_t msg_id, int size, unsigned char
 {
 	message_capsul_t msg_cap;
 
+	memset(&msg_cap, 0, sizeof(message_capsul_t));
+
 	msg_cap.msg_id = msg_id;
 	msg_cap.msg_size = (size > MAX_MSG_SIZE) ? MAX_MSG_SIZE : size;
 	if(msg)
@@ -388,7 +406,7 @@ int cthd_engine::proc_message(message_capsul_t *msg)
 			thd_log_warn("Terminating ...\n");
 
 			ret =  - 1;
-			exit(1);
+			terminate = true;
 			break;
 		case PREF_CHANGED:
 			process_pref_change();
@@ -476,6 +494,7 @@ void cthd_engine::takeover_thermal_control()
 				}
 			}
 		}
+		closedir(dir);
 	}
 }
 
@@ -522,6 +541,7 @@ void cthd_engine::giveup_thermal_control()
 				}
 			}
 		}
+		closedir(dir);
 	}
 }
 
@@ -529,7 +549,6 @@ void cthd_engine::process_terminate()
 {
 	thd_log_warn("termiating on user request ..\n");
 	giveup_thermal_control();
-	exit(0);
 }
 
 void cthd_engine::thd_engine_poll_enable()

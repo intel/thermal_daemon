@@ -82,6 +82,7 @@ private:
 	int has_invariant_tsc;
 	int has_aperf;
 	bool proc_list_matched;
+	bool terminate;
 
 	int preference;
 	pthread_t thd_engine;
@@ -116,7 +117,7 @@ public:
 	cthd_parse parser;
 
 	cthd_engine();
-	virtual ~cthd_engine(){}
+	virtual ~cthd_engine();
 	void set_control_mode(control_mode_t mode)
 	{
 		control_mode = mode;

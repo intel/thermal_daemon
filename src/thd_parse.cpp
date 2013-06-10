@@ -91,6 +91,8 @@ int cthd_parse::parse_new_trip_point(xmlNode * a_node, xmlDoc *doc, trip_point_t
 				else if (!strcmp(tmp_value, "hot"))
 					trip_pt->trip_pt_type = HOT;
 			}
+			if (tmp_value)
+				xmlFree(tmp_value);
 		}
 	}
 
@@ -133,6 +135,8 @@ int cthd_parse::parse_pid_values(xmlNode * a_node, xmlDoc *doc, thermal_zone_t *
 			} else if (!strcmp((const char*)cur_node->name, "Ki")) {
 				info_ptr->pid.Ki = atof(tmp_value);
 			}
+			if (tmp_value)
+				xmlFree(tmp_value);
 		}
 	}
 
@@ -163,6 +167,8 @@ int cthd_parse::parse_new_zone(xmlNode * a_node, xmlDoc *doc, thermal_zone_t *in
 				info_ptr->enable_pid = true;
 				parse_pid_values(cur_node->children, doc, info_ptr);
 			}
+			if (tmp_value)
+				xmlFree(tmp_value);
 		}
 	}
 
@@ -199,6 +205,8 @@ int cthd_parse::parse_new_cooling_dev(xmlNode * a_node, xmlDoc *doc, cooling_dev
 				else
 					cdev->auto_down_control = false;
 			}
+			if (tmp_value)
+				xmlFree(tmp_value);
 		}
 	}
 
@@ -273,6 +281,8 @@ int cthd_parse::parse_new_platform_info(xmlNode * a_node, xmlDoc *doc, thermal_i
 			} else if (!strcmp((const char*)cur_node->name, "CoolingDevices")) {
 				parse_cooling_devs(cur_node->children, doc, info_ptr);
 			}
+			if (tmp_value)
+				xmlFree(tmp_value);
 		}
 	}
 
@@ -295,6 +305,8 @@ int cthd_parse::parse_new_platform(xmlNode * a_node, xmlDoc *doc, thermal_info_t
 				parse_new_platform_info(cur_node->children, doc, &info);
 				thermal_info_list.push_back(info);
 			}
+			if (tmp_value)
+				xmlFree(tmp_value);
 		}
 	}
 

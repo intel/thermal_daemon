@@ -46,12 +46,6 @@ public:
 		for (int i=0; i<max_package_support; ++i)
 			intel_rapl_index[i] = -1;
 	}
-	~cthd_engine_dts() {
-		for (int i=0; i<zones.size(); ++i)
-			delete zones[i];
-		for (int i=0; i<cdevs.size(); ++i)
-			delete cdevs[i];
-	}
 	int read_thermal_zones();
 	int read_cooling_devices();
 	bool apply_cpu_operation(int cpu);

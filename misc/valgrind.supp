@@ -1,0 +1,94 @@
+# Valgrind suppressions file for glib, stl string calls
+
+{
+   Syscall param write
+   Memcheck:Param
+   ...
+   fun:g_main_loop_run
+   fun:main
+}
+
+{
+   g_type_init_with_debug_flags
+   Memcheck:Leak
+   ...
+   fun:g_type_init_with_debug_flags
+   fun:main
+}
+
+{
+   g_main_loop_run
+   Memcheck:Leak
+   fun:memalign
+   ...
+   fun:g_main_loop_run
+   fun:main
+}
+
+{
+   c_plus_plus_string_hack
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZNSs?_Rep?_S_createEmmRKSaIcE
+   fun:_ZNSs??_S_constructIPKcEEPcT_S?_RKSaIcESt??forward_iterator_tag
+   fun:_ZNSsC?EPKcRKSaIcE
+   fun:_ZN?cthd_msrC?Ev
+   fun:_ZN??cthd_engine_dts??read_cooling_devicesEv
+   fun:_ZN??cthd_engine??thd_engine_startEv
+   fun:main
+}
+
+{
+   c_plus_plus_string_hack
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZNSs4_Rep9_S_createEmmRKSaIcE
+   fun:_ZNSs12_S_constructIPKcEEPcT_S3_RKSaIcESt20forward_iterator_tag
+   fun:_ZNSsC1EPKcRKSaIcE
+   fun:_ZN8cthd_msrC1Ev
+   fun:_ZN15cthd_engine_dts26check_intel_p_state_driverEv
+   fun:_ZN15cthd_engine_dts20read_cooling_devicesEv
+   fun:_ZN11cthd_engine16thd_engine_startEv
+   fun:main
+}
+
+
+{
+   c_plus_plus_string_hack
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZNSs?_Rep?_S_createEmmRKSaIcE
+   fun:_ZNSs??_S_constructIPKcEEPcT_S?_RKSaIcESt??forward_iterator_tag
+   fun:_ZNSsC?EPKcRKSaIcE
+   fun:_ZN?cthd_msrC1Ev
+   fun:_ZN??c_rapl_interfaceC?Ei
+   fun:_ZN??cthd_engine_dts??read_cooling_devicesEv
+   fun:_ZN??cthd_engine??thd_engine_startEv
+   fun:main
+}
+
+{
+   c_plus_plus_string_hack
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZNSs?_Rep?_S_createEmmRKSaIcE
+   fun:_ZNSs??_S_constructIPKcEEPcT_S?_RKSaIcESt??forward_iterator_tag
+   fun:_ZNSsC?EPKcRKSaIcE
+   fun:_ZN?cthd_msrC?Ev
+   fun:_ZN??cthd_engine_dts??check_intel_p_state_driverEv
+   fun:_ZN??cthd_engine_dts??read_cooling_devicesEv
+   fun:_ZN??cthd_engine??thd_engine_startEv
+   fun:main
+}
+
+{
+   c_plus_plus_string_hack
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZNSt?vectorIiSaIiEE??_M_insert_auxEN?__gnu_cxx??__normal_iteratorIPiS?_EERKi
+   fun:_ZN??cthd_cdev_pstates?initEv
+   fun:_ZN??cthd_engine_dts??read_cooling_devicesEv
+   fun:_ZN??cthd_engine??thd_engine_startEv
+   fun:main
+}
+

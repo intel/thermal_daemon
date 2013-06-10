@@ -204,6 +204,8 @@ void thd_logger(const gchar *log_domain, GLogLevelFlags log_level, const gchar
 		g_print(message);
 }
 
+static GMainLoop *g_main_loop;
+
 // Setup dbus server
 static int thd_dbus_server_proc(gboolean no_daemon)
 {
@@ -218,7 +220,7 @@ static int thd_dbus_server_proc(gboolean no_daemon)
 	g_type_init();
 
 	// Create a main loop that will dispatch callbacks
-	main_loop = g_main_loop_new(NULL, FALSE);
+	g_main_loop = main_loop = g_main_loop_new(NULL, FALSE);
 	if(main_loop == NULL)
 	{
 		thd_log_error("Couldn't create GMainLoop:");
@@ -295,6 +297,7 @@ static int thd_dbus_server_proc(gboolean no_daemon)
 			{
 				matched = parser.platform_matched();
 			}
+			parser.parser_deinit();
 		}
 		if (matched) {
 			thd_log_warn("UUID matched, so will load zones and cdevs from thermal-conf.xml\n");
@@ -321,10 +324,11 @@ static int thd_dbus_server_proc(gboolean no_daemon)
 void sig_int_handler(int signum)
 {
 	// control+c handler
-	thd_engine->giveup_thermal_control();
 	thd_engine->thd_engine_terminate();
 	sleep(1);
-	exit(1);
+	delete thd_engine;
+	if (g_main_loop)
+		g_main_loop_quit(g_main_loop);
 }
 
 // main function
@@ -470,5 +474,4 @@ int main(int argc, char *argv[])
 
 	fprintf(stdout, "Exiting ..\n");
 	closelog();
-	exit(success ? 0 : 1);
 }

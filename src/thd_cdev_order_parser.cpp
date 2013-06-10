@@ -67,11 +67,15 @@ void cthd_cdev_order_parse::parser_deinit()
 int cthd_cdev_order_parse::parse_new_cdev(xmlNode * a_node, xmlDoc *doc)
 {
 	xmlNode *cur_node = NULL;
-
+	char *tmp_value;
 	for (cur_node = a_node; cur_node; cur_node = cur_node->next) {
 		if (cur_node->type == XML_ELEMENT_NODE) {
-			thd_log_info("node type: Element, name: %s value: %s\n", cur_node->name, xmlNodeListGetString(doc, cur_node->xmlChildrenNode, 1));
-			cdev_order_list.push_back(xmlNodeListGetString(doc, cur_node->xmlChildrenNode, 1));
+			tmp_value = (char *)xmlNodeListGetString(doc, cur_node->xmlChildrenNode, 1);
+			if (tmp_value) {
+				thd_log_info("node type: Element, name: %s value: %s\n", cur_node->name, tmp_value);
+				cdev_order_list.push_back(tmp_value);
+				xmlFree(tmp_value);
+			}
 		}
 	}
 
