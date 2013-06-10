@@ -44,7 +44,7 @@ static void *cthd_calibration_engine_thread(void *arg);
 cthd_engine::cthd_engine(): poll_timeout_msec( - 1), wakeup_fd(0), control_mode
 	(COMPLEMENTRY), write_pipe_fd(0), cdev_cnt(0), preference(0), status(true),
 	parse_thermal_zone_success(false),
-	parse_thermal_cdev_success(false), zone_count(0){}
+	parse_thermal_cdev_success(false), zone_count(0), thz_last_time(0){}
 
 void cthd_engine::thd_engine_thread()
 {
@@ -82,12 +82,23 @@ void cthd_engine::thd_engine_thread()
 			// Kobj uevent
 			if (kobj_uevent.check_for_event())
 			{
+				time_t tm;
+
+				time(&tm);
 				thd_log_debug("kobj uevent for thermal\n");
-				for(i = 0; i < zones.size(); ++i)
+				if ((tm - thz_last_time) >= thz_notify_debounce_interval)
 				{
-					cthd_zone *zone = zones[i];
-					zone->zone_temperature_notification(0, 0);
+					for(i = 0; i < zones.size(); ++i)
+					{
+						cthd_zone *zone = zones[i];
+						zone->zone_temperature_notification(0, 0);
+					}
 				}
+				else
+				{
+					thd_log_debug("IGNORE THZ kevent\n");
+				}
+				thz_last_time = tm;
 			}
 		}
 		if(poll_fds[wakeup_fd].revents & POLLIN)
@@ -434,6 +445,7 @@ void cthd_engine::takeover_thermal_control()
 	struct dirent *entry;
 	const std::string base_path = "/sys/class/thermal/";
 
+	thd_log_info("Taking over thermal control \n");
 	if ((dir = opendir(base_path.c_str())) != NULL)
 	{
 		while ((entry = readdir(dir)) != NULL)
@@ -471,6 +483,11 @@ void cthd_engine::giveup_thermal_control()
 {
 	if(control_mode != EXCLUSIVE)
 		return;
+
+	if (zone_preferences.size() == 0)
+		return;
+
+	thd_log_info("Giving up thermal control \n");
 
 	csys_fs sysfs("/sys/class/thermal/");
 

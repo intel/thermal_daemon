@@ -27,6 +27,7 @@
 
 #include <pthread.h>
 #include <poll.h>
+#include <time.h>
 #include "thd_common.h"
 #include "thd_sys_fs.h"
 #include "thd_preference.h"
@@ -90,6 +91,8 @@ private:
 
 	pthread_t cal_thd_engine;
 	std::vector <std::string > zone_preferences;
+	static const int thz_notify_debounce_interval = 3;
+	time_t thz_last_time;
 
 	struct pollfd poll_fds[THD_NUM_OF_POLL_FDS];
 	int write_pipe_fd;
@@ -155,6 +158,7 @@ public:
 	}
 
 	static const int max_cpu_count = 64;
+
 	time_t last_cpu_update[max_cpu_count];
 	virtual bool apply_cpu_operation(int cpu)
 	{
