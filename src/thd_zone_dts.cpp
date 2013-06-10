@@ -32,6 +32,7 @@
  *
  */
 
+#include <dirent.h>
 #include "thd_zone_dts.h"
 #include "thd_engine_dts.h"
 #include "thd_msr.h"
@@ -444,23 +445,32 @@ void cthd_zone_dts::update_zone_preference()
 int cthd_zone_dts::check_for_package_temp_thermal_zone()
 {
 	int index = -1;
-
-	csys_fs cdev_sysfs("/sys/class/thermal/");
-
-	for(int i = 0; i < max_dts_sensors; ++i)
+	csys_fs sysfs("/sys/class/thermal/");
+	DIR *dir;
+	struct dirent *entry;
+	const std::string base_path = "/sys/class/thermal/";
+	int cnt = 0;
+	if ((dir = opendir(base_path.c_str())) != NULL)
 	{
-		std::stringstream tcdev;
-		tcdev << "thermal_zone" << i << "/type";
-		if(cdev_sysfs.exists(tcdev.str().c_str()))
+		while ((entry = readdir(dir)) != NULL)
 		{
-			std::string type_str;
-			cdev_sysfs.read(tcdev.str(), type_str);
-			thd_log_debug("check_for_package_temp_thermal_zone: %s\n", type_str.c_str());
-			if (!type_str.compare(0, 9, "pkg-temp-"))
+			if (!strncmp(entry->d_name, "thermal_zone", strlen("thermal_zone")))
 			{
-				thd_log_debug("!check_for_package_temp_thermal_zone: %s\n", type_str.c_str());
-				index = i;
-				break;
+				int i;
+
+				i = atoi(entry->d_name+strlen("thermal_zone"));
+				std::stringstream type;
+				std::string type_val;
+
+				type << "thermal_zone" << i << "/type";
+				if(sysfs.exists(type.str().c_str()))
+				{
+					sysfs.read(type.str(), type_val);
+				}
+				if (!type_val.compare(0, 9, "pkg-temp-")) {
+					index = i;
+					break;
+				}
 			}
 		}
 	}
