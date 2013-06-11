@@ -61,7 +61,6 @@ int cthd_cdev_order_parse::start_parse()
 void cthd_cdev_order_parse::parser_deinit()
 {
 	xmlFreeDoc(doc);
-	xmlCleanupParser();
 }
 
 int cthd_cdev_order_parse::parse_new_cdev(xmlNode * a_node, xmlDoc *doc)

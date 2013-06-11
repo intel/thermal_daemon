@@ -356,7 +356,6 @@ int cthd_parse::start_parse()
 void cthd_parse::parser_deinit()
 {
 	xmlFreeDoc(doc);
-	xmlCleanupParser();
 }
 
 void cthd_parse::dump_thermal_conf()
