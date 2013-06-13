@@ -31,7 +31,7 @@
 #include "thd_rapl_interface.h"
 
 #if 1
-#define RAPL_DBG_PRINT thd_log_debug
+#define RAPL_DBG_PRINT
 #define RAPL_ERROR_PRINT thd_log_warn
 #else
 #define RAPL_DBG_PRINT(...)	((void) 0)
@@ -639,7 +639,6 @@ int c_rapl_interface::get_pp1_power_policy(unsigned int *pp1_power_policy)
 	return ret;
 }
 
-#define RAPL_TEST_MODE
 void c_rapl_interface::rapl_measure_energy()
 {
 #ifdef RAPL_TEST_MODE

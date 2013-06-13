@@ -46,9 +46,9 @@ class cthd_zone
 protected:
 	int index;
 	std::vector < cthd_trip_point > trip_points;
-	unsigned int zone_temp;
 	std::string temperature_sysfs_path;
 	csys_fs zone_sysfs;
+	unsigned int zone_temp;
 	bool zone_active;
 
 private:

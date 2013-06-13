@@ -57,7 +57,7 @@ bool cthd_kobj_uevent::check_for_event()
 	int i = 0;
 	int len;
 	const char *dev_path = "DEVPATH=";
-	int dev_path_len = strlen(dev_path);
+	unsigned int dev_path_len = strlen(dev_path);
 	char buffer[max_buffer_size];
 
 	len = recv(fd, buffer, sizeof(buffer), MSG_DONTWAIT);

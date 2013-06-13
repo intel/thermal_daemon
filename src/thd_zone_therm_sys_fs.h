@@ -30,8 +30,8 @@
 class cthd_sysfs_zone: public cthd_zone
 {
 private:
-	bool using_custom_zone;
 	int trip_point_cnt;
+	bool using_custom_zone;
 	int read_xml_trip_points();
 	int read_xml_cdev_trip_points();
 

@@ -114,7 +114,7 @@ unsigned int cthd_model::update_set_point(unsigned int curr_temp)
 		/*Compute PID Output*/
 		output = kp * error + ki * err_sum + kd * d_err;
 		_setpoint = max_temp - (unsigned int)output;
-		thd_log_info("update_pid %d %d %d %g %u\n", now, last_time, error, output, _setpoint);
+		thd_log_info("update_pid %ld %ld %d %g %u\n", now, last_time, error, output, _setpoint);
 		if((_setpoint < 0) || (abs(set_point - _setpoint) > max_compensation))
 			set_point -= max_compensation;
 		else

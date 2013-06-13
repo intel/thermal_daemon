@@ -361,12 +361,12 @@ void cthd_parse::parser_deinit()
 void cthd_parse::dump_thermal_conf()
 {
 	thd_log_info(" Dumping parsed XML Data\n");
-	for (int i=0; i<thermal_info_list.size(); ++i) {
+	for (unsigned int i=0; i<thermal_info_list.size(); ++i) {
 		thd_log_info(" *** Index %d ***\n", i);
 		thd_log_info("Name: %s\n", thermal_info_list[i].name.c_str());
 		thd_log_info("UUID: %s\n", thermal_info_list[i].uuid.c_str());
 		thd_log_info("type: %d\n", thermal_info_list[i].default_prefernce);
-		for (int j=0; j<thermal_info_list[i].zones.size(); ++j) {
+		for (unsigned int j=0; j<thermal_info_list[i].zones.size(); ++j) {
 			thd_log_info("\tZone %d \n", j);
 			thd_log_info("\t Name: %s\n", thermal_info_list[i].zones[j].name.c_str());
 			thd_log_info("\t Relationship: %s\n", thermal_info_list[i].zones[j].relationship.c_str());
@@ -376,7 +376,7 @@ void cthd_parse::dump_thermal_conf()
 				thd_log_info("\t PID: Ki %f\n", thermal_info_list[i].zones[j].pid.Ki);
 				thd_log_info("\t PID: Kd %f\n", thermal_info_list[i].zones[j].pid.Kd);
 			}
-			for (int k=0; k<thermal_info_list[i].zones[j].trip_pts.size(); ++k) {
+			for (unsigned int k=0; k<thermal_info_list[i].zones[j].trip_pts.size(); ++k) {
 				thd_log_info("\t\t Trip Point %d \n", k);
 				thd_log_info("\t\t  temp id %d \n", thermal_info_list[i].zones[j].trip_pts[k].temperature);
 				thd_log_info("\t\t  cooling dev id %d \n", thermal_info_list[i].zones[j].trip_pts[k].cool_dev_id);
@@ -384,7 +384,7 @@ void cthd_parse::dump_thermal_conf()
 				thd_log_info("\t\t  hyst id %d \n", thermal_info_list[i].zones[j].trip_pts[k].hyst);
 			}
 		}
-		for (int l=0; l<thermal_info_list[i].cooling_devs.size(); ++l) {
+		for (unsigned int l=0; l<thermal_info_list[i].cooling_devs.size(); ++l) {
 			thd_log_info("\tCooling Dev %d \n", l);
 			thd_log_info("\t\tName: %s\n", thermal_info_list[i].cooling_devs[l].path_str.c_str());
 			thd_log_info("\t\tMin: %d\n", thermal_info_list[i].cooling_devs[l].min_state);
@@ -407,7 +407,7 @@ bool cthd_parse::platform_matched()
 			return false;
 		else {
 			thd_log_debug("UUID is %s\n", str.c_str());
-			for (int i=0; i<thermal_info_list.size(); ++i) {
+			for (unsigned int i=0; i<thermal_info_list.size(); ++i) {
 				if (thermal_info_list[i].uuid == str) {
 					matched_thermal_info_index = i;
 					return true;
@@ -420,7 +420,7 @@ bool cthd_parse::platform_matched()
 	return false;
 }
 
-int cthd_parse::trip_count(int zone_index)
+int cthd_parse::trip_count(unsigned int zone_index)
 {
 	if (zone_index < thermal_info_list[matched_thermal_info_index].zones.size()) {
 		return thermal_info_list[matched_thermal_info_index].zones[zone_index].trip_pts.size();
@@ -429,7 +429,7 @@ int cthd_parse::trip_count(int zone_index)
 
 }
 
-trip_point_t* cthd_parse::get_trip_point(int zone_index, int trip_index)
+trip_point_t* cthd_parse::get_trip_point(unsigned int zone_index, unsigned int trip_index)
 {
 	trip_point_t *trip_pt;
 	if (zone_index < thermal_info_list[matched_thermal_info_index].zones.size()) {
@@ -442,7 +442,7 @@ trip_point_t* cthd_parse::get_trip_point(int zone_index, int trip_index)
 
 }
 
-cooling_dev_t* cthd_parse::get_cool_dev_index(int cdev_index)
+cooling_dev_t* cthd_parse::get_cool_dev_index(unsigned int cdev_index)
 {
 	cooling_dev_t *cdev;
 
@@ -479,4 +479,6 @@ int cthd_parse::set_default_preference()
 		ret = thd_pref.set_preference("PERFORMANCE");
 	else
 		ret = thd_pref.set_preference("ENERGY_CONSERVE");
+
+	return ret;
 }

@@ -39,6 +39,7 @@ rm -rf $RPM_BUILD_ROOT
 %config(noreplace) %{_sysconfdir}/dbus-1/system.d/org.freedesktop.thermald.conf 
 %{_datadir}/dbus-1/system-services/org.freedesktop.thermald.service
 %config(noreplace) %{_sysconfdir}/thermald/thermal-conf.xml
+%config(noreplace) %{_sysconfdir}/thermald/thermal-cdev-order.xml
 %doc COPYING README.txt
 %{_mandir}/man1/thermald.1.gz
 %{_unitdir}/thermald.service

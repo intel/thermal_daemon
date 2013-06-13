@@ -36,8 +36,8 @@ private:
 	int highest_turbo_freq_state;
 	int lowest_freq_state;
 	int lowest_turbo_freq_state;
-	int min_compensation;
 	float unit_value;
+	int min_compensation;
 	int max_offset;
 
 public:

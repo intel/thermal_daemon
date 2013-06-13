@@ -38,22 +38,23 @@ private:
 	static const unsigned int hot_zone_percent = 20; //20%
 	static const time_t set_point_delay_tm	= 4 * 3; // 12 seconds
 
+	time_t trend_increase_start;
 	unsigned int max_temp;
+	unsigned int set_point;
+
 	unsigned int hot_zone;
 	unsigned int last_temp;
 
-	time_t trend_increase_start;
 	time_t trend_decrease_start;
 	time_t max_temp_reached;
-	time_t set_point_delay_start;
-
-	unsigned int set_point;
 
 	int current_angle;
+	bool set_point_reached;
 	int delay_cnt;
 	bool max_temp_seen;
-	bool set_point_reached;
 	bool updated_set_point;
+	bool use_pid_param;
+	time_t set_point_delay_start;
 	bool user_forced_set_point_change;
 
 	unsigned int update_set_point(unsigned int curr_temp);
@@ -63,7 +64,7 @@ private:
 
 	double kp, ki, kd, err_sum, last_err;
 	time_t last_time;
-	bool use_pid_param;
+
 
 public:
 	cthd_model(bool use_pid=false);

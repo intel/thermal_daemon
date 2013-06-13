@@ -81,6 +81,8 @@ int cthd_cdev_rapl_msr::update()
 		return THD_ERROR;
 
 	ret = rapl.get_pkg_power_info(&thermal_spec_power, &max_power, &min_power, &max_time_window);
+	if (ret < 0)
+		return ret;
 	thd_log_debug("Pkg Power Info: Thermal spec %f watts, max %f watts, min %f watts, max time window %f seconds\n", thermal_spec_power, max_power, min_power, max_time_window);
 
 	max_state = 0;

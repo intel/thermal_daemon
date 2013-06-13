@@ -118,12 +118,15 @@ gboolean thd_dbus_interface_set_current_preference(PrefObject *obj, gint
 	*value_out, GError **error)
 {
 	int ret;
+
 	thd_log_debug("thd_dbus_interface_set_current_preference %s\n", (char*)
 	value_out);
 	g_assert(obj != NULL);
 	cthd_preference thd_pref;
 	ret = thd_pref.set_preference((char*)value_out);
 	thd_engine->send_message(PREF_CHANGED, 0, NULL);
+
+	return ret;
 }
 
 // Callback function called to get value via dbus
@@ -158,13 +161,14 @@ gboolean thd_dbus_interface_terminate(PrefObject *obj, gint *value_out, GError
 gboolean thd_dbus_interface_set_user_set_point(PrefObject *obj, gdouble
 	*value_out, GError **error)
 {
-	int ret;
 	thd_log_debug("thd_dbus_interface_set_user_set_point %s\n", (char*)
 	value_out);
 	g_assert(obj != NULL);
 	cthd_preference thd_pref;
 	if (thd_engine->thd_engine_set_user_set_point((char*)value_out) == THD_SUCCESS)
 		thd_engine->send_message(PREF_CHANGED, 0, NULL);
+
+	return TRUE;
 }
 
 // g_log handler. All logs will be directed here
@@ -201,7 +205,7 @@ void thd_logger(const gchar *log_domain, GLogLevelFlags log_level, const gchar
 		syslog(syslog_priority, "%s", message);
 	}
 	else
-		g_print(message);
+		g_print("%s", message);
 }
 
 static GMainLoop *g_main_loop;

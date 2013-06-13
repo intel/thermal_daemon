@@ -35,19 +35,19 @@ class cthd_cdev
 
 protected:
 	int index;
-
-	int curr_state;
-	int max_state;
-	int min_state;
 	csys_fs cdev_sysfs;
 	unsigned int trip_point;
-	std::string type_str;
+	int max_state;
+	int min_state;
+	int curr_state;
 	unsigned int sensor_mask;
 	time_t last_op_time;
 	int curr_pow;
 	int base_pow_state;
 	int inc_dec_val;
 	bool auto_down_adjust;
+
+	std::string type_str;
 
 private:
 	unsigned int int_2_pow(int pow)

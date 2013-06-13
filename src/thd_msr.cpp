@@ -287,7 +287,7 @@ int cthd_msr::set_clock_mod_duty_cycle(int state)
 	for(int i = 0; i < cpu_count; ++i)
 	{
 		ret = read_msr(i, MSR_IA32_THERM_CONTROL, &val);
-		thd_log_debug("set_clock_mod_duty_cycle current %x\n", val);
+		thd_log_debug("set_clock_mod_duty_cycle current %x\n", (unsigned int)val);
 		if(ret < 0)
 			return THD_ERROR;
 
@@ -303,7 +303,7 @@ int cthd_msr::set_clock_mod_duty_cycle(int state)
 		val &= ~MSR_IA32_CLK_MOD_DUTY_CYCLE_MASK;
 		val |= (state &MSR_IA32_CLK_MOD_DUTY_CYCLE_MASK);
 
-		thd_log_debug("set_clock_mod_duty_cycle current set to %x\n", val);
+		thd_log_debug("set_clock_mod_duty_cycle current set to %x\n", (unsigned int)val);
 		ret = write_msr(i, MSR_IA32_THERM_CONTROL, val);
 		if(ret < 0)
 		{
@@ -322,7 +322,7 @@ int cthd_msr::get_clock_mod_duty_cycle()
 
 	// Just get for cpu 0 and return
 	ret = read_msr(0, MSR_IA32_THERM_CONTROL, &val);
-	thd_log_debug("get_clock_mod_duty_cycle current %x\n", val);
+	thd_log_debug("get_clock_mod_duty_cycle current %x\n", (unsigned int)val);
 	if(ret < 0)
 		return THD_ERROR;
 
@@ -403,7 +403,7 @@ int cthd_msr::dec_freq_state_per_cpu(int cpu)
 	int current_clock;
 
 	ret = read_msr(cpu, MSR_IA32_PERF_CTL, &val);
-	thd_log_debug("perf_ctl current %x\n", val);
+	thd_log_debug("perf_ctl current %x\n", (unsigned int)val);
 	if(ret < 0)
 		return THD_ERROR;
 
@@ -412,7 +412,7 @@ int cthd_msr::dec_freq_state_per_cpu(int cpu)
 
 	val = (current_clock << PERF_CTL_CLK_SHIFT);
 
-	thd_log_debug("perf_ctl write %x\n", val);
+	thd_log_debug("perf_ctl write %x\n", (unsigned int)val);
 	ret = write_msr(cpu, MSR_IA32_PERF_CTL, val);
 	if(ret < 0)
 	{
@@ -420,7 +420,7 @@ int cthd_msr::dec_freq_state_per_cpu(int cpu)
 		return THD_ERROR;
 	}
 	ret = read_msr(cpu, MSR_IA32_PERF_CTL, &val);
-	thd_log_debug("perf_ctl read back %x\n", val);
+	thd_log_debug("perf_ctl read back %x\n", (unsigned int)val);
 	if(ret < 0)
 		return THD_ERROR;
 
@@ -439,7 +439,7 @@ int cthd_msr::dec_freq_state()
 	for(int i = 0; i < cpu_count; ++i)
 	{
 		ret = read_msr(i, MSR_IA32_PERF_CTL, &val);
-		thd_log_debug("perf_ctl current %x\n", val);
+		thd_log_debug("perf_ctl current %x\n", (unsigned int)val);
 		if(ret < 0)
 			return THD_ERROR;
 
@@ -448,7 +448,7 @@ int cthd_msr::dec_freq_state()
 
 		val = (current_clock << PERF_CTL_CLK_SHIFT);
 
-		thd_log_debug("perf_ctl write %x\n", val);
+		thd_log_debug("perf_ctl write %x\n", (unsigned int)val);
 		ret = write_msr(i, MSR_IA32_PERF_CTL, val);
 		if(ret < 0)
 		{
@@ -456,7 +456,7 @@ int cthd_msr::dec_freq_state()
 			return THD_ERROR;
 		}
 		ret = read_msr(i, MSR_IA32_PERF_CTL, &val);
-		thd_log_debug("perf_ctl read back %x\n", val);
+		thd_log_debug("perf_ctl read back %x\n", (unsigned int)val);
 		if(ret < 0)
 			return THD_ERROR;
 
@@ -487,7 +487,7 @@ int cthd_msr::inc_freq_state_per_cpu(int cpu)
 		return THD_ERROR;
 	}
 	ret = read_msr(cpu, MSR_IA32_PERF_CTL, &val);
-	thd_log_debug("perf_ctl read back %x\n", val);
+	thd_log_debug("perf_ctl read back %x\n", (unsigned int)val);
 	if(ret < 0)
 		return THD_ERROR;
 
@@ -507,7 +507,7 @@ int cthd_msr::inc_freq_state()
 		ret = read_msr(i, MSR_IA32_PERF_CTL, &val);
 		if (ret < 0)
 			return THD_ERROR;
-		thd_log_debug("perf_ctl current %x\n", val);
+		thd_log_debug("perf_ctl current %x\n", (unsigned int)val);
 		if(ret < 0)
 			return THD_ERROR;
 
@@ -516,7 +516,7 @@ int cthd_msr::inc_freq_state()
 
 		val = (current_clock << PERF_CTL_CLK_SHIFT);
 
-		thd_log_debug("perf_ctl write %x\n", val);
+		thd_log_debug("perf_ctl write %x\n", (unsigned int)val);
 		ret = write_msr(i, MSR_IA32_PERF_CTL, val);
 		if(ret < 0)
 		{
@@ -524,7 +524,7 @@ int cthd_msr::inc_freq_state()
 			return THD_ERROR;
 		}
 		ret = read_msr(i, MSR_IA32_PERF_CTL, &val);
-		thd_log_debug("perf_ctl read back %x\n", val);
+		thd_log_debug("perf_ctl read back %x\n", (unsigned int)val);
 		if(ret < 0)
 			return THD_ERROR;
 
@@ -543,7 +543,7 @@ int cthd_msr::set_freq_state_per_cpu(int cpu, int state)
 		return THD_ERROR;
 	val &= ~PERF_CTL_CLK_MASK;
 	val |= (state << PERF_CTL_CLK_SHIFT);
-	thd_log_debug("perf_ctl current %x\n", val);
+	thd_log_debug("perf_ctl current %x\n", (unsigned int)val);
 	ret = write_msr(cpu, MSR_IA32_PERF_CTL, val);
 	if(ret < 0)
 	{
@@ -576,7 +576,7 @@ int cthd_msr::set_freq_state(int state)
 		val &= ~PERF_CTL_CLK_MASK;
 		val |= (state << PERF_CTL_CLK_SHIFT);
 
-		thd_log_debug("perf_ctl write %x\n", val);
+		thd_log_debug("perf_ctl write %x\n", (unsigned int)val);
 		ret = write_msr(i, MSR_IA32_PERF_CTL, val);
 		if(ret < 0)
 		{
@@ -590,6 +590,8 @@ int cthd_msr::set_freq_state(int state)
 			return THD_ERROR;
 #endif
 	}
+
+	return THD_SUCCESS;
 }
 
 int cthd_msr::set_perf_bias_performace()

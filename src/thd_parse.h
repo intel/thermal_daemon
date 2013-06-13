@@ -74,11 +74,11 @@ typedef struct {
 
 class cthd_parse {
 private:
-	xmlDoc		*doc;
-	xmlNode		*root_element;
 	std::string	filename;
 	std::vector <thermal_info_t> thermal_info_list;
 	int matched_thermal_info_index;
+	xmlDoc		*doc;
+	xmlNode		*root_element;
 
 	int parse(xmlNode * a_node, xmlDoc *doc);
 	int parse_pid_values(xmlNode * a_node, xmlDoc *doc, thermal_zone_t *info_ptr);
@@ -103,11 +103,11 @@ public:
 	int cdev_count() { return thermal_info_list[matched_thermal_info_index].cooling_devs.size();}
 
 	int set_default_preference();
-	int trip_count(int zone_index);
+	int trip_count(unsigned int zone_index);
 	bool pid_status(int zone_index);
 	bool get_pid_values(int zone_index, int *Kp, int *Ki, int *Kd);
-	trip_point_t *get_trip_point(int zone_index, int trip_index);
-	cooling_dev_t *get_cool_dev_index(int cdev_index);
+	trip_point_t *get_trip_point(unsigned int zone_index, unsigned int trip_index);
+	cooling_dev_t *get_cool_dev_index(unsigned int cdev_index);
 	std::string get_sensor_path(int zone_index) {return thermal_info_list[matched_thermal_info_index].zones[zone_index].path;}
 };
 

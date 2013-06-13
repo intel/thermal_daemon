@@ -69,11 +69,12 @@ public:
 	static const int package_index_multiplier = 2; // Each cdev for different cdev will be at
 													// soft_cdev_start_index * package_index_multiplier
 
-	int msr_control_present;
 	int power_clamp_index; // dynamic based on thermal cdev
 	int intel_pstate_driver_index;
 	int intel_rapl_index[max_package_support];
 	int intel_rapl_index_limited; // same function as intel_rapl_index, but limited states
+	int msr_control_present;
+
 };
 
 

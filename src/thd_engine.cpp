@@ -41,14 +41,14 @@
 static void *cthd_engine_thread(void *arg);
 static void *cthd_calibration_engine_thread(void *arg);
 
-cthd_engine::cthd_engine(): poll_timeout_msec( - 1), wakeup_fd(0), control_mode
-	(COMPLEMENTRY), write_pipe_fd(0), cdev_cnt(0), preference(0), status(true),
-	parse_thermal_zone_success(false),
-	parse_thermal_cdev_success(false), zone_count(0), thz_last_time(0), terminate(false){}
+cthd_engine::cthd_engine(): cdev_cnt(0), zone_count(0), parse_thermal_zone_success(false),
+	parse_thermal_cdev_success(false), poll_timeout_msec( - 1), wakeup_fd(0),
+	control_mode(COMPLEMENTRY), write_pipe_fd(0), preference(0), status(true),
+	thz_last_time(0), terminate(false){}
 
 cthd_engine::~cthd_engine()
 {
-	int i;
+	unsigned int i;
 
 	for(i = 0; i < zones.size(); ++i)
 	{
@@ -64,7 +64,7 @@ cthd_engine::~cthd_engine()
 
 void cthd_engine::thd_engine_thread()
 {
-	int n, i;
+	unsigned int n, i;
 	int result;
 
 	thd_log_info("thd_engine_thread begin\n");
@@ -326,7 +326,7 @@ void cthd_engine::process_pref_change()
 		thd_log_warn("Preference changed \n");
 	}
 
-	for(int i = 0; i < zones.size(); ++i)
+	for(unsigned int i = 0; i < zones.size(); ++i)
 	{
 		cthd_zone *zone = zones[i];
 		zone->update_zone_preference();
@@ -381,7 +381,7 @@ void cthd_engine::thermal_zone_change(message_capsul_t *msg)
 	int i;
 
 	thermal_zone_notify_t *pmsg = (thermal_zone_notify_t*)msg->msg;
-	for(i = 0; i < zones.size(); ++i)
+	for(unsigned i = 0; i < zones.size(); ++i)
 	{
 		cthd_zone *zone = zones[i];
 		if(zone->zone_active_status())
@@ -564,7 +564,7 @@ void cthd_engine::thd_engine_poll_disable()
 void cthd_engine::thd_engine_reload_zones()
 {
 	thd_log_warn(" Reloading zones\n");
-	for(int i = 0; i < zones.size(); ++i)
+	for(unsigned int i = 0; i < zones.size(); ++i)
 	{
 		cthd_zone *zone = zones[i];
 		delete zone;
@@ -593,14 +593,14 @@ static supported_ids_t id_table[] = {
 int cthd_engine::check_cpu_id()
 {
 	// Copied from turbostat program
-	unsigned int eax, ebx, ecx, edx, max_level;
+	unsigned int ebx, ecx, edx, max_level;
 	unsigned int fms, family, model, stepping;
 	genuine_intel = 0;
 	int i;
 	bool valid = false;
 
 	proc_list_matched = false;
-	eax = ebx = ecx = edx = 0;
+	ebx = ecx = edx = 0;
 
 	asm("cpuid": "=a"(max_level), "=b"(ebx), "=c"(ecx), "=d"(edx): "a"(0));
 

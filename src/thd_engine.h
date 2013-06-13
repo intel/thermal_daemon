@@ -76,15 +76,20 @@ protected:
 	bool parse_thermal_cdev_success;
 
 private:
-	bool status;
+
+	int poll_timeout_msec;
+	int wakeup_fd;
 	control_mode_t control_mode;
+	int write_pipe_fd;
+	int preference;
+	bool status;
+	time_t thz_last_time;
+	bool terminate;
 	int genuine_intel;
 	int has_invariant_tsc;
 	int has_aperf;
 	bool proc_list_matched;
-	bool terminate;
 
-	int preference;
 	pthread_t thd_engine;
 	pthread_attr_t thd_attr;
 	pthread_cond_t thd_cond_var;
@@ -93,12 +98,8 @@ private:
 	pthread_t cal_thd_engine;
 	std::vector <std::string > zone_preferences;
 	static const int thz_notify_debounce_interval = 3;
-	time_t thz_last_time;
 
 	struct pollfd poll_fds[THD_NUM_OF_POLL_FDS];
-	int write_pipe_fd;
-	int wakeup_fd;
-	int poll_timeout_msec;
 
 	cthd_kobj_uevent kobj_uevent;
 

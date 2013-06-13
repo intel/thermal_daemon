@@ -14,7 +14,12 @@ AM_CXXFLAGS = ${DBUS_CFLAGS}\
 		-DTDCONFDIR=\"$(tdconfdir)\" \
 		-I src \
 		-fpermissive \
-		-fopenmp
+		-fopenmp \
+		-Wreorder \
+		-Wsign-compare \
+		-Wreturn-type \
+		-Wunused-but-set-variable\
+		-Wformat
 
 EXTRA_DIST=Makefile.glib \
 	thermald.pc.in

@@ -128,7 +128,7 @@ int cthd_zone_dts::load_cdev_xml(cthd_trip_point &trip_pt, std::vector <std::str
 {
 	cthd_engine_dts *thd_dts_engine = (cthd_engine_dts*)thd_engine;
 
-	for (int i = 0; i < list.size(); ++i) {
+	for (unsigned int i = 0; i < list.size(); ++i) {
 		thd_log_debug("- %s\n", list[i].c_str());
 		if (list[i] == "CDEV_INTEL_RAPL_DRIVER")
 		{
@@ -209,6 +209,7 @@ int cthd_zone_dts::load_cdev_xml(cthd_trip_point &trip_pt, std::vector <std::str
 		}
 	}			
 
+	return THD_SUCCESS;
 }
 
 int cthd_zone_dts::parse_cdev_order()
@@ -303,13 +304,11 @@ int cthd_zone_dts::read_trip_points()
 	{
 		unsigned int mask = 0x1;
 		int cnt = 0;
-		int cdev_index;
 		do
 		{
 			if(cpu_mask &mask)
 			{
 				thd_log_debug("Add default processing for %x\n", cpu_mask & mask);
-				cdev_index = cpu_to_cdev_index(cnt);
 				cthd_trip_point trip_pt(trip_point_cnt, P_T_STATE, set_point, def_hystersis,
 	0xFF);
 				trip_pt.thd_trip_point_set_control_type(SEQUENTIAL);

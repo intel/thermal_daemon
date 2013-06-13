@@ -92,7 +92,7 @@ int cthd_cdev_pstates::init()
 		if(cdev_sysfs.exists(str.str()))
 		{
 			cdev_sysfs.read(str.str(), freq_str);
-			int freq_int;
+			unsigned int freq_int;
 			std::istringstream(freq_str) >> freq_int;
 			if(scaling_min_frqeuency == 0 || freq_int < scaling_min_frqeuency)
 				scaling_min_frqeuency = freq_int;
@@ -108,7 +108,7 @@ int cthd_cdev_pstates::init()
 		{
 			cdev_sysfs.read(str.str(), freq_str);
 
-			int freq_int;
+			unsigned int freq_int;
 			std::istringstream(freq_str) >> freq_int;
 			if(scaling_max_frqeuency == 0 || freq_int > scaling_max_frqeuency)
 				scaling_max_frqeuency = freq_int;
@@ -118,11 +118,11 @@ int cthd_cdev_pstates::init()
 	thd_log_debug("cpu freq max %u min %u\n", scaling_max_frqeuency,
 	scaling_min_frqeuency);
 
-	for(int i = 0; i < _cpufreqs.size(); ++i)
+	for(unsigned int i = 0; i < _cpufreqs.size(); ++i)
 	{
 		thd_log_debug("cpu freq Add %d: %s\n", i, _cpufreqs[i].c_str());
 
-		int freq_int;
+		unsigned int freq_int;
 		std::istringstream(_cpufreqs[i]) >> freq_int;
 
 		if(freq_int >= scaling_min_frqeuency && freq_int <= scaling_max_frqeuency)
@@ -131,7 +131,7 @@ int cthd_cdev_pstates::init()
 		}
 	}
 
-	for(int i = 0; i < cpufreqs.size(); ++i)
+	for(unsigned int i = 0; i < cpufreqs.size(); ++i)
 	{
 		thd_log_debug("cpu freq %d: %d\n", i, cpufreqs[i]);
 	}
@@ -145,7 +145,7 @@ void cthd_cdev_pstates::set_curr_state(int state, int arg)
 {
 	// p state control
 	//scaling_setspeed
-	if(state < cpufreqs.size())
+	if(state < (int)cpufreqs.size())
 	{
 		if(cpu_index ==  - 1)
 		{

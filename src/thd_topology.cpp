@@ -191,6 +191,11 @@ int cthd_topology::check_temperature(int index)
 	if(fd < 0)
 		return  - 1;
 	retval = pread(fd, temp_str, sizeof(temp_str), 0);
+	if (retval < 0)
+	{
+		close(fd);
+		return 0;
+	}
 	temperature = atoi(temp_str);
 
 	current_moving_average = moving_average(temp_data, index, temperature);
@@ -305,8 +310,11 @@ int cthd_topology::calibrate()
 		pthread_attr_setdetachstate(&thd_attr, PTHREAD_CREATE_DETACHED);
 		terminate_thread = false;
 		ret = pthread_create(&load_thread, &thd_attr, load_thread_loop, (void*)this);
+		if (ret < 0)
+			return ret;
 		ret = pthread_create(&temp_thread, &thd_attr, temp_thread_loop, (void*)this);
-
+		if (ret < 0)
+			return ret;
 		thd_log_info("Started %d seconds sleep on main thread \n", measurment_time);
 		sleep(measurment_time);
 		thd_log_info("End %d seconds sleep on main thread \n", measurment_time);
