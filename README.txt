@@ -1,3 +1,5 @@
+Refer to thermal_daemon_usage.txt for details on thermal daemon operation.
+
 Prerequisites:
 	Kernel
 		Need kernel with "Intel P State driver", to use Intel P state driver to cool the system.
@@ -65,6 +67,13 @@ Use "sudo stop thermald" to stop
 -------------------------------------------
 
 Releases
+
+Release 1.02
+- Allow user to change the max temperarure via dbus message
+- Allow user to change the cooling method order via an XML configuration
+- Upstart fixes
+- Valgrind and zero warnings on build
+
 Release 1.01
 - Implement RAPL using MSRs.
 - User can configure cooling device order via XML config file
