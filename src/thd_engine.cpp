@@ -333,8 +333,11 @@ void cthd_engine::process_pref_change()
 		zone->update_zone_preference();
 	}
 
-	if(preference != 0)
+	if(control_mode == EXCLUSIVE)
+	{
+		thd_log_info("Control is taken over from kernel\n");
 		takeover_thermal_control();
+	}
 }
 
 void cthd_engine::thd_engine_terminate()
