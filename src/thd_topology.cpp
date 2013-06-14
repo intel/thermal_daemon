@@ -213,7 +213,6 @@ float cthd_topology::get_c0_present_value(int cpu)
 	unsigned long long mperf, delta_mperf;
 	unsigned long long tsc, delta_tsc;
 	float result;
-	int current_moving_average;
 
 	tsc = rdtsc();
 	msr.get_mperf_value(cpu, &mperf);

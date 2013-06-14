@@ -31,7 +31,7 @@
 #include "thd_rapl_interface.h"
 
 #if 1
-#define RAPL_DBG_PRINT
+#define RAPL_DBG_PRINT thd_log_debug
 #define RAPL_ERROR_PRINT thd_log_warn
 #else
 #define RAPL_DBG_PRINT(...)	((void) 0)
@@ -175,7 +175,7 @@ int c_rapl_interface::read_msr(int cpu, unsigned int idx, unsigned long long *va
 
 int c_rapl_interface::write_msr(int cpu, unsigned int idx, unsigned long long val)
 {
-	RAPL_DBG_PRINT("write_msr %X\n", val);
+	RAPL_DBG_PRINT("write_msr %X\n", (unsigned int)val);
 
 	return msr.write_msr(cpu, idx, val);
 }
@@ -316,7 +316,7 @@ int c_rapl_interface::set_pkg_power_limit_msr(unsigned long long value)
 {
 	int ret;
 
-	RAPL_DBG_PRINT("set_pkg_power_limit_msr %X\n", value);
+	RAPL_DBG_PRINT("set_pkg_power_limit_msr %X\n", (unsigned int)value);
 	if (!pkg_domain_present()) {
 		return -1;
 	}
@@ -362,7 +362,7 @@ bits 23:22. “Time_Unit” is specified by the “Time Units” field of MSR_RA
 
 	value = (value & ~power_limit_mask) | power ;
 	value |= (power_limit_en_bit | power_clamp_en_bit);
-	RAPL_DBG_PRINT("Try Limit with power %X\n", value);
+	RAPL_DBG_PRINT("Try Limit with power %X\n", (unsigned int)value);
 
 	time_limit = time_window / time_units;
 	y = (int)log2(time_limit);
@@ -372,7 +372,7 @@ bits 23:22. “Time_Unit” is specified by the “Time Units” field of MSR_RA
 	RAPL_DBG_PRINT("time_limit %g %d\n", time_limit, time_limit_int);
 	value &= ~0xFE0000;
 	value |= time_limit_int<<17;
-	RAPL_DBG_PRINT("Try new Limit %X\n", value);
+	RAPL_DBG_PRINT("Try new Limit %X\n", (unsigned int)value);
 
 	return set_pkg_power_limit_msr(value);
 }
@@ -387,7 +387,7 @@ int c_rapl_interface::store_pkg_power_limit()
 		return ret;
 	default_pkg_power_limit_msr_value = value;
 
-	RAPL_DBG_PRINT("store: default_pkg_power_limit_msr_value %X\n", default_pkg_power_limit_msr_value);
+	RAPL_DBG_PRINT("store: default_pkg_power_limit_msr_value %X\n", (unsigned int)default_pkg_power_limit_msr_value);
 
 	return 0;
 }
@@ -397,7 +397,7 @@ int c_rapl_interface::restore_pkg_power_limit()
 	if (default_pkg_power_limit_msr_value)
 		set_pkg_power_limit_msr(default_pkg_power_limit_msr_value);
 
-	RAPL_DBG_PRINT("restore: default_pkg_power_limit_msr_value %X\n", default_pkg_power_limit_msr_value);
+	RAPL_DBG_PRINT("restore: default_pkg_power_limit_msr_value %X\n", (unsigned int)default_pkg_power_limit_msr_value);
 
 	return 0;
 }

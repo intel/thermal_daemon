@@ -253,7 +253,6 @@ bool cthd_model::update_user_set_max_temp()
 {
 	std::stringstream filename;
 	bool present = false;
-	unsigned int _set_point;
 	unsigned int temp;
 
 	filename << TDCONFDIR << "/" << "thd_user_set_point.conf";

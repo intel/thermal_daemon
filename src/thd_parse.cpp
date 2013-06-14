@@ -431,7 +431,6 @@ int cthd_parse::trip_count(unsigned int zone_index)
 
 trip_point_t* cthd_parse::get_trip_point(unsigned int zone_index, unsigned int trip_index)
 {
-	trip_point_t *trip_pt;
 	if (zone_index < thermal_info_list[matched_thermal_info_index].zones.size()) {
 		if (trip_index < thermal_info_list[matched_thermal_info_index].zones[zone_index].trip_pts.size())
 			return &thermal_info_list[matched_thermal_info_index].zones[zone_index].trip_pts[trip_index];
@@ -444,7 +443,6 @@ trip_point_t* cthd_parse::get_trip_point(unsigned int zone_index, unsigned int t
 
 cooling_dev_t* cthd_parse::get_cool_dev_index(unsigned int cdev_index)
 {
-	cooling_dev_t *cdev;
 
 	if (cdev_index < thermal_info_list[matched_thermal_info_index].cooling_devs.size())
 		return &thermal_info_list[matched_thermal_info_index].cooling_devs[cdev_index];

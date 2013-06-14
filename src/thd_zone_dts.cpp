@@ -48,7 +48,6 @@ int cthd_zone_dts::init()
 {
 	critical_temp = 0;
 	int temp;
-	cthd_engine_dts *engine = (cthd_engine_dts*)thd_engine;
 	bool found = false;
 
 	max_temp = 0;
@@ -244,7 +243,6 @@ int cthd_zone_dts::parse_cdev_order()
 int cthd_zone_dts::read_trip_points()
 {
 	cthd_msr msr;
-	int _index = 0;
 	int ret;
 
 	if (init() != THD_SUCCESS)
@@ -448,7 +446,7 @@ int cthd_zone_dts::check_for_package_temp_thermal_zone()
 	DIR *dir;
 	struct dirent *entry;
 	const std::string base_path = "/sys/class/thermal/";
-	int cnt = 0;
+
 	if ((dir = opendir(base_path.c_str())) != NULL)
 	{
 		while ((entry = readdir(dir)) != NULL)

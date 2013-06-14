@@ -58,7 +58,6 @@ int cthd_zone_dts_sensor::read_trip_points()
 {
 	unsigned int cpu_mask;
 	unsigned int mask = 0x1;
-	int cdev_index;
 	int cnt = 0;
 	cthd_engine_dts *thd_dts_engine = (cthd_engine_dts*)thd_engine;
 
@@ -125,8 +124,6 @@ int cthd_zone_dts_sensor::read_trip_points()
 
 unsigned int cthd_zone_dts_sensor::read_zone_temp()
 {
-	unsigned int mask = 0x1;
-	int cnt = 0;
 
 	zone_temp = 0;
 	std::stringstream temp_input_str;

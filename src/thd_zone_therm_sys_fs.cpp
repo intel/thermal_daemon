@@ -181,7 +181,6 @@ int cthd_sysfs_zone::read_xml_trip_points()
 		for(int i = 0; i < thd_engine->parser.trip_count(index); ++i)
 		{
 			trip_point_t *trip_pt;
-			int trip_type;
 
 			trip_pt = thd_engine->parser.get_trip_point(index, i);
 			if(!trip_pt)

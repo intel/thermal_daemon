@@ -317,7 +317,7 @@ int cthd_msr::set_clock_mod_duty_cycle(int state)
 
 int cthd_msr::get_clock_mod_duty_cycle()
 {
-	int ret, state;
+	int ret, state=0;
 	unsigned long long val;
 
 	// Just get for cpu 0 and return
@@ -339,7 +339,6 @@ int cthd_msr::get_clock_mod_duty_cycle()
 int cthd_msr::get_min_freq()
 {
 	int ret;
-	unsigned char state;
 	unsigned long long val;
 
 	// Just get for cpu 0 and return

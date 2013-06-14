@@ -38,7 +38,6 @@ bool cthd_trip_point::thd_trip_point_check(unsigned int read_temp, int pref)
 {
 	int on =  - 1;
 	int off =  - 1;
-	int pid_state =  - 1;
 	bool apply = false;
 
 	if(read_temp == 0)
@@ -110,7 +109,7 @@ bool cthd_trip_point::thd_trip_point_check(unsigned int read_temp, int pref)
 		return TRUE;
 
 	int i, ret;
-	thd_log_debug("cdev size for this trippoint %d\n", cdevs.size());
+	thd_log_debug("cdev size for this trippoint %lu\n", cdevs.size());
 	if(on > 0)
 	{
 		for(unsigned i = 0; i < cdevs.size(); ++i)

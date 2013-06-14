@@ -39,7 +39,9 @@
 #include <locale>
 
 static void *cthd_engine_thread(void *arg);
+#ifdef PER_CPU_P_STATE_CONTROL
 static void *cthd_calibration_engine_thread(void *arg);
+#endif
 
 cthd_engine::cthd_engine(): cdev_cnt(0), zone_count(0), parse_thermal_zone_success(false),
 	parse_thermal_cdev_success(false), poll_timeout_msec( - 1), wakeup_fd(0),
@@ -65,7 +67,6 @@ cthd_engine::~cthd_engine()
 void cthd_engine::thd_engine_thread()
 {
 	unsigned int n, i;
-	int result;
 
 	thd_log_info("thd_engine_thread begin\n");
 	for(;;)
@@ -146,7 +147,7 @@ bool cthd_engine::set_preference(const int pref)
 
 int cthd_engine::thd_engine_start()
 {
-	int i, ret;
+	int ret;
 	int wake_fds[2];
 
 	check_cpu_id();
@@ -378,7 +379,6 @@ int cthd_engine::thd_engine_set_user_set_point(const char *user_set_point)
 
 void cthd_engine::thermal_zone_change(message_capsul_t *msg)
 {
-	int i;
 
 	thermal_zone_notify_t *pmsg = (thermal_zone_notify_t*)msg->msg;
 	for(unsigned i = 0; i < zones.size(); ++i)
@@ -596,7 +596,7 @@ int cthd_engine::check_cpu_id()
 	unsigned int ebx, ecx, edx, max_level;
 	unsigned int fms, family, model, stepping;
 	genuine_intel = 0;
-	int i;
+	int i=0;
 	bool valid = false;
 
 	proc_list_matched = false;

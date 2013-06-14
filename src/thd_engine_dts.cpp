@@ -240,7 +240,6 @@ int cthd_engine_dts::check_intel_p_state_driver()
 
 int cthd_engine_dts::read_cooling_devices()
 {
-	int _index = 0;
 
 	find_cdev_rapl();
 	find_cdev_power_clamp();

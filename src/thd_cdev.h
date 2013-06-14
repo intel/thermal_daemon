@@ -65,6 +65,7 @@ public:
 	curr_state(0), sensor_mask(0), last_op_time(0), curr_pow(0), base_pow_state
 	(0), inc_dec_val(1), auto_down_adjust(false){}
 
+	virtual ~cthd_cdev() {}
 	virtual int thd_cdev_set_state(int set_point, int temperature, int state, int arg);
 
 	virtual int thd_cdev_get_index()
