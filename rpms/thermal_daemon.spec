@@ -1,11 +1,11 @@
 Name:           thermal_daemon
-Version:        1.0
+Version:        1.02
 Release:        1%{?dist}
 Summary:        The "Linux Thermal Daemon" program from 01.org
 
 License:        GPLv2+
-URL:            https://github.com/01org/%{name}
-Source0:        https://github.com/01org/%{name}/rpms/%{name}-%{version}.tar.gz
+URL:            http://spandruvada.fedorapeople.org/
+Source0:        http://spandruvada.fedorapeople.org/%{name}-%{version}.tar.gz
 
 BuildRequires:  glib-devel
 BuildRequires:  dbus-glib-devel
@@ -47,3 +47,4 @@ rm -rf $RPM_BUILD_ROOT
 %changelog
 * Wed May 8 2013 Base version 1.0-1
 - Base version
+- updated to vesrion 1.02
