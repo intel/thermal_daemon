@@ -93,6 +93,7 @@ c_rapl_interface::c_rapl_interface(int cpu) :
 		RAPL_DBG_PRINT("Domain : PKG Not present\n");
 	}
 
+#ifdef RAPL_SERVER_CONFIG
 	// Check presence of DRAM domain
 	ret = read_msr(first_cpu, MSR_DRAM_ENERY_STATUS, &value);
 	if (ret > 0) {
@@ -101,7 +102,7 @@ c_rapl_interface::c_rapl_interface(int cpu) :
 	} else {
 		RAPL_DBG_PRINT("Domain : DRAM Not present\n");
 	}
-
+#endif
 	// Check presence of PP0 domain
 	ret = read_msr(first_cpu, MSR_PP0_ENERY_STATUS, &value);
 	if (ret > 0) {
