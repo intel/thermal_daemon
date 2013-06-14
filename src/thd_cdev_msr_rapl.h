@@ -43,7 +43,7 @@ protected:
 	bool control_start;
 
 public:
-	static const int rapl_low_limit_percent = 50;
+	static const int rapl_low_limit_percent = 25;
 	static const int rapl_power_dec_percent = 5;
 
 	cthd_cdev_rapl_msr(unsigned int _index, int _cpu_index): cthd_cdev(_index,
