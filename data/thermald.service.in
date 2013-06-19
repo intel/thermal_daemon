@@ -1,5 +1,7 @@
 [Unit]
 Description=Thermal Daemon Service
+Documentation=man:thermald(1)
+Documentation=https://github.com/01org/thermal_daemon/blob/master/thermal_daemon_usage.txt
 After=syslog.target
 
 [Service]
