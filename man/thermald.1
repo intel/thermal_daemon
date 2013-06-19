@@ -33,7 +33,15 @@ thermald \- start Linux thermal daemon
 .B thermald
 is a Linux daemon to prevent CPU from overheating. This daemon monitors
 CPU temperature and apply compensation using best available cooling
-methods.
+methods. This daemon by default uses "/sys/devices/platform/coretemp.0/tempX_max",
+as a limit for maximum temperature. But if it is desired that the system should
+use some other maximum temperature, then it can send dbus message
+(Requires --dbus-enable). For example
+from command line:
+.PP
+dbus-send --system --dest=org.freedesktop.thermald /org/freedesktop/thermald org.freedesktop.thermald.SetUserSetPoint string:80000
+.PP
+Here "80000" is the temperature in milli degree celsius.
 
 .SH OPTIONS
 .TP
