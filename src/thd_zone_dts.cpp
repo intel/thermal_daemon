@@ -131,10 +131,10 @@ int cthd_zone_dts::load_cdev_xml(cthd_trip_point &trip_pt, std::vector <std::str
 		thd_log_debug("- %s\n", list[i].c_str());
 		if (list[i] == "CDEV_INTEL_RAPL_DRIVER")
 		{
-			if (thd_dts_engine->intel_rapl_index[phy_package_id] != -1)
+			if (thd_dts_engine->intel_rapl_driver_index != -1)
 			{
-				thd_log_debug("ZONE DTS add RAPL id %d \n", thd_dts_engine->intel_rapl_index[phy_package_id]);
-				trip_pt.thd_trip_point_add_cdev_index(thd_dts_engine->intel_rapl_index[phy_package_id]);
+				thd_log_debug("ZONE DTS add RAPL driver control %d \n", thd_dts_engine->intel_rapl_limited_control_index);
+				trip_pt.thd_trip_point_add_cdev_index(thd_dts_engine->intel_rapl_limited_control_index);
 			}
 		}
 		else if (list[i] == "CDEV_RAPL")
@@ -264,10 +264,9 @@ int cthd_zone_dts::read_trip_points()
 	0xFF);
 		trip_pt.thd_trip_point_set_control_type(SEQUENTIAL);
 
-		if (thd_dts_engine->intel_rapl_index[phy_package_id] != -1)
+		if (thd_dts_engine->intel_rapl_driver_index != -1)
 		{
-			thd_log_debug("ZONE DTS add RAPL id %d \n", thd_dts_engine->intel_rapl_index[phy_package_id]);
-			trip_pt.thd_trip_point_add_cdev_index(thd_dts_engine->intel_rapl_index[phy_package_id]);
+			trip_pt.thd_trip_point_add_cdev_index(thd_dts_engine->intel_rapl_limited_control_index);
 		}
 		else if (thd_dts_engine->msr_control_present > 0)
 		{

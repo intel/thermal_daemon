@@ -173,52 +173,17 @@ int cthd_engine_dts::find_cdev_rapl()
 {
 	bool found = false;
 
-	csys_fs cdev_sysfs("/sys/class/thermal/");
-
-	for(int i = 0; i < max_cool_devs; ++i)
-	{
-		std::stringstream tcdev;
-		tcdev << "cooling_device" << i << "/type";
-		if(cdev_sysfs.exists(tcdev.str().c_str()))
-		{
-			std::string type_str;
-			std::string rapl_str = "rapl_pkg_";
-			cdev_sysfs.read(tcdev.str(), type_str);
-
-			unsigned found = type_str.find(rapl_str);
-			if (found == (unsigned)std::string::npos) {
-					continue;
-			}
-			std::string package_index_str = type_str.substr(rapl_str.length());
-			int package_index = atoi(package_index_str.c_str());
-			if (package_index >= max_package_support)
-				continue;
-			cthd_sysfs_cdev_rapl *cdev = new cthd_sysfs_cdev_rapl(i, "/sys/class/thermal/", package_index);
-			if(cdev->update() != THD_SUCCESS)
-				return THD_ERROR;
-			cdevs.push_back(cdev);
-			++cdev_cnt;
-			intel_rapl_index[package_index] = i;
-			thd_log_debug("Intel RAPL index = %d\n", intel_rapl_index[package_index]);
-
-			cthd_sysfs_cdev_rapl_limited *cdev1 = new cthd_sysfs_cdev_rapl_limited(intel_rapl_limited_control_index * (package_index+1),
-														i, "/sys/class/thermal/", package_index);
-			cdev1->set_inc_dec_value(1000);
-			if(cdev1->update() != THD_SUCCESS)
-				return THD_ERROR;
-			cdevs.push_back(cdev1);
-			++cdev_cnt;
-			intel_rapl_index_limited = intel_rapl_limited_control_index;
-			thd_log_debug("Intel RAPL index limited = %d\n", intel_rapl_index_limited * (package_index+1));
-
-			found = true;
-		}
-	}
-
-	if (found)
-		return THD_SUCCESS;
-	else
+	cthd_sysfs_cdev_rapl *cdev = new cthd_sysfs_cdev_rapl(intel_rapl_limited_control_index,
+									"/sys/class/powercap/intel-rapl/intel-rapl:0/", 0);
+	if(cdev->update() != THD_SUCCESS) {
+		thd_log_debug("find_cdev_rapl not present \n");
 		return THD_ERROR;
+	}
+	cdevs.push_back(cdev);
+	++cdev_cnt;
+	intel_rapl_driver_index = 0;
+
+	return THD_SUCCESS;
 }
 
 int cthd_engine_dts::check_intel_p_state_driver()
@@ -247,12 +212,14 @@ int cthd_engine_dts::read_cooling_devices()
 
 	if (processor_id_match()) {
 
-		cthd_cdev_rapl_msr *cdev_rapl = new cthd_cdev_rapl_msr(msr_rapl_index,  -
+		if (intel_rapl_driver_index) {
+			cthd_cdev_rapl_msr *cdev_rapl = new cthd_cdev_rapl_msr(msr_rapl_index,  -
 					1);
-		if(cdev_rapl->update() == THD_SUCCESS)
-		{
-			cdevs.push_back(cdev_rapl);
-			++cdev_cnt;
+			if(cdev_rapl->update() == THD_SUCCESS)
+			{
+				cdevs.push_back(cdev_rapl);
+				++cdev_cnt;
+			}
 		}
 
 		// Turbo sub states control
@@ -302,13 +269,15 @@ int cthd_engine_dts::read_cooling_devices()
 		msr_control_present = -1;
 	}
 	// P states control using cpufreq
-	cthd_cdev_pstates *cdev1 = new cthd_cdev_pstates(cpufreq_index,  - 1);
-	if(cdev1->update() == THD_SUCCESS)
+	if (intel_pstate_driver_index)
 	{
-		cdevs.push_back(cdev1);
-		++cdev_cnt;
+		cthd_cdev_pstates *cdev1 = new cthd_cdev_pstates(cpufreq_index,  - 1);
+		if(cdev1->update() == THD_SUCCESS)
+		{
+			cdevs.push_back(cdev1);
+			++cdev_cnt;
+		}
 	}
-
 	// T states control
 	cthd_cdev_tstates *cdev2 = new cthd_cdev_tstates(t_state_index,  - 1);
 	if(cdev2->update() == THD_SUCCESS)
@@ -389,12 +358,15 @@ int cthd_engine_dts::read_cooling_devices()
 				msr_control_present = -1;
 
 			// P states control using cpufreq
-			cthd_cdev_pstates *cdev1 = new cthd_cdev_pstates(cpufreq_index +
-													max_cpu_count *(i + 1), i);
-			if(cdev1->update() == THD_SUCCESS)
+			if(intel_pstate_driver_index)
 			{
-				cdevs.push_back(cdev1);
-				++cdev_cnt;
+				cthd_cdev_pstates *cdev1 = new cthd_cdev_pstates(cpufreq_index +
+													max_cpu_count *(i + 1), i);
+				if(cdev1->update() == THD_SUCCESS)
+				{
+					cdevs.push_back(cdev1);
+					++cdev_cnt;
+				}
 			}
 			// T states control
 			cthd_cdev_tstates *cdev2 = new cthd_cdev_tstates(t_state_index +

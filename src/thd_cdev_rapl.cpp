@@ -33,29 +33,28 @@ void cthd_sysfs_cdev_rapl::set_curr_state(int state, int arg)
 {
 
 	std::stringstream tc_state_dev;
-	tc_state_dev << "cooling_device" << index << "/cur_state";
-	if(cdev_sysfs.exists(tc_state_dev.str()))
-	{
-		std::stringstream state_str;
-		int new_state;
 
-		if (state < inc_dec_val)
-		{
-			new_state = 0;
-			curr_state = 0;
-		}
-		else
-		{
-			new_state = phy_max - state;
-			curr_state = state;
-		}
-		state_str << new_state;
-		thd_log_debug("set cdev state index %d state %d wr:%d\n", index, state, new_state);
-		if (cdev_sysfs.write(tc_state_dev.str(), state_str.str()) < 0)
-			curr_state = (state == 0) ? 0 : max_state;
+	std::stringstream state_str;
+	int new_state;
+
+	if (state < inc_dec_val)
+	{
+		new_state = 0;
+		curr_state = 0;
+		cdev_sysfs.write("enabled", "0");
+		new_state = phy_max;
 	}
 	else
-		curr_state = 0;
+	{
+		new_state = phy_max - state;
+		curr_state = state;
+		cdev_sysfs.write("enabled", "1");
+	}
+	state_str << new_state;
+	thd_log_debug("set cdev state index %d state %d wr:%d\n", index, state, new_state);
+	tc_state_dev << "constraint_" << constraint_index <<"_power_limit_uw";
+	if (cdev_sysfs.write(tc_state_dev.str(), state_str.str()) < 0)
+		curr_state = (state == 0) ? 0 : max_state;
 
 }
 
@@ -71,12 +70,68 @@ int cthd_sysfs_cdev_rapl::get_max_state()
 
 int cthd_sysfs_cdev_rapl::update()
 {
-	int ret = cthd_sysfs_cdev::update();
-	phy_max = max_state;
+	int i;
+	std::stringstream temp_str;
+	int _index = -1;
+
+	for (i=0; i<rapl_no_time_windows; ++i)
+	{
+		temp_str << "constraint_" << i <<"_name";
+		if(cdev_sysfs.exists(temp_str.str()))
+		{
+			std::string type_str;
+			cdev_sysfs.read(temp_str.str(), type_str);
+			if (type_str == "long_term") {
+				_index = i;
+				break;
+			}
+		}
+	}
+	if (_index < 0)
+	{
+		thd_log_info("powercap RAPL no long term time window\n");
+		return THD_ERROR;
+	}
+
+	std::string power_limit;
+	temp_str.str(std::string());
+	temp_str << "constraint_" << _index <<"_max_power_uw";
+	if(!cdev_sysfs.exists(temp_str.str()))
+	{
+		thd_log_info("powercap RAPL no max power limit range %s \n", temp_str.str().c_str());
+		return THD_ERROR;
+	}
+	cdev_sysfs.read(temp_str.str(), power_limit);
+	std::istringstream(power_limit) >> phy_max;
+	thd_log_info("powercap RAPL max power limit range %lu \n", phy_max);
+
 	set_inc_dec_value(phy_max * (float)rapl_power_dec_percent/100);
-
+	max_state = phy_max;
 	max_state -= (float)max_state * rapl_low_limit_percent/100;
-	thd_log_debug("RAPL max limit %d increment: %d\n", max_state, inc_dec_val);
 
-	return ret;
+	std::stringstream time_window;
+	temp_str.str(std::string());
+	temp_str << "constraint_" << _index <<"_time_window_us";
+	if(!cdev_sysfs.exists(temp_str.str()))
+	{
+		thd_log_info("powercap RAPL no time_window_us %s \n", temp_str.str().c_str());
+		return THD_ERROR;
+	}
+	time_window << def_rapl_time_window;
+	cdev_sysfs.write(temp_str.str(), time_window.str());
+
+	std::stringstream enable;
+	temp_str.str(std::string());
+	temp_str << "enabled";
+	if(!cdev_sysfs.exists(temp_str.str()))
+	{
+		thd_log_info("powercap RAPL no enabled %s \n", temp_str.str().c_str());
+		return THD_ERROR;
+	}
+	cdev_sysfs.write(temp_str.str(), "0");
+
+	thd_log_debug("RAPL max limit %d increment: %d\n", max_state, inc_dec_val);
+	constraint_index = _index ;
+
+	return THD_SUCCESS;
 }
