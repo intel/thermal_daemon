@@ -177,3 +177,19 @@ int cthd_trip_point::thd_trip_point_add_cdev_index(int _index)
 		return THD_ERROR;
 	}
 }
+
+void cthd_trip_point::thd_trip_cdev_state_reset()
+{
+	for(int i = cdevs.size() - 1; i >= 0; --i)
+	{
+		cthd_cdev *cdev = cdevs[i];
+		thd_log_debug("thd_trip_cdev_state_reset index %d\n", cdev->thd_cdev_get_index());
+		if(cdev->in_min_state())
+		{
+			thd_log_debug("Need to switch to next cdev \n");
+			// No scope of control with this cdev
+			continue;
+		}
+		cdev->thd_cdev_set_min_state(arg);
+	}
+}

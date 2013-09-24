@@ -425,9 +425,14 @@ unsigned int cthd_zone_dts::read_zone_temp()
 	if(pkg_thres_th_zone > 0)
 	{
 		if(zone_temp > thd_model.get_hot_zone_trigger_point())
+		{
 			thd_engine->thd_engine_poll_enable();
+		}
 		else
+		{
+			zone_reset();
 			thd_engine->thd_engine_poll_disable();
+		}
 	}
 	return zone_temp;
 }

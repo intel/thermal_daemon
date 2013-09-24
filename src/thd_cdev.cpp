@@ -114,3 +114,8 @@ get_curr_state(), max_state);
 
 	return THD_SUCCESS;
 };
+
+int cthd_cdev::thd_cdev_set_min_state(int arg)
+{
+	set_curr_state(min_state, arg);
+}

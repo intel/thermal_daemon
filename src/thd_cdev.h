@@ -67,6 +67,7 @@ public:
 
 	virtual ~cthd_cdev() {}
 	virtual int thd_cdev_set_state(int set_point, int temperature, int state, int arg);
+	virtual int thd_cdev_set_min_state(int arg);
 
 	virtual int thd_cdev_get_index()
 	{

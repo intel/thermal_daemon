@@ -118,3 +118,18 @@ void cthd_zone::zone_temperature_notification(int type, int data)
 		thermal_zone_temp_change();
 	}
 }
+
+void cthd_zone::zone_reset()
+{
+	int i, count;
+
+	if(zone_active)
+	{
+		count = trip_points.size();
+		for(i = count - 1; i >= 0; --i)
+		{
+			cthd_trip_point &trip_point = trip_points[i];
+			trip_point.thd_trip_cdev_state_reset();
+		}
+	}
+}

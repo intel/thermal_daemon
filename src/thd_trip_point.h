@@ -59,6 +59,7 @@ public:
 	unsigned int _hyst, int arg);
 	bool thd_trip_point_check(unsigned int read_temp, int pref);
 	void thd_trip_point_add_cdev(cthd_cdev &cdev);
+	void thd_trip_cdev_state_reset();
 	int thd_trip_point_value()
 	{
 		return temp;
