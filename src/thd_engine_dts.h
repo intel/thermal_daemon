@@ -64,6 +64,8 @@ public:
 	static const int intel_pstate_control_index = soft_cdev_start_index + 6;
 	static const int intel_rapl_limited_control_index = soft_cdev_start_index + 7;
 	static const int msr_rapl_index = soft_cdev_start_index + 8;
+	static const int intel_pstate_turbo_control_index = soft_cdev_start_index + 9;
+
 	static const int package_index_multiplier = 2; // Each cdev for different cdev will be at
 													// soft_cdev_start_index * package_index_multiplier
 

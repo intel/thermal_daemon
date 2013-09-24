@@ -33,6 +33,7 @@
 #include "thd_cdev_msr_turbo_states.h"
 #include "thd_cdev_msr_pstates_limited.h"
 #include "thd_cdev_intel_pstate_driver.h"
+#include "thd_cdev_intel_pstate_turbo.h"
 #include "thd_cdev_rapl.h"
 #include "thd_cdev_msr_rapl.h"
 
@@ -192,11 +193,18 @@ int cthd_engine_dts::check_intel_p_state_driver()
 	if (cdev_sysfs.exists())
 	{
 		thd_log_info("Found Intel pstate driver \n");
+		cthd_cdev_intel_pstate_turbo *cdev1 = new cthd_cdev_intel_pstate_turbo(intel_pstate_turbo_control_index, "/sys/devices/system/cpu/intel_pstate/");
+		if(cdev1->update() != THD_SUCCESS)
+			return THD_ERROR;
+		cdevs.push_back(cdev1);
+		++cdev_cnt;
+
 		cthd_intel_p_state_cdev *cdev = new cthd_intel_p_state_cdev(intel_pstate_control_index, "/sys/devices/system/cpu/intel_pstate/");
 		if(cdev->update() != THD_SUCCESS)
 			return THD_ERROR;
 		cdevs.push_back(cdev);
 		++cdev_cnt;
+
 		intel_pstate_driver_index = 0;
 	}
 
