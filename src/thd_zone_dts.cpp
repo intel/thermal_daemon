@@ -278,6 +278,7 @@ int cthd_zone_dts::read_trip_points()
 
 		if (thd_dts_engine->intel_pstate_driver_index != -1)
 		{
+			trip_pt.thd_trip_point_add_cdev_index(thd_dts_engine->intel_pstate_turbo_control_index);
 			trip_pt.thd_trip_point_add_cdev_index(thd_dts_engine->intel_pstate_control_index);
 		}
 		else if (thd_dts_engine->msr_control_present > 0)
