@@ -59,6 +59,7 @@ typedef struct {
 	int min_state;
 	int max_state;
 	int inc_dec_step;
+	bool read_back; // For some device read back current state is not possible
 	bool auto_down_control;
 	std::string type_string;
 	std::string path_str;
@@ -67,6 +68,7 @@ typedef struct {
 typedef struct {
 	std::string name;
 	std::string uuid;
+	std::string product_name;
 	int default_prefernce;
 	std::vector <thermal_zone_t> zones;
 	std::vector <cooling_dev_t> cooling_devs;

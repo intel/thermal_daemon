@@ -46,6 +46,7 @@ protected:
 	int base_pow_state;
 	int inc_dec_val;
 	bool auto_down_adjust;
+	bool read_back;
 
 	std::string type_str;
 
@@ -63,7 +64,7 @@ public:
 	cthd_cdev(unsigned int _index, std::string control_path): index(_index),
 	cdev_sysfs(control_path.c_str()), trip_point(0), max_state(0), min_state(0),
 	curr_state(0), sensor_mask(0), last_op_time(0), curr_pow(0), base_pow_state
-	(0), inc_dec_val(1), auto_down_adjust(false){}
+	(0), inc_dec_val(1), auto_down_adjust(false), read_back(true) {}
 
 	virtual ~cthd_cdev() {}
 	virtual int thd_cdev_set_state(int set_point, int temperature, int state, int arg);
@@ -111,14 +112,16 @@ public:
 	}
 	bool in_min_state()
 	{
-		if(get_curr_state() <= min_state)
+		if((min_state < max_state && get_curr_state() <= min_state) ||
+				(min_state > max_state && get_curr_state() >= min_state))
 			return true;
 		return false;
 	}
 
 	bool in_max_state()
 	{
-		if(get_curr_state() >= get_max_state())
+		if((min_state < max_state && get_curr_state() >= get_max_state()) ||
+				(min_state > max_state && get_curr_state() <= get_max_state()))
 			return true;
 		return false;
 	}

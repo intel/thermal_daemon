@@ -46,6 +46,7 @@ int cthd_sysfs_cdev::update()
 			min_state = cdev->min_state;
 			max_state = cdev->max_state;
 			inc_dec_val = cdev->inc_dec_step;
+			read_back = cdev->read_back;
 			auto_down_adjust = cdev->auto_down_control;
 			if(sys_fs.exists(custom_path_str))
 			{
@@ -122,12 +123,14 @@ void cthd_sysfs_cdev::set_curr_state(int state, int arg)
 	if(use_custom_cdevs)
 	{
 		csys_fs sys_fs("");
+
 		if(sys_fs.exists(custom_path_str))
 		{
 			std::stringstream state_str;
 			state_str << state;
 			thd_log_debug("set sysfs cdev state index %d state %d\n", index, state);
 			sys_fs.write(custom_path_str, state_str.str());
+			curr_state = state;
 			return ;
 		}
 		thd_log_warn("cdev_custom: set_curr_state failed\n");
@@ -141,6 +144,7 @@ void cthd_sysfs_cdev::set_curr_state(int state, int arg)
 		state_str << state;
 		thd_log_debug("set cdev state index %d state %d\n", index, state);
 		cdev_sysfs.write(tc_state_dev.str(), state_str.str());
+		curr_state = state;
 	}
 	else
 		curr_state = 0;
@@ -151,6 +155,12 @@ int cthd_sysfs_cdev::get_curr_state()
 {
 	if(use_custom_cdevs)
 	{
+		if (!read_back)
+		{
+			thd_log_debug("No Read back for current state \n");
+			return curr_state;
+		}
+
 		csys_fs sys_fs("");
 		if(sys_fs.exists(custom_path_str))
 		{

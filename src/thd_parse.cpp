@@ -182,6 +182,7 @@ int cthd_parse::parse_new_cooling_dev(xmlNode * a_node, xmlDoc *doc, cooling_dev
 
 	cdev->max_state = cdev->min_state = 0;
 	cdev->inc_dec_step = 1 ;
+	cdev->read_back = true;
 	cdev->auto_down_control = false;
 	for (cur_node = a_node; cur_node; cur_node = cur_node->next) {
 		if (cur_node->type == XML_ELEMENT_NODE) {
@@ -199,6 +200,8 @@ int cthd_parse::parse_new_cooling_dev(xmlNode * a_node, xmlDoc *doc, cooling_dev
 				cdev->max_state = atoi(tmp_value);
 			} else if (!strcmp((const char *)cur_node->name, "IncDecStep")) {
 				cdev->inc_dec_step = atoi(tmp_value);
+			} else if (!strcmp((const char *)cur_node->name, "ReadBack")) {
+				cdev->read_back = atoi(tmp_value);
 			} else if (!strcmp((const char *)cur_node->name, "AutoOffMode")) {
 				if (atoi(tmp_value))
 					cdev->auto_down_control = true;
@@ -269,6 +272,8 @@ int cthd_parse::parse_new_platform_info(xmlNode * a_node, xmlDoc *doc, thermal_i
 			tmp_value = (char*)xmlNodeListGetString(doc, cur_node->xmlChildrenNode, 1);
 			if (!strcmp((const char*)cur_node->name, "uuid")) {
 				info_ptr->uuid.assign((const char*)tmp_value);
+			} else if (!strcmp((const char*)cur_node->name, "ProductName")) {
+				info_ptr->product_name.assign((const char*)tmp_value);
 			} else if (!strcmp((const char*)cur_node->name, "Name")) {
 				info_ptr->name.assign((const char*)tmp_value);
 			} else if (!strcmp((const char*)cur_node->name, "Preference")) {
@@ -403,17 +408,40 @@ bool cthd_parse::platform_matched()
 	if (thd_sysfs.exists(std::string("product_uuid"))) {
 		thd_log_debug("checking UUID\n");
 		std::string str;
-		if(thd_sysfs.read("product_uuid", str) < 0)
-			return false;
-		else {
-			thd_log_debug("UUID is %s\n", str.c_str());
+		if(thd_sysfs.read("product_uuid", str) >= 0) {
+			thd_log_info("UUID is [%s]\n", str.c_str());
 			for (unsigned int i=0; i<thermal_info_list.size(); ++i) {
 				if (thermal_info_list[i].uuid == str) {
 					matched_thermal_info_index = i;
+					thd_log_info("Product UUID matched \n");
 					return true;
 				}
 			}
-			return false;
+		}
+	}
+
+	if (thd_sysfs.exists(std::string("product_name"))) {
+		thd_log_debug("checking product name\n");
+		char product_name[128];
+		// Use different read method as the product name contains spaces
+		if(thd_sysfs.read("product_name", product_name, 127) >= 0) {
+			product_name[127] = '\0';
+			int len = strlen(product_name);
+			if (!len)
+				return false;
+			for (int i=0; i<len; ++i)
+				if (product_name[i] == '\n')
+					product_name[i] = '\0';
+			thd_log_info("product name is[%s]\n", product_name);
+			for (unsigned int i=0; i<thermal_info_list.size(); ++i) {
+				if (!thermal_info_list[i].product_name.size())
+					continue;
+				if (thermal_info_list[i].product_name.compare(0, strlen(product_name), product_name) == 0) {
+					matched_thermal_info_index = i;
+					thd_log_info("Product Name matched \n");
+					return true;
+				}
+			}
 		}
 	}
 

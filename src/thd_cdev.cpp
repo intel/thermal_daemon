@@ -43,14 +43,15 @@ int cthd_cdev::thd_cdev_set_state(int set_point, int temperature, int state, int
 {
 	thd_log_debug(">>thd_cdev_set_state index:%d state:%d\n", index, state);
 	curr_state = get_curr_state();
-	if(curr_state < min_state)
+	if( (min_state < max_state && curr_state < min_state) || (min_state > max_state && curr_state > min_state))
 		curr_state = min_state;
 	max_state = get_max_state();
 	thd_log_debug("thd_cdev_set_%d:curr state %d max state %d\n", index,
 curr_state, max_state);
 	if(state)
 	{
-		if(curr_state < max_state)
+		if((min_state < max_state && curr_state < max_state) ||
+				(min_state > max_state && curr_state > max_state))
 		{
 			int state = curr_state + inc_dec_val;
 			time_t tm;
@@ -63,7 +64,8 @@ curr_state, max_state);
 				state = base_pow_state + int_2_pow(curr_pow) * inc_dec_val;
 				thd_log_debug("consecutive call, increment exponentially state %d\n",
 state);
-				if(state >= max_state)
+				if((min_state < max_state && state >= max_state) ||
+						(min_state > max_state && state <= max_state))
 				{
 					state = max_state;
 					curr_pow = 0;
@@ -75,7 +77,8 @@ state);
 				curr_pow = 0;
 			last_op_time = tm;
 			sensor_mask |= arg;
-			if(state > max_state)
+			if((min_state < max_state && state > max_state) ||
+					(min_state > max_state && state < max_state))
 				state = max_state;
 			thd_log_debug("op->device:%s %d\n", type_str.c_str(), state);
 			set_curr_state(state, arg);
@@ -84,7 +87,8 @@ state);
 	else
 	{
 		curr_pow = 0;
-		if(curr_state > 0 && auto_down_adjust == false)
+		if(((min_state < max_state && curr_state > min_state) ||
+				(min_state > max_state && curr_state < min_state)) && auto_down_adjust == false)
 		{
 			int state = curr_state - inc_dec_val;
 			sensor_mask &= ~arg;
@@ -95,7 +99,8 @@ state);
 			}
 			else
 			{
-				if(state < min_state)
+				if((min_state < max_state && state < min_state) ||
+						(min_state > max_state && state > min_state))
 					state = min_state;
 				thd_log_debug("op->device:%s %d\n", type_str.c_str(), state);
 				set_curr_state(state, arg);
@@ -103,10 +108,12 @@ state);
 		}
 		else
 		{
+			thd_log_debug("op->device: force min %s %d\n", type_str.c_str(), min_state);
 			set_curr_state(min_state, arg);
 		}
 
 	}
+
 	thd_log_info("Set : %d, %d, %d, %d, %d\n", set_point, temperature, index,
 get_curr_state(), max_state);
 
@@ -118,4 +125,5 @@ get_curr_state(), max_state);
 int cthd_cdev::thd_cdev_set_min_state(int arg)
 {
 	set_curr_state(min_state, arg);
+	return THD_SUCCESS;
 }

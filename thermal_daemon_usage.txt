@@ -10,7 +10,7 @@ For most users, this should be enough to bring the CPU temperature of the system
 - Read temperature either by polling or by event notifications (using x86 package temperature driver to be merged to 3.10 kernel). Rate of polling can be controlled by command line argument. Default is 4 seconds. Temperature can be read by using either coretemp sys-fs or hwmon on older system.
 - When the temperature is more than the target temperature, it will activate the cooling devices. There is a default order hard-coded in the coded in the code, but can be overridden by configuring “thermal-cdev-order.xml”.
 - Dynamically it will change the temperature at which compensation is applied, to keep the system under the target temperature.
-- Also target temperature can be changed by sending message via dbus. Refer to script “test/test_pref.sh”in the thermal daemon source repository. It is basically sending
+- Also target temperature can be changed by sending message via dbus. Refer to script “tools/thermald_set_pref.sh”in the thermal daemon source repository. It is basically sending
 “dbus-send --system --dest=org.freedesktop.thermald /org/freedesktop/thermald org.freedesktop.thermald.SetUserSetPoint string:your_temperature_value_in_milli_degree_celsius
 ”
 

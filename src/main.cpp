@@ -304,7 +304,7 @@ static int thd_dbus_server_proc(gboolean no_daemon)
 			parser.parser_deinit();
 		}
 		if (matched) {
-			thd_log_warn("UUID matched, so will load zones and cdevs from thermal-conf.xml\n");
+			thd_log_warn("UUID/Name matched, so will load zones and cdevs from thermal-conf.xml\n");
 			thd_engine = new cthd_engine_therm_sysfs();
 		}
 		else

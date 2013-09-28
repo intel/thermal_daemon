@@ -1,5 +1,6 @@
 <?xml version="1.0"?><!DOCTYPE ThermalConfiguration [
 <!ELEMENT uuid (#PCDATA)>
+<!ELEMENT ProductName (#PCDATA)>
 <!ELEMENT Preference (#PCDATA)>
 <!ELEMENT Name (#PCDATA)>
 <!ELEMENT Sensor_path (#PCDATA)>
@@ -352,7 +353,8 @@ Example using a non thermal zone temperature sysfs
 -->
 <Platform>
 	<Name>Asus Ultrabook Platform</Name>
-	<uuid>dummy-0BAE5980-01A6-81E1-3575-5404A62D3DB1</uuid>
+	<uuid>_EFFDF494-6209-11E2-9E12-C48508924B5E</uuid>
+	<ProductName>_UX31A</ProductName>
 	<Preference>QUIET</Preference>
 	<ThermalZones>
 		<ThermalZone>
@@ -360,23 +362,13 @@ Example using a non thermal zone temperature sysfs
 			<Sensor_path>/sys/devices/platform/coretemp.0/temp1_input</Sensor_path>
 			<TripPoints>
 				<TripPoint>
-					<Temperature> 70000 </Temperature>
+					<Temperature> 80000 </Temperature>
 					<CoolingDevice>0</CoolingDevice>
 					<type>passive</type>
 				</TripPoint>
 				<TripPoint>
-					<Temperature> 70000 </Temperature>
+					<Temperature> 80000 </Temperature>
 					<CoolingDevice>1</CoolingDevice>
-					<type>passive</type>
-				</TripPoint>
-				<TripPoint>
-					<Temperature> 70000 </Temperature>
-					<CoolingDevice>2</CoolingDevice>
-					<type>passive</type>
-				</TripPoint>
-				<TripPoint>
-					<Temperature> 70000 </Temperature>
-					<CoolingDevice>3</CoolingDevice>
 					<type>passive</type>
 				</TripPoint>
 			</TripPoints>
@@ -385,28 +377,31 @@ Example using a non thermal zone temperature sysfs
 	<CoolingDevices>
 		<CoolingDevice>
 			<Index>0</Index>
-			<Type>Processor</Type>
-			<Path>/sys/class/thermal/cooling_device0/cur_state</Path>
+			<Type>RAPL</Type>
+			<Path>/sys/class/powercap/intel-rapl/intel-rapl:0/enabled</Path>
 			<MinState>0</MinState>
-			<MaxState>10</MaxState>
+			<ReadBack> 0 </ReadBack>
+			<MaxState>1</MaxState>
 		</CoolingDevice>
 		<CoolingDevice>
 			<Index>1</Index>
-			<Type>Processor</Type>
-			<Path>/sys/class/thermal/cooling_device1/cur_state</Path>
-			<MinState>0</MinState>
-			<MaxState>10</MaxState>
+			<Type>RAPL</Type>
+			<Path>/sys/class/powercap/intel-rapl/intel-rapl:0/constraint_0_power_limit_uw</Path>
+			<MinState>17000000</MinState>
+			<IncDecStep>-1000000</IncDecStep>
+			<MaxState>4000000</MaxState>
 		</CoolingDevice>
 		<CoolingDevice>
 			<Index>2</Index>
-			<Type>Processor</Type>
-			<Path>/sys/class/thermal/cooling_device2/cur_state</Path>
-			<MinState>0</MinState>
-			<MaxState>10</MaxState>
+			<Type>Intel_PState</Type>
+			<Path>/sys/devices/system/cpu/intel_pstate/max_perf_pct</Path>
+			<MinState>100</MinState>
+			<IncDecStep>-10</IncDecStep>
+			<MaxState>50</MaxState>
 		</CoolingDevice>
 		<CoolingDevice>
 			<Index>3</Index>
-			<Type>Processor</Type>
+			<Type>processor</Type>
 			<Path>/sys/class/thermal/cooling_device3/cur_state</Path>
 			<MinState>0</MinState>
 			<MaxState>10</MaxState>
@@ -417,6 +412,7 @@ Example using a non thermal zone temperature sysfs
 			<Path>/sys/class/thermal/cooling_device4/cur_state</Path>
 			<MinState>0</MinState>
 			<IncDecStep>5</IncDecStep>
+			<ReadBack> 0 </ReadBack>
 			<AutoOffMode>1</AutoOffMode>
 			<MaxState>50</MaxState>
 		</CoolingDevice>
