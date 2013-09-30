@@ -172,8 +172,6 @@ int cthd_engine_dts::find_cdev_power_clamp()
 
 int cthd_engine_dts::find_cdev_rapl()
 {
-	bool found = false;
-
 	cthd_sysfs_cdev_rapl *cdev = new cthd_sysfs_cdev_rapl(intel_rapl_limited_control_index,
 									"/sys/class/powercap/intel-rapl/intel-rapl:0/", 0);
 	if(cdev->update() != THD_SUCCESS) {
