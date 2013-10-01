@@ -68,6 +68,13 @@ Use "sudo stop thermald" to stop
 
 Releases
 
+Release 1.03
+- Allow negative step increments while configuring via XML
+- Use powercap RAPL driver I/F
+- Additional cpuids in the list
+- Add man page with details of usage
+- Added P state turbo on/off
+
 Release 1.02
 - Allow user to change the max temperarure via dbus message
 - Allow user to change the cooling method order via an XML configuration
