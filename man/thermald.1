@@ -49,7 +49,7 @@ For most users, this should be enough to bring the CPU temperature of the system
 .P
 - Read temperature either by polling or by event notifications (using x86 package temperature driver available from Linux kernel version 3.11). Rate of polling can be controlled by command line argument. Default is 4 seconds. Temperature can be read by using either coretemp sys-fs or hwmon on older system.
 .P
-- When the temperature is more than the target temperature, it will activate the cooling devices. There is a default order hard-coded in the coded in the code, but can be overridden by configuring “thermal-cdev-order.xml”.
+- When the temperature is more than the target temperature, it will activate the cooling devices. There is a default order, hard-coded in the code, but it can be overridden by configuring “thermal-cdev-order.xml”.
 .P
 - Dynamically, it will change the temperature at which compensation is applied, to keep the system under the target temperature.
 .P
@@ -62,7 +62,7 @@ For most users, this should be enough to bring the CPU temperature of the system
 .P
 In this mode, the daemon uses the configuration as defined in “thermal-conf.xml”. There can be multiple configurations in this file. It will pick a configuration which matches your system uuid (/sys/class/dmi/id/product_uuid or product_name). This configuration is similar to the ACPI style configuration at /sys/class/thermal. It has two parts: “Thermal Zones” and “Cooling devices”.
 .P
-Thermal zones are used to read temperature. A path for a temperature sensor can be configured here. Also, each thermal zone has trip points, which are triggered to activate a cooling device. For example, it can be configured to “read temperature from a sensor sys-fs path and when the temperature exceeds a trip point, activating a cooling device”.
+Thermal zones are used to read temperature. A path for a temperature sensor can be configured here. Also, each thermal zone has trip points, which are triggered to activate  cooling devices. For example, it can be configured to “read temperature from a sensor sys-fs path and when the temperature exceeds a trip point, activating a cooling device”.
 .P
 Cooling devices are used to cool the system. Each cooling device has a sys-fs path, a minimum value and a maximum value. The current state value is incremented by 1 for each activation, but the compensation increment can also be configured. Every time the temperature is more than a trip point value, the state is incremented till it reaches the max state.
 .P
@@ -123,10 +123,13 @@ Test Mode only: Allow non root user.
 .TP
 .B \-\-poll-interval
 Poll interval in seconds: Poll for zone temperature changes.
-If want to disable polling set to zero.
+To disable polling, set to zero.
 .TP
 .B \-\-dbus-enable
 Enable Dbus.
+.TP
+.B \-\-ingore-cpuid-check
+Ignore CPU ID check.
 .TP
 .B \-\-use-thermal-sysfs
 Use thermal sysfs, default use digital temperature sensor

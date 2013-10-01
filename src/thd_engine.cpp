@@ -145,12 +145,18 @@ bool cthd_engine::set_preference(const int pref)
 	return TRUE;
 }
 
-int cthd_engine::thd_engine_start()
+int cthd_engine::thd_engine_start(bool ignore_cpuid_check)
 {
 	int ret;
 	int wake_fds[2];
 
-	check_cpu_id();
+	if (ignore_cpuid_check)
+	{
+		thd_log_debug("Ignore CPU ID check for MSRs \n");
+		proc_list_matched = true;
+	}
+	else
+		check_cpu_id();
 
 	// Pipe is used for communication between two processes
 	ret = pipe(wake_fds);

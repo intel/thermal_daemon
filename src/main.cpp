@@ -91,6 +91,9 @@ static gboolean dbus_enable;
 // poll mode
 int thd_poll_interval = 4; //in seconds
 
+// check cpuid
+static gboolean ignore_cpuid_check = false;
+
 // Thermal engine
 cthd_engine *thd_engine;
 
@@ -311,7 +314,7 @@ static int thd_dbus_server_proc(gboolean no_daemon)
 			thd_engine = new cthd_engine_dts();
 	}
 	// Initialize thermald objects
-	if(thd_engine->thd_engine_start() != THD_SUCCESS)
+	if(thd_engine->thd_engine_start(ignore_cpuid_check) != THD_SUCCESS)
 	{
 		thd_log_error("THD engine start failed: ");
 		closelog();
@@ -391,6 +394,11 @@ int main(int argc, char *argv[])
 		{
 			"use-thermal-sysfs", 0, 0, G_OPTION_ARG_NONE, &use_thermal_sys_fs, N_(
 			"Use thermal sysfs instead of DTS sensors, default use dts."), NULL
+		}
+		,
+		{
+			"ingore-cpuid-check", 0, 0, G_OPTION_ARG_NONE, &ignore_cpuid_check, N_(
+			"Ignore CPU ID check."), NULL
 		}
 		,
 
