@@ -594,7 +594,11 @@ static supported_ids_t id_table[] = {
 		{6, 0x2a}, // Sandybridge
 		{6, 0x2d}, // Sandybridge
 		{6, 0x3a}, // IvyBridge
+		{6, 0x3c},
+		{6, 0x3e},
+		{6, 0x3f},
 		{6, 0x45}, // Haswell ULT */
+		{6, 0x46}, // Haswell ULT */
 
 		{0, 0} // Last Invalid entry
 };
