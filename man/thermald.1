@@ -31,8 +31,8 @@ thermald \- start Linux thermal daemon
 
 .SH DESCRIPTION
 .B thermald
-is a Linux daemon to prevent overheating of systems. This daemon monitors
-temperature and apply compensation using available cooling methods.
+is a Linux daemon used to prevent the overheating of systems. This daemon monitors
+temperature and applies compensation using available cooling methods.
 
 This daemon acts to cool the system under the following two modes:
 .P
@@ -45,35 +45,35 @@ This daemon acts to cool the system under the following two modes:
 .P
 For most users, this should be enough to bring the CPU temperature of the system under control. These are the high level operations in this mode:
 .LP
-- Get a temperature which is high enough to apply cooling action (target temperature). This is exported using the IA32 target temperature in MSR (Machine Specific Register). This can be read from /sys/devices/platform/coretemp.0/tempX_max. It is possible that this value is not present in a platform. In this case, it uses a fixed offset from the critical temperature.
+- Get a high enough temperature to apply cooling action (target temperature). This is exported using the IA32 target temperature in MSR (Machine Specific Register). This can be read from /sys/devices/platform/coretemp.0/tempX_max. It is possible that this value is not present in a platform. In that case, it uses a fixed offset from the critical temperature.
 .P
 - Read temperature either by polling or by event notifications (using x86 package temperature driver available from Linux kernel version 3.11). Rate of polling can be controlled by command line argument. Default is 4 seconds. Temperature can be read by using either coretemp sys-fs or hwmon on older system.
 .P
 - When the temperature is more than the target temperature, it will activate the cooling devices. There is a default order hard-coded in the coded in the code, but can be overridden by configuring “thermal-cdev-order.xml”.
 .P
-- Dynamically it will change the temperature at which compensation is applied, to keep the system under the target temperature.
+- Dynamically, it will change the temperature at which compensation is applied, to keep the system under the target temperature.
 .P
-- Also target temperature can be changed by sending message via dbus. Refer to script “tools/thermald_set_pref.sh”in the thermal daemon source repository. It is basically sending
+- Also target temperature can be changed by sending messages via dbus. Refer to script “tools/thermald_set_pref.sh”in the thermal daemon source repository. It is basically sends
 “dbus-send --system --dest=org.freedesktop.thermald /org/freedesktop/thermald org.freedesktop.thermald.SetUserSetPoint string:your_temperature_value_in_milli_degree_celsius
 ”
 .P
 
 2. User defined configuration
 .P
-In this mode, this daemon uses configuration defined in “thermal-conf.xml”. There can be multiple configurations in this file. It will pick a configuration matching your system uuid (/sys/class/dmi/id/product_uuid or product_name). This configuration is similar to the ACPI style configuration at /sys/class/thermal. This configuration has two parts: “Thermal Zones” and “Cooling devices”.
+In this mode, the daemon uses the configuration as defined in “thermal-conf.xml”. There can be multiple configurations in this file. It will pick a configuration which matches your system uuid (/sys/class/dmi/id/product_uuid or product_name). This configuration is similar to the ACPI style configuration at /sys/class/thermal. It has two parts: “Thermal Zones” and “Cooling devices”.
 .P
-Thermal zones are used to read temperature. A path for a temperature sensor can be configured here. Also each thermal zone has trip points, which are triggered to activate a cooling device. For example, it can be configured to “read temperature from a sensor sys-fs path and when the temperature exceeds a trip point, activate a cooling device”.
+Thermal zones are used to read temperature. A path for a temperature sensor can be configured here. Also, each thermal zone has trip points, which are triggered to activate a cooling device. For example, it can be configured to “read temperature from a sensor sys-fs path and when the temperature exceeds a trip point, activating a cooling device”.
 .P
-Cooling devices are used to cool the system. Each cooling device has sys-fs path, minimum value and a maximum value. The current state value is incremented by 1 for each activation, but the compensation increment can also be configured. Every time temperature is more than a trip point value, the state is incremented till it reaches the max state.
+Cooling devices are used to cool the system. Each cooling device has a sys-fs path, a minimum value and a maximum value. The current state value is incremented by 1 for each activation, but the compensation increment can also be configured. Every time the temperature is more than a trip point value, the state is incremented till it reaches the max state.
 .P
 
 Default cooling devices with Zero Configuration mode
 .P
-It is possible that some of these cooling devices are not present. In this case it will use the next highest priority cooling devices. Also when temperature can't be controlled by one cooling device, it selects the next in order.
+It is possible that some of these cooling devices are not present. In this case, it will use the next highest priority cooling device. Also, when the temperature can't be controlled by one cooling device, it selects the next in order.
  
 .P
 CDEV_INTEL_RAPL_DRIVER
-RAPL (Running Average Power Limit) is the method used to control CPU performance in Intel CPUs. This is available only from Sandy Bridge and later micro-architectures. On older CPUs RAPL interface is not present. This driver is not available in the upstream kernel yet. 
+RAPL (Running Average Power Limit) is the method used to control CPU performance in Intel CPUs. This is available only from Sandy Bridge and later micro-architectures. On older CPUs, RAPL interface is not present. This driver is not available in the upstream kernel yet. 
 
 .P
 CDEV_MSR_RAPL
@@ -97,7 +97,7 @@ These cooling devices use MSRs to control performance. You need user space MSR a
 
 .P
 CDEV_CPU_FREQ
-This uses cpufreq driver to limit the maximum frequency of operation. Even the older system has this driver, so this can be used as a fall-back on most systems.
+This uses cpufreq driver to limit the maximum frequency of operation. Even the older systems have this driver, so this can be used as a fall-back on most systems.
 
 
 
