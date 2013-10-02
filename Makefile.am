@@ -2,8 +2,6 @@ include $(GLIB_MAKEFILE)
 
 SUBDIRS = data
 
-INCLUDES= -I@top_srcdir@/src
-
 ACLOCAL_AMFLAGS = 
 
 # Global C Flags
@@ -29,6 +27,7 @@ bin_PROGRAMS = thermald
 
 # Evaluate Table Application
 thermald_CPPFLAGS = \
+	-I@top_srcdir@/src \
 	-DTDLOCALEDIR=\"$(datadir)/locale\"
 thermald_includedir = @top_srcdir@
 thermald_LDADD = \
