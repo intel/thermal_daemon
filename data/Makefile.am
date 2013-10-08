@@ -28,10 +28,14 @@ tdconfigdir = $(tdconfdir)
 tdconfig_DATA = thermal-conf.xml \
 	thermal-cdev-order.xml
 
+upstartconfdir = /etc/init
+upstartconf_DATA = thermald.conf
+
 EXTRA_DIST = \
 	thermald.service.in \
 	org.freedesktop.thermald.service.in \
 	$(dbusservice_DATA) \
-	$(tdconfig_DATA)
+	$(tdconfig_DATA) \
+	$(upstartconf_DATA)
 
 CLEANFILES = thermald.service org.freedesktop.thermald.service
