@@ -45,6 +45,7 @@
 #include "thd_engine_therm_sys_fs.h"
 #include "thd_engine_dts.h"
 #include "thd_parse.h"
+#include <syslog.h>
 
 #if !defined(TD_DIST_VERSION)
 #define TD_DIST_VERSION PACKAGE_VERSION

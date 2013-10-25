@@ -34,16 +34,16 @@ private:
 	static const unsigned int safety_margin = 1*1000;
 	static const int angle_increment = 1;
 	static const int def_setpoint_delay_cnt = 3;
-	static const unsigned int max_compensation = 5000;
+	static const int max_compensation = 5000;
 	static const unsigned int hot_zone_percent = 20; //20%
 	static const time_t set_point_delay_tm	= 4 * 3; // 12 seconds
 
 	time_t trend_increase_start;
-	unsigned int max_temp;
-	unsigned int set_point;
+	int max_temp;
+	int set_point;
 
-	unsigned int hot_zone;
-	unsigned int last_temp;
+	int hot_zone;
+	int last_temp;
 
 	time_t trend_decrease_start;
 	time_t max_temp_reached;
@@ -59,8 +59,8 @@ private:
 
 	unsigned int update_set_point(unsigned int curr_temp);
 	void store_set_point();
-	unsigned int read_set_point();
-	unsigned int read_user_set_max_temp();
+	int read_set_point();
+	int read_user_set_max_temp();
 
 	double kp, ki, kd, err_sum, last_err;
 	time_t last_time;
@@ -69,8 +69,8 @@ private:
 public:
 	cthd_model(bool use_pid=false);
 
-	void add_sample(unsigned int temperature);
-	void set_max_temperature(unsigned int temp);
+	void add_sample(int temperature);
+	void set_max_temperature(int temp);
 	bool update_user_set_max_temp();
 
 	unsigned int get_set_point()

@@ -61,7 +61,7 @@ unsigned int cthd_model::update_set_point(unsigned int curr_temp)
 		double slope;
 		double delta_x = (max_temp_reached - trend_increase_start) *1000;
 		double delta_y = max_temp - hot_zone;
-		unsigned int _setpoint;
+		int _setpoint;
 		double radians;
 		double arc_len;
 
@@ -96,7 +96,7 @@ unsigned int cthd_model::update_set_point(unsigned int curr_temp)
 	{
 		double output;
 		double d_err = 0;
-		unsigned int _setpoint;
+		int _setpoint;
 
 		time_t now;
 		time(&now);
@@ -128,7 +128,7 @@ unsigned int cthd_model::update_set_point(unsigned int curr_temp)
 	}
 }
 
-void cthd_model::add_sample(unsigned int temperature)
+void cthd_model::add_sample(int temperature)
 {
 	time_t tm;
 
@@ -141,7 +141,7 @@ void cthd_model::add_sample(unsigned int temperature)
 	}
 	else if(trend_increase_start && temperature < hot_zone)
 	{
-		unsigned int _set_point;
+		int _set_point;
 		thd_log_debug("Trend increase stopped %ld\n", trend_increase_start);
 		trend_increase_start = 0;
 		_set_point = read_set_point(); // Restore set point to a calculated max
@@ -162,7 +162,7 @@ void cthd_model::add_sample(unsigned int temperature)
 		// then we need to start tuning
 		if(!max_temp_seen)
 		{
-			unsigned int _set_point;
+			int _set_point;
 			update_set_point(temperature);
 			_set_point = read_set_point();
 			// Update only if the current set point is more than
@@ -212,7 +212,7 @@ void cthd_model::store_set_point()
 	fout.close();
 }
 
-unsigned int cthd_model::read_set_point()
+int cthd_model::read_set_point()
 {
 	std::stringstream filename;
 	unsigned int _set_point = 0;
@@ -228,10 +228,10 @@ unsigned int cthd_model::read_set_point()
 	return _set_point;
 }
 
-void cthd_model::set_max_temperature(unsigned int temp)
+void cthd_model::set_max_temperature(int temp)
 {
-	unsigned int _set_point;
-	unsigned int user_defined_max;
+	int _set_point;
+	int user_defined_max;
 
 	max_temp = temp - safety_margin;
 	user_defined_max = read_user_set_max_temp();
@@ -276,7 +276,7 @@ bool cthd_model::update_user_set_max_temp()
 	return present;
 }
 
-unsigned int cthd_model::read_user_set_max_temp()
+int cthd_model::read_user_set_max_temp()
 {
 	std::stringstream filename;
 	unsigned int user_max = 0;

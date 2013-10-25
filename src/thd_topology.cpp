@@ -79,7 +79,9 @@ static void *load_thread_loop(void *arg)
 
 	CPU_ZERO(&set);
 	CPU_SET(obj->designated_cpu, &set);
+#ifndef ANDROID
 	pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
+#endif
 	if(sched_setaffinity(gettid(), sizeof(cpu_set_t), &set))
 	{
 		perror("sched_setaffinity");
@@ -110,7 +112,9 @@ static void *temp_thread_loop(void *arg)
 	cpu_mask &= ~(1 << obj->designated_cpu);
 	CPU_ZERO(&set);
 	CPU_SET(obj->designated_cpu, &set);
+#ifndef ANDROID
 	pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
+#endif
 	if(sched_setaffinity(gettid(), sizeof(cpu_set_t), &set))
 	{
 		perror("sched_setaffinity");
@@ -319,9 +323,10 @@ int cthd_topology::calibrate()
 		thd_log_info("End %d seconds sleep on main thread \n", measurment_time);
 		terminate_thread = true;
 		sleep(1);
+#ifndef ANDROID
 		pthread_cancel(load_thread);
 		pthread_cancel(temp_thread);
-
+#endif
 		if(cal_failed)
 		{
 			thd_log_warn("Calibration process aborted because of unsuitable CPU load \n")

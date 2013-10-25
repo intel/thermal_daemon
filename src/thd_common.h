@@ -24,6 +24,6 @@
 #ifndef THD_COMMON_H_
 #define THD_COMMON_H_
 
-#include <thermald.h>
+#include "thermald.h"
 
 #endif /* THD_COMMON_H_ */

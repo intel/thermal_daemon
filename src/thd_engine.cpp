@@ -66,7 +66,8 @@ cthd_engine::~cthd_engine()
 
 void cthd_engine::thd_engine_thread()
 {
-	unsigned int n, i;
+	unsigned int i;
+	int n;
 
 	thd_log_info("thd_engine_thread begin\n");
 	for(;;)
@@ -142,7 +143,7 @@ void cthd_engine::thd_engine_thread()
 
 bool cthd_engine::set_preference(const int pref)
 {
-	return TRUE;
+	return true;
 }
 
 int cthd_engine::thd_engine_start(bool ignore_cpuid_check)
@@ -605,6 +606,7 @@ static supported_ids_t id_table[] = {
 
 int cthd_engine::check_cpu_id()
 {
+#ifndef ANDROID
 	// Copied from turbostat program
 	unsigned int ebx, ecx, edx, max_level;
 	unsigned int fms, family, model, stepping;
@@ -652,7 +654,7 @@ int cthd_engine::check_cpu_id()
 	{
 		thd_log_warn("No MSR supported on processor \n");
 	}
-
+#endif
 	return THD_SUCCESS;
 }
 

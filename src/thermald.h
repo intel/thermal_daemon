@@ -26,10 +26,6 @@
 
 #include <config.h>
 #include <stdio.h>
-#include <glib.h>
-#include <dbus/dbus.h>
-#include <dbus/dbus-glib-lowlevel.h>
-#include <dbus/dbus-glib.h>
 #include <getopt.h>
 #include <locale.h>
 #include <errno.h>
@@ -40,9 +36,16 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <string.h>
+#include <signal.h>
+
+#ifndef ANDROID
+#include <glib.h>
+#include <dbus/dbus.h>
+#include <dbus/dbus-glib-lowlevel.h>
+#include <dbus/dbus-glib.h>
 #include <glib/gi18n.h>
 #include <gmodule.h>
-#include <string.h>
 
 // Log macros
 #define thd_log_fatal		g_error		// Print error and terminate
@@ -51,6 +54,20 @@
 #define thd_log_debug		g_debug
 #define thd_log_info(...)	g_log(NULL, G_LOG_LEVEL_INFO, __VA_ARGS__)
 
+#else
+#define LOG_NDEBUG 1
+#undef LOG_TAG
+#define LOG_TAG "THERMALD"
+#include <utils/Log.h>
+#include <cutils/log.h>
+#include <cutils/properties.h>
+
+#define thd_log_fatal	ALOGE
+#define thd_log_error	ALOGE
+#define thd_log_warn	ALOGW
+#define thd_log_info	ALOGD
+#define thd_log_debug 	ALOGV
+#endif
 // Common return value defines
 #define THD_SUCCESS			0
 #define THD_ERROR			-1

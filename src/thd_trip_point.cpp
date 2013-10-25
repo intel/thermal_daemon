@@ -59,7 +59,7 @@ bool cthd_trip_point::thd_trip_point_check(unsigned int read_temp, int pref)
 	switch(pref)
 	{
 		case PREF_DISABLED:
-			return FALSE;
+			return false;
 			break;
 
 		case PREF_PERFORMANCE:
@@ -103,13 +103,13 @@ bool cthd_trip_point::thd_trip_point_check(unsigned int read_temp, int pref)
 		}
 	}
 	else
-		return FALSE;
+		return false;
 
 	if(on != 1 && off != 1)
-		return TRUE;
+		return true;
 
 	int i, ret;
-	thd_log_debug("cdev size for this trippoint %lu\n", cdevs.size());
+	thd_log_debug("cdev size for this trippoint %u\n", cdevs.size());
 	if(on > 0)
 	{
 		for(unsigned i = 0; i < cdevs.size(); ++i)
@@ -155,7 +155,7 @@ bool cthd_trip_point::thd_trip_point_check(unsigned int read_temp, int pref)
 		}
 	}
 
-	return TRUE;
+	return true;
 }
 
 void cthd_trip_point::thd_trip_point_add_cdev(cthd_cdev &cdev)

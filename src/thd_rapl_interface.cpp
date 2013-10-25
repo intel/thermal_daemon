@@ -201,7 +201,7 @@ double c_rapl_interface::get_power_unit()
 		return ret;
 	}
 
-	units = (double) 1/pow(2, value & 0xf);
+	units = (double) 1/pow(2.0, (int)value & 0xf);
 
 	if (units == 0.0)
 		return THD_ERROR;
@@ -221,7 +221,7 @@ double c_rapl_interface::get_energy_status_unit()
 		return ret;
 	}
 
-	units = (double)1/ pow(2, (value & 0x1f00) >> 8);
+	units = (double)1/ pow(2.0, (int)(value & 0x1f00) >> 8);
 
 	if (units == 0.0)
 		return THD_ERROR;
@@ -242,7 +242,7 @@ double c_rapl_interface::get_time_unit()
 		return ret;
 	}
 
-	units = (double)1 / pow(2, (value & 0xf0000) >> 16);
+	units = (double)1 / pow(2.0, (int)(value & 0xf0000) >> 16);
 
 	if (units == 0.0)
 		return THD_ERROR;
@@ -365,7 +365,11 @@ bits 23:22. “Time_Unit” is specified by the “Time Units” field of MSR_RA
 	RAPL_DBG_PRINT("Try Limit with power %X\n", (unsigned int)value);
 
 	time_limit = time_window / time_units;
+#ifdef ANDROID
+	y = (int)log(time_limit) * 1.442695;
+#else
 	y = (int)log2(time_limit);
+#endif
 	z = 4 * (time_limit-(1<<y))/ (1<<y);
 	time_limit_int = ((y& 0x1f) | ((z&0x3)<<5));
 

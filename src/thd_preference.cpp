@@ -106,7 +106,7 @@ bool cthd_preference::set_preference(const char *pref_str)
 	std::ofstream fout(filename.str().c_str());
 	if(!fout.good())
 	{
-		return FALSE;
+		return false;
 	}
 	fout << pref;
 	fout.close();
@@ -119,7 +119,7 @@ bool cthd_preference::set_preference(const char *pref_str)
 	std::ofstream fout_save(filename_save.str().c_str());
 	if(!fout_save.good())
 	{
-		return FALSE;
+		return false;
 	}
 	fout_save << old_preference;
 	fout_save.close();
@@ -140,7 +140,7 @@ bool cthd_preference::set_preference(const char *pref_str)
 	thd_log_debug("old_preference %d new preference %d\n", old_preference,
 	preference);
 
-	return TRUE;
+	return true;
 }
 
 int cthd_preference::get_old_preference()

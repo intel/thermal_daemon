@@ -47,7 +47,7 @@ cthd_zone_dts::cthd_zone_dts(int index, std::string path, int package_id): cthd_
 int cthd_zone_dts::init()
 {
 	critical_temp = 0;
-	int temp;
+	int temp = 0;
 	bool found = false;
 
 	max_temp = 0;
