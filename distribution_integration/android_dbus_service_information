@@ -1,0 +1,24 @@
+Android Integration
+
+Thermald required dbus daemon.
+
+To start dbus daemon add the following to your init.rc.
+
+service dbus /system/bin/dbus-daemon --system --nofork
+    class main
+    socket dbus stream 660 root root
+    user root
+    group system inet
+
+To start thermald as a service
+service thermald /system/bin/thermald --dbus-enable
+    user root
+    group system
+    class main
+    disabled
+    oneshot
+
+By default it is disabled. So need explicit command somewhere:
+"start thermald"
+
+
