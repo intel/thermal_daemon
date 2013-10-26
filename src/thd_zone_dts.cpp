@@ -104,7 +104,18 @@ int cthd_zone_dts::init()
 		thd_log_error("DTS temperature path not found \n");
 		return THD_ERROR;
 	}
-	thd_log_debug("Core temp DTS :critical %d, max %d\n", critical_temp, max_temp);
+	thd_log_info("Core temp DTS :critical %d, max %d\n", critical_temp, max_temp);
+	if (critical_temp == 0)
+		critical_temp = def_critical_temp;
+	if (max_temp == 0)
+	{
+		max_temp = def_critical_temp - def_offset_from_critical;
+		thd_log_info("Force max temp to %d\n", max_temp);
+	} else if ((critical_temp - max_temp) < def_offset_from_critical)
+	{
+		max_temp = critical_temp - def_offset_from_critical;
+		thd_log_info("Buggy max temp: to close to critical %d\n", max_temp);
+	}
 
 	thd_model.set_max_temperature(max_temp);
 	prev_set_point = set_point = thd_model.get_set_point();
