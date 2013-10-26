@@ -218,7 +218,7 @@ skip_kobj:
 	pthread_attr_init(&thd_attr);
 	pthread_attr_setdetachstate(&thd_attr, PTHREAD_CREATE_DETACHED);
 	ret = pthread_create(&thd_engine, &thd_attr, cthd_engine_thread, (void*)this);
-#else 
+#else
 	{
 		pid_t childpid;
 

@@ -60,7 +60,7 @@ static volatile struct dummy dymmy_var;
 pid_t gettid(void)
 {
 	return syscall(__NR_gettid);
-} 
+}
 
 void cthd_topology::test_function(cthd_topology *obj)
 {
@@ -411,7 +411,7 @@ int cthd_topology::calibrate()
 	}
 
 	configuration_saved();
-	return 0; 
+	return 0;
 	// calibration process is done, it is possible that we can't do per cpu control
 }
 

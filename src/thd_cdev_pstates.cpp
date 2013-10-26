@@ -58,7 +58,7 @@ int cthd_cdev_pstates::init()
 	std::vector < std::string > _cpufreqs;
 	if(cdev_sysfs.exists("cpu0/cpufreq/scaling_available_frequencies"))
 	{
-		std::string p = 
+		std::string p =
 	"/sys/devices/system/cpu/cpu0/cpufreq/scaling_available_frequencies";
 
 		std::ifstream f(p.c_str(), std::fstream::in);

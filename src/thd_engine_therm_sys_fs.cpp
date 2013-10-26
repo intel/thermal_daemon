@@ -53,7 +53,7 @@ int cthd_engine_therm_sysfs::read_thermal_zones()
 	// Check for the presence of thermal zones
 	if(thd_sysfs.exists("thermal_zone"))
 	{
-		cthd_sysfs_zone *zone = new cthd_sysfs_zone(count, 
+		cthd_sysfs_zone *zone = new cthd_sysfs_zone(count,
 	"/sys/class/thermal/thermal_zone");
 		zone->set_zone_active();
 		zones.push_back(zone);
@@ -65,7 +65,7 @@ int cthd_engine_therm_sysfs::read_thermal_zones()
 		tzone << "thermal_zone" << i;
 		if(thd_sysfs.exists(tzone.str().c_str()))
 		{
-			cthd_sysfs_zone *zone = new cthd_sysfs_zone(count, 
+			cthd_sysfs_zone *zone = new cthd_sysfs_zone(count,
 	"/sys/class/thermal/thermal_zone");
 			zone->set_zone_active();
 			if(zone->zone_update() != THD_SUCCESS)
@@ -143,7 +143,7 @@ int cthd_engine_therm_sysfs::read_xml_thermal_zones()
 
 		for(int i = 0; i < parser.zone_count(); ++i)
 		{
-			cthd_sysfs_zone *zone = new cthd_sysfs_zone(count, 
+			cthd_sysfs_zone *zone = new cthd_sysfs_zone(count,
 	"/sys/class/thermal/thermal_zone/");
 			if(zone->zone_update() != THD_SUCCESS)
 			{

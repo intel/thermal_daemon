@@ -67,6 +67,9 @@ Use "sudo stop thermald" to stop
 -------------------------------------------
 
 Releases
+Release 1.04
+- Android and chrome os integration
+- Minor fixes for buggy max temp
 
 Release 1.03
 - Allow negative step increments while configuring via XML

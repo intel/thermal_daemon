@@ -41,7 +41,7 @@ protected:
 	int cpu_index;
 	int max_state;
 public:
-	cthd_cdev_pstate_msr(unsigned int _index, int _cpu_index): cthd_cdev(_index, 
+	cthd_cdev_pstate_msr(unsigned int _index, int _cpu_index): cthd_cdev(_index,
 	"/sys/devices/system/cpu/"), cpu_index(_cpu_index), max_state(0){}
 	int init();
 	void set_curr_state(int state, int arg);

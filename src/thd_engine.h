@@ -48,7 +48,7 @@ typedef enum
 // this daemon or it just complements, what is done in kernel
 typedef enum
 {
-	COMPLEMENTRY, EXCLUSIVE, 
+	COMPLEMENTRY, EXCLUSIVE,
 } control_mode_t;
 
 typedef struct

@@ -45,7 +45,7 @@ private:
 	int cpu_index;
 
 public:
-	cthd_cdev_pstates(unsigned int _index, int _cpu_index): cthd_cdev(_index, 
+	cthd_cdev_pstates(unsigned int _index, int _cpu_index): cthd_cdev(_index,
 	"/sys/devices/system/cpu/"), cpu_index(_cpu_index){}
 
 	int init();

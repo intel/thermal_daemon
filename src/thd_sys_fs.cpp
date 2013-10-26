@@ -167,7 +167,7 @@ bool csys_fs::exists(const std::string &path)
 bool csys_fs::exists()
 {
 	return csys_fs::exists("");
-} 
+}
 
 int csys_fs::read_symbolic_link_value(const std::string &path, char *buf, int
 	len)
