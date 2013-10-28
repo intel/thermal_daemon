@@ -37,7 +37,7 @@ temperature and applies compensation using available cooling methods.
 This daemon acts to cool the system under the following two modes:
 .P
 -Zero Configuration Mode
-.P 
+.P
 -User defined configuration mode
 
 .P
@@ -70,10 +70,10 @@ Cooling devices are used to cool the system. Each cooling device has a sys-fs pa
 Default cooling devices with Zero Configuration mode
 .P
 It is possible that some of these cooling devices are not present. In this case, it will use the next highest priority cooling device. Also, when the temperature can't be controlled by one cooling device, it selects the next in order.
- 
+
 .P
 CDEV_INTEL_RAPL_DRIVER
-RAPL (Running Average Power Limit) is the method used to control CPU performance in Intel CPUs. This is available only from Sandy Bridge and later micro-architectures. On older CPUs, RAPL interface is not present. This driver is not available in the upstream kernel yet. 
+RAPL (Running Average Power Limit) is the method used to control CPU performance in Intel CPUs. This is available only from Sandy Bridge and later micro-architectures. On older CPUs, RAPL interface is not present. This driver is not available in the upstream kernel yet.
 
 .P
 CDEV_MSR_RAPL

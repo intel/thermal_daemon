@@ -10,23 +10,23 @@ Prerequisites:
 		If none of the above available cpufreq to control P states.
 
 Building and executing on Fedora
-1. 
+1.
 Install
 
 	yum install automake
 	yum install gcc
 	yum install gcc-c++
 	yum install glib-devel
-	yum install dbus-glib-devel	
+	yum install dbus-glib-devel
 	yum install libxml2-devel
 
 2
 Build
 
-	./autogen.sh	
+	./autogen.sh
 	 ./configure prefix=/usr
 	make
-	sudo make install 
+	sudo make install
 
 3
 - start service
@@ -38,7 +38,7 @@ Build
 
 4. Terminate using DBUS I/F
 	sudo test/test_pref.sh
-		and select "TERMINATE" choice. 
+		and select "TERMINATE" choice.
 
 
 
@@ -54,10 +54,10 @@ Building on Ubuntu
 2
 Build
 
-	./autogen.sh	
+	./autogen.sh
 	 ./configure prefix=/usr
 	make
-	sudo make install 
+	sudo make install
 (It will give error for systemd configuration, but ignore)
 cp data/thermald.conf /etc/init/
 3.
@@ -105,7 +105,7 @@ version 0.9
 version 0.8
 - Fix RAPL PATH, which is submitted upstream
 - Handle case when there is no MSR access from user mode
-- Allow non Intel CPUs 
+- Allow non Intel CPUs
 
 version 0.7
 - Conditional per cpu control
@@ -147,7 +147,7 @@ Version 0.2
 - Use platform DMI UUID to index into configuration data. If there is no UUID match, falls back to thermal sysfs
 - Terminate interface
 - Takes over control from kernel thermal processing
-- Clean up of classes. 
+- Clean up of classes.
 
 
 Version 0.1

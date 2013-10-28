@@ -2,7 +2,7 @@ include $(GLIB_MAKEFILE)
 
 SUBDIRS = data
 
-ACLOCAL_AMFLAGS = 
+ACLOCAL_AMFLAGS =
 
 # Global C Flags
 AM_CFLAGS = ${DBUS_CFLAGS}

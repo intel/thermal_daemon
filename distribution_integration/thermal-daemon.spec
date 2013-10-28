@@ -44,11 +44,11 @@ make %{?_smp_mflags}
 %systemd_preun thermald.service
 
 %postun
-%systemd_postun_with_restart thermald.service 
+%systemd_postun_with_restart thermald.service
 
 %files
 %{_bindir}/thermald
-%config(noreplace) %{_sysconfdir}/dbus-1/system.d/org.freedesktop.thermald.conf 
+%config(noreplace) %{_sysconfdir}/dbus-1/system.d/org.freedesktop.thermald.conf
 %{_datadir}/dbus-1/system-services/org.freedesktop.thermald.service
 %config(noreplace) %{_sysconfdir}/thermald/thermal-conf.xml
 %config(noreplace) %{_sysconfdir}/thermald/thermal-cdev-order.xml

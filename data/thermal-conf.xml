@@ -28,7 +28,7 @@
 ]>
 
 <!-- 	EXAMPLE CONF FILE
- 	Motivation: How can it help
+Motivation: How can it help
 Configuration in this file is useful for the following cases:
 1. If there is no thermal sysfs data but has some some sensors
 and cooling devices.
@@ -63,7 +63,7 @@ Example below specifies
 <Name>Intel IvyBridge UltraBook SDV</Name>
 <uuid>dummy-C4850803-A624-C485-0803-A624C4850803</uuid>
 <Preference>PERFORMANCE</Preference>
-<!-- Either PERFORMANCE or QUIET 
+<!-- Either PERFORMANCE or QUIET
 <Preference>QUIET</Preference>
 -->
 	<ThermalZones>
