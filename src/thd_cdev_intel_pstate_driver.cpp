@@ -33,87 +33,77 @@
  * unit value is calculated using number of possible p states
  * . Each step reduces bye one p state.
  *  Contents of "/sys/devices/system/cpu/intel_pstate/"
-	max_perf_pct,  min_perf_pct,  no_turbo
+ max_perf_pct,  min_perf_pct,  no_turbo
  */
 
-void cthd_intel_p_state_cdev::set_curr_state(int state, int arg)
-{
+void cthd_intel_p_state_cdev::set_curr_state(int state, int arg) {
 	std::stringstream tc_state_dev;
 	int new_state;
 
 	tc_state_dev << "/max_perf_pct";
-	if(cdev_sysfs.exists(tc_state_dev.str()))
-	{
+	if (cdev_sysfs.exists(tc_state_dev.str())) {
 		std::stringstream state_str;
 		if (state == 0)
 			new_state = 100;
-		else
-		{
+		else {
 			new_state = 100 - (state + min_compensation) * unit_value;
 		}
 		state_str << new_state;
-		thd_log_debug("set cdev state index %d state %d percent %d\n", index, state, new_state);
+		thd_log_debug("set cdev state index %d state %d percent %d\n", index,
+				state, new_state);
+		if (new_state <= turbo_disable_percent)
+			set_turbo_disable_status(true);
+		else
+			set_turbo_disable_status(false);
 		if (cdev_sysfs.write(tc_state_dev.str(), state_str.str()) < 0)
 			curr_state = (state == 0) ? 0 : max_state;
 		else
 			curr_state = state;
-	}
-	else
+	} else
 		curr_state = (state == 0) ? 0 : max_state;
 }
 
-int cthd_intel_p_state_cdev::get_max_state()
-{
+void cthd_intel_p_state_cdev::set_turbo_disable_status(bool enable) {
+	std::stringstream tc_state_dev;
+
+	if (enable == turbo_status) {
+		return;
+	}
+	tc_state_dev << "/no_turbo";
+	if (enable) {
+		cdev_sysfs.write(tc_state_dev.str(), "1");
+		thd_log_info("turbo disabled \n");
+	} else {
+		cdev_sysfs.write(tc_state_dev.str(), "0");
+		thd_log_info("turbo enabled \n");
+	}
+	turbo_status = enable;
+}
+
+int cthd_intel_p_state_cdev::get_max_state() {
 	return max_state;
 }
 
-int cthd_intel_p_state_cdev::update()
-{
+int cthd_intel_p_state_cdev::update() {
 	std::stringstream tc_state_dev;
 
 	tc_state_dev << "/max_perf_pct";
-	if(cdev_sysfs.exists(tc_state_dev.str()))
-	{
+	if (cdev_sysfs.exists(tc_state_dev.str())) {
 		std::string state_str;
 		cdev_sysfs.read(tc_state_dev.str(), state_str);
 		std::istringstream(state_str) >> curr_state;
-	}
-	else {
+	} else {
 		return THD_ERROR;
 	}
-	highest_turbo_freq_state = msr.get_max_turbo_freq();
-	if (highest_turbo_freq_state == THD_ERROR)
-		goto default_settings;
-	lowest_turbo_freq_state = msr.get_min_turbo_freq();
-	if (lowest_turbo_freq_state == THD_ERROR)
-		goto default_settings;
-	lowest_freq_state = msr.get_min_freq();
-	if (lowest_freq_state == THD_ERROR)
-		goto default_settings;
-	max_state = highest_turbo_freq_state;
-	type_str = "intel_pstate_driver";
-	min_compensation = highest_turbo_freq_state - lowest_turbo_freq_state;
-	if (max_state > 0)
-	{
-		unit_value = 100 / max_state;
-		max_offset = 100 % max_state;
-	}
-
-	curr_state = max_state - curr_state/unit_value;
-	if (curr_state < 0)
-		curr_state = 0;
-	max_state = max_state/intel_pstate_limit_ratio;
-	thd_log_debug("cooling dev index:%d, curr_state:%d, max_state:%d, unit:%f, min_com:%d, type:%s\n", index, curr_state, max_state, unit_value, min_compensation, type_str.c_str());
-
-	return THD_SUCCESS;
-
-default_settings:
 	thd_log_info("Use Default pstate drv settings\n");
 	max_state = default_max_state;
 	min_compensation = 0;
 	unit_value = 100 / max_state;
 	curr_state = 0;
-	thd_log_debug("cooling dev index:%d, curr_state:%d, max_state:%d, unit:%f, min_com:%d, type:%s\n", index, curr_state, max_state, unit_value, min_compensation, type_str.c_str());
+	thd_log_debug(
+			"cooling dev index:%d, curr_state:%d, max_state:%d, unit:%f, min_com:%d, type:%s\n",
+			index, curr_state, max_state, unit_value, min_compensation,
+			type_str.c_str());
 
 	return THD_SUCCESS;
 }

@@ -25,16 +25,13 @@
 #include "thd_cdev_order_parser.h"
 #include "thd_sys_fs.h"
 
-cthd_cdev_order_parse::cthd_cdev_order_parse()
-	 :doc(NULL),
-	 root_element(NULL)
-{
+cthd_cdev_order_parse::cthd_cdev_order_parse() :
+		doc(NULL), root_element(NULL) {
 	std::string name = TDCONFDIR;
-	filename=name+"/""thermal-cdev-order.xml";
+	filename = name + "/" "thermal-cpu-cdev-order.xml";
 }
 
-int cthd_cdev_order_parse::parser_init()
-{
+int cthd_cdev_order_parse::parser_init() {
 
 	doc = xmlReadFile(filename.c_str(), NULL, 0);
 	if (doc == NULL) {
@@ -51,27 +48,26 @@ int cthd_cdev_order_parse::parser_init()
 	return THD_SUCCESS;
 }
 
-int cthd_cdev_order_parse::start_parse()
-{
+int cthd_cdev_order_parse::start_parse() {
 	parse(root_element, doc);
 
 	return THD_SUCCESS;
 }
 
-void cthd_cdev_order_parse::parser_deinit()
-{
+void cthd_cdev_order_parse::parser_deinit() {
 	xmlFreeDoc(doc);
 }
 
-int cthd_cdev_order_parse::parse_new_cdev(xmlNode * a_node, xmlDoc *doc)
-{
+int cthd_cdev_order_parse::parse_new_cdev(xmlNode * a_node, xmlDoc *doc) {
 	xmlNode *cur_node = NULL;
 	char *tmp_value;
 	for (cur_node = a_node; cur_node; cur_node = cur_node->next) {
 		if (cur_node->type == XML_ELEMENT_NODE) {
-			tmp_value = (char *)xmlNodeListGetString(doc, cur_node->xmlChildrenNode, 1);
+			tmp_value = (char *) xmlNodeListGetString(doc,
+					cur_node->xmlChildrenNode, 1);
 			if (tmp_value) {
-				thd_log_info("node type: Element, name: %s value: %s\n", cur_node->name, tmp_value);
+				thd_log_info("node type: Element, name: %s value: %s\n",
+						cur_node->name, tmp_value);
 				cdev_order_list.push_back(tmp_value);
 				xmlFree(tmp_value);
 			}
@@ -81,14 +77,12 @@ int cthd_cdev_order_parse::parse_new_cdev(xmlNode * a_node, xmlDoc *doc)
 	return THD_SUCCESS;
 }
 
-
-int cthd_cdev_order_parse::parse(xmlNode * a_node, xmlDoc *doc)
-{
+int cthd_cdev_order_parse::parse(xmlNode * a_node, xmlDoc *doc) {
 	xmlNode *cur_node = NULL;
 
 	for (cur_node = a_node; cur_node; cur_node = cur_node->next) {
 		if (cur_node->type == XML_ELEMENT_NODE) {
-			if (!strcmp((const char*)cur_node->name, "CoolingDeviceOrder")) {
+			if (!strcmp((const char*) cur_node->name, "CoolingDeviceOrder")) {
 				parse_new_cdev(cur_node->children, doc);
 			}
 		}
@@ -97,8 +91,7 @@ int cthd_cdev_order_parse::parse(xmlNode * a_node, xmlDoc *doc)
 	return THD_SUCCESS;
 }
 
-int cthd_cdev_order_parse::get_order_list(std::vector <std::string> &list)
-{
+int cthd_cdev_order_parse::get_order_list(std::vector<std::string> &list) {
 	list = cdev_order_list;
 	return 0;
 }

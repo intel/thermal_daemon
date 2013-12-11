@@ -32,30 +32,63 @@
 #include "thermald.h"
 #include "thd_trip_point.h"
 
+#define CDEV_DEF_BIT_MIN_STATE	0x0001
+#define CDEV_DEF_BIT_MAX_STATE	0x0002
+#define CDEV_DEF_BIT_STEP		0x0004
+#define CDEV_DEF_BIT_READ_BACK	0x0008
+#define CDEV_DEF_BIT_AUTO_DOWN	0x0010
+#define CDEV_DEF_BIT_PATH		0x0020
+#define CDEV_DEF_BIT_STATUS		0x0040
+#define CDEV_DEF_BIT_UNIT_VAL	0x0080
+#define CDEV_DEF_BIT_DEBOUNCE_VAL	0x0100
+#define CDEV_DEF_BIT_PID_PARAMS	0x0200
+
+#define SENSOR_DEF_BIT_PATH		0x0001
+#define SENSOR_DEF_BIT_ASYNC_CAPABLE		0x0002
+
+typedef struct {
+	double Kp;
+	double Ki;
+	double Kd;
+} pid_control_t;
+
+typedef struct {
+	unsigned int mask;
+	std::string name;
+	std::string path;
+	bool async_capable;
+} thermal_sensor_t;
+
+typedef struct {
+	std::string type;
+	int influence;
+	int sampling_period;
+} trip_cdev_t;
+
 typedef struct {
 	int temperature;
 	int hyst;
 	trip_point_type_t trip_pt_type;
-	int cool_dev_id;
-}trip_point_t;
+	trip_control_type_t control_type;
+	int influence;
+	std::string sensor_type;
+	std::vector<trip_cdev_t> cdev_trips;
+} trip_point_t;
 
 typedef struct {
-	float Kp;
-	float Ki;
-	float Kd;
-}pid_control_t;
+	std::string type;
+	std::vector<trip_point_t> trip_pts;
+} thermal_zone_t;
+
+typedef enum {
+	ABSOULUTE_VALUE, RELATIVE_PERCENTAGES
+} unit_value_t;
 
 typedef struct {
-	std::string name;
-	std::string path;
-	std::string relationship;
-	std::vector <trip_point_t> trip_pts;
-	bool		enable_pid;
-	pid_control_t pid;
-}thermal_zone_t;
-
-typedef struct {
+	bool status;
+	unsigned int mask; // Fields which are present in config
 	int index;
+	unit_value_t unit_val;
 	int min_state;
 	int max_state;
 	int inc_dec_step;
@@ -63,36 +96,58 @@ typedef struct {
 	bool auto_down_control;
 	std::string type_string;
 	std::string path_str;
-}cooling_dev_t;
+	int debounce_interval;
+	bool pid_enable;
+	pid_control_t pid;
+
+} cooling_dev_t;
 
 typedef struct {
 	std::string name;
 	std::string uuid;
 	std::string product_name;
 	int default_prefernce;
-	std::vector <thermal_zone_t> zones;
-	std::vector <cooling_dev_t> cooling_devs;
-}thermal_info_t;
+	std::vector<thermal_sensor_t> sensors;
+	std::vector<thermal_zone_t> zones;
+	std::vector<cooling_dev_t> cooling_devs;
+} thermal_info_t;
 
 class cthd_parse {
 private:
-	std::string	filename;
-	std::vector <thermal_info_t> thermal_info_list;
+	std::string filename;
+	std::vector<thermal_info_t> thermal_info_list;
 	int matched_thermal_info_index;
-	xmlDoc		*doc;
-	xmlNode		*root_element;
+	xmlDoc *doc;
+	xmlNode *root_element;
 
 	int parse(xmlNode * a_node, xmlDoc *doc);
-	int parse_pid_values(xmlNode * a_node, xmlDoc *doc, thermal_zone_t *info_ptr);
-	int parse_new_thermal_conf(xmlNode * a_node, xmlDoc *doc, thermal_info_t *info);
-	int parse_new_platform_info(xmlNode * a_node, xmlDoc *doc, thermal_info_t *info);
+	int parse_pid_values(xmlNode * a_node, xmlDoc *doc, pid_control_t *pid_ptr);
+	int parse_new_trip_cdev(xmlNode * a_node, xmlDoc *doc,
+			trip_cdev_t *trip_cdev);
+
+	int parse_new_thermal_conf(xmlNode * a_node, xmlDoc *doc,
+			thermal_info_t *info);
+	int parse_new_platform_info(xmlNode * a_node, xmlDoc *doc,
+			thermal_info_t *info);
 	int parse_new_zone(xmlNode * a_node, xmlDoc *doc, thermal_zone_t *info_ptr);
-	int parse_new_cooling_dev(xmlNode * a_node, xmlDoc *doc, cooling_dev_t *info_ptr);
-	int parse_new_trip_point(xmlNode * a_node, xmlDoc *doc, trip_point_t *trip_pt);
-	int parse_thermal_zones(xmlNode * a_node, xmlDoc *doc, thermal_info_t *info_ptr);
-	int parse_cooling_devs(xmlNode * a_node, xmlDoc *doc, thermal_info_t *info_ptr);
-	int parse_trip_points(xmlNode * a_node, xmlDoc *doc, thermal_zone_t *info_ptr);
+	int parse_new_cooling_dev(xmlNode * a_node, xmlDoc *doc,
+			cooling_dev_t *info_ptr);
+	int parse_new_trip_point(xmlNode * a_node, xmlDoc *doc,
+			trip_point_t *trip_pt);
+	int parse_thermal_zones(xmlNode * a_node, xmlDoc *doc,
+			thermal_info_t *info_ptr);
+	int parse_new_sensor(xmlNode * a_node, xmlDoc *doc,
+			thermal_sensor_t *info_ptr);
+	int parse_thermal_sensors(xmlNode * a_node, xmlDoc *doc,
+			thermal_info_t *info_ptr);
+	int parse_cooling_devs(xmlNode * a_node, xmlDoc *doc,
+			thermal_info_t *info_ptr);
+	int parse_trip_points(xmlNode * a_node, xmlDoc *doc,
+			thermal_zone_t *info_ptr);
 	int parse_new_platform(xmlNode * a_node, xmlDoc *doc, thermal_info_t *info);
+
+	void string_trim(std::string &str);
+	char *char_trim(char *trim);
 
 public:
 	cthd_parse();
@@ -101,16 +156,29 @@ public:
 	int start_parse();
 	void dump_thermal_conf();
 	bool platform_matched();
-	int zone_count() { return thermal_info_list[matched_thermal_info_index].zones.size();}
-	int cdev_count() { return thermal_info_list[matched_thermal_info_index].cooling_devs.size();}
+	int zone_count() {
+		return thermal_info_list[matched_thermal_info_index].zones.size();
+	}
+	int cdev_count() {
+		return thermal_info_list[matched_thermal_info_index].cooling_devs.size();
+	}
+
+	int sensor_count() {
+		return thermal_info_list[matched_thermal_info_index].sensors.size();
+	}
 
 	int set_default_preference();
 	int trip_count(unsigned int zone_index);
-	bool pid_status(int zone_index);
-	bool get_pid_values(int zone_index, int *Kp, int *Ki, int *Kd);
-	trip_point_t *get_trip_point(unsigned int zone_index, unsigned int trip_index);
+	bool pid_status(int cdev_index);
+	bool get_pid_values(int cdev_index, int *Kp, int *Ki, int *Kd);
+	trip_point_t *get_trip_point(unsigned int zone_index,
+			unsigned int trip_index);
 	cooling_dev_t *get_cool_dev_index(unsigned int cdev_index);
-	std::string get_sensor_path(int zone_index) {return thermal_info_list[matched_thermal_info_index].zones[zone_index].path;}
+	thermal_sensor_t *get_sensor_dev_index(unsigned int sensor_index);
+	thermal_zone_t *get_zone_dev_index(unsigned int zone_index);
+//	std::string get_sensor_path(int zone_index) {
+//		return thermal_info_list[matched_thermal_info_index].zones[zone_index].path;
+//	}
 };
 
 #endif

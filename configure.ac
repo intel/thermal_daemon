@@ -1,11 +1,11 @@
 AC_PREREQ(1.0)
 
 m4_define([td_major_version], [1])
-m4_define([td_minor_version], [0])
+m4_define([td_minor_version], [1])
 m4_define([td_version],
           [td_major_version.td_minor_version])
 
-AC_INIT([thermald], [td_version], [http://bugzilla.gnome.org/enter_bug_cgi?product=thermald], [thermald])
+AC_INIT([thermald], [td_version], [], [thermald])
 
 AC_CONFIG_AUX_DIR(build-aux)
 AC_CONFIG_HEADERS([config.h])

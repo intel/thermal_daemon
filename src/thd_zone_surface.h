@@ -1,8 +1,7 @@
 /*
- * thd_engine_therm_sys_fs.h: thermal engine class implementation
- *  for acpi style	sysfs control.
+ * thd_zone_surface.h: zone interface for external surface
  *
- * Copyright (C) 2012 Intel Corporation. All rights reserved.
+ * Copyright (C) 2013 Intel Corporation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License version
@@ -23,26 +22,26 @@
  *
  */
 
-#ifndef THD_ENGINE_THERM_SYSFS_H_
-#define THD_ENGINE_THERM_SYSFS_H_
+#ifndef THD_ZONE_SURFACE_H_
+#define THD_ZONE_SURFACE_H_
 
+#include "thd_zone_therm_sys_fs.h"
 #include "thd_engine.h"
 
-class cthd_engine_therm_sysfs: public cthd_engine
-{
+class cthd_zone_surface: public cthd_zone {
 private:
-	csys_fs thd_sysfs;
-	bool parser_init_done;
-
-	void parser_init();
-	int read_xml_thermal_zones();
-	int read_xml_cooling_device();
+	cthd_sensor *sensor;
 
 public:
-	cthd_engine_therm_sysfs();
-	int read_thermal_zones();
-	int read_cooling_devices();
+	static const int passive_trip_temp = 45000;
+	static const int passive_trip_hyst = 1000;
+	static const int surface_sampling_period = 12;
+
+	cthd_zone_surface(int count);
+
+	int read_trip_points();
+	int read_cdev_trip_points();
+	int zone_bind_sensors();
 };
 
-
-#endif /* THD_ENGINE_ZONE_CONTROL_H_ */
+#endif /* THD_ZONE_SURFACE_H_ */

@@ -27,15 +27,13 @@
 
 #include "thd_cdev.h"
 
-class cthd_sysfs_cdev: public cthd_cdev
-{
+class cthd_sysfs_cdev: public cthd_cdev {
 protected:
-	bool use_custom_cdevs;
-	std::string custom_path_str;
 
 public:
-	cthd_sysfs_cdev(unsigned int _index, std::string control_path): cthd_cdev
-	(_index, control_path), use_custom_cdevs(false){}
+	cthd_sysfs_cdev(unsigned int _index, std::string control_path) :
+			cthd_cdev(_index, control_path) {
+	}
 	virtual void set_curr_state(int state, int arg);
 	virtual int get_curr_state();
 	virtual int get_max_state();

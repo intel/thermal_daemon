@@ -24,55 +24,48 @@
 
 #include "thd_preference.h"
 
-cthd_preference::cthd_preference(): old_preference(0)
-{
+cthd_preference::cthd_preference() :
+		old_preference(0) {
 	std::stringstream filename;
 	filename << TDCONFDIR << "/" << "thd_preference.conf";
 	std::ifstream ifs(filename.str().c_str(), std::ifstream::in);
-	if(!ifs.good())
-	{
-		preference = PREF_PERFORMANCE;
-	}
-	else
-	{
-		//ifs.read(reinterpret_cast < char * > (&preference), sizeof(preference));
+	if (!ifs.good()) {
+		preference = PREF_ENERGY_CONSERVE;
+	} else {
 		ifs >> preference;
 	}
 	ifs.close();
 }
 
-std::string cthd_preference::int_pref_to_string(int pref)
-{
+std::string cthd_preference::int_pref_to_string(int pref) {
 	std::string perf_str;
 
-	switch(preference)
-	{
-		case PREF_PERFORMANCE:
-			perf_str = "PERFORMANCE";
-			break;
-		case PREF_ENERGY_CONSERVE:
-			perf_str = "ENERGY_CONSERVE";
-			break;
-		case PREF_DISABLED:
-			perf_str = "DISABLE";
-			break;
-		default:
-			perf_str = "INVALID";
-			break;
+	switch (preference) {
+	case PREF_PERFORMANCE:
+		perf_str = "PERFORMANCE";
+		break;
+	case PREF_ENERGY_CONSERVE:
+		perf_str = "ENERGY_CONSERVE";
+		break;
+	case PREF_DISABLED:
+		perf_str = "DISABLE";
+		break;
+	default:
+		perf_str = "INVALID";
+		break;
 	}
 
 	return perf_str;
 }
 
-int cthd_preference::string_pref_to_int(std::string &pref_str)
-{
+int cthd_preference::string_pref_to_int(std::string &pref_str) {
 	int pref;
 
-	if(pref_str == "PERFORMANCE")
+	if (pref_str == "PERFORMANCE")
 		pref = PREF_PERFORMANCE;
-	else if(pref_str == "ENERGY_CONSERVE")
+	else if (pref_str == "ENERGY_CONSERVE")
 		pref = PREF_ENERGY_CONSERVE;
-	else if(pref_str == "DISABLE")
+	else if (pref_str == "DISABLE")
 		pref = PREF_DISABLED;
 	else
 		pref = PREF_PERFORMANCE;
@@ -80,23 +73,31 @@ int cthd_preference::string_pref_to_int(std::string &pref_str)
 	return pref;
 }
 
-std::string cthd_preference::get_preference_str()
-{
+std::string cthd_preference::get_preference_str() {
 	return int_pref_to_string(preference);
 }
 
-const char *cthd_preference::get_preference_cstr()
-{
+const char *cthd_preference::get_preference_cstr() {
 	return int_pref_to_string(preference).c_str();
 }
 
-int cthd_preference::get_preference()
-{
+int cthd_preference::get_preference() {
 	return preference;
 }
 
-bool cthd_preference::set_preference(const char *pref_str)
-{
+void cthd_preference::refresh() {
+	std::stringstream filename;
+	filename << TDCONFDIR << "/" << "thd_preference.conf";
+	std::ifstream ifs(filename.str().c_str(), std::ifstream::in);
+	if (!ifs.good()) {
+		preference = PREF_ENERGY_CONSERVE;
+	} else {
+		ifs >> preference;
+	}
+	ifs.close();
+}
+
+bool cthd_preference::set_preference(const char *pref_str) {
 	std::string str(pref_str);
 	int pref = string_pref_to_int(str);
 
@@ -104,8 +105,7 @@ bool cthd_preference::set_preference(const char *pref_str)
 	filename << TDCONFDIR << "/" << "thd_preference.conf";
 
 	std::ofstream fout(filename.str().c_str());
-	if(!fout.good())
-	{
+	if (!fout.good()) {
 		return false;
 	}
 	fout << pref;
@@ -117,44 +117,35 @@ bool cthd_preference::set_preference(const char *pref_str)
 	filename_save << TDCONFDIR << "/" << "thd_preference.conf.save";
 
 	std::ofstream fout_save(filename_save.str().c_str());
-	if(!fout_save.good())
-	{
+	if (!fout_save.good()) {
 		return false;
 	}
 	fout_save << old_preference;
 	fout_save.close();
 
-
 	std::ifstream ifs(filename.str().c_str(), std::ifstream::in);
-	if(!ifs.good())
-	{
+	if (!ifs.good()) {
 		preference = PREF_PERFORMANCE;
-	}
-	else
-	{
+	} else {
 		//ifs.read(reinterpret_cast < char * > (&preference), sizeof(preference));
 		ifs >> preference;
 	}
 	ifs.close();
 
 	thd_log_debug("old_preference %d new preference %d\n", old_preference,
-	preference);
+			preference);
 
 	return true;
 }
 
-int cthd_preference::get_old_preference()
-{
+int cthd_preference::get_old_preference() {
 	std::stringstream filename;
 
 	filename << TDCONFDIR << "/" << "thd_preference.conf.save";
 	std::ifstream ifs(filename.str().c_str(), std::ifstream::in);
-	if(!ifs.good())
-	{
+	if (!ifs.good()) {
 		old_preference = PREF_PERFORMANCE;
-	}
-	else
-	{
+	} else {
 		//ifs.read(reinterpret_cast < char * > (&preference), sizeof(preference));
 		ifs >> old_preference;
 	}

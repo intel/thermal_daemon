@@ -35,36 +35,43 @@
 #include <sstream>
 #include <string>
 
-class csys_fs
-{
+class csys_fs {
 private:
 	std::string base_path;
 
 public:
-	csys_fs(): base_path(""){}
+	csys_fs() :
+			base_path("") {
+	}
 	;
-	csys_fs(const char *path): base_path(path){}
+	csys_fs(const char *path) :
+			base_path(path) {
+	}
 
 	/* write data to base path (dir) + provided path */
 	int write(const std::string &path, const std::string &buf);
 	int write(const std::string &path, unsigned int data);
-	int write(const std::string &path, unsigned int position, unsigned long long
-	data);
+	int write(const std::string &path, unsigned int position,
+			unsigned long long data);
 
 	/* read data from base path (dir) + provided path */
 	int read(const std::string &path, char *buf, int len);
 	int read(const std::string &path, std::string &buf);
 	int read(const std::string &path, unsigned int *ptr_val);
-	int read(const std::string &path, unsigned int position, char *buf, int len);
+	int read(const std::string &path, unsigned int position, char *buf,
+			int len);
 
-	const char *get_base_path()
-	{
+	const char *get_base_path() {
 		return base_path.c_str();
 	}
 	int read_symbolic_link_value(const std::string &path, char *buf, int len);
 
 	bool exists(const std::string &path);
 	bool exists();
+
+	void update_path(std::string path) {
+		base_path = path;
+	}
 };
 
 #endif /* THD_SYS_FS_H_ */

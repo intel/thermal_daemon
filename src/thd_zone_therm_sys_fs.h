@@ -27,25 +27,21 @@
 
 #include "thd_zone.h"
 
-class cthd_sysfs_zone: public cthd_zone
-{
+class cthd_sysfs_zone: public cthd_zone {
 private:
 	int trip_point_cnt;
-	bool using_custom_zone;
-	int read_xml_trip_points();
-	int read_xml_cdev_trip_points();
+	cthd_zone *zone;
 
 public:
 	static const int max_trip_points = 50;
 	static const int max_cool_devs = 50;
 
-	cthd_sysfs_zone(int count, std::string path): cthd_zone(count, path),
-	trip_point_cnt(0), using_custom_zone(false){}
+	cthd_sysfs_zone(int count, std::string path);
 
+	virtual int read_trip_points();
+	virtual int read_cdev_trip_points();
+	virtual int zone_bind_sensors();
 
-	int read_trip_points();
-	int read_cdev_trip_points();
-	void set_temp_sensor_path();
 };
 
 #endif /* THD_ZONE_THERM_SYS_FS_H_ */

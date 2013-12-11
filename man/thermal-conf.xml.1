@@ -1,0 +1,198 @@
+.\" thermal-conf.xml(1) manual page
+.\"
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\"
+.\" The GNU General Public License's references to "object code"
+.\" and "executables" are to be interpreted as the output of any
+.\" document formatting or typesetting system, including
+.\" intermediate and printed output.
+.\"
+.\" This manual is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public Licence along
+.\" with this manual; if not, write to the Free Software Foundation, Inc.,
+.\" 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+.\"
+.\" Copyright (C) 2012 Intel Corporation. All rights reserved.
+.\"
+.TH thermal-conf.xml "1" "11 Dec 2013"
+
+.SH NAME
+thermal-conf.xml \- Configuration file for thermal daemon
+.SH SYNOPSIS
+$(TDCONFDIR)/etc/thermald/thermal-conf.xml
+
+.SH DESCRIPTION
+.B thermal-conf.xml
+is a configuration file for the thermal daemon. It is used to configure thermal sensors, zone and cooling devices.The location of this file depends on the configuration option used during build time.
+.TP
+The terminology used in this file confirms to "Advanced Configuration and Power Interface Specification". The ACPI thermal model is based around conceptual platform regions called thermal zones that physically contain devices, thermal sensors, and cooling controls. For example of a thermal zone can be a CPU or a laptop cover. A zone can contain multiple sensors for monitoring temperature. A cooling device provides interface to reduce the temperature of a source device, which causes increase in the temperature. An example of a cooling device is a FAN or some Linux driver which can throttle the source device.
+.TP
+A thermal zone configuration includes one or more trip points. A trip point is a temperature at which a cooling device needs to be activated.
+.TP
+A cooling device can be either active or passive. An example of an active device is a FAN, which will not reduce performance at the cost of consuming more power and noise. A passive device uses performance throttling to control temperature. In addition to cooling devices present in the thermal sysfs, the following cooling devices are built into the thermald, which can be used as valid cooling device type:
+.TP
+	- rapl_controller
+.TP
+	- intel_pstate
+.TP
+	- cpufreq
+.TP
+The thermal sysfs under Linux (/sys/class/thermal) provides a way to represent per platform ACPI configuration. The kernel thermal governor uses this data to keep the platform thermals under control. But there are some limitations, which thermald tries to resolve. For example:
+.TP
+- If the ACPI data is not optimized or buggy. In this case thermal-conf.xml can be used to correct the behavior without change in BIOS.
+.TP
+- There may be thermal zones exposed by the thermal sysfs without associated cooling actions. In this case thermal conf.xml can be used to tie the cooling devices to those zones.
+.TP
+- The best cooling method may not be in the thermal sysfs. In this case thermal-conf.xml can be used to bind a zone to an external cooling device.
+.TP
+- Specify thermal relationships. A zone can be influenced by multiple source devices with varying degrees. In this case thermal-conf.xml can be used to define the relative influence for apply compensation.
+
+.SH FILE FORMAT
+The configuration file format confirms to XML specifications. A set of tags defined to define platform, sensors, zones, cooling devices and trip points.
+.TP
+<ThermalConfiguration>
+.TP
+<Platform>
+.TP
+	<Name>Example Platform Name</Name>
+.TP
+	<!--UUID is optional, if present this will be matched. Both product name and UUID can contain wild card "*", which matches any platform.-->
+.TP
+	<UUID>Example UUID</UUID>
+.TP configuration file format confirms to XML specifications. A set of tags defined to define platform, sensors, zones,  cooling
+       devices and trip points.
+
+       <ThermalConfiguration>
+
+       <Platform>
+
+
+	<ProductName>Example Product Name</ProductName>
+.TP
+	<Preference>QUIET|PERFORMANCE</Preference>
+.TP
+	<!-Quiet mode will only use passive cooling device. "PERFORMANCE" will only select active devices .-->
+.TP
+	<ThermalSensors>
+.TP
+		<ThermalSensor>
+.TP
+			<!-- New Sensor with a type and path -->
+.TP
+			<Type>example_sensor_1</Type>
+.TP
+			<Path>/some_path</Path>
+.TP
+			<AsyncCapable>0</AsyncCapable>
+.TP
+		</ThermalSensor>
+.TP
+		<ThermalSensor>
+.TP
+			<!-- Already present in thermal sysfs, enable this or add/change config For example, here we are indicating that sensor can do async events to avoid polling
+			-->
+.TP
+			<Type>example_thermal_sysfs_sensor</Type>
+.TP
+			<!-- If async capable, then we don't need to poll -->
+.TP
+			<AsyncCapable>1</AsyncCapable>
+.TP
+		</ThermalSensor>
+.TP
+	</ThermalSensors>
+.TP
+	<ThermalZones>
+.TP
+		<ThermalZone>
+.TP
+			<Type>Example Zone type</Type>
+.TP
+			<TripPoints>
+.TP
+				<TripPoint>
+.TP
+					<SensorType>example_sensor_1</SensorType>
+.TP
+					<!-- Temperature at which to take action -->
+.TP
+					<Temperature> 75000 </Temperature>
+.TP
+					<!-- max/passive/active If a MAX type is specified, then daemon will use PID control to aggressively throttle to avoid reaching this temp.-->
+.TP
+					<type>max</type>
+.TP
+					<!-- SEQUENTIAL | PARALLEL. When a trip point temp is violated, then number of cooling devices can be activated. If control type is SEQUENTIAL then, it will exhaust first cooling device before trying next. -->
+.TP
+					<ControlType>SEQUENTIAL</ControlType>
+.TP
+					<CoolingDevice>
+.TP
+						<index>1</index>
+.TP
+						<type>example_cooling_device</type>
+.TP
+						<!-- Influence will be used order cooling devices. First cooling device will be used, which has highest influence. -->
+.TP
+						<influence> 100 </influence>
+.TP
+						<!-- Delay in using this cdev, this takes some time too actually cool a zone -->
+.TP
+						<SamplingPeriod> 12 </SamplingPeriod>
+.TP
+					</CoolingDevice>
+.TP
+				</TripPoint>
+.TP
+			</TripPoints>
+.TP
+		</ThermalZone>
+.TP
+	</ThermalZones>
+.TP
+	<CoolingDevices>
+.TP
+		<CoolingDevice>
+.TP
+			<!-- Cooling device can be specified by a type and optionally a sysfs path. If the type is already present in thermal sysfs, there is no need of a path. Compensation can use min/max and step size to increasing cool the system. Debounce period can be used to force a waiting period for action. -->
+.TP
+			<Type>example_cooling_device</Type>
+.TP
+			<MinState>0</MinState>
+.TP
+			<IncDecStep>10</IncDecStep>
+.TP
+			<ReadBack> 0 </ReadBack>
+.TP
+			<MaxState>50</MaxState>
+.TP
+			<DebouncePeriod>5000</DebouncePeriod>
+.TP
+			<!-- If there are no PID parameters, compensation increase step wise and exponentially (if single step is not able to change trend). Alternatively a PID parameters can be specified then next step will use PID calculation using provided PID constants. -->
+.TP
+			<PidControl>
+.TP
+				<kp>0.001</kp>
+.TP
+				<kd>0.0001</kd>
+.TP
+				<ki>0.0001</ki>
+.TP
+			</PidControl>
+.TP
+		</CoolingDevice>
+.TP
+	</CoolingDevices>
+.TP
+</Platform>
+.TP
+</ThermalConfiguration>
+.TP
+

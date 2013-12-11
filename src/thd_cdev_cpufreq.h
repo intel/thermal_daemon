@@ -1,6 +1,6 @@
 /*
- * src/thd_cdev_intel_pstate_turbo.h.h: thermal cooling class implementation
- *	using Turbo states using Intel P state driver
+ * thd_cdev_pstates.h: thermal cooling class interface
+ *
  * Copyright (C) 2012 Intel Corporation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or
@@ -21,23 +21,34 @@
  * Author Name <Srinivas.Pandruvada@linux.intel.com>
  *
  */
-#ifndef THD_CDEV_INTEL_PSTATE_TURBO_STATES_H_
-#define THD_CDEV_INTEL_PSTATE_TURBO_STATES_H_
 
+#ifndef THD_CDEV_PSTATES_H_
+#define THD_CDEV_PSTATES_H_
+
+#include <string>
+#include <vector>
 #include "thd_cdev.h"
-#include "thd_msr.h"
 
-class cthd_cdev_intel_pstate_turbo: public cthd_cdev
-{
+class cthd_cdev_cpufreq: public cthd_cdev {
 private:
 
+	int cpu_start_index;
+	int cpu_end_index;
+	std::vector<int> cpufreqs;
+	int pstate_active_freq_index;
+	int turbo_state;
+	std::string last_governor;
+	int cpu_index;
+
 public:
-	static const int turbo_states_cnt = 1;
-	cthd_cdev_intel_pstate_turbo(unsigned int _index, std::string control_path)
-			: cthd_cdev(_index, control_path) {}
+	cthd_cdev_cpufreq(unsigned int _index, int _cpu_index) :
+			cthd_cdev(_index, "/sys/devices/system/cpu/"), cpu_index(_cpu_index) {
+	}
+
+	int init();
 	void set_curr_state(int state, int arg);
 	int get_max_state();
 	int update();
 };
 
-#endif /* THD_CDEV_TURBO_STATES_H_ */
+#endif /* THD_CDEV_PSTATES_H_ */

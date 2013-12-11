@@ -26,14 +26,12 @@
 #include "thd_common.h"
 #include <stdlib.h>
 
-int csys_fs::write(const std::string &path, const std::string &buf)
-{
+int csys_fs::write(const std::string &path, const std::string &buf) {
 	std::string p = base_path + path;
 	int fd = ::open(p.c_str(), O_WRONLY);
-	if(fd < 0)
-	{
+	if (fd < 0) {
 		thd_log_warn("sysfs write failed %s\n", path.c_str());
-		return  - errno;
+		return -errno;
 	}
 	int ret = ::write(fd, buf.c_str(), buf.size());
 	if (ret < 0)
@@ -44,19 +42,16 @@ int csys_fs::write(const std::string &path, const std::string &buf)
 }
 
 int csys_fs::write(const std::string &path, unsigned int position, unsigned
-	long long data)
-{
+long long data) {
 	std::string p = base_path + path;
 	int fd = ::open(p.c_str(), O_WRONLY);
-	if(fd < 0)
-	{
+	if (fd < 0) {
 		thd_log_warn("sysfs write failed %s\n", path.c_str());
-		return  - errno;
+		return -errno;
 	}
-	if(::lseek(fd, position, SEEK_CUR) ==  - 1)
-	{
+	if (::lseek(fd, position, SEEK_CUR) == -1) {
 		thd_log_warn("sysfs write failed %s\n", path.c_str());
-		return  - errno;
+		return -errno;
 	}
 	int ret = ::write(fd, &data, sizeof(data));
 	if (ret < 0)
@@ -66,21 +61,18 @@ int csys_fs::write(const std::string &path, unsigned int position, unsigned
 	return ret;
 }
 
-int csys_fs::write(const std::string &path, unsigned int data)
-{
+int csys_fs::write(const std::string &path, unsigned int data) {
 	std::ostringstream os;
 	os << data;
 	return csys_fs::write(path, os.str());
 }
 
-int csys_fs::read(const std::string &path, char *buf, int len)
-{
+int csys_fs::read(const std::string &path, char *buf, int len) {
 	std::string p = base_path + path;
 	int fd = ::open(p.c_str(), O_RDONLY);
-	if(fd < 0)
-	{
+	if (fd < 0) {
 		thd_log_warn("sysfs read failed %s\n", path.c_str());
-		return  - errno;
+		return -errno;
 	}
 	int ret = ::read(fd, buf, len);
 	if (ret < 0)
@@ -91,39 +83,34 @@ int csys_fs::read(const std::string &path, char *buf, int len)
 }
 
 int csys_fs::read(const std::string &path, unsigned int position, char *buf,
-	int len)
-{
+		int len) {
 	std::string p = base_path + path;
 	int fd = ::open(p.c_str(), O_RDONLY);
-	if(fd < 0)
-	{
+	if (fd < 0) {
 		thd_log_warn("sysfs read failed %s\n", path.c_str());
-		return  - errno;
+		return -errno;
 	}
-	if(::lseek(fd, position, SEEK_CUR) ==  - 1)
-	{
+	if (::lseek(fd, position, SEEK_CUR) == -1) {
 		thd_log_warn("sysfs read failed %s\n", path.c_str());
-		return  - errno;
+		return -errno;
 	}
 	int ret = ::read(fd, buf, len);
-	if(ret < 0)
+	if (ret < 0)
 		thd_log_warn("sysfs read failed %s\n", path.c_str());
 	close(fd);
 
 	return ret;
 }
 
-int csys_fs::read(const std::string &path, unsigned int *ptr_val)
-{
+int csys_fs::read(const std::string &path, unsigned int *ptr_val) {
 	std::string p = base_path + path;
 	char str[16];
 	int ret;
 
 	int fd = ::open(p.c_str(), O_RDONLY);
-	if(fd < 0)
-	{
+	if (fd < 0) {
 		thd_log_warn("sysfs read failed %s\n", path.c_str());
-		return  - errno;
+		return -errno;
 	}
 	ret = ::read(fd, str, sizeof(str));
 	if (ret > 0)
@@ -135,49 +122,42 @@ int csys_fs::read(const std::string &path, unsigned int *ptr_val)
 	return ret;
 }
 
-int csys_fs::read(const std::string &path, std::string &buf)
-{
+int csys_fs::read(const std::string &path, std::string &buf) {
 	std::string p = base_path + path;
 
 	std::ifstream f(p.c_str(), std::fstream::in);
-	if(f.fail())
-	{
+	if (f.fail()) {
 		thd_log_warn("sysfs read failed %s\n", path.c_str());
-		return  - EINVAL;
+		return -EINVAL;
 	}
 	int ret = 0;
 	f >> buf;
-	if(f.bad())
-	{
+	if (f.bad()) {
 		thd_log_warn("sysfs read failed %s\n", path.c_str());
-		ret =  - EIO;
+		ret = -EIO;
 	}
 	f.close();
 
 	return ret;
 }
 
-bool csys_fs::exists(const std::string &path)
-{
+bool csys_fs::exists(const std::string &path) {
 	struct stat s;
 
-	return (bool)(stat((base_path + path).c_str(), &s) == 0);
+	return (bool) (stat((base_path + path).c_str(), &s) == 0);
 }
 
-bool csys_fs::exists()
-{
+bool csys_fs::exists() {
 	return csys_fs::exists("");
 }
 
-int csys_fs::read_symbolic_link_value(const std::string &path, char *buf, int
-	len)
-{
+int csys_fs::read_symbolic_link_value(const std::string &path, char *buf,
+		int len) {
 	std::string p = base_path + path;
 	int ret = ::readlink(p.c_str(), buf, len);
-	if(ret < 0)
-	{
+	if (ret < 0) {
 		thd_log_warn("read_symbolic_link %s\n", path.c_str());
-		return  - errno;
+		return -errno;
 	}
 	buf[ret] = '\0';
 	return 0;

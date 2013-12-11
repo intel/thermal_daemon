@@ -25,56 +25,122 @@
 #ifndef THD_ZONE_H
 #define THD_ZONE_H
 
+#include <vector>
+
 #include "thd_common.h"
 #include "thd_sys_fs.h"
 #include "thd_preference.h"
 #include "thd_cdev.h"
 #include "thd_trip_point.h"
+#include "thd_sensor.h"
+#include "thd_model.h"
 
-#include <vector>
-
-typedef struct
-{
+typedef struct {
 	int zone;
 	int type;
 	unsigned int data;
 } thermal_zone_notify_t;
 
-class cthd_zone
-{
+// If the zone has multiple sensors, there are two possibilities
+// Either the are independent, means that each has own set of trip points
+// Or related. In this case one trip point. Here we take max of the sensor reading
+// and then apply trip
+typedef enum {
+	SENSOR_INDEPENDENT, SENSORS_CORELATED
+} sensor_relate_t;
+
+class cthd_zone {
 
 protected:
 	int index;
-	std::vector < cthd_trip_point > trip_points;
+	std::vector<cthd_trip_point> trip_points;
 	std::string temperature_sysfs_path;
 	csys_fs zone_sysfs;
 	unsigned int zone_temp;
 	bool zone_active;
+	bool zone_cdev_binded_status;
+	std::string type_str;
+	std::vector<cthd_sensor *> sensors;
+	sensor_relate_t sensor_rel;
+	cthd_model *thd_model;
+
+	virtual int zone_bind_sensors() = 0;
+	void thermal_zone_temp_change(int id, unsigned int temp, int pref);
 
 private:
-	void thermal_zone_temp_change();
 
 public:
-	cthd_zone(int _index, std::string control_path);
-	virtual ~cthd_zone(){}
+	cthd_zone(int _index, std::string control_path, sensor_relate_t rel =
+			SENSOR_INDEPENDENT);
+	virtual ~cthd_zone();
 	void zone_temperature_notification(int type, int data);
 	int zone_update();
 	virtual void update_zone_preference();
 	void zone_reset();
 
-	virtual unsigned int read_zone_temp();
 	virtual int read_trip_points() = 0;
 	virtual int read_cdev_trip_points() = 0;
-	virtual void set_temp_sensor_path() = 0;
+	virtual void read_zone_temp();
 
-	void set_zone_active()
-	{
+	int get_zone_index() {
+		return index;
+	}
+
+	void add_trip(cthd_trip_point &trip);
+
+	void set_zone_active() {
 		zone_active = true;
-	};
-	bool zone_active_status()
-	{
+	}
+	;
+	bool zone_active_status() {
 		return zone_active;
-	};
+	}
+
+	bool zone_cdev_binded() {
+		return zone_cdev_binded_status;
+	}
+
+	std::string get_zone_type() {
+		return type_str;
+	}
+
+	void set_zone_type(std::string type) {
+		type_str = type;
+	}
+
+	void bind_sensor(cthd_sensor *sensor) {
+		for (unsigned int i = 0; i < sensors.size(); ++i) {
+			if (sensors[i] == sensor)
+				return;
+		}
+		sensors.push_back(sensor);
+	}
+
+	unsigned int get_trip_count() {
+		return trip_points.size();
+	}
+
+	int update_max_temperature(int max_temp);
+
+	int bind_cooling_device(trip_point_type_t type, unsigned int trip_temp,
+			cthd_cdev *cdev);
+
+	void zone_dump() {
+		thd_log_info("Zone %d: %s, Active:%d Bind:%d Sensor_cnt:%lu\n", index,
+				type_str.c_str(), zone_active, zone_cdev_binded_status,
+				(unsigned long) sensors.size());
+		thd_log_info("..sensors.. \n");
+		for (unsigned int i = 0; i < sensors.size(); ++i) {
+			sensors[i]->sensor_dump();
+		}
+		thd_log_info("..trips.. \n");
+		for (unsigned int i = 0; i < trip_points.size(); ++i) {
+			trip_points[i].trip_dump();
+		}
+
+	}
+
+	;
 };
 
 #endif

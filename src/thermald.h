@@ -24,7 +24,6 @@
 #ifndef THD_THERMALD_H
 #define THD_THERMALD_H
 
-#include <config.h>
 #include <stdio.h>
 #include <getopt.h>
 #include <locale.h>
@@ -39,7 +38,24 @@
 #include <string.h>
 #include <signal.h>
 
-#ifndef ANDROID
+#include "config.h"
+
+#ifdef ANDROID
+#define LOG_NDEBUG 1
+#undef LOG_TAG
+#define LOG_TAG "THERMALD"
+#include <utils/Log.h>
+#include <cutils/log.h>
+#include <cutils/properties.h>
+
+#define thd_log_fatal	ALOGE
+#define thd_log_error	ALOGE
+#define thd_log_warn	ALOGW
+#define thd_log_info	ALOGD
+#define thd_log_debug 	ALOGV
+#else
+#define LOCKF_SUPPORT
+#ifdef GLIBC_SUPPORT
 #include <glib.h>
 #include <dbus/dbus.h>
 #include <dbus/dbus-glib-lowlevel.h>
@@ -53,20 +69,16 @@
 #define thd_log_warn		g_warning
 #define thd_log_debug		g_debug
 #define thd_log_info(...)	g_log(NULL, G_LOG_LEVEL_INFO, __VA_ARGS__)
-
 #else
-#define LOG_NDEBUG 1
-#undef LOG_TAG
-#define LOG_TAG "THERMALD"
-#include <utils/Log.h>
-#include <cutils/log.h>
-#include <cutils/properties.h>
-
-#define thd_log_fatal	ALOGE
-#define thd_log_error	ALOGE
-#define thd_log_warn	ALOGW
-#define thd_log_info	ALOGD
-#define thd_log_debug 	ALOGV
+static int dummy_printf(const char *__restrict __format, ...) {
+	return 0;
+}
+#define thd_log_fatal		printf
+#define thd_log_error		printf
+#define thd_log_warn		printf
+#define thd_log_debug		dummy_printf
+#define thd_log_info		printf
+#endif
 #endif
 // Common return value defines
 #define THD_SUCCESS			0

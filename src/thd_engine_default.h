@@ -1,7 +1,7 @@
 /*
- * thd_cdev_pstates.h: thermal cooling class interface
- *	using T states.
- * Copyright (C) 2012 Intel Corporation. All rights reserved.
+ * cthd_engine_defualt.cpp: Default thermal engine
+ *
+ * Copyright (C) 2013 Intel Corporation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License version
@@ -21,26 +21,31 @@
  * Author Name <Srinivas.Pandruvada@linux.intel.com>
  *
  */
-#ifndef THD_CDEV_TSTATES_H_
-#define THD_CDEV_TSTATES_H_
 
-#include "thd_cdev.h"
-#include "thd_msr.h"
+#ifndef THD_ENGINE_DEFAULT_H_
+#define THD_ENGINE_DEFAULT_H_
 
-class cthd_cdev_tstates: public cthd_cdev
-{
+#include "thd_engine.h"
+#include "thd_zone_surface.h"
+
+class cthd_engine_default: public cthd_engine {
 private:
-	int t_state_index;
-	cthd_msr msr;
-	int cpu_index;
+	int parser_init();
+	void parser_deinit();
+	int add_replace_cdev(cooling_dev_t *config);
+
+	bool parser_init_done;
 
 public:
-	static const int t_states_cnt = 7;
-	cthd_cdev_tstates(unsigned int _index, int _cpu_index): cthd_cdev(_index, ""),
-	cpu_index(_cpu_index){}
+	static const int power_clamp_reduction_percent = 5;
 
-	void set_curr_state(int state, int arg);
-	int get_max_state();
+	cthd_engine_default() :
+			cthd_engine(), parser_init_done(false) {
+	}
+	~cthd_engine_default();
+	int read_thermal_zones();
+	int read_cooling_devices();
+	int read_thermal_sensors();
 };
 
-#endif /* THD_CDEV_TSTATES_H_ */
+#endif /* THD_ENGINE_DEFAULT_H_ */

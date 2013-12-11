@@ -25,13 +25,10 @@
 #define THD_CDEV_RAPL_MSR_H_
 
 #include "thd_cdev.h"
-#include "thd_msr.h"
 #include "thd_rapl_interface.h"
 
-class cthd_cdev_rapl_msr: public cthd_cdev
-{
+class cthd_cdev_rapl_msr: public cthd_cdev {
 protected:
-	cthd_msr msr;
 	int max_state;
 	c_rapl_interface rapl;
 
@@ -46,8 +43,10 @@ public:
 	static const int rapl_low_limit_percent = 25;
 	static const int rapl_power_dec_percent = 5;
 
-	cthd_cdev_rapl_msr(unsigned int _index, int _cpu_index): cthd_cdev(_index,
-	"/sys/devices/system/cpu/"), max_state(0), rapl(0), control_start(false){}
+	cthd_cdev_rapl_msr(unsigned int _index, int _cpu_index) :
+			cthd_cdev(_index, "/sys/devices/system/cpu/"), max_state(0), rapl(
+					0), control_start(false) {
+	}
 	void set_curr_state(int state, int arg);
 	int get_max_state();
 	virtual int update();

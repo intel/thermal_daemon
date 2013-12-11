@@ -31,75 +31,12 @@ thermald \- start Linux thermal daemon
 
 .SH DESCRIPTION
 .B thermald
-is a Linux daemon used to prevent the overheating of systems. This daemon monitors
+is a Linux daemon used to prevent the overheating of platforms. This daemon monitors
 temperature and applies compensation using available cooling methods.
 
-This daemon acts to cool the system under the following two modes:
-.P
--Zero Configuration Mode
-.P
--User defined configuration mode
-
-.P
-1. Zero Configuration Mode
-.P
-For most users, this should be enough to bring the CPU temperature of the system under control. These are the high level operations in this mode:
-.LP
-- Get a high enough temperature to apply cooling action (target temperature). This is exported using the IA32 target temperature in MSR (Machine Specific Register). This can be read from /sys/devices/platform/coretemp.0/tempX_max. It is possible that this value is not present in a platform. In that case, it uses a fixed offset from the critical temperature.
-.P
-- Read temperature either by polling or by event notifications (using x86 package temperature driver available from Linux kernel version 3.11). Rate of polling can be controlled by command line argument. Default is 4 seconds. Temperature can be read by using either coretemp sys-fs or hwmon on older system.
-.P
-- When the temperature is more than the target temperature, it will activate the cooling devices. There is a default order, hard-coded in the code, but it can be overridden by configuring “thermal-cdev-order.xml”.
-.P
-- Dynamically, it will change the temperature at which compensation is applied, to keep the system under the target temperature.
-.P
-- Also target temperature can be changed by sending messages via dbus. Refer to script “tools/thermald_set_pref.sh”in the thermal daemon source repository. It is basically sends
-“dbus-send --system --dest=org.freedesktop.thermald /org/freedesktop/thermald org.freedesktop.thermald.SetUserSetPoint string:your_temperature_value_in_milli_degree_celsius
-”
-.P
-
-2. User defined configuration
-.P
-In this mode, the daemon uses the configuration as defined in “thermal-conf.xml”. There can be multiple configurations in this file. It will pick a configuration which matches your system uuid (/sys/class/dmi/id/product_uuid or product_name). This configuration is similar to the ACPI style configuration at /sys/class/thermal. It has two parts: “Thermal Zones” and “Cooling devices”.
-.P
-Thermal zones are used to read temperature. A path for a temperature sensor can be configured here. Also, each thermal zone has trip points, which are triggered to activate  cooling devices. For example, it can be configured to “read temperature from a sensor sys-fs path and when the temperature exceeds a trip point, activating a cooling device”.
-.P
-Cooling devices are used to cool the system. Each cooling device has a sys-fs path, a minimum value and a maximum value. The current state value is incremented by 1 for each activation, but the compensation increment can also be configured. Every time the temperature is more than a trip point value, the state is incremented till it reaches the max state.
-.P
-
-Default cooling devices with Zero Configuration mode
-.P
-It is possible that some of these cooling devices are not present. In this case, it will use the next highest priority cooling device. Also, when the temperature can't be controlled by one cooling device, it selects the next in order.
-
-.P
-CDEV_INTEL_RAPL_DRIVER
-RAPL (Running Average Power Limit) is the method used to control CPU performance in Intel CPUs. This is available only from Sandy Bridge and later micro-architectures. On older CPUs, RAPL interface is not present. This driver is not available in the upstream kernel yet.
-
-.P
-CDEV_MSR_RAPL
-Till there is an upstream driver available to use RAPL interface, RAPL can use MSR (machine specific registers). But MSR access from user space requires CONFIG_X86_MSR configuration in kernel. There is a possibility that your system doesn't have MSR access from user space. In this case this method can't be used.
-
-.P
-CDEV_INTEL_PSTATE_DRIVER
-Intel P state driver is available from kernel version 3.9. This is a replacement for cpufreq driver to control system performance. If your system has this driver, this will be used.
-
-.P
-CDEV_POWER_CLAMP
-Intel power clamp is available in upstream kernel. It uses idle injection to CPUs to reduce performance. This driver is already available in the upstream Linux kernel.
-
-.P
-CDEV_MSR_TURBO_STATES
-CDEV_MSR_PSTATES_PARTIAL
-CDEV_TURBO_ON_OFF
-CDEV_MSR_PSTATES
-CDEV_T_STATES
-These cooling devices use MSRs to control performance. You need user space MSR access. So a kernel with CONFIG_X86_MSR is needed.
-
-.P
-CDEV_CPU_FREQ
-This uses cpufreq driver to limit the maximum frequency of operation. Even the older systems have this driver, so this can be used as a fall-back on most systems.
-
-
+By default, it monitors CPU temperature using available CPU digital temperature sensors and maintains CPU temperature under control, before HW takes aggressive correction action. If there is a skin temperature sensor in thermal sysfs, then it tries to keep skin temperature under 45C.
+.TP
+Optionally thermal daemon can act as a primary thermal controller by using thermal sysfs or an comprehensive configuration using an XML configuration file (thermal-conf.xml). 
 
 .SH OPTIONS
 .TP
@@ -118,21 +55,16 @@ log severity: info level and up.
 .B \-\-loglevel=debug
 log severity: debug level and up: Max logging.
 .TP
-.B \-\-test-mode
-Test Mode only: Allow non root user.
-.TP
 .B \-\-poll-interval
 Poll interval in seconds: Poll for zone temperature changes.
-To disable polling, set to zero.
+To disable polling, set to zero. Polling can only be disabled, if available temperature sensors can notify temperature change asynchronously.
 .TP
 .B \-\-dbus-enable
 Enable Dbus.
 .TP
-.B \-\-ingore-cpuid-check
-Ignore CPU ID check.
-.TP
-.B \-\-use-thermal-sysfs
-Use thermal sysfs, default use digital temperature sensor
-and pre-compiled cooling devices in order.
-.TP
+.B \-\-exclusive-control
+Act as exclusive thermal controller. This will use user-space
+governor for thermal sysfs and take over control.
 
+.SH SEE ALSO
+thermal-conf.xml(1)

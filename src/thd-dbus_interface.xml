@@ -17,7 +17,8 @@
       <arg type="s" name="new_pref" direction="in"/>
     </method>
 
-    <method name="SetUserSetPoint">
+    <method name="SetUserMaxTemperature">
+      <arg type="s" name="zone_name" direction="in"/>
       <arg type="s" name="user_set_point_in_milli_degree_celsius" direction="in"/>
     </method>
 
@@ -27,11 +28,9 @@
     </method>
 
     <method name="Calibrate">
-      <arg type="s" name="calibrate" direction="in"/>
     </method>
 
     <method name="Terminate">
-      <arg type="s" name="terminate" direction="in"/>
     </method>
 
   </interface>

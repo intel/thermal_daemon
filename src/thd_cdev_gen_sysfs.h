@@ -1,7 +1,7 @@
 /*
- * thd_cdev_pstates.h: thermal cooling class interface
- *	using T states.
- * Copyright (C) 2012 Intel Corporation. All rights reserved.
+ * cthd_sysfs_gen_sysfs.h: thermal cooling class interface
+ *	for non thermal cdev sysfs
+ * Copyright (C) 2013 Intel Corporation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License version
@@ -21,32 +21,20 @@
  * Author Name <Srinivas.Pandruvada@linux.intel.com>
  *
  */
-#ifndef THD_CDEV_PSTATE_MSR_H_
-#define THD_CDEV_PSTATE_MSR_H_
+#ifndef THD_CDEV_GEN_SYSFS_H_
+#define THD_CDEV_GEN_SYSFS_H_
 
 #include "thd_cdev.h"
-#include "thd_msr.h"
 
-class cthd_cdev_pstate_msr: public cthd_cdev
-{
+class cthd_gen_sysfs_cdev: public cthd_cdev {
 protected:
-	cthd_msr msr;
-	int cpu_start_index;
-	int cpu_end_index;
-	std::string last_governor;
-	int highest_freq_state;
-	int lowest_freq_state;
-	int control_begin();
-	int control_end();
-	int cpu_index;
-	int max_state;
+
 public:
-	cthd_cdev_pstate_msr(unsigned int _index, int _cpu_index): cthd_cdev(_index,
-	"/sys/devices/system/cpu/"), cpu_index(_cpu_index), max_state(0){}
-	int init();
-	void set_curr_state(int state, int arg);
-	int get_max_state();
+	cthd_gen_sysfs_cdev(unsigned int _index, std::string control_path) :
+			cthd_cdev(_index, control_path) {
+	}
+	virtual void set_curr_state(int state, int arg);
 	virtual int update();
 };
 
-#endif /* THD_CDEV_TSTATES_H_ */
+#endif /* THD_CDEV_GEN_SYSFS_H_ */

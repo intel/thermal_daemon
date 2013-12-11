@@ -26,8 +26,7 @@
 
 #include "thd_msr.h"
 
-class c_rapl_interface
-{
+class c_rapl_interface {
 private:
 	static const int def_sampling_interval = 1; //In seconds
 	unsigned char rapl_domains;
@@ -56,8 +55,8 @@ public:
 	double get_time_unit();
 
 	int get_pkg_energy_status(double *status);
-	int get_pkg_power_info(double *thermal_spec_power,
-			double *max_power, double *min_power, double *max_time_window);
+	int get_pkg_power_info(double *thermal_spec_power, double *max_power,
+			double *min_power, double *max_time_window);
 	int get_pkg_power_limit_msr(unsigned long long *value);
 	int set_pkg_power_limit_msr(unsigned long long value);
 
@@ -67,8 +66,8 @@ public:
 	int restore_pkg_power_limit();
 
 	int get_dram_energy_status(double *status);
-	int get_dram_power_info(double *thermal_spec_power,
-			double *max_power, double *min_power, double *max_time_window);
+	int get_dram_power_info(double *thermal_spec_power, double *max_power,
+			double *min_power, double *max_time_window);
 	int get_dram_power_limit(unsigned long long *value);
 	int set_dram_power_limit(unsigned long long value);
 

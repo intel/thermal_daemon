@@ -1,10 +1,15 @@
-Refer to thermal_daemon_usage.txt for details on thermal daemon operation.
+Use man pages to check command line arguments in configuration:
+	man thermald
+	man thermal-conf.xml
 
 Prerequisites:
 	Kernel
-		Need kernel with "Intel P State driver", to use Intel P state driver to cool the system.
-		Intel Power clamp driver: To use Idle injection to cool the system.
-		CONFIG_X86_MSR, so that x86 MSR can be read/write from user space to control P-States.
+		Prefers kernel with
+			Intel RAPL power capping driver : Available from Linux kernel 3.13.rc1
+			Intel P State driver (Available in Linux kernel stable release)
+			Intel Power clamp driver (Available in Linux kernel stable release)
+
+		CONFIG_X86_MSR, so that x86 MSR can be read/write from user space to control RAPL if no RAPL powecap class driver is not present.
 
 	Default
 		If none of the above available cpufreq to control P states.
@@ -67,6 +72,15 @@ Use "sudo stop thermald" to stop
 -------------------------------------------
 
 Releases
+
+Release 1.1
+- Use powercap Intel RAPL driver
+- Use skin temperature sensor by default if available
+- Specify thermal relationship
+- Clean up for MSR related controls as up stream kernel driver are capable now
+- Override capability of thermal sysfs for a specific sensor or zone
+- Friendly to new thermal sysfs
+
 Release 1.04
 - Android and chrome os integration
 - Minor fixes for buggy max temp

@@ -1,7 +1,7 @@
 /*
- * thd_cdev_pstates.cpp: thermal cooling class implementation
- *	using Turbo states
- * Copyright (C) 2012 Intel Corporation. All rights reserved.
+ * cthd_sysfs_gen_sysfs.cpp: thermal cooling class interface
+ *	for non thermal cdev sysfs
+ * Copyright (C) 2013 Intel Corporation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License version
@@ -21,26 +21,26 @@
  * Author Name <Srinivas.Pandruvada@linux.intel.com>
  *
  */
-#ifndef THD_CDEV_TURBO_STATES_H_
-#define THD_CDEV_TURBO_STATES_H_
 
-#include "thd_cdev.h"
-#include "thd_msr.h"
+#include "thd_cdev_gen_sysfs.h"
 
-class cthd_cdev_turbo_states: public cthd_cdev
-{
-private:
-	int t_state_index;
-	cthd_msr msr;
-	int cpu_index;
+int cthd_gen_sysfs_cdev::update() {
+	if (cdev_sysfs.exists()) {
+		std::string state_str;
+		cdev_sysfs.read("", state_str);
+		std::istringstream(state_str) >> curr_state;
+		min_state = max_state = curr_state;
+	} else
+		return THD_ERROR;
 
-public:
-	static const int turbo_states_cnt = 1;
-	cthd_cdev_turbo_states(unsigned int _index, int _cpu_index): cthd_cdev(_index,
-	""), cpu_index(_cpu_index){}
+	return THD_SUCCESS;
+}
 
-	void set_curr_state(int state, int arg);
-	int get_max_state();
-};
+void cthd_gen_sysfs_cdev::set_curr_state(int state, int arg) {
 
-#endif /* THD_CDEV_TURBO_STATES_H_ */
+	std::stringstream state_str;
+	state_str << state;
+	thd_log_debug("set cdev state index %d state %d\n", index, state);
+	cdev_sysfs.write("", state_str.str());
+	curr_state = state;
+}

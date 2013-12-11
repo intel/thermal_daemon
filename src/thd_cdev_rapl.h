@@ -25,10 +25,10 @@
 #ifndef THD_CDEV_RAPL_H_
 #define THD_CDEV_RAPL_H_
 
-#include "thd_cdev_therm_sys_fs.h"
+#include "thd_cdev.h"
+#include "thd_sys_fs.h"
 
-class cthd_sysfs_cdev_rapl: public cthd_sysfs_cdev
-{
+class cthd_sysfs_cdev_rapl: public cthd_cdev {
 private:
 	unsigned long phy_max;
 	int package_id;
@@ -41,12 +41,16 @@ public:
 	static const int rapl_low_limit_percent = 25;
 	static const int rapl_power_dec_percent = 5;
 
-	cthd_sysfs_cdev_rapl(unsigned int _index, std::string control_path, int package):
-		cthd_sysfs_cdev(_index, control_path), package_id(package), constraint_index(0) {}
+	cthd_sysfs_cdev_rapl(unsigned int _index, int package) :
+			cthd_cdev(_index,
+					"/sys/devices/virtual/powercap/intel-rapl/intel-rapl:0/"), package_id(
+					package), constraint_index(0) {
+	}
 	virtual void set_curr_state(int state, int arg);
 	virtual int get_curr_state();
 	virtual int get_max_state();
 	virtual int update();
+	virtual void set_curr_state_raw(int state, int arg);
 };
 
 #endif /* THD_CDEV_RAPL_H_ */

@@ -1,7 +1,7 @@
 /*
- * thd_cdev_pstates.h: thermal cooling class interface
+ * thd_zone_generic.h: zone interface for xml conf
  *
- * Copyright (C) 2012 Intel Corporation. All rights reserved.
+ * Copyright (C) 2013 Intel Corporation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License version
@@ -22,36 +22,25 @@
  *
  */
 
-#ifndef THD_CDEV_PSTATES_H_
-#define THD_CDEV_PSTATES_H_
+#ifndef THD_ZONE_GENERIC_H_
+#define THD_ZONE_GENERIC_H_
 
-#include <string>
-#include <vector>
-#include "thd_cdev.h"
-#include "thd_msr.h"
+#include "thd_zone.h"
 
-
-class cthd_cdev_pstates: public cthd_cdev
-{
+class cthd_zone_generic: public cthd_zone {
 private:
-
-	int cpu_start_index;
-	int cpu_end_index;
-	std::vector < int > cpufreqs;
-	int pstate_active_freq_index;
-	int turbo_state;
-	cthd_msr msr;
-	std::string last_governor;
-	int cpu_index;
+	int trip_point_cnt;
+	int config_index;
+	cthd_zone *zone;
+	std::vector<cthd_sensor *> sensor_list;
 
 public:
-	cthd_cdev_pstates(unsigned int _index, int _cpu_index): cthd_cdev(_index,
-	"/sys/devices/system/cpu/"), cpu_index(_cpu_index){}
 
-	int init();
-	void set_curr_state(int state, int arg);
-	int get_max_state();
-	int update();
+	cthd_zone_generic(int index, int _config_index, std::string type);
+
+	virtual int read_trip_points();
+	virtual int read_cdev_trip_points();
+	virtual int zone_bind_sensors();
 };
 
-#endif /* THD_CDEV_PSTATES_H_ */
+#endif /* THD_ZONE_GENERIC_H_ */

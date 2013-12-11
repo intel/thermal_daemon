@@ -1,420 +1,142 @@
-<?xml version="1.0"?><!DOCTYPE ThermalConfiguration [
-<!ELEMENT uuid (#PCDATA)>
-<!ELEMENT ProductName (#PCDATA)>
-<!ELEMENT Preference (#PCDATA)>
-<!ELEMENT Name (#PCDATA)>
-<!ELEMENT Sensor_path (#PCDATA)>
-<!ELEMENT Temperature (#PCDATA)>
-<!ELEMENT type (#PCDATA)>
-<!ELEMENT TripPoint (Temperature,CoolingDevice,type)>
-<!ELEMENT TripPoints (TripPoint)+>
-<!ELEMENT Kp (#PCDATA)>
-<!ELEMENT Ki (#PCDATA)>
-<!ELEMENT Kd (#PCDATA)>
-<!ELEMENT PidControl (Kp,Ki,Kd)>
-<!ELEMENT ThermalZone (Name,Sensor_path,TripPoints)>
-<!ELEMENT ThermalZones (ThermalZone)+>
-<!ELEMENT Index (#PCDATA)>
-<!ELEMENT Type (#PCDATA)>
-<!ELEMENT Path (#PCDATA)>
-<!ELEMENT MinState (#PCDATA)>
-<!ELEMENT MaxState (#PCDATA)>
-<!ELEMENT IncDecStep (#PCDATA)>
-<!ELEMENT AutoOffMode (#PCDATA)>
-<!ELEMENT CoolingDevice (#PCDATA|Index|Type|Path|MinState|MaxState)*>
-<!ELEMENT CoolingDevices (CoolingDevice)+>
-<!ELEMENT Platform (Name,uuid,Preference,ThermalZones,CoolingDevices)>
-<!ELEMENT ThermalConfiguration (Platform)+>
-]>
-
-<!-- 	EXAMPLE CONF FILE
-Motivation: How can it help
-Configuration in this file is useful for the following cases:
-1. If there is no thermal sysfs data but has some some sensors
-and cooling devices.
-2. Buggy ACPI provided data: For example has 0's in trip points
-or invalid trip points
-3. Non ACPI detectable sensor and cooling devices, so thermal zone
-information
-4. Specify ACPI passive cooling clock throttling constants
-
-Caveats:
-Using DMI UUID to identify a platform. What else can we use?
-WILL BE ENHANCING TILL SOME TIME! SO DTD IS NOT FINAL.
--->
+<?xml version="1.0"?>
 
 <!--
-Example below specifies
-- One platform thermal configuration data
-- Three temperature zones
-	Two temerature zones
-	One virtual temperature zone
-- 4 cooling devices
-	Two active cooling FAN type devices
-	one passive cooling using ACPI formula
-	one passive cooling with PID controller
+use "man thermal-conf.xml" for details
 -->
 
 <!-- BEGIN -->
-
-<!-- Thermal configuration -->
 <ThermalConfiguration>
 <Platform>
-<Name>Intel IvyBridge UltraBook SDV</Name>
-<uuid>dummy-C4850803-A624-C485-0803-A624C4850803</uuid>
-<Preference>PERFORMANCE</Preference>
-<!-- Either PERFORMANCE or QUIET
-<Preference>QUIET</Preference>
--->
-	<ThermalZones>
-		<!-- Thermal Zone 0 -->
-		<ThermalZone>
-			<Name>Zone0</Name>
-			<Sensor_path>/sys/class/thermal/thermal_zone0/temp</Sensor_path>
-			<TripPoints>
-				<TripPoint>
-					<Temperature>50000</Temperature>
-					<CoolingDevice>9</CoolingDevice>
-					<type>active</type>
-				</TripPoint>
-				<TripPoint>
-					<Temperature>60000</Temperature>
-					<CoolingDevice>8</CoolingDevice>
-					<type>active</type>
-				</TripPoint>
-				<TripPoint>
-					<Temperature>70000</Temperature>
-					<CoolingDevice>7</CoolingDevice>
-					<type>active</type>
-				</TripPoint>
-				<TripPoint>
-					<Temperature>75000</Temperature>
-					<CoolingDevice>6</CoolingDevice>
-					<type>active</type>
-				</TripPoint>
-				<TripPoint>
-					<Temperature>80000</Temperature>
-					<CoolingDevice>5</CoolingDevice>
-					<type>active</type>
-				</TripPoint>
-					<TripPoint>
-					<Temperature>85000</Temperature>
-					<CoolingDevice>4</CoolingDevice>
-					<type>active</type>
-				</TripPoint>
-				<TripPoint>
-					<Temperature>86000</Temperature>
-					<CoolingDevice>3</CoolingDevice>
-					<type>active</type>
-				</TripPoint>
-				<TripPoint>
-					<Temperature>90000</Temperature>
-					<CoolingDevice>2</CoolingDevice>
-					<type>active</type>
-				</TripPoint>
-				<TripPoint>
-					<Temperature>95000</Temperature>
-					<CoolingDevice>1</CoolingDevice>
-					<type>active</type>
-				</TripPoint>
-				<TripPoint>
-					<Temperature>98000</Temperature>
-					<CoolingDevice>0</CoolingDevice>
-					<type>active</type>
-				</TripPoint>
-				<TripPoint>
-					<Temperature>105000</Temperature>
-					<type>critical</type>
-				</TripPoint>
-			</TripPoints>
-		</ThermalZone>
-		<!-- Thermal Zone 1 -->
-		<ThermalZone>
-			<Name>Zone1</Name>
-			<Sensor_path>/sys/class/thermal/thermal_zone1/temp</Sensor_path>
-			<TripPoints>
-				<TripPoint>
-					<Temperature>95000</Temperature>
-					<CoolingDevice>13</CoolingDevice>
-					<type>passive</type>
-				</TripPoint>
-				<TripPoint>
-					<Temperature>95000</Temperature>
-					<CoolingDevice>12</CoolingDevice>
-					<type>passive</type>
-				</TripPoint>
-				<TripPoint>
-					<Temperature>95000</Temperature>
-					<CoolingDevice>11</CoolingDevice>
-					<type>passive</type>
-				</TripPoint>
-				<TripPoint>
-					<Temperature>95000</Temperature>
-					<CoolingDevice>10</CoolingDevice>
-					<type>passive</type>
-				<TripPoint>
-					<Temperature>105000</Temperature>
-					<type>critical</type>
-				</TripPoint>
-				</TripPoint>
-			</TripPoints>
-		</ThermalZone>
-	<!-- Thermal Zones End -->
-	</ThermalZones>
-	<!-- Cooling Devices Begin -->
-	<CoolingDevices>
-		<CoolingDevice>
-			<Index>0</Index>
-			<Type>Fan</Type>
-			<Path>/sys/class/thermal/cooling_device0/cur_state</Path>
-			<MinState>0</MinState>
-			<MaxState>1</MaxState>
-		</CoolingDevice>
-		<CoolingDevice>
-			<Index>1</Index>
-			<Type>Fan</Type>
-			<Path>/sys/class/thermal/cooling_device1/cur_state</Path>
-			<MinState>0</MinState>
-			<MaxState>1</MaxState>
-		</CoolingDevice>
-		<CoolingDevice>
-			<Index>2</Index>
-			<Type>Fan</Type>
-			<Path>/sys/class/thermal/cooling_device2/cur_state</Path>
-			<MinState>0</MinState>
-			<MaxState>1</MaxState>
-		</CoolingDevice>
-		<CoolingDevice>
-			<Index>3</Index>
-			<Type>Fan</Type>
-			<Path>/sys/class/thermal/cooling_device3/cur_state</Path>
-			<MinState>0</MinState>
-			<MaxState>1</MaxState>
-		</CoolingDevice>
-		<CoolingDevice>
-			<Index>4</Index>
-			<Type>Fan</Type>
-			<Path>/sys/class/thermal/cooling_device4/cur_state</Path>
-			<MinState>0</MinState>
-			<MaxState>1</MaxState>
-		</CoolingDevice>
-		<CoolingDevice>
-			<Index>5</Index>
-			<Type>Fan</Type>
-			<Path>/sys/class/thermal/cooling_device5/cur_state</Path>
-			<MinState>0</MinState>
-			<MaxState>1</MaxState>
-		</CoolingDevice>
-		<CoolingDevice>
-			<Index>6</Index>
-			<Type>Fan</Type>
-			<Path>/sys/class/thermal/cooling_device6/cur_state</Path>
-			<MinState>0</MinState>
-			<MaxState>1</MaxState>
-		</CoolingDevice>
-		<CoolingDevice>
-			<Index>7</Index>
-			<Type>Fan</Type>
-			<Path>/sys/class/thermal/cooling_device7/cur_state</Path>
-			<MinState>0</MinState>
-			<MaxState>1</MaxState>
-		</CoolingDevice>
-		<CoolingDevice>
-			<Index>8</Index>
-			<Type>Fan</Type>
-			<Path>/sys/class/thermal/cooling_device8/cur_state</Path>
-			<MinState>0</MinState>
-			<MaxState>1</MaxState>
-		</CoolingDevice>
-		<CoolingDevice>
-			<Index>9</Index>
-			<Type>Fan</Type>
-			<Path>/sys/class/thermal/cooling_device9/cur_state</Path>
-			<MinState>0</MinState>
-			<MaxState>1</MaxState>
-		</CoolingDevice>
-		<CoolingDevice>
-			<Index>10</Index>
-			<Type>Processor</Type>
-			<Path>/sys/class/thermal/cooling_device10/cur_state</Path>
-			<MinState>0</MinState>
-			<MaxState>17</MaxState>
-		</CoolingDevice>
-		<CoolingDevice>
-			<Index>11</Index>
-			<Type>Processor</Type>
-			<Path>/sys/class/thermal/cooling_device11/cur_state</Path>
-			<MinState>0</MinState>
-			<MaxState>17</MaxState>
-		</CoolingDevice>
-		<CoolingDevice>
-			<Index>12</Index>
-			<Type>Processor</Type>
-			<Path>/sys/class/thermal/cooling_device12/cur_state</Path>
-			<MinState>0</MinState>
-			<MaxState>17</MaxState>
-		</CoolingDevice>
-		<CoolingDevice>
-			<Index>13</Index>
-			<Type>Processor</Type>
-			<Path>/sys/class/thermal/cooling_device13/cur_state</Path>
-			<MinState>0</MinState>
-			<MaxState>17</MaxState>
-		</CoolingDevice>
-		<CoolingDevice>
-			<Index>14</Index>
-			<Type>LCD</Type>
-			<Path>/sys/class/thermal/cooling_device14/cur_state</Path>
-			<MinState>0</MinState>
-			<MaxState>16</MaxState>
-		</CoolingDevice>
-	<!-- Cooling Devices End -->
-	</CoolingDevices>
-</Platform>
-<Platform>
-	<Name>SandyBridge Platform</Name>
-	<uuid>dummy-001320F9-BE92-0013-20F9-BE92001320F9</uuid>
-	<Preference>PERFORMANCE</Preference>
-
-	<ThermalZones>
-		<ThermalZone>
-			<Name>Zone0</Name>
-			<Sensor_path>/sys/class/thermal/thermal_zone0/temp</Sensor_path>
-			<TripPoints>
-				<TripPoint>
-					<Temperature> 40000 </Temperature>
-					<CoolingDevice>4</CoolingDevice>
-					<type>active</type>
-				</TripPoint>
-				<TripPoint>
-					<Temperature> 45000 </Temperature>
-					<CoolingDevice>3</CoolingDevice>
-					<type>active</type>
-				</TripPoint>
-				<TripPoint>
-					<Temperature> 50000 </Temperature>
-					<CoolingDevice>2</CoolingDevice>
-					<type>active</type>
-				</TripPoint>
-				<TripPoint>
-					<Temperature> 55000 </Temperature>
-					<CoolingDevice>1</CoolingDevice>
-					<type>active</type>
-				</TripPoint>
-				<TripPoint>
-					<Temperature> 71000 </Temperature>
-					<CoolingDevice>0</CoolingDevice>
-					<type>active</type>
-				</TripPoint>
-			</TripPoints>
-		</ThermalZone>
-	</ThermalZones>
-	<CoolingDevices>
-		<CoolingDevice>
-			<Index>0</Index>
-			<Type>Fan</Type>
-			<Path>/sys/class/thermal/cooling_device0/cur_state</Path>
-			<MinState>0</MinState>
-			<MaxState>1</MaxState>
-		</CoolingDevice>
-		<CoolingDevice>
-			<Index>1</Index>
-			<Type>Fan</Type>
-			<Path>/sys/class/thermal/cooling_device1/cur_state</Path>
-			<MinState>0</MinState>
-			<MaxState>1</MaxState>
-		</CoolingDevice>
-		<CoolingDevice>
-			<Index>2</Index>
-			<Type>Fan</Type>
-			<Path>/sys/class/thermal/cooling_device2/cur_state</Path>
-			<MinState>0</MinState>
-			<MaxState>1</MaxState>
-		</CoolingDevice>
-		<CoolingDevice>
-			<Index>3</Index>
-			<Type>Fan</Type>
-			<Path>/sys/class/thermal/cooling_device3/cur_state</Path>
-			<MinState>0</MinState>
-			<MaxState>1</MaxState>
-		</CoolingDevice>
-		<CoolingDevice>
-			<Index>4</Index>
-			<Type>Fan</Type>
-			<Path>/sys/class/thermal/cooling_device4/cur_state</Path>
-			<MinState>0</MinState>
-			<MaxState>1</MaxState>
-		</CoolingDevice>
-	</CoolingDevices>
-</Platform>
-
-<!-- 	EXAMPLE CONF FILE
-Example using a non thermal zone temperature sysfs
--->
-<Platform>
-	<Name>Asus Ultrabook Platform</Name>
-	<uuid>_EFFDF494-6209-11E2-9E12-C48508924B5E</uuid>
-	<ProductName>_UX31A</ProductName>
+	<Name>Generic X86 Laptop Device</Name>
+	<ProductName>*</ProductName>
 	<Preference>QUIET</Preference>
 	<ThermalZones>
 		<ThermalZone>
-			<Name>Zone0</Name>
-			<Sensor_path>/sys/devices/platform/coretemp.0/temp1_input</Sensor_path>
+			<Type>SKIN</Type>
 			<TripPoints>
 				<TripPoint>
-					<Temperature> 80000 </Temperature>
-					<CoolingDevice>0</CoolingDevice>
+					<SensorType>TSKN</SensorType>
+					<Temperature>80000</Temperature>
 					<type>passive</type>
+					<ControlType>SEQUENTIAL</ControlType>
+					<CoolingDevice>
+						<index>1</index>
+						<type>rapl_controller</type>
+						<influence> 100 </influence>
+						<SamplingPeriod> 12 </SamplingPeriod>
+					</CoolingDevice>
+					<CoolingDevice>
+						<index>2</index>
+						<type>intel_powerclamp</type>
+						<influence> 100 </influence>
+						<SamplingPeriod> 12 </SamplingPeriod>
+					</CoolingDevice>
 				</TripPoint>
+			</TripPoints>
+		</ThermalZone>
+	</ThermalZones>
+</Platform>
+
+<!-- Thermal configuration example only -->
+<Platform>
+	<Name>Example Platform Name</Name>
+	<!--UUID is optional, if present this will be matched -->
+	<!-- Both product name and UUID can contain
+		wild card "*", which matches any platform
+	 -->
+	<UUID>Example UUID</UUID>
+	<ProductName>Example Product Name</ProductName>
+	<Preference>QUIET</Preference>
+	<ThermalSensors>
+		<ThermalSensor>
+			<!-- New Sensor with a type and path -->
+			<Type>example_sensor_1</Type>
+			<Path>/some_path</Path>
+			<AsyncCapable>0</AsyncCapable>
+		</ThermalSensor>
+		<ThermalSensor>
+			<!-- Already present in thermal sysfs,
+				enable this or add/change config
+				For example, here we are indicating that
+				sensor can do async events to avoid polling
+			-->
+			<Type>example_thermal_sysfs_sensor</Type>
+			<!-- If async capable, then we don't need to poll -->
+			<AsyncCapable>1</AsyncCapable>
+		</ThermalSensor>
+	</ThermalSensors>
+	<ThermalZones>
+		<ThermalZone>
+			<Type>Example Zone type</Type>
+			<TripPoints>
 				<TripPoint>
-					<Temperature> 80000 </Temperature>
-					<CoolingDevice>1</CoolingDevice>
-					<type>passive</type>
+					<SensorType>example_sensor_1</SensorType>
+					<!-- Temperature at which to take action -->
+					<Temperature> 75000 </Temperature>
+					<!-- max/passive/active
+						If a MAX type is specified, then
+						daemon will use PID control
+						to aggresively throttle to avoid
+						reaching this temp.
+					 -->
+					<type>max</type>
+					<!-- SEQUENTIAL | PARALLEL
+					When a trip point temp is violated, then
+					number of cooling device can be activated.
+					If control type is SEQUENTIAL then
+					It will exhaust first cooling device before trying
+					next.
+					-->
+					<ControlType>SEQUENTIAL</ControlType>
+					<CoolingDevice>
+						<index>1</index>
+						<type>example_cooling_device</type>
+						<!-- Influence will be used order cooling devices.
+							First cooling device will be used, which has
+							highest influence.
+						-->
+						<influence> 100 </influence>
+						<!-- Delay in using this cdev, this takes some time
+						too actually cool a zone
+						-->
+						<SamplingPeriod> 12 </SamplingPeriod>
+					</CoolingDevice>
 				</TripPoint>
+
 			</TripPoints>
 		</ThermalZone>
 	</ThermalZones>
 	<CoolingDevices>
 		<CoolingDevice>
-			<Index>0</Index>
-			<Type>RAPL</Type>
-			<Path>/sys/class/powercap/intel-rapl/intel-rapl:0/enabled</Path>
+			<!--
+				Cooling device can be specified
+				by a type and optionally a sysfs path
+				If the type already present in thermal sysfs
+				no need of a path.
+				Compensation can use min/max and step size
+				to increasing cool the system.
+				Debounce period can be used to force
+				a waiting period for action
+			-->
+			<Type>example_cooling_device</Type>
 			<MinState>0</MinState>
+			<IncDecStep>10</IncDecStep>
 			<ReadBack> 0 </ReadBack>
-			<MaxState>1</MaxState>
-		</CoolingDevice>
-		<CoolingDevice>
-			<Index>1</Index>
-			<Type>RAPL</Type>
-			<Path>/sys/class/powercap/intel-rapl/intel-rapl:0/constraint_0_power_limit_uw</Path>
-			<MinState>17000000</MinState>
-			<IncDecStep>-1000000</IncDecStep>
-			<MaxState>4000000</MaxState>
-		</CoolingDevice>
-		<CoolingDevice>
-			<Index>2</Index>
-			<Type>Intel_PState</Type>
-			<Path>/sys/devices/system/cpu/intel_pstate/max_perf_pct</Path>
-			<MinState>100</MinState>
-			<IncDecStep>-10</IncDecStep>
 			<MaxState>50</MaxState>
-		</CoolingDevice>
-		<CoolingDevice>
-			<Index>3</Index>
-			<Type>processor</Type>
-			<Path>/sys/class/thermal/cooling_device3/cur_state</Path>
-			<MinState>0</MinState>
-			<MaxState>10</MaxState>
-		</CoolingDevice>
-		<CoolingDevice>
-			<Index>4</Index>
-			<Type>intel_powerclamp</Type>
-			<Path>/sys/class/thermal/cooling_device4/cur_state</Path>
-			<MinState>0</MinState>
-			<IncDecStep>5</IncDecStep>
-			<ReadBack> 0 </ReadBack>
-			<AutoOffMode>1</AutoOffMode>
-			<MaxState>50</MaxState>
+			<DebouncePeriod>5000</DebouncePeriod>
+			<!--
+				If there are no PID parameter
+				compensation increase step wise and exponentaially
+				if single step is not able to change trend.
+				Alternatively a PID parameters can be specified
+				then next step will use PID calculation using
+				provided PID constants.
+			-->>
+			<PidControl>
+				<kp>0.001</kp>
+				<kd>0.0001</kd>
+				<ki>0.0001</ki>
+			</PidControl>
 		</CoolingDevice>
 	</CoolingDevices>
 </Platform>

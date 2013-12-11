@@ -25,9 +25,8 @@
 #include "thd_kobj_uevent.h"
 #include "thd_common.h"
 
-int cthd_kobj_uevent::kobj_uevent_open()
-{
-	memset(&nls,0,sizeof(struct sockaddr_nl));
+int cthd_kobj_uevent::kobj_uevent_open() {
+	memset(&nls, 0, sizeof(struct sockaddr_nl));
 
 	nls.nl_family = AF_NETLINK;
 	nls.nl_pid = getpid();
@@ -37,8 +36,7 @@ int cthd_kobj_uevent::kobj_uevent_open()
 	if (fd < 0)
 		return fd;
 
-	if (bind(fd, (struct sockaddr*)&nls, sizeof(struct sockaddr_nl)))
-	{
+	if (bind(fd, (struct sockaddr*) &nls, sizeof(struct sockaddr_nl))) {
 		thd_log_warn("kob_uevent bin failed \n");
 		close(fd);
 		return -1;
@@ -47,13 +45,11 @@ int cthd_kobj_uevent::kobj_uevent_open()
 	return fd;
 }
 
-void cthd_kobj_uevent::kobj_uevent_close()
-{
+void cthd_kobj_uevent::kobj_uevent_close() {
 	close(fd);
 }
 
-bool cthd_kobj_uevent::check_for_event()
-{
+bool cthd_kobj_uevent::check_for_event() {
 	int i = 0;
 	int len;
 	const char *dev_path = "DEVPATH=";
@@ -62,22 +58,20 @@ bool cthd_kobj_uevent::check_for_event()
 
 	len = recv(fd, buffer, sizeof(buffer), MSG_DONTWAIT);
 
-	while (i<len) {
-		if (strlen(buffer+i) > dev_path_len &&
-				!strncmp(buffer+i, dev_path, dev_path_len))
-		{
-			if (!strncmp(buffer+i+dev_path_len, device_path, strlen(device_path)))
-			{
+	while (i < len) {
+		if (strlen(buffer + i) > dev_path_len
+				&& !strncmp(buffer + i, dev_path, dev_path_len)) {
+			if (!strncmp(buffer + i + dev_path_len, device_path,
+					strlen(device_path))) {
 				return true;
 			}
 		}
-		i += strlen(buffer+i)+1;
+		i += strlen(buffer + i) + 1;
 	}
 
 	return false;
 }
 
-void cthd_kobj_uevent::register_dev_path(char *path)
-{
+void cthd_kobj_uevent::register_dev_path(char *path) {
 	strncpy(device_path, path, max_buffer_size);
 }

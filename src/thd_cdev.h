@@ -25,13 +25,13 @@
 #ifndef THD_CDEV_H
 #define THD_CDEV_H
 
+#include <time.h>
 #include "thd_common.h"
 #include "thd_sys_fs.h"
 #include "thd_preference.h"
-#include <time.h>
+#include "thd_pid.h"
 
-class cthd_cdev
-{
+class cthd_cdev {
 
 protected:
 	int index;
@@ -40,8 +40,7 @@ protected:
 	int max_state;
 	int min_state;
 	int curr_state;
-	unsigned int sensor_mask;
-	time_t last_op_time;
+	unsigned int zone_mask;
 	int curr_pow;
 	int base_pow_state;
 	int inc_dec_val;
@@ -49,83 +48,139 @@ protected:
 	bool read_back;
 
 	std::string type_str;
+	int debounce_interval;
+	time_t last_action_time;
+	bool trend_increase;
+	bool pid_enable;
+	cthd_pid pid_ctrl;
+	int last_state;
 
 private:
-	unsigned int int_2_pow(int pow)
-	{
+	unsigned int int_2_pow(int pow) {
 		int i;
 		int _pow = 1;
-		for(i = 0; i < pow; ++i)
+		for (i = 0; i < pow; ++i)
 			_pow = _pow * 2;
 		return _pow;
 	}
+	int thd_cdev_exponential_controller(int set_point, int target_temp,
+			int temperature, int state, int arg);
 
 public:
-	cthd_cdev(unsigned int _index, std::string control_path): index(_index),
-	cdev_sysfs(control_path.c_str()), trip_point(0), max_state(0), min_state(0),
-	curr_state(0), sensor_mask(0), last_op_time(0), curr_pow(0), base_pow_state
-	(0), inc_dec_val(1), auto_down_adjust(false), read_back(true) {}
+	static const int default_debounce_interval = 3; // In seconds
+	cthd_cdev(unsigned int _index, std::string control_path) :
+			index(_index), cdev_sysfs(control_path.c_str()), trip_point(0), max_state(
+					0), min_state(0), curr_state(0), zone_mask(0), curr_pow(0), base_pow_state(
+					0), inc_dec_val(1), auto_down_adjust(false), read_back(
+					true), debounce_interval(default_debounce_interval), last_action_time(
+					0), trend_increase(false), pid_enable(false), pid_ctrl(), last_state(
+					0) {
+	}
 
-	virtual ~cthd_cdev() {}
-	virtual int thd_cdev_set_state(int set_point, int temperature, int state, int arg);
-	virtual int thd_cdev_set_min_state(int arg);
+	virtual ~cthd_cdev() {
+	}
+	virtual int thd_cdev_set_state(int set_point, int target_temp,
+			int temperature, int state, int arg);
 
-	virtual int thd_cdev_get_index()
-	{
+	virtual int thd_cdev_set_min_state(int zone_id);
+
+	virtual void thd_cdev_set_min_state_param(int arg) {
+		min_state = arg;
+	}
+	virtual void thd_cdev_set_max_state_param(int arg) {
+		max_state = arg;
+	}
+	virtual void thd_cdev_set_read_back_param(bool arg) {
+		read_back = arg;
+	}
+	virtual int thd_cdev_get_index() {
 		return index;
 	}
 
-	virtual int init()
-	{
+	virtual int init() {
 		return 0;
-	};
-	virtual int control_begin()
-	{
+	}
+	;
+	virtual int control_begin() {
+		if (pid_enable) {
+			pid_ctrl.reset();
+		}
 		return 0;
-	};
-	virtual int control_end()
-	{
+	}
+	;
+	virtual int control_end() {
 		return 0;
-	};
-	virtual void set_curr_state(int state, int arg){}
-
-	virtual int get_curr_state()
-	{
+	}
+	;
+	virtual void set_curr_state(int state, int arg) {
+	}
+	virtual void set_curr_state_raw(int state, int arg) {
+		set_curr_state(state, arg);
+	}
+	virtual int get_curr_state() {
 		return curr_state;
 	}
 
-	virtual int get_max_state()
-	{
+	virtual int get_min_state() {
+		return min_state;
+	}
+
+	virtual int get_max_state() {
+		return max_state;
+	}
+	;
+	virtual int update() {
 		return 0;
-	};
-	virtual int update()
-	{
-		return 0;
-	};
-	virtual void set_inc_dec_value(int value)
-	{
+	}
+	;
+	virtual void set_inc_dec_value(int value) {
 		inc_dec_val = value;
 	}
-	virtual void set_down_adjust_control(bool value)
-	{
+	virtual void set_down_adjust_control(bool value) {
 		auto_down_adjust = value;
 	}
-	bool in_min_state()
-	{
-		if((min_state < max_state && get_curr_state() <= min_state) ||
-				(min_state > max_state && get_curr_state() >= min_state))
+	void set_debounce_interval(int interval) {
+		debounce_interval = interval;
+	}
+	bool in_min_state() {
+		if ((min_state < max_state && get_curr_state() <= min_state)
+				|| (min_state > max_state && get_curr_state() >= min_state))
 			return true;
 		return false;
 	}
 
-	bool in_max_state()
-	{
-		if((min_state < max_state && get_curr_state() >= get_max_state()) ||
-				(min_state > max_state && get_curr_state() <= get_max_state()))
+	bool in_max_state() {
+		if ((min_state < max_state && get_curr_state() >= get_max_state())
+				|| (min_state > max_state && get_curr_state() <= get_max_state()))
 			return true;
 		return false;
 	}
 
+	std::string get_cdev_type() {
+		return type_str;
+	}
+	std::string get_base_path() {
+		return cdev_sysfs.get_base_path();
+	}
+	void set_cdev_type(std::string _type_str) {
+		type_str = _type_str;
+	}
+	void set_pid_param(double kp, double ki, double kd) {
+		pid_ctrl.kp = kp;
+		pid_ctrl.ki = ki;
+		pid_ctrl.kd = kd;
+		thd_log_info("set_pid_param %d [%g.%g,%g]\n", index, kp, ki, kd);
+	}
+	void enable_pid() {
+		thd_log_info("PID control enabled %d\n", index);
+		pid_enable = true;
+	}
+
+	void cdev_dump() {
+		thd_log_info("%d: %s, C:%d MN: %d MX:%d ST:%d pt:%s rd_bk %d \n", index,
+				type_str.c_str(), curr_state, min_state, max_state, inc_dec_val,
+				get_base_path().c_str(), read_back);
+	}
 };
 
 #endif

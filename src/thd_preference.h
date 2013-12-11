@@ -32,13 +32,11 @@
 #include <iostream>
 #include <fstream>
 
-enum
-{
-	PREF_PERFORMANCE, PREF_ENERGY_CONSERVE, PREF_DISABLED
+enum {
+	PREF_ENERGY_CONSERVE, PREF_PERFORMANCE, PREF_DISABLED
 };
 
-class cthd_preference
-{
+class cthd_preference {
 private:
 	int preference;
 	int old_preference;
@@ -52,6 +50,7 @@ public:
 	const char *get_preference_cstr();
 	int get_preference();
 	int get_old_preference();
+	void refresh();
 
 };
 

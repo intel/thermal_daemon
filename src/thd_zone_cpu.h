@@ -27,15 +27,9 @@
 #define THD_ZONE_DTS_H
 
 #include "thd_zone.h"
-#include "thd_cdev_pstates.h"
-#include "thd_cdev_tstates.h"
-#include "thd_cdev_turbo_states.h"
-#include "thd_model.h"
-#include "thd_topology.h"
 #include <vector>
 
-class cthd_zone_dts: public cthd_zone
-{
+class cthd_zone_cpu: public cthd_zone {
 protected:
 	csys_fs dts_sysfs;
 	int critical_temp;
@@ -46,40 +40,26 @@ protected:
 	unsigned int sensor_mask;
 	int phy_package_id;
 
-	//cthd_cdev_pstates cdev_pstates;
-	cthd_topology topology;
-
-	cthd_model thd_model;
-	std::vector <std::string> sensor_sysfs;
+	std::vector<std::string> sensor_sysfs;
 
 	int init();
-	int update_trip_points();
-	int cpu_to_cdev_index(int _index)
-	{
-		return (4+_index * 4);
-	}
 
-	int update_thresholds(int thres_1, int thres_2);
 	int parse_cdev_order();
-	int check_for_package_temp_thermal_zone();
-	int set_package_temp_thermal_zone_thres(int zone, int thres_0, int thres_1);
-	int set_package_temp_zone_policy(int zone, std::string policy);
 	int pkg_thres_th_zone;
+	bool pkg_temp_poll_enable;
 
 public:
-	static const int max_dts_sensors = sizeof(unsigned int) *8;
+	static const int max_dts_sensors = 16;
 	static const int def_hystersis = 0;
 	static const int def_offset_from_critical = 10000;
 	static const int def_critical_temp = 100000;
 
-	cthd_zone_dts(int count, std::string path, int package_id);
-	int load_cdev_xml(cthd_trip_point &trip_pt, std::vector <std::string> &list);
+	cthd_zone_cpu(int count, std::string path, int package_id);
+	int load_cdev_xml(cthd_trip_point &trip_pt, std::vector<std::string> &list);
 
-	virtual void update_zone_preference();
 	virtual int read_trip_points();
 	int read_cdev_trip_points();
-	void set_temp_sensor_path();
-	virtual unsigned int read_zone_temp();
+	int zone_bind_sensors();
 
 };
 

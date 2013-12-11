@@ -26,7 +26,7 @@ dbusservice_DATA = org.freedesktop.thermald.conf
 
 tdconfigdir = $(tdconfdir)
 tdconfig_DATA = thermal-conf.xml \
-	thermal-cdev-order.xml
+	thermal-cpu-cdev-order.xml
 
 upstartconfdir = /etc/init
 upstartconf_DATA = thermald.conf

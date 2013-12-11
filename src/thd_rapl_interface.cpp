@@ -69,14 +69,9 @@
 #define PP1_DOMAIN_PRESENT	0x08
 
 c_rapl_interface::c_rapl_interface(int cpu) :
-	measurment_interval(def_sampling_interval),
-	first_cpu(cpu),
-	last_pkg_energy_status(0.0),
-	last_dram_energy_status(0.0),
-	last_pp0_energy_status(0.0),
-	last_pp1_energy_status(0.0),
-	default_pkg_power_limit_msr_value(0)
-{
+		measurment_interval(def_sampling_interval), first_cpu(cpu), last_pkg_energy_status(
+				0.0), last_dram_energy_status(0.0), last_pp0_energy_status(0.0), last_pp1_energy_status(
+				0.0), default_pkg_power_limit_msr_value(0) {
 	unsigned long long value;
 	int ret;
 
@@ -132,8 +127,7 @@ c_rapl_interface::c_rapl_interface(int cpu) :
 	RAPL_DBG_PRINT("RAPL Domain mask: %x\n", rapl_domains);
 }
 
-bool c_rapl_interface::pkg_domain_present()
-{
+bool c_rapl_interface::pkg_domain_present() {
 	if ((rapl_domains & PKG_DOMAIN_PRESENT)) {
 		return true;
 	}
@@ -141,8 +135,7 @@ bool c_rapl_interface::pkg_domain_present()
 	return false;
 }
 
-bool c_rapl_interface::dram_domain_present()
-{
+bool c_rapl_interface::dram_domain_present() {
 	if ((rapl_domains & DRAM_DOMAIN_PRESENT)) {
 		return true;
 	}
@@ -150,8 +143,7 @@ bool c_rapl_interface::dram_domain_present()
 	return false;
 }
 
-bool c_rapl_interface::pp0_domain_present()
-{
+bool c_rapl_interface::pp0_domain_present() {
 	if ((rapl_domains & PP0_DOMAIN_PRESENT)) {
 		return true;
 	}
@@ -159,8 +151,7 @@ bool c_rapl_interface::pp0_domain_present()
 	return false;
 }
 
-bool c_rapl_interface::pp1_domain_present()
-{
+bool c_rapl_interface::pp1_domain_present() {
 	if ((rapl_domains & PP1_DOMAIN_PRESENT)) {
 		return true;
 	}
@@ -168,20 +159,19 @@ bool c_rapl_interface::pp1_domain_present()
 	return false;
 }
 
-int c_rapl_interface::read_msr(int cpu, unsigned int idx, unsigned long long *val)
-{
+int c_rapl_interface::read_msr(int cpu, unsigned int idx,
+		unsigned long long *val) {
 	return msr.read_msr(cpu, idx, val);
 }
 
-int c_rapl_interface::write_msr(int cpu, unsigned int idx, unsigned long long val)
-{
-	RAPL_DBG_PRINT("write_msr %X\n", (unsigned int)val);
+int c_rapl_interface::write_msr(int cpu, unsigned int idx,
+		unsigned long long val) {
+	RAPL_DBG_PRINT("write_msr %X\n", (unsigned int) val);
 
 	return msr.write_msr(cpu, idx, val);
 }
 
-int c_rapl_interface::get_rapl_power_unit(unsigned long long *value)
-{
+int c_rapl_interface::get_rapl_power_unit(unsigned long long *value) {
 	int ret;
 
 	ret = read_msr(first_cpu, MSR_RAPL_POWER_UNIT, value);
@@ -189,19 +179,17 @@ int c_rapl_interface::get_rapl_power_unit(unsigned long long *value)
 	return ret;
 }
 
-double c_rapl_interface::get_power_unit()
-{
+double c_rapl_interface::get_power_unit() {
 	int ret;
 	unsigned long long value;
 	double units;
 
 	ret = get_rapl_power_unit(&value);
-	if(ret < 0)
-	{
+	if (ret < 0) {
 		return ret;
 	}
 
-	units = (double) 1/pow(2.0, (int)value & 0xf);
+	units = (double) 1 / pow(2.0, (int) value & 0xf);
 
 	if (units == 0.0)
 		return THD_ERROR;
@@ -209,19 +197,17 @@ double c_rapl_interface::get_power_unit()
 	return units;
 }
 
-double c_rapl_interface::get_energy_status_unit()
-{
+double c_rapl_interface::get_energy_status_unit() {
 	int ret;
 	unsigned long long value;
 	double units;
 
 	ret = get_rapl_power_unit(&value);
-	if(ret < 0)
-	{
+	if (ret < 0) {
 		return ret;
 	}
 
-	units = (double)1/ pow(2.0, (int)(value & 0x1f00) >> 8);
+	units = (double) 1 / pow(2.0, (int) (value & 0x1f00) >> 8);
 
 	if (units == 0.0)
 		return THD_ERROR;
@@ -230,19 +216,17 @@ double c_rapl_interface::get_energy_status_unit()
 
 }
 
-double c_rapl_interface::get_time_unit()
-{
+double c_rapl_interface::get_time_unit() {
 	int ret;
 	unsigned long long value;
 	double units;
 
 	ret = get_rapl_power_unit(&value);
-	if(ret < 0)
-	{
+	if (ret < 0) {
 		return ret;
 	}
 
-	units = (double)1 / pow(2.0, (int)(value & 0xf0000) >> 16);
+	units = (double) 1 / pow(2.0, (int) (value & 0xf0000) >> 16);
 
 	if (units == 0.0)
 		return THD_ERROR;
@@ -250,8 +234,7 @@ double c_rapl_interface::get_time_unit()
 	return units;
 }
 
-int c_rapl_interface::get_pkg_energy_status(double *status)
-{
+int c_rapl_interface::get_pkg_energy_status(double *status) {
 	int ret;
 	unsigned long long value;
 
@@ -260,8 +243,7 @@ int c_rapl_interface::get_pkg_energy_status(double *status)
 	}
 
 	ret = read_msr(first_cpu, MSR_PKG_ENERY_STATUS, &value);
-	if(ret < 0)
-	{
+	if (ret < 0) {
 		RAPL_ERROR_PRINT("get_pkg_energy_status failed\n");
 		return ret;
 	}
@@ -272,8 +254,7 @@ int c_rapl_interface::get_pkg_energy_status(double *status)
 }
 
 int c_rapl_interface::get_pkg_power_info(double *thermal_spec_power,
-			double *max_power, double *min_power, double *max_time_window)
-{
+		double *max_power, double *min_power, double *max_time_window) {
 	int ret;
 	unsigned long long value;
 
@@ -281,21 +262,19 @@ int c_rapl_interface::get_pkg_power_info(double *thermal_spec_power,
 		return -1;
 	}
 	ret = read_msr(first_cpu, MSR_PKG_POWER_INFO, &value);
-	if(ret < 0)
-	{
+	if (ret < 0) {
 		RAPL_ERROR_PRINT("get_pkg_power_info failed\n");
 		return ret;
 	}
-	*thermal_spec_power =  (value & 0x7FFF) * power_units;
-	*min_power =  ((value & 0x7FFF0000) >> 16) * power_units;
-	*max_power =  ((value & 0x7FFF00000000) >> 32) * power_units;
-	*max_time_window = ((value & 0x3f000000000000)>>48) * time_units;
+	*thermal_spec_power = (value & 0x7FFF) * power_units;
+	*min_power = ((value & 0x7FFF0000) >> 16) * power_units;
+	*max_power = ((value & 0x7FFF00000000) >> 32) * power_units;
+	*max_time_window = ((value & 0x3f000000000000) >> 48) * time_units;
 
 	return ret;
 }
 
-int c_rapl_interface::get_pkg_power_limit_msr(unsigned long long *value)
-{
+int c_rapl_interface::get_pkg_power_limit_msr(unsigned long long *value) {
 	int ret;
 
 	if (!pkg_domain_present()) {
@@ -303,8 +282,7 @@ int c_rapl_interface::get_pkg_power_limit_msr(unsigned long long *value)
 	}
 
 	ret = read_msr(first_cpu, MSR_PKG_POWER_LIMIT, value);
-	if(ret < 0)
-	{
+	if (ret < 0) {
 		RAPL_ERROR_PRINT("get_pkg_power_limit failed\n");
 		return ret;
 	}
@@ -312,18 +290,16 @@ int c_rapl_interface::get_pkg_power_limit_msr(unsigned long long *value)
 	return ret;
 }
 
-int c_rapl_interface::set_pkg_power_limit_msr(unsigned long long value)
-{
+int c_rapl_interface::set_pkg_power_limit_msr(unsigned long long value) {
 	int ret;
 
-	RAPL_DBG_PRINT("set_pkg_power_limit_msr %X\n", (unsigned int)value);
+	RAPL_DBG_PRINT("set_pkg_power_limit_msr %X\n", (unsigned int) value);
 	if (!pkg_domain_present()) {
 		return -1;
 	}
 
 	ret = write_msr(first_cpu, MSR_PKG_POWER_LIMIT, value);
-	if(ret < 0)
-	{
+	if (ret < 0) {
 		RAPL_ERROR_PRINT("set_pkg_power_limit failed\n");
 		return ret;
 	}
@@ -332,22 +308,21 @@ int c_rapl_interface::set_pkg_power_limit_msr(unsigned long long value)
 }
 
 // power is in milliwatts
-int c_rapl_interface::set_pkg_power_limit(int time_window, int power)
-{
-/*
-Package Power Limit #1(bits 14:0): Sets the average power usage limit of the package domain
-corresponding to time window # 1. The unit of this field is specified by the “Power Units” field of
-   MSR_RAPL_POWER_UNIT.
-• Enable Power Limit #1(bit 15): 0 = disabled; 1 = enabled.
-  •
-• Time Window for Power Limit #1 (bits 23:17): Indicates the time window for power limit #1
-Package Clamping Limitation #1 (bit 16): Allow going below OS-requested P/T state setting during time
-window specified by bits 23:17.
-Time limit = 2^Y * (1.0 + Z/4.0) * Time_Unit
-Here “Y” is the unsigned integer value represented. by bits 21:17, “Z” is an unsigned integer represented by
-bits 23:22. “Time_Unit” is specified by the “Time Units” field of MSR_RAPL_POWER_UNIT.
+int c_rapl_interface::set_pkg_power_limit(int time_window, int power) {
+	/*
+	 Package Power Limit #1(bits 14:0): Sets the average power usage limit of the package domain
+	 corresponding to time window # 1. The unit of this field is specified by the “Power Units” field of
+	 MSR_RAPL_POWER_UNIT.
+	 • Enable Power Limit #1(bit 15): 0 = disabled; 1 = enabled.
+	 •
+	 • Time Window for Power Limit #1 (bits 23:17): Indicates the time window for power limit #1
+	 Package Clamping Limitation #1 (bit 16): Allow going below OS-requested P/T state setting during time
+	 window specified by bits 23:17.
+	 Time limit = 2^Y * (1.0 + Z/4.0) * Time_Unit
+	 Here “Y” is the unsigned integer value represented. by bits 21:17, “Z” is an unsigned integer represented by
+	 bits 23:22. “Time_Unit” is specified by the “Time Units” field of MSR_RAPL_POWER_UNIT.
 
-*/
+	 */
 	unsigned long long value = default_pkg_power_limit_msr_value;
 	unsigned int power_limit_mask = 0x7fff;
 	unsigned int power_limit_en_bit = 0x8000;
@@ -357,32 +332,31 @@ bits 23:22. “Time_Unit” is specified by the “Time Units” field of MSR_RA
 	int time_limit_int;
 
 	RAPL_DBG_PRINT("set_pkg_power_limit tm %d %d \n", time_window, power);
-	power = (int) ((double)power / 1000 / power_units);
+	power = (int) ((double) power / 1000 / power_units);
 	RAPL_DBG_PRINT("power / power units %d \n", power);
 
-	value = (value & ~power_limit_mask) | power ;
+	value = (value & ~power_limit_mask) | power;
 	value |= (power_limit_en_bit | power_clamp_en_bit);
-	RAPL_DBG_PRINT("Try Limit with power %X\n", (unsigned int)value);
+	RAPL_DBG_PRINT("Try Limit with power %X\n", (unsigned int) value);
 
 	time_limit = time_window / time_units;
 #ifdef ANDROID
 	y = (int)log(time_limit) * 1.442695;
 #else
-	y = (int)log2(time_limit);
+	y = (int) log2(time_limit);
 #endif
-	z = 4 * (time_limit-(1<<y))/ (1<<y);
-	time_limit_int = ((y& 0x1f) | ((z&0x3)<<5));
+	z = 4 * (time_limit - (1 << y)) / (1 << y);
+	time_limit_int = ((y & 0x1f) | ((z & 0x3) << 5));
 
 	RAPL_DBG_PRINT("time_limit %g %d\n", time_limit, time_limit_int);
 	value &= ~0xFE0000;
-	value |= time_limit_int<<17;
-	RAPL_DBG_PRINT("Try new Limit %X\n", (unsigned int)value);
+	value |= time_limit_int << 17;
+	RAPL_DBG_PRINT("Try new Limit %X\n", (unsigned int) value);
 
 	return set_pkg_power_limit_msr(value);
 }
 
-int c_rapl_interface::store_pkg_power_limit()
-{
+int c_rapl_interface::store_pkg_power_limit() {
 	unsigned long long value;
 	int ret;
 
@@ -391,24 +365,23 @@ int c_rapl_interface::store_pkg_power_limit()
 		return ret;
 	default_pkg_power_limit_msr_value = value;
 
-	RAPL_DBG_PRINT("store: default_pkg_power_limit_msr_value %X\n", (unsigned int)default_pkg_power_limit_msr_value);
+	RAPL_DBG_PRINT("store: default_pkg_power_limit_msr_value %X\n",
+			(unsigned int) default_pkg_power_limit_msr_value);
 
 	return 0;
 }
 
-int c_rapl_interface::restore_pkg_power_limit()
-{
+int c_rapl_interface::restore_pkg_power_limit() {
 	if (default_pkg_power_limit_msr_value)
 		set_pkg_power_limit_msr(default_pkg_power_limit_msr_value);
 
-	RAPL_DBG_PRINT("restore: default_pkg_power_limit_msr_value %X\n", (unsigned int)default_pkg_power_limit_msr_value);
+	RAPL_DBG_PRINT("restore: default_pkg_power_limit_msr_value %X\n",
+			(unsigned int) default_pkg_power_limit_msr_value);
 
 	return 0;
 }
 
-
-int c_rapl_interface::get_dram_energy_status(double *status)
-{
+int c_rapl_interface::get_dram_energy_status(double *status) {
 	int ret;
 	unsigned long long value;
 
@@ -417,8 +390,7 @@ int c_rapl_interface::get_dram_energy_status(double *status)
 	}
 
 	ret = read_msr(first_cpu, MSR_DRAM_ENERY_STATUS, &value);
-	if(ret < 0)
-	{
+	if (ret < 0) {
 		RAPL_ERROR_PRINT("get_dram_energy_status failed\n");
 		return ret;
 	}
@@ -429,8 +401,7 @@ int c_rapl_interface::get_dram_energy_status(double *status)
 }
 
 int c_rapl_interface::get_dram_power_info(double *thermal_spec_power,
-			double *max_power, double *min_power, double *max_time_window)
-{
+		double *max_power, double *min_power, double *max_time_window) {
 	int ret;
 	unsigned long long value;
 
@@ -438,22 +409,20 @@ int c_rapl_interface::get_dram_power_info(double *thermal_spec_power,
 		return -1;
 	}
 	ret = read_msr(first_cpu, MSR_DRAM_POWER_INFO, &value);
-	if(ret < 0)
-	{
+	if (ret < 0) {
 		RAPL_ERROR_PRINT("get_dram_power_info failed\n");
 		return ret;
 	}
 
-	*thermal_spec_power =  (value & 0x7FFF) * power_units;
-	*min_power =  ((value & 0x7FFF0000) >> 16) * power_units;
-	*max_power =  ((value & 0x7FFF00000000) >> 32) * power_units;
-	*max_time_window = ((value & 0x3f000000000000)>>48) * time_units;
+	*thermal_spec_power = (value & 0x7FFF) * power_units;
+	*min_power = ((value & 0x7FFF0000) >> 16) * power_units;
+	*max_power = ((value & 0x7FFF00000000) >> 32) * power_units;
+	*max_time_window = ((value & 0x3f000000000000) >> 48) * time_units;
 
 	return ret;
 }
 
-int c_rapl_interface::get_dram_power_limit(unsigned long long *value)
-{
+int c_rapl_interface::get_dram_power_limit(unsigned long long *value) {
 	int ret;
 
 	if (!dram_domain_present()) {
@@ -461,8 +430,7 @@ int c_rapl_interface::get_dram_power_limit(unsigned long long *value)
 	}
 
 	ret = read_msr(first_cpu, MSR_DRAM_POWER_LIMIT, value);
-	if(ret < 0)
-	{
+	if (ret < 0) {
 		RAPL_ERROR_PRINT("get_dram_power_limit failed\n");
 		return ret;
 	}
@@ -470,8 +438,7 @@ int c_rapl_interface::get_dram_power_limit(unsigned long long *value)
 	return ret;
 }
 
-int c_rapl_interface::set_dram_power_limit(unsigned long long value)
-{
+int c_rapl_interface::set_dram_power_limit(unsigned long long value) {
 	int ret;
 
 	if (!dram_domain_present()) {
@@ -479,8 +446,7 @@ int c_rapl_interface::set_dram_power_limit(unsigned long long value)
 	}
 
 	ret = write_msr(first_cpu, MSR_DRAM_POWER_LIMIT, value);
-	if(ret < 0)
-	{
+	if (ret < 0) {
 		RAPL_ERROR_PRINT("set_dram_power_limit failed\n");
 		return ret;
 	}
@@ -488,8 +454,7 @@ int c_rapl_interface::set_dram_power_limit(unsigned long long value)
 	return ret;
 }
 
-int c_rapl_interface::get_pp0_energy_status(double *status)
-{
+int c_rapl_interface::get_pp0_energy_status(double *status) {
 	int ret;
 	unsigned long long value;
 
@@ -498,8 +463,7 @@ int c_rapl_interface::get_pp0_energy_status(double *status)
 	}
 
 	ret = read_msr(first_cpu, MSR_PP0_ENERY_STATUS, &value);
-	if(ret < 0)
-	{
+	if (ret < 0) {
 		RAPL_ERROR_PRINT("get_pp0_energy_status failed\n");
 		return ret;
 	}
@@ -509,8 +473,7 @@ int c_rapl_interface::get_pp0_energy_status(double *status)
 	return ret;
 }
 
-int c_rapl_interface::get_pp0_power_limit(unsigned long long *value)
-{
+int c_rapl_interface::get_pp0_power_limit(unsigned long long *value) {
 	int ret;
 
 	if (!pp0_domain_present()) {
@@ -518,8 +481,7 @@ int c_rapl_interface::get_pp0_power_limit(unsigned long long *value)
 	}
 
 	ret = read_msr(first_cpu, MSR_PP0_POWER_LIMIT, value);
-	if(ret < 0)
-	{
+	if (ret < 0) {
 		RAPL_ERROR_PRINT("get_pp0_power_limit failed\n");
 		return ret;
 	}
@@ -527,8 +489,7 @@ int c_rapl_interface::get_pp0_power_limit(unsigned long long *value)
 	return ret;
 }
 
-int c_rapl_interface::set_pp0_power_limit(unsigned long long value)
-{
+int c_rapl_interface::set_pp0_power_limit(unsigned long long value) {
 	int ret;
 
 	if (!pp0_domain_present()) {
@@ -536,8 +497,7 @@ int c_rapl_interface::set_pp0_power_limit(unsigned long long value)
 	}
 
 	ret = write_msr(first_cpu, MSR_PP0_POWER_LIMIT, value);
-	if(ret < 0)
-	{
+	if (ret < 0) {
 		RAPL_ERROR_PRINT("set_pp0_power_limit failed\n");
 		return ret;
 	}
@@ -545,8 +505,7 @@ int c_rapl_interface::set_pp0_power_limit(unsigned long long value)
 	return ret;
 }
 
-int c_rapl_interface::get_pp0_power_policy(unsigned int *pp0_power_policy)
-{
+int c_rapl_interface::get_pp0_power_policy(unsigned int *pp0_power_policy) {
 	int ret;
 	unsigned long long value;
 
@@ -555,19 +514,17 @@ int c_rapl_interface::get_pp0_power_policy(unsigned int *pp0_power_policy)
 	}
 
 	ret = read_msr(first_cpu, MSR_PP0_POLICY, &value);
-	if(ret < 0)
-	{
+	if (ret < 0) {
 		RAPL_ERROR_PRINT("get_pp0_power_policy failed\n");
 		return ret;
 	}
 
-	*pp0_power_policy =  value & 0x0f;
+	*pp0_power_policy = value & 0x0f;
 
 	return ret;
 }
 
-int c_rapl_interface::get_pp1_energy_status(double *status)
-{
+int c_rapl_interface::get_pp1_energy_status(double *status) {
 	int ret;
 	unsigned long long value;
 
@@ -576,8 +533,7 @@ int c_rapl_interface::get_pp1_energy_status(double *status)
 	}
 
 	ret = read_msr(first_cpu, MSR_PP1_ENERY_STATUS, &value);
-	if(ret < 0)
-	{
+	if (ret < 0) {
 		RAPL_ERROR_PRINT("get_pp1_energy_status failed\n");
 		return ret;
 	}
@@ -587,8 +543,7 @@ int c_rapl_interface::get_pp1_energy_status(double *status)
 	return ret;
 }
 
-int c_rapl_interface::get_pp1_power_limit(unsigned long long *value)
-{
+int c_rapl_interface::get_pp1_power_limit(unsigned long long *value) {
 	int ret;
 
 	if (!pp1_domain_present()) {
@@ -596,8 +551,7 @@ int c_rapl_interface::get_pp1_power_limit(unsigned long long *value)
 	}
 
 	ret = read_msr(first_cpu, MSR_PP1_POWER_LIMIT, value);
-	if(ret < 0)
-	{
+	if (ret < 0) {
 		RAPL_ERROR_PRINT("get_pp1_power_info failed\n");
 		return ret;
 	}
@@ -605,8 +559,7 @@ int c_rapl_interface::get_pp1_power_limit(unsigned long long *value)
 	return ret;
 }
 
-int c_rapl_interface::set_pp1_power_limit(unsigned long long value)
-{
+int c_rapl_interface::set_pp1_power_limit(unsigned long long value) {
 	int ret;
 
 	if (!pp1_domain_present()) {
@@ -614,8 +567,7 @@ int c_rapl_interface::set_pp1_power_limit(unsigned long long value)
 	}
 
 	ret = write_msr(first_cpu, MSR_PP1_POWER_LIMIT, value);
-	if(ret < 0)
-	{
+	if (ret < 0) {
 		RAPL_ERROR_PRINT("set_pp1_power_limit failed\n");
 		return ret;
 	}
@@ -623,8 +575,7 @@ int c_rapl_interface::set_pp1_power_limit(unsigned long long value)
 	return ret;
 }
 
-int c_rapl_interface::get_pp1_power_policy(unsigned int *pp1_power_policy)
-{
+int c_rapl_interface::get_pp1_power_policy(unsigned int *pp1_power_policy) {
 	int ret;
 	unsigned long long value;
 
@@ -633,19 +584,17 @@ int c_rapl_interface::get_pp1_power_policy(unsigned int *pp1_power_policy)
 	}
 
 	ret = read_msr(first_cpu, MSR_PP1_POLICY, &value);
-	if(ret < 0)
-	{
+	if (ret < 0) {
 		RAPL_ERROR_PRINT("get_pp1_power_policy failed\n");
 		return ret;
 	}
 
-	*pp1_power_policy =  value & 0x0f;
+	*pp1_power_policy = value & 0x0f;
 
 	return ret;
 }
 
-void c_rapl_interface::rapl_measure_energy()
-{
+void c_rapl_interface::rapl_measure_energy() {
 #ifdef RAPL_TEST_MODE
 	int ret;
 	double energy_status;
@@ -671,7 +620,7 @@ void c_rapl_interface::rapl_measure_energy()
 		if (pkg_domain_present()) {
 			ret = get_pkg_energy_status(&energy_status);
 			if (last_pkg_energy_status == 0)
-				last_pkg_energy_status = energy_status;
+			last_pkg_energy_status = energy_status;
 			if (ret > 0) {
 				pkg_joules = energy_status;
 				pkg_watts = (energy_status-last_pkg_energy_status)/measurment_interval;
@@ -681,8 +630,8 @@ void c_rapl_interface::rapl_measure_energy()
 		if (dram_domain_present()) {
 			ret = get_dram_energy_status(&energy_status);
 			if (last_dram_energy_status == 0)
-				last_dram_energy_status = energy_status;
-			if (ret > 0){
+			last_dram_energy_status = energy_status;
+			if (ret > 0) {
 				dram_joules = energy_status;
 				dram_watts = (energy_status-last_dram_energy_status)/measurment_interval;
 			}
@@ -691,8 +640,8 @@ void c_rapl_interface::rapl_measure_energy()
 		if (pp0_domain_present()) {
 			ret = get_pp0_energy_status(&energy_status);
 			if (last_pp0_energy_status == 0)
-				last_pp0_energy_status = energy_status;
-			if (ret > 0){
+			last_pp0_energy_status = energy_status;
+			if (ret > 0) {
 				pp0_joules = energy_status;
 				pp0_watts = (energy_status-last_pp0_energy_status)/measurment_interval;
 			}
@@ -701,8 +650,8 @@ void c_rapl_interface::rapl_measure_energy()
 		if (pp1_domain_present()) {
 			ret = get_pp1_energy_status(&energy_status);
 			if (last_pp1_energy_status == 0)
-				last_pp1_energy_status = energy_status;
-			if (ret > 0){
+			last_pp1_energy_status = energy_status;
+			if (ret > 0) {
 				pp1_joules = energy_status;
 				pp1_watts = (energy_status-last_pp1_energy_status)/measurment_interval;
 			}

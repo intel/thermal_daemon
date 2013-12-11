@@ -27,8 +27,7 @@
 #include "thd_common.h"
 #include "thd_sys_fs.h"
 
-class cthd_msr
-{
+class cthd_msr {
 private:
 	csys_fs msr_sysfs;
 	int no_of_cpus;

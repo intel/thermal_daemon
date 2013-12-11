@@ -22,22 +22,26 @@
  *
  */
 
+#ifndef _THD_MODEL_H
+#define _THD_MODEL_H
+
 #include "thermald.h"
 #include <vector>
 #include <time.h>
+#include <string>
 
-class cthd_model
-{
+class cthd_model {
 
 private:
 	static const int def_max_temperature = 100 * 1000;
-	static const unsigned int safety_margin = 1*1000;
+	static const unsigned int safety_margin = 1 * 1000;
 	static const int angle_increment = 1;
 	static const int def_setpoint_delay_cnt = 3;
 	static const int max_compensation = 5000;
 	static const unsigned int hot_zone_percent = 20; //20%
-	static const time_t set_point_delay_tm	= 4 * 3; // 12 seconds
+	static const time_t set_point_delay_tm = 4 * 3; // 12 seconds
 
+	std::string zone_type;
 	time_t trend_increase_start;
 	int max_temp;
 	int set_point;
@@ -65,26 +69,25 @@ private:
 	double kp, ki, kd, err_sum, last_err;
 	time_t last_time;
 
-
 public:
-	cthd_model(bool use_pid=false);
+	cthd_model(std::string _zone_type, bool use_pid = false);
 
 	void add_sample(int temperature);
 	void set_max_temperature(int temp);
 	bool update_user_set_max_temp();
 
-	unsigned int get_set_point()
-	{
+	unsigned int get_set_point() {
 		return set_point;
 	}
 
-	unsigned int get_hot_zone_trigger_point()
-	{
+	unsigned int get_hot_zone_trigger_point() {
 		return hot_zone;
 	}
 
-	bool is_set_point_reached()
-	{
+	bool is_set_point_reached() {
 		return (set_point_reached || updated_set_point);
-	};
+	}
+	;
 };
+
+#endif

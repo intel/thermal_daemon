@@ -33,10 +33,10 @@
 
 class cthd_cdev_order_parse {
 private:
-	xmlDoc		*doc;
-	xmlNode		*root_element;
-	std::string	filename;
-	std::vector <std::string> cdev_order_list;
+	xmlDoc *doc;
+	xmlNode *root_element;
+	std::string filename;
+	std::vector<std::string> cdev_order_list;
 
 	int parse(xmlNode * a_node, xmlDoc *doc);
 	int parse_new_cdev(xmlNode * a_node, xmlDoc *doc);
@@ -47,7 +47,7 @@ public:
 	void parser_deinit();
 
 	int start_parse();
-	int get_order_list(std::vector <std::string> &list);
+	int get_order_list(std::vector<std::string> &list);
 };
 
 #endif

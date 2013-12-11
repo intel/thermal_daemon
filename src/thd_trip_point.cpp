@@ -28,127 +28,144 @@
 #include "thd_engine.h"
 
 cthd_trip_point::cthd_trip_point(int _index, trip_point_type_t _type, unsigned
-	int _temp, unsigned int _hyst, int _arg): index(_index), type(_type), temp
-	(_temp), hyst(_hyst), control_type(PARALLEL), arg(_arg)
-{
-	thd_log_debug("Add trip pt %d:%d:%d\n", type, temp, hyst);
+int _temp, unsigned int _hyst, int _zone_id, int _sensor_id,
+		trip_control_type_t _control_type) :
+		index(_index), type(_type), temp(_temp), hyst(_hyst), control_type(
+				_control_type), zone_id(_zone_id), sensor_id(_sensor_id), trip_on(
+				false), poll_on(false) {
+	thd_log_debug("Add trip pt %d:%d:0x%x:%d:%d\n", type, zone_id, sensor_id,
+			temp, hyst);
 }
 
-bool cthd_trip_point::thd_trip_point_check(unsigned int read_temp, int pref)
-{
-	int on =  - 1;
-	int off =  - 1;
+bool cthd_trip_point::thd_trip_point_check(int id, unsigned int read_temp,
+		int pref, bool *reset) {
+	int on = -1;
+	int off = -1;
 	bool apply = false;
 
-	if(read_temp == 0)
-	{
+	*reset = false;
+
+	if (sensor_id != DEFAULT_SENSOR_ID && sensor_id != id)
+		return false;
+
+	if (read_temp == 0) {
 		thd_log_warn("TEMP == 0 pref: %d\n", pref);
 	}
 
-	if(type == CRITICAL)
-	{
-		if(read_temp >= temp)
-		{
+	if (type == CRITICAL) {
+		if (read_temp >= temp) {
 			thd_log_warn("critical temp reached \n");
 			sync();
 			reboot(RB_POWER_OFF);
 		}
 	}
 
-	thd_log_debug("pref %d type %d\n", pref, type);
-	switch(pref)
-	{
-		case PREF_DISABLED:
-			return false;
-			break;
-
-		case PREF_PERFORMANCE:
-			if(type == ACTIVE)
-			{
-				apply = true;
-				thd_log_debug("Active Trip point applicable \n");
+	if (type == POLLING && sensor_id != DEFAULT_SENSOR_ID) {
+		cthd_sensor *sensor = thd_engine->get_sensor(sensor_id);
+		if (sensor && sensor->check_async_capable()) {
+			if (!poll_on && read_temp >= temp) {
+				thd_log_debug("polling trip reached, on \n");
+				sensor->sensor_poll_trip(true);
+				poll_on = true;
+				sensor->set_threshold(0, temp);
+			} else if (poll_on && read_temp < temp) {
+				thd_log_debug("polling trip reached, off \n");
+				sensor->sensor_poll_trip(false);
+				thd_log_info("Dropped below poll threshold \n");
+				*reset = true;
+				poll_on = false;
+				sensor->set_threshold(0, temp);
 			}
-			break;
+		}
+		return true;
+	}
+	thd_log_debug("pref %d type %d temp %d trip %d \n", pref, type, read_temp,
+			temp);
+	switch (pref) {
+	case PREF_DISABLED:
+		return false;
+		break;
 
-		case PREF_ENERGY_CONSERVE:
-			if(type == PASSIVE)
-			{
-				apply = true;
-				thd_log_debug("Passive Trip point applicable \n");
-			}
-			break;
+	case PREF_PERFORMANCE:
+		if (type == ACTIVE || type == MAX) {
+			apply = true;
+			thd_log_debug("Active Trip point applicable \n");
+		}
+		break;
 
-		default:
-			break;
+	case PREF_ENERGY_CONSERVE:
+		if (type == PASSIVE || type == MAX) {
+			apply = true;
+			thd_log_debug("Passive Trip point applicable \n");
+		}
+		break;
+
+	default:
+		break;
 	}
 
-	// P state control are always affective
-	if(type == P_T_STATE)
-	{
-		apply = true;
-		thd_log_debug("P T states Trip point applicable \n");
-	}
-
-	if(apply)
-	{
-		if(read_temp >= temp)
-		{
+	if (apply) {
+		if (read_temp >= temp) {
 			thd_log_debug("Trip point applicable >  %d:%d \n", index, temp);
 			on = 1;
-		}
-		else if((read_temp + hyst) < temp)
-		{
-			thd_log_debug("Trip point applicable =<  %d:%d \n", index, temp);
+			trip_on = true;
+		} else if ((trip_on && (read_temp + hyst) < temp)
+				|| (!trip_on && read_temp < temp)) {
+			thd_log_debug("Trip point applicable <  %d:%d \n", index, temp);
 			off = 1;
+			trip_on = false;
 		}
-	}
-	else
+	} else
 		return false;
 
-	if(on != 1 && off != 1)
+	if (on != 1 && off != 1)
 		return true;
 
 	int i, ret;
-	thd_log_debug("cdev size for this trippoint %u\n", cdevs.size());
-	if(on > 0)
-	{
-		for(unsigned i = 0; i < cdevs.size(); ++i)
-		{
+	thd_log_debug("cdev size for this trippoint %lu\n", cdevs.size());
+	if (on > 0) {
+		for (unsigned i = 0; i < cdevs.size(); ++i) {
+			cthd_cdev *cdev = cdevs[i].cdev;
 
-			cthd_cdev *cdev = cdevs[i];
-			thd_log_debug("cdev at index %d\n", cdev->thd_cdev_get_index());
-			if(cdev->in_max_state())
-			{
+			if (cdevs[i].sampling_priod) {
+				time_t tm;
+				time(&tm);
+				if ((tm - cdevs[i].last_op_time) < cdevs[i].sampling_priod) {
+					thd_log_info("Too early to act index %d tm %ld\n",
+							cdev->thd_cdev_get_index(),
+							tm - cdevs[i].last_op_time);
+					continue;
+				}
+				cdevs[i].last_op_time = tm;
+			}
+			thd_log_debug("cdev at index %d:%s\n", cdev->thd_cdev_get_index(),
+					cdev->get_cdev_type().c_str());
+			if (cdev->in_max_state()) {
 				thd_log_debug("Need to switch to next cdev \n");
 				// No scope of control with this cdev
 				continue;
 			}
-			ret = cdev->thd_cdev_set_state(temp, read_temp, 1, arg);
-			if(control_type == SEQUENTIAL && ret == THD_SUCCESS)
-			{
+			ret = cdev->thd_cdev_set_state(temp, temp, read_temp, 1, zone_id);
+			if (control_type == SEQUENTIAL && ret == THD_SUCCESS) {
 				// Only one cdev activation
 				break;
 			}
 		}
 	}
 
-	if(off > 0)
-	{
-		for(i = cdevs.size() - 1; i >= 0; --i)
-		{
+	if (off > 0) {
+		for (i = cdevs.size() - 1; i >= 0; --i) {
 
-			cthd_cdev *cdev = cdevs[i];
-			thd_log_debug("cdev at index %d\n", cdev->thd_cdev_get_index());
-
-			if(cdev->in_min_state())
-			{
+			cthd_cdev *cdev = cdevs[i].cdev;
+			thd_log_debug("cdev at index %d:%s\n", cdev->thd_cdev_get_index(),
+					cdev->get_cdev_type().c_str());
+			if (cdev->in_min_state()) {
 				thd_log_debug("Need to switch to next cdev \n");
 				// No scope of control with this cdev
 				continue;
 			}
-			cdev->thd_cdev_set_state(temp, read_temp, 0, arg);
-			if(control_type == SEQUENTIAL)
-			{
+			cdev->thd_cdev_set_state(temp, temp, read_temp, 0, zone_id);
+			if (control_type == SEQUENTIAL) {
 				// Only one cdev activation
 				break;
 			}
@@ -158,38 +175,43 @@ bool cthd_trip_point::thd_trip_point_check(unsigned int read_temp, int pref)
 	return true;
 }
 
-void cthd_trip_point::thd_trip_point_add_cdev(cthd_cdev &cdev)
-{
-	cdevs.push_back(&cdev);
+void cthd_trip_point::thd_trip_point_add_cdev(cthd_cdev &cdev, int influence,
+		int sampling_period) {
+	trip_pt_cdev_t thd_cdev;
+	thd_cdev.cdev = &cdev;
+	thd_cdev.influence = influence;
+	thd_cdev.sampling_priod = sampling_period;
+	thd_cdev.last_op_time = 0;
+	trip_cdev_add(thd_cdev);
 }
 
-int cthd_trip_point::thd_trip_point_add_cdev_index(int _index)
-{
+int cthd_trip_point::thd_trip_point_add_cdev_index(int _index, int influence) {
 	cthd_cdev *cdev = thd_engine->thd_get_cdev_at_index(_index);
-	if(cdev)
-	{
-		cdevs.push_back(cdev);
+	if (cdev) {
+		trip_pt_cdev_t thd_cdev;
+		thd_cdev.cdev = cdev;
+		thd_cdev.influence = influence;
+		thd_cdev.sampling_priod = 0;
+		thd_cdev.last_op_time = 0;
+		trip_cdev_add(thd_cdev);
 		return THD_SUCCESS;
-	}
-	else
-	{
+	} else {
 		thd_log_warn("thd_trip_point_add_cdev_index not present %d\n", _index);
 		return THD_ERROR;
 	}
 }
 
-void cthd_trip_point::thd_trip_cdev_state_reset()
-{
-	for(int i = cdevs.size() - 1; i >= 0; --i)
-	{
-		cthd_cdev *cdev = cdevs[i];
-		thd_log_debug("thd_trip_cdev_state_reset index %d\n", cdev->thd_cdev_get_index());
-		if(cdev->in_min_state())
-		{
+void cthd_trip_point::thd_trip_cdev_state_reset() {
+	thd_log_info("thd_trip_cdev_state_reset \n");
+	for (int i = cdevs.size() - 1; i >= 0; --i) {
+		cthd_cdev *cdev = cdevs[i].cdev;
+		thd_log_info("thd_trip_cdev_state_reset index %d:%s\n",
+				cdev->thd_cdev_get_index(), cdev->get_cdev_type().c_str());
+		if (cdev->in_min_state()) {
 			thd_log_debug("Need to switch to next cdev \n");
 			// No scope of control with this cdev
 			continue;
 		}
-		cdev->thd_cdev_set_min_state(arg);
+		cdev->thd_cdev_set_min_state(zone_id);
 	}
 }

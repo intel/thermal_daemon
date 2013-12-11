@@ -1,7 +1,7 @@
 /*
- * thd_zone_dts_sensor.h: thermal engine DTS sensor class interface
+ * thd_pid.h: pid interface
  *
- * Copyright (C) 2012 Intel Corporation. All rights reserved.
+ * Copyright (C) 2013 Intel Corporation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License version
@@ -20,28 +20,26 @@
  *
  * Author Name <Srinivas.Pandruvada@linux.intel.com>
  *
- * This implementation allows to use core temperature interface.
  */
 
-#ifndef THD_ZONE_DTS_SENSOR_H_
-#define THD_ZONE_DTS_SENSOR_H_
+#include "thermald.h"
+#include <time.h>
 
-#include "thd_zone_dts.h"
+class cthd_pid {
 
-class cthd_zone_dts_sensor: public cthd_zone_dts
-{
 private:
-	int index;
-	unsigned int read_cpu_mask();
-	bool conf_present;
+	double err_sum, last_err;
+	time_t last_time;
+	unsigned int target_temp;
 
 public:
-	cthd_zone_dts_sensor(int count, int _index, std::string path);
-	int read_trip_points();
-	unsigned int read_zone_temp();
-
+	cthd_pid();
+	double kp, ki, kd;
+	int pid_output(unsigned int curr_temp);
+	void set_target_temp(unsigned int temp) {
+		target_temp = temp;
+	}
+	void reset() {
+		err_sum = last_err = last_time = 0;
+	}
 };
-
-
-
-#endif /* THD_ZONE_DTS_SENSOR_H_ */

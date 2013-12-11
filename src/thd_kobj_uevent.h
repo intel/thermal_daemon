@@ -36,8 +36,7 @@
 #include <linux/types.h>
 #include <linux/netlink.h>
 
-class cthd_kobj_uevent
-{
+class cthd_kobj_uevent {
 private:
 	static const int max_buffer_size = 512;
 

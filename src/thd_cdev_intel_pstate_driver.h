@@ -26,29 +26,28 @@
 #define THD_CDEV_INTEL_PSATATE_DRIVER_H_
 
 #include "thd_cdev.h"
-#include "thd_msr.h"
 
-class cthd_intel_p_state_cdev: public cthd_cdev
-{
+class cthd_intel_p_state_cdev: public cthd_cdev {
 private:
-	cthd_msr msr;
-
-	int highest_turbo_freq_state;
-	int lowest_freq_state;
-	int lowest_turbo_freq_state;
 	float unit_value;
 	int min_compensation;
 	int max_offset;
 
+	bool turbo_status;
+	void set_turbo_disable_status(bool enable);
+
 public:
 	static const int intel_pstate_limit_ratio = 2;
 	static const int default_max_state = 10;
-	cthd_intel_p_state_cdev(unsigned int _index, std::string control_path)
-		: cthd_cdev(_index, control_path), unit_value(1), min_compensation(0), max_offset(0) {};
+	static const int turbo_disable_percent = 70;
+	cthd_intel_p_state_cdev(unsigned int _index) :
+			cthd_cdev(_index, "/sys/devices/system/cpu/intel_pstate/"), unit_value(
+					1), min_compensation(0), max_offset(0), turbo_status(false) {
+	}
+	;
 	void set_curr_state(int state, int arg);
 	int get_max_state();
 	int update();
 };
-
 
 #endif /* THD_CDEV_INTEL_PSATATE_DRIVER_H_ */
