@@ -101,11 +101,12 @@ int cthd_sensor::set_threshold(int index, int temp) {
 	if (sensor_sysfs.exists(tcdev.str().c_str())) {
 		status = sensor_sysfs.write(tcdev.str(), thres.str());
 	}
-	enable_uevent();
 	thd_log_debug("cthd_sensor::set_threshold: status %d\n", status);
 
-	if (status > 0)
+	if (status > 0) {
+		enable_uevent();
 		return THD_SUCCESS;
+	}
 	else
 		return THD_ERROR;
 
