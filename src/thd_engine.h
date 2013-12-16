@@ -118,7 +118,7 @@ private:
 public:
 	static const int max_thermal_zones = 10;
 	static const int max_cool_devs = 50;
-	static const int def_poll_interval = 5000;
+	static const int def_poll_interval = 4000;
 	static const int soft_cdev_start_index = 100;
 
 	cthd_parse parser;

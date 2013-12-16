@@ -116,6 +116,19 @@ public:
 		sensors.push_back(sensor);
 	}
 
+	// Even if one sensor, it is using doesn't
+	// provide async control, return false
+	bool check_sensor_async_status() {
+		for (unsigned int i = 0; i < sensors.size(); ++i) {
+			cthd_sensor *sensor = sensors[i];
+			if (!sensor->check_async_capable()) {
+				return false;
+			}
+		}
+
+		return true;
+	}
+
 	unsigned int get_trip_count() {
 		return trip_points.size();
 	}

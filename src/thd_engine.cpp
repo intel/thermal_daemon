@@ -190,6 +190,26 @@ int cthd_engine::thd_engine_start(bool ignore_cpuid_check) {
 		return THD_FATAL_ERROR;
 	}
 
+	// Check if polling is disabled and sensors don't support
+	// async mode, in that enable force polling
+	if (!poll_interval_sec) {
+		unsigned int i;
+		for (i = 0; i < zones.size(); ++i) {
+			cthd_zone *zone = zones[i];
+			if (!zone->zone_active_status())
+				continue;
+			if (!zone->check_sensor_async_status()) {
+				thd_log_warn(
+						"Polling will be enabled as some sensors are not capable to notify asynchnously \n");
+				poll_timeout_msec = def_poll_interval;
+				break;
+			}
+		}
+		if (i == zones.size()) {
+			thd_log_info("Proceed without polling mode! \n");
+		}
+	}
+
 	poll_fds[0].fd = kobj_uevent.kobj_uevent_open();
 	if (poll_fds[0].fd < 0) {
 		thd_log_warn("Invalid kobj_uevent handle\n");
