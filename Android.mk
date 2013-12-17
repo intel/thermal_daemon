@@ -34,15 +34,14 @@ thermald_src_files := \
 include external/stlport/libstlport.mk
 
 LOCAL_C_INCLUDES += $(LOCAL_PATH) $(thermald_src_path) \
-			$(call include-path-for, dbus) \
 			external/icu4c/common \
 			external/libxml2/include
 
 LOCAL_MODULE_TAGS := optional
-LOCAL_CFLAGS := -fpermissive -DTDRUNDIR='"/data/thermald_run"' -DTDCONFDIR='"/data/thermald_conf"'
+LOCAL_CFLAGS := -fpermissive -DTDRUNDIR='"data/thermal-daemon"' -DTDCONFDIR='"system/etc/thermal-daemon"'
 LOCAL_STATIC_LIBRARIES := libxml2
-LOCAL_SHARED_LIBRARIES := liblog libcutils libdl libstlport libicuuc libicui18n libdbus
+LOCAL_SHARED_LIBRARIES := liblog libcutils libdl libstlport libicuuc libicui18n
 LOCAL_PRELINK_MODULE := false
 LOCAL_SRC_FILES := $(thermald_src_files)
-LOCAL_MODULE := thermald
+LOCAL_MODULE := thermal-daemon
 include $(BUILD_EXECUTABLE)
