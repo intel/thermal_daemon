@@ -27,7 +27,7 @@
 cthd_preference::cthd_preference() :
 		old_preference(0) {
 	std::stringstream filename;
-	filename << TDCONFDIR << "/" << "thd_preference.conf";
+	filename << TDRUNDIR << "/" << "thd_preference.conf";
 	std::ifstream ifs(filename.str().c_str(), std::ifstream::in);
 	if (!ifs.good()) {
 		preference = PREF_ENERGY_CONSERVE;
@@ -87,7 +87,7 @@ int cthd_preference::get_preference() {
 
 void cthd_preference::refresh() {
 	std::stringstream filename;
-	filename << TDCONFDIR << "/" << "thd_preference.conf";
+	filename << TDRUNDIR << "/" << "thd_preference.conf";
 	std::ifstream ifs(filename.str().c_str(), std::ifstream::in);
 	if (!ifs.good()) {
 		preference = PREF_ENERGY_CONSERVE;
@@ -102,7 +102,7 @@ bool cthd_preference::set_preference(const char *pref_str) {
 	int pref = string_pref_to_int(str);
 
 	std::stringstream filename;
-	filename << TDCONFDIR << "/" << "thd_preference.conf";
+	filename << TDRUNDIR << "/" << "thd_preference.conf";
 
 	std::ofstream fout(filename.str().c_str());
 	if (!fout.good()) {
@@ -114,7 +114,7 @@ bool cthd_preference::set_preference(const char *pref_str) {
 	// Save the old preference
 	old_preference = preference;
 	std::stringstream filename_save;
-	filename_save << TDCONFDIR << "/" << "thd_preference.conf.save";
+	filename_save << TDRUNDIR << "/" << "thd_preference.conf.save";
 
 	std::ofstream fout_save(filename_save.str().c_str());
 	if (!fout_save.good()) {
@@ -141,7 +141,7 @@ bool cthd_preference::set_preference(const char *pref_str) {
 int cthd_preference::get_old_preference() {
 	std::stringstream filename;
 
-	filename << TDCONFDIR << "/" << "thd_preference.conf.save";
+	filename << TDRUNDIR << "/" << "thd_preference.conf.save";
 	std::ifstream ifs(filename.str().c_str(), std::ifstream::in);
 	if (!ifs.good()) {
 		old_preference = PREF_PERFORMANCE;

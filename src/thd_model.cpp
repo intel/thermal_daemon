@@ -189,7 +189,7 @@ void cthd_model::store_set_point() {
 	std::stringstream filename;
 	std::ofstream file;
 
-	filename << TDCONFDIR << "/" << "thermal_set_point." << zone_type << "."
+	filename << TDRUNDIR << "/" << "thermal_set_point." << zone_type << "."
 			<< "conf";
 	std::ofstream fout(filename.str().c_str());
 	if (fout.good()) {
@@ -203,7 +203,7 @@ int cthd_model::read_set_point() {
 	std::stringstream filename;
 	unsigned int _set_point = 0;
 
-	filename << TDCONFDIR << "/" << "thermal_set_point." << zone_type << "."
+	filename << TDRUNDIR << "/" << "thermal_set_point." << zone_type << "."
 			<< "conf";
 	std::ifstream ifs(filename.str().c_str(), std::ifstream::in);
 	if (ifs.good()) {
@@ -237,7 +237,7 @@ bool cthd_model::update_user_set_max_temp() {
 	bool present = false;
 	unsigned int temp;
 
-	filename << TDCONFDIR << "/" << "thd_user_set_max." << zone_type << "."
+	filename << TDRUNDIR << "/" << "thd_user_set_max." << zone_type << "."
 			<< "conf";
 	std::ifstream ifs(filename.str().c_str(), std::ifstream::in);
 	if (ifs.good()) {
@@ -261,7 +261,7 @@ int cthd_model::read_user_set_max_temp() {
 	std::stringstream filename;
 	unsigned int user_max = 0;
 
-	filename << TDCONFDIR << "/" << "thd_user_set_max." << zone_type << "."
+	filename << TDRUNDIR << "/" << "thd_user_set_max." << zone_type << "."
 			<< "conf";
 	std::ifstream ifs(filename.str().c_str(), std::ifstream::in);
 	if (ifs.good()) {

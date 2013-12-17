@@ -251,7 +251,7 @@ int cthd_zone::update_max_temperature(int max_temp) {
 	std::stringstream filename;
 	std::stringstream temp_str;
 
-	filename << TDCONFDIR << "/" << "thd_user_set_max." << type_str << "."
+	filename << TDRUNDIR << "/" << "thd_user_set_max." << type_str << "."
 			<< "conf";
 	std::ofstream fout(filename.str().c_str());
 	if (!fout.good()) {
