@@ -25,6 +25,7 @@
  * functions.
  */
 
+#include <dbus/dbus.h>
 #include "thermald.h"
 #include "thd_preference.h"
 #include "thd_engine.h"
@@ -39,14 +40,139 @@ static int pid_file_handle;
 
 // Thermal engine
 cthd_engine *thd_engine;
+static DBusConnection *dbus_conn;
+
+// Start dbus server
+static int thermald_dbus_server_start() {
+	DBusError err;
+	int ret;
+	char* param;
+
+	dbus_error_init(&err);
+
+	dbus_conn = dbus_bus_get(DBUS_BUS_SYSTEM, &err);
+	if (dbus_error_is_set(&err)) {
+		thd_log_fatal("Connection Error (%s)\n", err.message);
+		dbus_error_free(&err);
+	}
+	if (NULL == dbus_conn) {
+		thd_log_fatal("Connection Null\n");
+		exit(1);
+	}
+
+	ret = dbus_bus_request_name(dbus_conn, THD_SERVICE_NAME,
+			DBUS_NAME_FLAG_REPLACE_EXISTING, &err);
+	if (dbus_error_is_set(&err)) {
+		thd_log_fatal("Name Error (%s)\n", err.message);
+		dbus_error_free(&err);
+	}
+	if (DBUS_REQUEST_NAME_REPLY_PRIMARY_OWNER != ret) {
+		thd_log_fatal("Not Primary Owner (%d)\n", ret);
+		exit(1);
+	}
+	thd_log_info("thermald dbus server started \n");
+
+	return 0;
+}
+
+// Stop dbus server
+static void thermald_dbus_server_stop() {
+	if (dbus_conn)
+		dbus_connection_close(dbus_conn);
+}
 
 // Stop daemon
 static void daemonShutdown() {
+	if (dbus_conn)
+		thermald_dbus_server_stop();
 	if (pid_file_handle)
 		close(pid_file_handle);
 	thd_engine->thd_engine_terminate();
 	sleep(1);
 	delete thd_engine;
+}
+
+// Stop daemon
+static void thermald_dbus_listen() {
+	DBusMessage *msg;
+	DBusMessage *reply;
+	DBusMessageIter args;
+	const char *method;
+
+	while (true) {
+		bool read_msg = true;
+		// Blocking read of the next available message
+		dbus_connection_read_write(dbus_conn, -1);
+		thd_log_debug("Got some dbus message... \n");
+
+		while (read_msg) {
+			msg = dbus_connection_pop_message(dbus_conn);
+
+			// loop again if we haven't got a message
+			if (NULL == msg) {
+				read_msg = false;
+				break;
+			}
+			method = dbus_message_get_member(msg);
+			if (!method) {
+				dbus_message_unref(msg);
+				read_msg = false;
+				break;
+			}
+			thd_log_info("Received dbus msg %s\n", method);
+
+			if (!strcasecmp(method, "SetUserMaxTemperature")) {
+				bool status;
+				char *zone_name;
+				char *set_point;
+				DBusError error;
+
+				dbus_error_init(&error);
+				if (dbus_message_get_args(msg, &error, DBUS_TYPE_STRING,
+						&zone_name, DBUS_TYPE_STRING, &set_point,
+						DBUS_TYPE_INVALID)) {
+					thd_log_info("New Set Point %s\n", set_point);
+					cthd_preference thd_pref;
+					if (thd_engine->thd_engine_set_user_max_temp(zone_name,
+							set_point) == THD_SUCCESS)
+						thd_engine->send_message(PREF_CHANGED, 0, NULL);
+				} else {
+					thd_log_error("dbus_message_get_args failed %s\n",
+							error.message);
+				}
+				dbus_error_free(&error);
+			} else if (!strcasecmp(method, "SetCurrentPreference")) {
+				bool status;
+				char *pref_str;
+				DBusError error;
+
+				dbus_error_init(&error);
+				if (dbus_message_get_args(msg, &error, DBUS_TYPE_STRING,
+						&pref_str, DBUS_TYPE_INVALID)) {
+					thd_log_info("New Pref %s\n", pref_str);
+					cthd_preference thd_pref;
+					thd_pref.set_preference(pref_str);
+					thd_engine->send_message(PREF_CHANGED, 0, NULL);
+				} else {
+					thd_log_error("dbus_message_get_args failed %s\n",
+							error.message);
+				}
+				dbus_error_free(&error);
+			} else if (!strcasecmp(method, "CalibrateStart")) {
+				// TBD
+			} else if (!strcasecmp(method, "CalibrateEnd")) {
+				// TBD
+			} else if (!strcasecmp(method, "Terminate")) {
+				daemonShutdown();
+				exit(EXIT_SUCCESS);
+			} else {
+				thd_log_error("dbus_message_get_args Invalid Message\n");
+			}
+
+			// free the message
+			dbus_message_unref(msg);
+		}
+	}
 }
 
 // signal handler
@@ -143,6 +269,7 @@ static void print_usage(FILE* stream, int exit_code) {
 			"  --version Show version.\n"
 			"  --no-daemon No daemon.\n"
 			"  -poll-interval poll interval 0 to disable.\n"
+			"  --dbus-enable Enable dbus I/F.\n"
 			"  --exclusive_control to act as exclusive thermal controller. \n");
 
 	exit(exit_code);
@@ -226,6 +353,10 @@ int main(int argc, char *argv[]) {
 		thd_engine->set_control_mode(EXCLUSIVE);
 
 	thd_engine->set_poll_interval(thd_poll_interval);
+	if (thd_engine->thd_engine_start(false) != THD_SUCCESS) {
+		thd_log_error("THD engine start failed: ");
+		exit(1);
+	}
 
 	// Initialize thermald objects
 	if (thd_engine->thd_engine_start(false) != THD_SUCCESS) {
@@ -234,17 +365,28 @@ int main(int argc, char *argv[]) {
 	}
 #ifdef VALGRIND_TEST
 	// lots of STL lib function don't free memory
-	// when called with exit().
+	// when called with exit() fn.
 	// Here just run for some time and gracefully return.
 	sleep(10);
+	if (dbus_conn)
+	thermald_dbus_server_stop();
 	if (pid_file_handle)
-		close(pid_file_handle);
+	close(pid_file_handle);
 	thd_engine->thd_engine_terminate();
 	sleep(1);
 	delete thd_engine;
 #else
-	for (;;)
-		sleep(0xffff);
+	if (dbus_enable) {
+		if (thermald_dbus_server_start()) {
+			fprintf(stderr, "Dbus start error\n");
+			exit(1);
+		}
+		thermald_dbus_listen(); // Will block here
+		thermald_dbus_server_stop();
+	} else {
+		for (;;)
+			sleep(0xffff);
+	}
 
 	thd_log_info("Linux Thermal Daemon is exiting \n");
 #endif

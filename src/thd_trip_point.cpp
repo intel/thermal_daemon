@@ -122,7 +122,8 @@ bool cthd_trip_point::thd_trip_point_check(int id, unsigned int read_temp,
 		return true;
 
 	int i, ret;
-	thd_log_debug("cdev size for this trippoint %lu\n", cdevs.size());
+	thd_log_debug("cdev size for this trippoint %lu\n",
+			(unsigned long) cdevs.size());
 	if (on > 0) {
 		for (unsigned i = 0; i < cdevs.size(); ++i) {
 			cthd_cdev *cdev = cdevs[i].cdev;

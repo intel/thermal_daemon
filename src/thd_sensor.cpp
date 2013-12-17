@@ -106,8 +106,7 @@ int cthd_sensor::set_threshold(int index, int temp) {
 	if (status > 0) {
 		enable_uevent();
 		return THD_SUCCESS;
-	}
-	else
+	} else
 		return THD_ERROR;
 
 }
