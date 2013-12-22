@@ -150,10 +150,12 @@ int cthd_sysfs_zone::read_cdev_trip_points() {
 				if (ptr) {
 					ptr += strlen("cooling_device");
 					thd_log_debug("symbolic name %s:%s\n", buf, ptr);
-					if (trip_cnt >= 0) {
+					if (trip_cnt >= 0 && trip_cnt < trip_point_cnt) {
 						trip_points[trip_cnt].thd_trip_point_add_cdev_index(
 								atoi(ptr), cthd_trip_point::default_influence);
 						zone_cdev_binded_status = true;
+					} else {
+						thd_log_debug("Invalid trip_cnt\n");
 					}
 				}
 			}
