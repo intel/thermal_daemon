@@ -38,9 +38,8 @@
 #include <string.h>
 #include <signal.h>
 
-#include "config.h"
-
 #ifdef ANDROID
+
 #define LOG_NDEBUG 1
 #undef LOG_TAG
 #define LOG_TAG "THERMALD"
@@ -53,7 +52,11 @@
 #define thd_log_warn	ALOGW
 #define thd_log_info	ALOGD
 #define thd_log_debug 	ALOGV
+
 #else
+
+#include "config.h"
+
 #define LOCKF_SUPPORT
 #ifdef GLIBC_SUPPORT
 #include <glib.h>
