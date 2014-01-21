@@ -222,13 +222,13 @@ static int thd_dbus_server_proc(gboolean no_daemon) {
 	// Create a main loop that will dispatch callbacks
 	g_main_loop = main_loop = g_main_loop_new(NULL, FALSE);
 	if (main_loop == NULL) {
-		thd_log_error("Couldn't create GMainLoop:");
+		thd_log_error("Couldn't create GMainLoop:\n");
 		return THD_FATAL_ERROR;
 	}
 	if (dbus_enable) {
 		bus = dbus_g_bus_get(DBUS_BUS_SYSTEM, &error);
 		if (error != NULL) {
-			thd_log_error("Couldn't connect to session bus: %s:",
+			thd_log_error("Couldn't connect to session bus: %s:\n",
 					error->message);
 			return THD_FATAL_ERROR;
 		}
@@ -237,7 +237,7 @@ static int thd_dbus_server_proc(gboolean no_daemon) {
 		bus_proxy = dbus_g_proxy_new_for_name(bus, DBUS_SERVICE_DBUS,
 				DBUS_PATH_DBUS, DBUS_INTERFACE_DBUS);
 		if (bus_proxy == NULL) {
-			thd_log_error("Failed to get a proxy for D-Bus:");
+			thd_log_error("Failed to get a proxy for D-Bus:\n");
 			return THD_FATAL_ERROR;
 		}
 
@@ -252,12 +252,12 @@ static int thd_dbus_server_proc(gboolean no_daemon) {
 		}
 		thd_log_debug("RequestName returned %d.\n", result);
 		if (result != DBUS_REQUEST_NAME_REPLY_PRIMARY_OWNER) {
-			thd_log_error("Failed to get the primary well-known name:");
+			thd_log_error("Failed to get the primary well-known name:\n");
 			return THD_FATAL_ERROR;
 		}
 		value_obj = (PrefObject*) g_object_new(PREF_TYPE_OBJECT, NULL);
 		if (value_obj == NULL) {
-			thd_log_error("Failed to create one Value instance:");
+			thd_log_error("Failed to create one Value instance:\n");
 			return THD_FATAL_ERROR;
 		}
 
@@ -284,7 +284,7 @@ static int thd_dbus_server_proc(gboolean no_daemon) {
 	// Initialize thermald objects
 	thd_engine->set_poll_interval(thd_poll_interval);
 	if (thd_engine->thd_engine_start(ignore_cpuid_check) != THD_SUCCESS) {
-		thd_log_error("THD engine start failed: ");
+		thd_log_error("THD engine start failed:\n");
 		closelog();
 		exit(EXIT_FAILURE);
 	}

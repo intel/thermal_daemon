@@ -60,7 +60,7 @@ static void signal_handler(int sig) {
 		exit(EXIT_SUCCESS);
 		break;
 	default:
-		thd_log_warn("Unhandled signal %s", strsignal(sig));
+		thd_log_warn("Unhandled signal %s\n", strsignal(sig));
 		break;
 	}
 }
@@ -117,7 +117,7 @@ static void daemonize(char *rundir, char *pidfile) {
 	pid_file_handle = open(pidfile, O_RDWR | O_CREAT, 0600);
 	if (pid_file_handle == -1) {
 		/* Couldn't open lock file */
-		thd_log_info("Could not open PID lock file %s, exiting", pidfile);
+		thd_log_info("Could not open PID lock file %s, exiting\n", pidfile);
 		exit(EXIT_FAILURE);
 	}
 	/* Try to lock file */
@@ -225,7 +225,7 @@ int main(int argc, char *argv[]) {
 
 	// Initialize thermald objects
 	if (thd_engine->thd_engine_start(false) != THD_SUCCESS) {
-		thd_log_error("thermald engine start failed: ");
+		thd_log_error("thermald engine start failed:\n");
 		exit(EXIT_FAILURE);
 	}
 #ifdef VALGRIND_TEST

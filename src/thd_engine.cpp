@@ -150,7 +150,7 @@ int cthd_engine::thd_engine_start(bool ignore_cpuid_check) {
 	// Pipe is used for communication between two processes
 	ret = pipe(wake_fds);
 	if (ret) {
-		thd_log_error("Thermal sysfs: pipe creation failed %d: ", ret);
+		thd_log_error("Thermal sysfs: pipe creation failed %d:\n", ret);
 		return THD_FATAL_ERROR;
 	}
 	fcntl(wake_fds[0], F_SETFL, O_NONBLOCK);
@@ -171,21 +171,21 @@ int cthd_engine::thd_engine_start(bool ignore_cpuid_check) {
 
 	ret = read_thermal_sensors();
 	if (ret != THD_SUCCESS) {
-		thd_log_error("Thermal sysfs Error in reading sensors");
+		thd_log_error("Thermal sysfs Error in reading sensors\n");
 		// This is a fatal error and daemon will exit
 		return THD_FATAL_ERROR;
 	}
 
 	ret = read_cooling_devices();
 	if (ret != THD_SUCCESS) {
-		thd_log_error("Thermal sysfs Error in reading cooling devs");
+		thd_log_error("Thermal sysfs Error in reading cooling devs\n");
 		// This is a fatal error and daemon will exit
 		return THD_FATAL_ERROR;
 	}
 
 	ret = read_thermal_zones();
 	if (ret != THD_SUCCESS) {
-		thd_log_error("No thermal sensors found");
+		thd_log_error("No thermal sensors found\n");
 		// This is a fatal error and daemon will exit
 		return THD_FATAL_ERROR;
 	}
@@ -529,7 +529,7 @@ void cthd_engine::thd_engine_reload_zones() {
 
 	int ret = read_thermal_zones();
 	if (ret != THD_SUCCESS) {
-		thd_log_error("No thermal sensors found");
+		thd_log_error("No thermal sensors found\n");
 		// This is a fatal error and daemon will exit
 		return;
 	}
