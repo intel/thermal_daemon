@@ -71,8 +71,8 @@ thermald_SOURCES = \
 		src/thd_rapl_interface.cpp \
 		src/thd_cdev_msr_rapl.cpp
 
-
-man1_MANS = man/thermald.1 man/thermal-conf.xml.1
+man5_MANS = man/thermal-conf.xml.5
+man8_MANS = man/thermald.8
 
 thd-dbus-interface.h: $(top_srcdir)/src/thd-dbus_interface.xml
 	$(AM_V_GEN) dbus-binding-tool --prefix=thd_dbus_interface --mode=glib-server --output=$@ $<
