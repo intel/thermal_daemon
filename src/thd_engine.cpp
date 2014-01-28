@@ -237,7 +237,7 @@ int cthd_engine::thd_engine_start(bool ignore_cpuid_check) {
 		if((childpid = fork()) == - 1)
 		{
 			perror("fork");
-			exit(1);
+			exit(EXIT_FAILURE);
 		}
 
 		if(childpid == 0)
@@ -506,7 +506,7 @@ void cthd_engine::giveup_thermal_control() {
 void cthd_engine::process_terminate() {
 	thd_log_warn("terminating on user request ..\n");
 	giveup_thermal_control();
-	exit(0);
+	exit(EXIT_SUCCESS);
 }
 
 void cthd_engine::thd_engine_poll_enable(int sensor_id) {

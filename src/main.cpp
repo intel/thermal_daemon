@@ -286,7 +286,7 @@ static int thd_dbus_server_proc(gboolean no_daemon) {
 	if (thd_engine->thd_engine_start(ignore_cpuid_check) != THD_SUCCESS) {
 		thd_log_error("THD engine start failed: ");
 		closelog();
-		exit(1);
+		exit(EXIT_FAILURE);
 	}
 
 	// Start service requests on the D-Bus
@@ -343,7 +343,7 @@ int main(int argc, char *argv[]) {
 
 	if (!g_module_supported()) {
 		fprintf(stderr, _("GModules are not supported on your platform!\n"));
-		exit(1);
+		exit(EXIT_FAILURE);
 	}
 
 	/* Set locale to be able to use environment variables */
@@ -371,21 +371,21 @@ int main(int argc, char *argv[]) {
 		fprintf(stderr,
 				_(
 						"Invalid option.  Please use --help to see a list of valid options.\n"));
-		exit(1);
+		exit(EXIT_FAILURE);
 	}
 
 	if (show_version) {
 		fprintf(stdout, TD_DIST_VERSION "\n");
-		exit(0);
+		exit(EXIT_SUCCESS);
 	}
 
 	if (getuid() != 0 && !test_mode) {
 		fprintf(stderr, _("You must be root to run thermald!\n"));
-		exit(1);
+		exit(EXIT_FAILURE);
 	}
 	if (g_mkdir_with_parents(TDRUNDIR, 0755) != 0) {
 		fprintf(stderr, "Cannot create '%s': %s", TDRUNDIR, strerror(errno));
-		exit(1);
+		exit(EXIT_FAILURE);
 	}
 	g_mkdir_with_parents(TDCONFDIR, 0755); // Don't care return value as directory
 	// may already exist
