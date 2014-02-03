@@ -659,7 +659,7 @@ void cthd_engine::thd_read_default_cooling_devices() {
 	if ((dir = opendir(base_path.c_str())) != NULL) {
 		while ((entry = readdir(dir)) != NULL) {
 			if (!strncmp(entry->d_name, "cooling_device",
-					strlen("thermal_zone"))) {
+					strlen("cooling_device"))) {
 				int i;
 				i = atoi(entry->d_name + strlen("cooling_device"));
 				cthd_sysfs_cdev *cdev = new cthd_sysfs_cdev(i,
