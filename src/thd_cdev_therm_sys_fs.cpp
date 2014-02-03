@@ -54,6 +54,13 @@ int cthd_sysfs_cdev::update() {
 	tc_type_dev << "cooling_device" << index << "/type";
 	if (cdev_sysfs.exists(tc_type_dev.str())) {
 		cdev_sysfs.read(tc_type_dev.str(), type_str);
+		if (type_str.size()) {
+			// They essentially change same ACPI object, so reading their
+			// state from sysfs after a change to any processor will cause
+			// double compensation
+			if (type_str == "Processor")
+				read_back = false;
+		}
 	}
 
 	thd_log_debug("cooling dev %d:%d:%d:%s\n", index, curr_state, max_state,
