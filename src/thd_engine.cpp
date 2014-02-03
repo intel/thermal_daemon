@@ -562,7 +562,8 @@ int cthd_engine::check_cpu_id() {
 	if (ebx == 0x756e6547 && edx == 0x49656e69 && ecx == 0x6c65746e)
 		genuine_intel = 1;
 	if (genuine_intel == 0) {
-		thd_log_warn("Not running on a genuine Intel CPU!\n");
+		// Simply return without further capability check
+		return THD_SUCCESS;
 	}
 	asm("cpuid": "=a"(fms), "=c"(ecx), "=d"(edx): "a"(1): "ebx");
 	family = (fms >> 8) & 0xf;
