@@ -122,6 +122,26 @@ int csys_fs::read(const std::string &path, unsigned int *ptr_val) {
 	return ret;
 }
 
+int csys_fs::read(const std::string &path, unsigned long *ptr_val) {
+	std::string p = base_path + path;
+	char str[32];
+	int ret;
+
+	int fd = ::open(p.c_str(), O_RDONLY);
+	if (fd < 0) {
+		thd_log_warn("sysfs read failed %s\n", path.c_str());
+		return -errno;
+	}
+	ret = ::read(fd, str, sizeof(str));
+	if (ret > 0)
+		*ptr_val = atol(str);
+	else
+		thd_log_warn("sysfs read failed %s\n", path.c_str());
+	close(fd);
+
+	return ret;
+}
+
 int csys_fs::read(const std::string &path, std::string &buf) {
 	std::string p = base_path + path;
 

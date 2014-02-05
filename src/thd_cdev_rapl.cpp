@@ -107,7 +107,6 @@ int cthd_sysfs_cdev_rapl::update() {
 		return THD_ERROR;
 	}
 
-	std::string power_limit;
 	temp_str.str(std::string());
 	temp_str << "constraint_" << _index << "_max_power_uw";
 	if (!cdev_sysfs.exists(temp_str.str())) {
@@ -115,11 +114,12 @@ int cthd_sysfs_cdev_rapl::update() {
 				temp_str.str().c_str());
 		return THD_ERROR;
 	}
-	cdev_sysfs.read(temp_str.str(), power_limit);
-	std::istringstream(power_limit) >> phy_max;
+	if (cdev_sysfs.read(temp_str.str(), &phy_max) < 0) {
+		thd_log_info("powercap RAPL invalid max power limit range \n");
+		return THD_ERROR;
+	}
 
 	std::stringstream temp_power_str;
-	std::string current_power_limit;
 	temp_power_str.str(std::string());
 	temp_power_str << "constraint_" << _index << "_power_limit_uw";
 	if (!cdev_sysfs.exists(temp_power_str.str())) {
@@ -127,15 +127,16 @@ int cthd_sysfs_cdev_rapl::update() {
 				temp_str.str().c_str());
 		return THD_ERROR;
 	}
-	cdev_sysfs.read(temp_power_str.str(), current_power_limit);
-	std::istringstream(current_power_limit) >> constraint_phy_max;
+	if (cdev_sysfs.read(temp_power_str.str(), &constraint_phy_max) <= 0) {
+		thd_log_info("powercap RAPL invalid max power limit range \n");
+		constraint_phy_max = 0;
+	}
 	if (constraint_phy_max > phy_max) {
 		thd_log_info(
 				"Default constraint power limit is more than max power %lu:%lu\n",
 				constraint_phy_max, phy_max);
 		phy_max = constraint_phy_max;
 	}
-
 	thd_log_info("powercap RAPL max power limit range %lu \n", phy_max);
 
 	set_inc_dec_value(phy_max * (float) rapl_power_dec_percent / 100);
