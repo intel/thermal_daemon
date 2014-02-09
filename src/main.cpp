@@ -271,7 +271,7 @@ static int thd_dbus_server_proc(gboolean no_daemon) {
 				"thermald ver %s: Ready to serve requests: Daemonizing..\n",
 				TD_DIST_VERSION);
 
-		if (daemon(0, 1) != 0) {
+		if (daemon(0, 0) != 0) {
 			thd_log_error("Failed to daemonize.\n");
 			return THD_FATAL_ERROR;
 		}
