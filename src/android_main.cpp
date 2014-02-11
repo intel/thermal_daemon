@@ -131,7 +131,7 @@ static void daemonize(char *rundir, char *pidfile) {
 		exit(EXIT_FAILURE);
 	}
 	thd_log_info("Thermal PID %d\n", getpid());
-	sprintf(str, "%d\n", getpid());
+	snprintf(str, sizeof(str), "%d\n", getpid());
 	write(pid_file_handle, str, strlen(str));
 }
 
