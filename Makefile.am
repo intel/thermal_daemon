@@ -23,7 +23,7 @@ EXTRA_DIST=Makefile.glib \
 	thermald.pc.in
 
 # Programs to build
-bin_PROGRAMS = thermald
+sbin_PROGRAMS = thermald
 
 # Evaluate Table Application
 thermald_CPPFLAGS = \

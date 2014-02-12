@@ -1,12 +1,10 @@
 [Unit]
 Description=Thermal Daemon Service
-After=syslog.target
 
 [Service]
 Type=dbus
 BusName=org.freedesktop.thermald
-ExecStart=/usr/bin/thermald --no-daemon --dbus-enable
-StandardError=null
+ExecStart=@sbindir@/thermald --no-daemon --dbus-enable
 
 [Install]
 WantedBy=multi-user.target
