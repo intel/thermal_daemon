@@ -5,7 +5,7 @@ After=syslog.target
 [Service]
 Type=dbus
 BusName=org.freedesktop.thermald
-ExecStart=/usr/bin/thermald --no-daemon --dbus-enable
+ExecStart=@sbindir@/thermald --no-daemon --dbus-enable
 StandardError=null
 
 [Install]
