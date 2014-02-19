@@ -282,3 +282,19 @@ void cthd_zone::add_trip(cthd_trip_point &trip) {
 	if (add)
 		trip_points.push_back(trip);
 }
+
+void cthd_zone::update_trip_temp(cthd_trip_point &trip) {
+	for (unsigned int j = 0; j < trip_points.size(); ++j) {
+		if (trip_points[j].get_trip_type() == trip.get_trip_type()) {
+			thd_log_debug("updating existing trip temp \n");
+			trip_points[j].update_trip_temp(trip.get_trip_temp());
+			trip_points[j].update_trip_hyst(trip.get_trip_hyst());
+			if (trip.get_trip_type() == MAX) {
+				thd_model->set_max_temperature(trip.get_trip_temp());
+				// TODO: If sensor supports polling
+				// update the polling threshold also.
+			}
+			break;
+		}
+	}
+}

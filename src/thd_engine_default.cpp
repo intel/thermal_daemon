@@ -181,56 +181,6 @@ int cthd_engine_default::read_thermal_zones() {
 	thd_read_default_thermal_zones();
 	count = zone_count;
 
-	// Add from XML cooling device config
-	if (!parser_init() && parser.platform_matched()) {
-		for (int i = 0; i < parser.zone_count(); ++i) {
-			thermal_zone_t *zone_config = parser.get_zone_dev_index(i);
-			if (!zone_config)
-				continue;
-			cthd_zone *zone = search_zone(zone_config->type);
-			if (zone) {
-				thd_log_info("Zone already present \n");
-				for (unsigned int k = 0; k < zone_config->trip_pts.size();
-						++k) {
-					trip_point_t &trip_pt_config = zone_config->trip_pts[k];
-					cthd_sensor *sensor = search_sensor(
-							trip_pt_config.sensor_type);
-					if (!sensor) {
-						thd_log_error("XML zone: invalid sensor type \n");
-						continue;
-					}
-					zone->bind_sensor(sensor);
-					cthd_trip_point trip_pt(zone->get_trip_count(),
-							trip_pt_config.trip_pt_type,
-							trip_pt_config.temperature, trip_pt_config.hyst,
-							zone->get_zone_index(), sensor->get_index(),
-							trip_pt_config.control_type);
-					// bind cdev
-					for (unsigned int j = 0;
-							j < trip_pt_config.cdev_trips.size(); ++j) {
-						cthd_cdev *cdev = search_cdev(
-								trip_pt_config.cdev_trips[j].type);
-						if (cdev) {
-							trip_pt.thd_trip_point_add_cdev(*cdev,
-									trip_pt_config.cdev_trips[j].influence);
-						}
-					}
-					zone->add_trip(trip_pt);
-				}
-				zone->set_zone_active();
-			} else {
-				cthd_zone_generic *zone = new cthd_zone_generic(count, i,
-						zone_config->type);
-				if (zone->zone_update() == THD_SUCCESS) {
-					zones.push_back(zone);
-					++count;
-				}
-				zone->set_zone_active();
-			}
-		}
-	}
-	zone_count = count;
-
 	if (!search_zone("cpu")) {
 		bool cpu_zone_created = false;
 		thd_log_info("zone cpu will be created \n");
@@ -272,6 +222,67 @@ int cthd_engine_default::read_thermal_zones() {
 			}
 		}
 	}
+	zone_count = count;
+
+	// Add from XML thermal zone
+	if (!parser_init() && parser.platform_matched()) {
+		for (int i = 0; i < parser.zone_count(); ++i) {
+			thermal_zone_t *zone_config = parser.get_zone_dev_index(i);
+			if (!zone_config)
+				continue;
+			cthd_zone *zone = search_zone(zone_config->type);
+			if (zone) {
+				thd_log_info("Zone already present \n");
+				for (unsigned int k = 0; k < zone_config->trip_pts.size();
+						++k) {
+					trip_point_t &trip_pt_config = zone_config->trip_pts[k];
+					cthd_sensor *sensor = search_sensor(
+							trip_pt_config.sensor_type);
+					if (!sensor) {
+						thd_log_error("XML zone: invalid sensor type \n");
+						// This will update the trip tempearture for the matching
+						// trip type
+						if (trip_pt_config.temperature) {
+							cthd_trip_point trip_pt(zone->get_trip_count(),
+									trip_pt_config.trip_pt_type,
+									trip_pt_config.temperature,
+									trip_pt_config.hyst, zone->get_zone_index(),
+									-1, trip_pt_config.control_type);
+							zone->update_trip_temp(trip_pt);
+						}
+						continue;
+					}
+					zone->bind_sensor(sensor);
+					cthd_trip_point trip_pt(zone->get_trip_count(),
+							trip_pt_config.trip_pt_type,
+							trip_pt_config.temperature, trip_pt_config.hyst,
+							zone->get_zone_index(), sensor->get_index(),
+							trip_pt_config.control_type);
+					// bind cdev
+					for (unsigned int j = 0;
+							j < trip_pt_config.cdev_trips.size(); ++j) {
+						cthd_cdev *cdev = search_cdev(
+								trip_pt_config.cdev_trips[j].type);
+						if (cdev) {
+							trip_pt.thd_trip_point_add_cdev(*cdev,
+									trip_pt_config.cdev_trips[j].influence);
+						}
+					}
+					zone->add_trip(trip_pt);
+				}
+				zone->set_zone_active();
+			} else {
+				cthd_zone_generic *zone = new cthd_zone_generic(count, i,
+						zone_config->type);
+				if (zone->zone_update() == THD_SUCCESS) {
+					zones.push_back(zone);
+					++count;
+				}
+				zone->set_zone_active();
+			}
+		}
+	}
+	zone_count = count;
 
 #ifdef ACTIVATE_SURFACE
 //	Enable when skin sensors are standardized

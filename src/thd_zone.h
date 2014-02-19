@@ -87,6 +87,7 @@ public:
 	}
 
 	void add_trip(cthd_trip_point &trip);
+	void update_trip_temp(cthd_trip_point &trip);
 
 	void set_zone_active() {
 		zone_active = true;
