@@ -73,6 +73,7 @@ int cthd_zone_surface::read_trip_points() {
 	if (add) {
 		trip_points.push_back(*trip_ptr);
 	}
+	delete trip_ptr;
 
 	return THD_SUCCESS;
 }
