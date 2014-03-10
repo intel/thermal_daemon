@@ -609,8 +609,10 @@ void cthd_engine::thd_read_default_thermal_sensors() {
 				i = atoi(entry->d_name + strlen("thermal_zone"));
 				cthd_sensor *sensor = new cthd_sensor(i,
 						base_path + entry->d_name + "/", "");
-				if (sensor->sensor_update() != THD_SUCCESS)
+				if (sensor->sensor_update() != THD_SUCCESS) {
+					delete sensor;
 					continue;
+				}
 				sensors.push_back(sensor);
 			}
 		}
@@ -635,8 +637,10 @@ void cthd_engine::thd_read_default_thermal_zones() {
 				i = atoi(entry->d_name + strlen("thermal_zone"));
 				cthd_sysfs_zone *zone = new cthd_sysfs_zone(i,
 						"/sys/class/thermal/thermal_zone");
-				if (zone->zone_update() != THD_SUCCESS)
+				if (zone->zone_update() != THD_SUCCESS) {
+					delete zone;
 					continue;
+				}
 				if (control_mode == EXCLUSIVE)
 					zone->set_zone_active();
 				zones.push_back(zone);
@@ -664,8 +668,10 @@ void cthd_engine::thd_read_default_cooling_devices() {
 				i = atoi(entry->d_name + strlen("cooling_device"));
 				cthd_sysfs_cdev *cdev = new cthd_sysfs_cdev(i,
 						"/sys/class/thermal/");
-				if (cdev->update() != THD_SUCCESS)
+				if (cdev->update() != THD_SUCCESS) {
+					delete cdev;
 					continue;
+				}
 				cdevs.push_back(cdev);
 			}
 		}

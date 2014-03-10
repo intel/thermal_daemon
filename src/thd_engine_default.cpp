@@ -107,8 +107,10 @@ int cthd_engine_default::read_thermal_sensors() {
 									base_path + entry->d_name + "/"
 											+ temp_input_str.str(),
 									temp_input_str.str(), SENSOR_TYPE_RAW);
-							if (sensor->sensor_update() != THD_SUCCESS)
+							if (sensor->sensor_update() != THD_SUCCESS) {
+								delete sensor;
 								return THD_ERROR;
+							}
 							sensors.push_back(sensor);
 							++index;
 						}
@@ -127,8 +129,10 @@ int cthd_engine_default::read_thermal_sensors() {
 		cthd_sensor *sensor = new cthd_sensor(index,
 				"/sys/class/hwmon/hwmon0/temp1_input", "hwmon",
 				SENSOR_TYPE_RAW);
-		if (sensor->sensor_update() != THD_SUCCESS)
+		if (sensor->sensor_update() != THD_SUCCESS) {
+			delete sensor;
 			return THD_ERROR;
+		}
 		sensors.push_back(sensor);
 		++index;
 
@@ -197,6 +201,8 @@ int cthd_engine_default::read_thermal_zones() {
 						zones.push_back(zone);
 						++count;
 						cpu_zone_created = true;
+					} else {
+						delete zone;
 					}
 				}
 			}
@@ -214,6 +220,8 @@ int cthd_engine_default::read_thermal_zones() {
 				zones.push_back(zone);
 				++count;
 				cpu_zone_created = true;
+			} else {
+				delete zone;
 			}
 
 			if (!cpu_zone_created) {
