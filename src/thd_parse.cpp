@@ -530,13 +530,13 @@ void cthd_parse::parser_deinit() {
 void cthd_parse::dump_thermal_conf() {
 	thd_log_info(" Dumping parsed XML Data\n");
 	for (unsigned int i = 0; i < thermal_info_list.size(); ++i) {
-		thd_log_info(" *** Index %d ***\n", i);
+		thd_log_info(" *** Index %u ***\n", i);
 		thd_log_info("Name: %s\n", thermal_info_list[i].name.c_str());
 		thd_log_info("UUID: %s\n", thermal_info_list[i].uuid.c_str());
 		thd_log_info("type: %d\n", thermal_info_list[i].default_prefernce);
 
 		for (unsigned int j = 0; j < thermal_info_list[i].sensors.size(); ++j) {
-			thd_log_info("\tSensor %d \n", j);
+			thd_log_info("\tSensor %u \n", j);
 			thd_log_info("\t Name: %s\n",
 					thermal_info_list[i].sensors[j].name.c_str());
 			thd_log_info("\t Path: %s\n",
@@ -545,12 +545,12 @@ void cthd_parse::dump_thermal_conf() {
 					thermal_info_list[i].sensors[j].async_capable);
 		}
 		for (unsigned int j = 0; j < thermal_info_list[i].zones.size(); ++j) {
-			thd_log_info("\tZone %d \n", j);
+			thd_log_info("\tZone %u \n", j);
 			thd_log_info("\t Name: %s\n",
 					thermal_info_list[i].zones[j].type.c_str());
 			for (unsigned int k = 0;
 					k < thermal_info_list[i].zones[j].trip_pts.size(); ++k) {
-				thd_log_info("\t\t Trip Point %d \n", k);
+				thd_log_info("\t\t Trip Point %u \n", k);
 				thd_log_info("\t\t  temp id %d \n",
 						thermal_info_list[i].zones[j].trip_pts[k].temperature);
 				thd_log_info("\t\t  trip type %d \n",
@@ -562,7 +562,7 @@ void cthd_parse::dump_thermal_conf() {
 						l
 								< thermal_info_list[i].zones[j].trip_pts[k].cdev_trips.size();
 						++l) {
-					thd_log_info("\t\t  Trip id %d \n", l);
+					thd_log_info("\t\t  Trip id %u \n", l);
 					thd_log_info("\t\t\t  type %s \n",
 							thermal_info_list[i].zones[j].trip_pts[k].cdev_trips[l].type.c_str());
 					thd_log_info("\t\t\t  influence %d \n",
@@ -574,7 +574,7 @@ void cthd_parse::dump_thermal_conf() {
 		}
 		for (unsigned int l = 0; l < thermal_info_list[i].cooling_devs.size();
 				++l) {
-			thd_log_info("\tCooling Dev %d \n", l);
+			thd_log_info("\tCooling Dev %u \n", l);
 			thd_log_info("\t\tType: %s\n",
 					thermal_info_list[i].cooling_devs[l].type_string.c_str());
 			thd_log_info("\t\tPath: %s\n",
