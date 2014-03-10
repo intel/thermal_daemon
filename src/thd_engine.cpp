@@ -561,7 +561,7 @@ int cthd_engine::check_cpu_id() {
 		model += ((fms >> 16) & 0xf) << 4;
 
 	thd_log_warn(
-			"%d CPUID levels; family:model:stepping 0x%x:%x:%x (%d:%d:%d)\n",
+			"%u CPUID levels; family:model:stepping 0x%x:%x:%x (%u:%u:%u)\n",
 			max_level, family, model, stepping, family, model, stepping);
 
 	while (id_table[i].family) {
