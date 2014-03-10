@@ -187,7 +187,6 @@ void cthd_model::add_sample(int temperature) {
 
 void cthd_model::store_set_point() {
 	std::stringstream filename;
-	std::ofstream file;
 
 	filename << TDRUNDIR << "/" << "thermal_set_point." << zone_type << "."
 			<< "conf";
