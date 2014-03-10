@@ -140,7 +140,12 @@ gboolean thd_dbus_interface_get_current_preference(PrefObject *obj,
 
 	cthd_preference thd_pref;
 	value_out = (gchar*) thd_pref.get_preference_cstr();
+	if (!value_out) {
+		g_free(pref_str);
+		return FALSE;
+	}
 	strncpy(pref_str, value_out, MAX_DBUS_REPLY_STR_LEN);
+	free(value_out);
 	thd_log_debug("thd_dbus_interface_get_current_preference out :%s\n",
 			pref_str);
 	*pref_out = pref_str;

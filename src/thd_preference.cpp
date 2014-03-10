@@ -78,7 +78,7 @@ std::string cthd_preference::get_preference_str() {
 }
 
 const char *cthd_preference::get_preference_cstr() {
-	return int_pref_to_string(preference).c_str();
+	return strdup(int_pref_to_string(preference).c_str());
 }
 
 int cthd_preference::get_preference() {
