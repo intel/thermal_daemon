@@ -725,7 +725,7 @@ cthd_sensor* cthd_engine::search_sensor(std::string name) {
 }
 
 cthd_sensor* cthd_engine::get_sensor(int index) {
-	if (index < (int) sensors.size())
+	if (index >= 0 && index < (int) sensors.size())
 		return sensors[index];
 	else
 		return NULL;
@@ -734,7 +734,7 @@ cthd_sensor* cthd_engine::get_sensor(int index) {
 cthd_zone* cthd_engine::get_zone(int index) {
 	if (index == -1)
 		return NULL;
-	if (index < (int) zones.size())
+	if (index >= 0 && index < (int) zones.size())
 		return zones[index];
 	else
 		return NULL;
