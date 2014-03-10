@@ -51,6 +51,7 @@ long long data) {
 	}
 	if (::lseek(fd, position, SEEK_CUR) == -1) {
 		thd_log_warn("sysfs write failed %s\n", path.c_str());
+		close(fd);
 		return -errno;
 	}
 	int ret = ::write(fd, &data, sizeof(data));
@@ -92,6 +93,7 @@ int csys_fs::read(const std::string &path, unsigned int position, char *buf,
 	}
 	if (::lseek(fd, position, SEEK_CUR) == -1) {
 		thd_log_warn("sysfs read failed %s\n", path.c_str());
+		close(fd);
 		return -errno;
 	}
 	int ret = ::read(fd, buf, len);
