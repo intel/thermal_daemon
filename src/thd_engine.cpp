@@ -154,8 +154,16 @@ int cthd_engine::thd_engine_start(bool ignore_cpuid_check) {
 		thd_log_error("Thermal sysfs: pipe creation failed %d:\n", ret);
 		return THD_FATAL_ERROR;
 	}
-	fcntl(wake_fds[0], F_SETFL, O_NONBLOCK);
-	fcntl(wake_fds[1], F_SETFL, O_NONBLOCK);
+	if (fcntl(wake_fds[0], F_SETFL, O_NONBLOCK) < 0) {
+		thd_log_error("Cannot set non-blocking on pipe: %s\n",
+			strerror(errno));
+		return THD_FATAL_ERROR;
+	}
+	if (fcntl(wake_fds[1], F_SETFL, O_NONBLOCK) < 0) {
+		thd_log_error("Cannot set non-blocking on pipe: %s\n",
+			strerror(errno));
+		return THD_FATAL_ERROR;
+	}
 	write_pipe_fd = wake_fds[1];
 	wakeup_fd = THD_NUM_OF_POLL_FDS - 1;
 
