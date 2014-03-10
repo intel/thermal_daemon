@@ -74,4 +74,5 @@ bool cthd_kobj_uevent::check_for_event() {
 
 void cthd_kobj_uevent::register_dev_path(char *path) {
 	strncpy(device_path, path, max_buffer_size);
+	device_path[max_buffer_size - 1] = '\0';
 }
