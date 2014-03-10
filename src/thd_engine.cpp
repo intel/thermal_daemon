@@ -444,14 +444,8 @@ void cthd_engine::takeover_thermal_control() {
 
 				i = atoi(entry->d_name + strlen("thermal_zone"));
 				std::stringstream policy;
-				std::stringstream type;
-				std::string type_val;
 				std::string curr_policy;
 
-				type << "thermal_zone" << i << "/type";
-				if (sysfs.exists(type.str().c_str())) {
-					sysfs.read(type.str(), type_val);
-				}
 				policy << "thermal_zone" << i << "/policy";
 				if (sysfs.exists(policy.str().c_str())) {
 					sysfs.read(policy.str(), curr_policy);
@@ -487,13 +481,7 @@ void cthd_engine::giveup_thermal_control() {
 
 				i = atoi(entry->d_name + strlen("thermal_zone"));
 				std::stringstream policy;
-				std::stringstream type;
-				std::string type_val;
 
-				type << "thermal_zone" << i << "/type";
-				if (sysfs.exists(type.str().c_str())) {
-					sysfs.read(type.str(), type_val);
-				}
 				policy << "thermal_zone" << i << "/policy";
 				if (sysfs.exists(policy.str().c_str())) {
 					sysfs.write(policy.str(), zone_preferences[cnt++]);
