@@ -36,6 +36,7 @@
 #include "thd_cdev.h"
 #include "thd_parse.h"
 #include "thd_kobj_uevent.h"
+#include "thd_rapl_power_meter.h"
 
 #define MAX_MSG_SIZE 		512
 #define THD_NUM_OF_POLL_FDS	10
@@ -122,6 +123,7 @@ public:
 	static const int soft_cdev_start_index = 100;
 
 	cthd_parse parser;
+	cthd_rapl_power_meter rapl_power_meter;
 
 	cthd_engine();
 	virtual ~cthd_engine();
