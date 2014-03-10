@@ -75,7 +75,7 @@ unsigned int cthd_model::update_set_point(unsigned int curr_temp) {
 			arc_len = delta_x * tan(radians);
 			_setpoint = max_temp - (unsigned int) (arc_len - delta_y);
 			_setpoint = _setpoint - _setpoint % 1000;
-			thd_log_info("** set point  x:%g y:%g arc_len:%g set_point %u\n",
+			thd_log_info("** set point  x:%g y:%g arc_len:%g set_point %d\n",
 					delta_x, delta_y, arc_len, _setpoint);
 			if ((_setpoint < 0)
 					|| (abs(set_point - _setpoint) > max_compensation))
@@ -111,7 +111,7 @@ unsigned int cthd_model::update_set_point(unsigned int curr_temp) {
 		/*Compute PID Output*/
 		output = kp * error + ki * err_sum + kd * d_err;
 		_setpoint = max_temp - (unsigned int) output;
-		thd_log_info("update_pid %ld %ld %d %g %u\n", now, last_time, error,
+		thd_log_info("update_pid %ld %ld %d %g %d\n", now, last_time, error,
 				output, _setpoint);
 		if ((_setpoint < 0) || (abs(set_point - _setpoint) > max_compensation))
 			set_point -= max_compensation;
@@ -195,7 +195,7 @@ void cthd_model::store_set_point() {
 	if (fout.good()) {
 		fout << set_point;
 	}
-	thd_log_info("storing set point %u\n", set_point);
+	thd_log_info("storing set point %d\n", set_point);
 	fout.close();
 }
 
@@ -249,7 +249,7 @@ bool cthd_model::update_user_set_max_temp() {
 			store_set_point();
 			present = true;
 			user_forced_set_point_change = true;
-			thd_log_info("User forced maximum temperature is %u\n", max_temp);
+			thd_log_info("User forced maximum temperature is %d\n", max_temp);
 		}
 	}
 	ifs.close();
