@@ -33,10 +33,14 @@ private:
 	unsigned long phy_max;
 	int package_id;
 	int constraint_index;
+	bool dynamic_phy_max_enable;
+
+	bool calculate_phy_max();
 
 public:
 	static const int rapl_no_time_windows = 6;
 	static const long def_rapl_time_window = 1000000; // micro seconds
+	static const int rapl_min_default_step = 500000; //0.5W
 
 	static const int rapl_low_limit_percent = 25;
 	static const int rapl_power_dec_percent = 5;
@@ -44,7 +48,8 @@ public:
 	cthd_sysfs_cdev_rapl(unsigned int _index, int package) :
 			cthd_cdev(_index,
 					"/sys/devices/virtual/powercap/intel-rapl/intel-rapl:0/"), phy_max(
-					0), package_id(package), constraint_index(0) {
+					0), package_id(package), constraint_index(0), dynamic_phy_max_enable(
+					false) {
 	}
 	virtual void set_curr_state(int state, int arg);
 	virtual int get_curr_state();

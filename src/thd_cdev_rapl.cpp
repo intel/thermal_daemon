@@ -42,6 +42,12 @@ void cthd_sysfs_cdev_rapl::set_curr_state(int state, int arg) {
 		cdev_sysfs.write("enabled", "0");
 		new_state = phy_max;
 	} else {
+		if (dynamic_phy_max_enable) {
+			if (!calculate_phy_max()) {
+				curr_state = state;
+				return;
+			}
+		}
 		new_state = phy_max - state;
 		curr_state = state;
 		cdev_sysfs.write("enabled", "1");
@@ -62,9 +68,15 @@ void cthd_sysfs_cdev_rapl::set_curr_state_raw(int state, int arg) {
 
 	if (state <= min_state)
 		new_state = phy_max;
-	else
+	else {
+		if (dynamic_phy_max_enable) {
+			if (!calculate_phy_max()) {
+				curr_state = state;
+				return;
+			}
+		}
 		new_state = phy_max - state;
-
+	}
 	curr_state = state;
 	state_str << new_state;
 
@@ -77,11 +89,33 @@ void cthd_sysfs_cdev_rapl::set_curr_state_raw(int state, int arg) {
 
 }
 
+bool cthd_sysfs_cdev_rapl::calculate_phy_max() {
+	if (dynamic_phy_max_enable) {
+		unsigned int curr_max_phy;
+		curr_max_phy = thd_engine->rapl_power_meter.rapl_action_get_power(
+				PACKAGE);
+		thd_log_info("curr_phy_max = %u \n", curr_max_phy);
+		if (curr_max_phy < rapl_min_default_step)
+			return false;
+		if (phy_max < curr_max_phy) {
+			phy_max = curr_max_phy;
+			set_inc_dec_value(phy_max * (float) rapl_power_dec_percent / 100);
+			max_state = phy_max;
+			max_state -= (float) max_state * rapl_low_limit_percent / 100;
+			thd_log_info("PHY_MAX %lu, step %d, max_state %d\n", phy_max,
+					inc_dec_val, max_state);
+		}
+	}
+
+	return true;
+}
+
 int cthd_sysfs_cdev_rapl::get_curr_state() {
 	return curr_state;
 }
 
 int cthd_sysfs_cdev_rapl::get_max_state() {
+
 	return max_state;
 }
 
@@ -116,7 +150,13 @@ int cthd_sysfs_cdev_rapl::update() {
 	}
 	if (cdev_sysfs.read(temp_str.str(), &phy_max) < 0) {
 		thd_log_info("powercap RAPL invalid max power limit range \n");
-		return THD_ERROR;
+		thd_log_info("Calculate dynamically phy_max \n");
+		phy_max = 0;
+		thd_engine->rapl_power_meter.rapl_start_measure_power();
+		max_state = rapl_min_default_step;
+		set_inc_dec_value(rapl_min_default_step);
+		dynamic_phy_max_enable = true;
+		return THD_SUCCESS;
 	}
 
 	std::stringstream temp_power_str;
