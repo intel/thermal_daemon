@@ -45,14 +45,12 @@ cthd_model::cthd_model(std::string _zone_type, bool use_pid) :
 				0), set_point_reached(false), delay_cnt(0), max_temp_seen(
 				false), updated_set_point(false), use_pid_param(use_pid), set_point_delay_start(
 				0), user_forced_set_point_change(false) {
-	if (use_pid) {
-		// set default pid parameters
-		kp = 0.5;
-		ki = kd = 0.0001;
-		last_time = 0;
-		err_sum = 0.0;
-		last_err = 0.0;
-	}
+	// set default pid parameters
+	kp = 0.5;
+	ki = kd = 0.0001;
+	last_time = 0;
+	err_sum = 0.0;
+	last_err = 0.0;
 }
 
 unsigned int cthd_model::update_set_point(unsigned int curr_temp) {

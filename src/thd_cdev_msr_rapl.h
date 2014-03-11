@@ -45,7 +45,8 @@ public:
 
 	cthd_cdev_rapl_msr(unsigned int _index, int _cpu_index) :
 			cthd_cdev(_index, "/sys/devices/system/cpu/"), max_state(0), rapl(
-					0), control_start(false) {
+					0), thermal_spec_power(0.0), max_power(0.0), min_power(0.0), max_time_window(
+					0.0), phy_max(0), control_start(false) {
 	}
 	void set_curr_state(int state, int arg);
 	int get_max_state();

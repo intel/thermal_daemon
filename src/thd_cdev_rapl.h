@@ -43,8 +43,8 @@ public:
 
 	cthd_sysfs_cdev_rapl(unsigned int _index, int package) :
 			cthd_cdev(_index,
-					"/sys/devices/virtual/powercap/intel-rapl/intel-rapl:0/"), package_id(
-					package), constraint_index(0) {
+					"/sys/devices/virtual/powercap/intel-rapl/intel-rapl:0/"), phy_max(
+					0), package_id(package), constraint_index(0) {
 	}
 	virtual void set_curr_state(int state, int arg);
 	virtual int get_curr_state();

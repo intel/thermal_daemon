@@ -45,10 +45,16 @@ private:
 	char device_path[max_buffer_size];
 
 public:
+	cthd_kobj_uevent() {
+		fd = 0;
+		memset(&nls, 0, sizeof(nls));
+		device_path[0] = '\0';
+	}
 	int kobj_uevent_open();
 	void kobj_uevent_close();
 	void register_dev_path(char *path);
 	bool check_for_event();
-};
+}
+;
 
 #endif
