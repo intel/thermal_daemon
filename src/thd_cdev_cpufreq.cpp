@@ -37,13 +37,26 @@ int cthd_cdev_cpufreq::init() {
 
 		cdev_sysfs.read("present", count_str);
 		p1 = count_str.find_first_of("-", p0);
+		if (p1 == std::string::npos)
+			return THD_ERROR;
+
 		std::string token1 = count_str.substr(p0, p1 - p0);
+		if (token1.empty())
+			return THD_ERROR;
+
 		std::istringstream(token1) >> cpu_start_index;
+		if ((p1 + 1) >= count_str.size())
+			return THD_ERROR;
+
 		std::string token2 = count_str.substr(p1 + 1);
+		if (token2.empty())
+			return THD_ERROR;
+
 		std::istringstream(token2) >> cpu_end_index;
+		if ((cpu_end_index <= 0) || (cpu_end_index < cpu_start_index)
+				|| cpu_end_index > 63)
+			return THD_ERROR;
 	} else {
-		cpu_start_index = 0;
-		cpu_end_index = 0;
 		return THD_ERROR;
 	}
 	thd_log_debug("pstate CPU present %d-%d\n", cpu_start_index, cpu_end_index);
