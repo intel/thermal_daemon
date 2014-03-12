@@ -92,6 +92,7 @@ int cthd_zone_generic::read_trip_points() {
 			trip_points.push_back(*trip_ptr);
 			++trip_point_cnt;
 		}
+		delete trip_ptr;
 	}
 
 	return 0;
