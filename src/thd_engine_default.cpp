@@ -117,6 +117,7 @@ int cthd_engine_default::read_thermal_sensors() {
 									temp_input_str.str(), SENSOR_TYPE_RAW);
 							if (sensor->sensor_update() != THD_SUCCESS) {
 								delete sensor;
+								closedir(dir);
 								return THD_ERROR;
 							}
 							sensors.push_back(sensor);
