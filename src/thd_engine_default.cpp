@@ -37,15 +37,23 @@
 
 // Default CPU cooling devices, which are not part of thermal sysfs
 // Since non trivial initialization is not supported, we init all fields even if they are not needed
-static cooling_dev_t cpu_def_cooling_devices[] = {
-	{	.status = true,
-		.mask = CDEV_DEF_BIT_UNIT_VAL | CDEV_DEF_BIT_READ_BACK | CDEV_DEF_BIT_MIN_STATE | CDEV_DEF_BIT_STEP,
-		.index = 0, .unit_val = ABSOULUTE_VALUE, .min_state = 0, .max_state = 0, .inc_dec_step = 5,
-		.read_back = false, .auto_down_control = false,
-		.type_string = "intel_powerclamp", .path_str = "",
-		.debounce_interval = 4, .pid_enable = false,
-		.pid = {0.0, 0.0, 0.0}},
-};
+/* Some security scan handler can't parse, the following block and generate unnecessary errors.
+ * hiding good ones. So init in old style compatible to C++
+
+ static cooling_dev_t cpu_def_cooling_devices[] = {
+ {	.status = true,
+ .mask = CDEV_DEF_BIT_UNIT_VAL | CDEV_DEF_BIT_READ_BACK | CDEV_DEF_BIT_MIN_STATE | CDEV_DEF_BIT_STEP,
+ .index = 0, .unit_val = ABSOULUTE_VALUE, .min_state = 0, .max_state = 0, .inc_dec_step = 5,
+ .read_back = false, .auto_down_control = false,
+ .type_string = "intel_powerclamp", .path_str = "",
+ .debounce_interval = 4, .pid_enable = false,
+ .pid = {0.0, 0.0, 0.0}},
+ };
+ */
+static cooling_dev_t cpu_def_cooling_devices[] = { { true, CDEV_DEF_BIT_UNIT_VAL
+		| CDEV_DEF_BIT_READ_BACK | CDEV_DEF_BIT_MIN_STATE | CDEV_DEF_BIT_STEP,
+		0, ABSOULUTE_VALUE, 0, 0, 5, false, false, "intel_powerclamp", "", 4,
+		false, { 0.0, 0.0, 0.0 } } };
 
 cthd_engine_default::~cthd_engine_default() {
 	if (parser_init_done)
