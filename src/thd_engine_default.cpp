@@ -229,8 +229,9 @@ int cthd_engine_default::read_thermal_zones() {
 		if (zone->zone_update() == THD_SUCCESS) {
 			zones.push_back(zone);
 			++count;
-		}
-		zone->set_zone_active();
+			zone->set_zone_active();
+		} else
+			delete zone;
 	} else {
 		thd_log_info("TSKN sensor was activated by config \n");
 	}
