@@ -10,37 +10,17 @@ use "man thermal-conf.xml" for details
 	<Name>Generic X86 Laptop Device</Name>
 	<ProductName>*</ProductName>
 	<Preference>QUIET</Preference>
-	<ThermalSensors>
-		<ThermalSensor>
-			<Type>TSKN</Type>
-			<AsyncCapable>1</AsyncCapable>
-		</ThermalSensor>
-	</ThermalSensors>
-	<ThermalZones>
-		<ThermalZone>
-			<Type>SKIN</Type>
-			<TripPoints>
-				<TripPoint>
-					<SensorType>TSKN</SensorType>
-					<Temperature>44000</Temperature>
-					<type>passive</type>
-					<ControlType>SEQUENTIAL</ControlType>
-					<CoolingDevice>
-						<index>1</index>
-						<type>rapl_controller</type>
-						<influence> 100 </influence>
-						<SamplingPeriod> 16 </SamplingPeriod>
-					</CoolingDevice>
-					<CoolingDevice>
-						<index>2</index>
-						<type>intel_powerclamp</type>
-						<influence> 100 </influence>
-						<SamplingPeriod> 12 </SamplingPeriod>
-					</CoolingDevice>
-				</TripPoint>
-			</TripPoints>
-		</ThermalZone>
-	</ThermalZones>
+       <ThermalZones>
+                <ThermalZone>
+                        <Type>Surface</Type>
+                        <TripPoints>
+                                <TripPoint>
+                                        <Temperature>47000</Temperature>
+                                        <type>max</type>
+                                </TripPoint>
+                        </TripPoints>
+                </ThermalZone>
+        </ThermalZones>
 </Platform>
 
 <!-- Thermal configuration example only -->

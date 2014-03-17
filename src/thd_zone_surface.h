@@ -33,7 +33,7 @@ private:
 	cthd_sensor *sensor;
 
 public:
-	static const int passive_trip_temp = 45000;
+	static const int passive_trip_temp = 50000;
 	static const int passive_trip_hyst = 1000;
 	static const int surface_sampling_period = 12;
 

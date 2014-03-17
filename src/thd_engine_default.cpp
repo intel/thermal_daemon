@@ -35,6 +35,8 @@
 #include "thd_zone_surface.h"
 #include "thd_cdev_msr_rapl.h"
 
+#define ACTIVATE_SURFACE
+
 // Default CPU cooling devices, which are not part of thermal sysfs
 // Since non trivial initialization is not supported, we init all fields even if they are not needed
 /* Some security scan handler can't parse, the following block and generate unnecessary errors.
@@ -217,6 +219,22 @@ int cthd_engine_default::read_thermal_zones() {
 			}
 			closedir(dir);
 		}
+#ifdef ACTIVATE_SURFACE
+//	Enable when skin sensors are standardized
+	cthd_zone *surface;
+	surface = search_zone("Surface");
+
+	if (!surface || (surface && !surface->zone_active_status())) {
+		cthd_zone_surface *zone = new cthd_zone_surface(count);
+		if (zone->zone_update() == THD_SUCCESS) {
+			zones.push_back(zone);
+			++count;
+		}
+		zone->set_zone_active();
+	} else {
+		thd_log_info("TSKN sensor was activated by config \n");
+	}
+#endif
 
 		if (!cpu_zone_created) {
 			// No coretemp sysfs exist, try hwmon
@@ -249,7 +267,7 @@ int cthd_engine_default::read_thermal_zones() {
 				continue;
 			cthd_zone *zone = search_zone(zone_config->type);
 			if (zone) {
-				thd_log_info("Zone already present \n");
+				thd_log_info("Zone already present %s \n", zone_config->type.c_str());
 				for (unsigned int k = 0; k < zone_config->trip_pts.size();
 						++k) {
 					trip_point_t &trip_pt_config = zone_config->trip_pts[k];
@@ -294,31 +312,13 @@ int cthd_engine_default::read_thermal_zones() {
 				if (zone->zone_update() == THD_SUCCESS) {
 					zones.push_back(zone);
 					++count;
-				}
-				zone->set_zone_active();
+					zone->set_zone_active();
+				} else
+					delete zone;
 			}
 		}
 	}
 	zone_count = count;
-
-#ifdef ACTIVATE_SURFACE
-//	Enable when skin sensors are standardized
-	cthd_zone *surface;
-	surface = search_zone("TSKN");
-	if (!surface)
-	surface = search_zone("Surface");
-
-	if (!surface || (surface && !surface->zone_active_status())) {
-		cthd_zone_surface *zone = new cthd_zone_surface(count);
-		if (zone->zone_update() == THD_SUCCESS) {
-			zones.push_back(zone);
-			++count;
-		}
-		zone->set_zone_active();
-	} else {
-		thd_log_info("TSKN sensor was activated by config \n");
-	}
-#endif
 
 	for (unsigned int i = 0; i < zones.size(); ++i) {
 		zones[i]->zone_dump();

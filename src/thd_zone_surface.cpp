@@ -49,7 +49,7 @@ int cthd_zone_surface::read_trip_points() {
 		}
 	}
 	if (!trip_ptr) {
-		trip_ptr = new cthd_trip_point(trip_points.size(), PASSIVE,
+		trip_ptr = new cthd_trip_point(trip_points.size(), MAX,
 				passive_trip_temp, passive_trip_hyst, index,
 				sensor->get_index(), SEQUENTIAL);
 		if (!trip_ptr) {
