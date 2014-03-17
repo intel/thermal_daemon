@@ -148,18 +148,18 @@ int cthd_parse::parse_new_trip_point(xmlNode * a_node, xmlDoc *doc,
 				string_trim(trip_pt->sensor_type);
 			} else if (!strcasecmp((const char*) cur_node->name, "type")) {
 				char *type_val = char_trim(tmp_value);
-				if (!strcasecmp(type_val, "active"))
+				if (type_val && !strcasecmp(type_val, "active"))
 					trip_pt->trip_pt_type = ACTIVE;
-				else if (!strcasecmp(type_val, "passive"))
+				else if (type_val && !strcasecmp(type_val, "passive"))
 					trip_pt->trip_pt_type = PASSIVE;
-				else if (!strcasecmp(type_val, "critical"))
+				else if (type_val && !strcasecmp(type_val, "critical"))
 					trip_pt->trip_pt_type = CRITICAL;
-				else if (!strcasecmp(type_val, "max"))
+				else if (type_val && !strcasecmp(type_val, "max"))
 					trip_pt->trip_pt_type = MAX;
 			} else if (!strcasecmp((const char*) cur_node->name,
 					"ControlType")) {
 				char *ctrl_val = char_trim(tmp_value);
-				if (!strcasecmp(ctrl_val, "SEQUENTIAL"))
+				if (ctrl_val && !strcasecmp(ctrl_val, "SEQUENTIAL"))
 					trip_pt->control_type = SEQUENTIAL;
 				else
 					trip_pt->control_type = PARALLEL;
@@ -428,7 +428,7 @@ int cthd_parse::parse_new_platform_info(xmlNode * a_node, xmlDoc *doc,
 			} else if (!strcasecmp((const char*) cur_node->name,
 					"Preference")) {
 				char *pref_val = char_trim(tmp_value);
-				if (!strcasecmp(pref_val, "PERFORMANCE"))
+				if (pref_val && !strcasecmp(pref_val, "PERFORMANCE"))
 					info_ptr->default_prefernce = PREF_PERFORMANCE;
 				else
 					info_ptr->default_prefernce = PREF_ENERGY_CONSERVE;
