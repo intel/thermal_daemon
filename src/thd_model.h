@@ -76,6 +76,14 @@ public:
 	void set_max_temperature(int temp);
 	bool update_user_set_max_temp();
 
+	void set_zone_type(std::string _zone_type) {
+		zone_type = _zone_type;
+	}
+
+	void use_pid() {
+		use_pid_param = true;
+	}
+
 	unsigned int get_set_point() {
 		return set_point;
 	}

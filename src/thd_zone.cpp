@@ -37,15 +37,13 @@
 cthd_zone::cthd_zone(int _index, std::string control_path, sensor_relate_t rel) :
 		index(_index), zone_sysfs(control_path.c_str()), zone_temp(0), zone_active(
 				false), zone_cdev_binded_status(false), type_str(), sensor_rel(
-				rel), thd_model(NULL) {
+				rel), thd_model("") {
 	thd_log_debug("Added zone index:%d \n", index);
 }
 
 cthd_zone::~cthd_zone() {
 	trip_points.clear();
 	sensors.clear();
-	if (thd_model)
-		delete thd_model;
 }
 
 void cthd_zone::thermal_zone_temp_change(int id, unsigned int temp, int pref) {
@@ -57,10 +55,10 @@ void cthd_zone::thermal_zone_temp_change(int id, unsigned int temp, int pref) {
 	for (i = count - 1; i >= 0; --i) {
 		cthd_trip_point &trip_point = trip_points[i];
 		if (trip_point.get_trip_type() == MAX) {
-			thd_model->add_sample(zone_temp);
-			if (thd_model->is_set_point_reached()) {
+			thd_model.add_sample(zone_temp);
+			if (thd_model.is_set_point_reached()) {
 				int set_point;
-				set_point = thd_model->get_set_point();
+				set_point = thd_model.get_set_point();
 				thd_log_debug("new set point %d \n", set_point);
 				trip_point.thd_trip_update_set_point(set_point);
 				updated_max = true;
@@ -79,9 +77,9 @@ void cthd_zone::thermal_zone_temp_change(int id, unsigned int temp, int pref) {
 			cthd_trip_point &trip_point = trip_points[i];
 			if (trip_point.get_trip_type() == POLLING) {
 				thd_log_debug("new poll point %d \n",
-						thd_model->get_hot_zone_trigger_point());
+						thd_model.get_hot_zone_trigger_point());
 				trip_point.thd_trip_update_set_point(
-						thd_model->get_hot_zone_trigger_point());
+						thd_model.get_hot_zone_trigger_point());
 				trip_point.thd_trip_point_check(id, temp, pref, &reset);
 			}
 		}
@@ -92,7 +90,7 @@ void cthd_zone::update_zone_preference() {
 	if (!zone_active)
 		return;
 	thd_log_debug("update_zone_preference\n");
-	thd_model->update_user_set_max_temp();
+	thd_model.update_user_set_max_temp();
 
 	for (unsigned int i = 0; i < sensors.size(); ++i) {
 		cthd_sensor *sensor;
@@ -114,7 +112,9 @@ void cthd_zone::update_zone_preference() {
 int cthd_zone::zone_update() {
 	int ret;
 
-	thd_model = new cthd_model(type_str, true);
+	thd_model.set_zone_type(type_str);
+	thd_model.use_pid();
+
 	if (zone_bind_sensors() != THD_SUCCESS) {
 		thd_log_warn("Zone update failed: unable to bind \n");
 		return THD_ERROR;
@@ -147,8 +147,8 @@ int cthd_zone::zone_update() {
 					// We have to guarantee MAX, so we better
 					// wake up before, so that by the time
 					// we are notified, temp > max temp
-					thd_model->set_max_temperature(max_trip_temp);
-					polling_trip = thd_model->get_hot_zone_trigger_point();
+					thd_model.set_max_temperature(max_trip_temp);
+					polling_trip = thd_model.get_hot_zone_trigger_point();
 				}
 				sensor->set_threshold(0, polling_trip);
 				cthd_trip_point trip_pt_polling(trip_points.size(), POLLING,
@@ -166,9 +166,9 @@ int cthd_zone::zone_update() {
 		cthd_trip_point &trip_point = trip_points[i];
 		unsigned int set_point;
 		if (trip_point.get_trip_type() == MAX) {
-			thd_model->set_max_temperature(trip_point.get_trip_temp());
-			set_point = thd_model->get_set_point();
-			if (set_point != thd_model->get_set_point()) {
+			thd_model.set_max_temperature(trip_point.get_trip_temp());
+			set_point = thd_model.get_set_point();
+			if (set_point != thd_model.get_set_point()) {
 				trip_point.thd_trip_update_set_point(set_point);
 			}
 		}
@@ -271,7 +271,7 @@ void cthd_zone::add_trip(cthd_trip_point &trip) {
 			thd_log_debug("updating existing trip temp \n");
 			trip_points[j] = trip;
 			if (trip.get_trip_type() == MAX) {
-				thd_model->set_max_temperature(trip.get_trip_temp());
+				thd_model.set_max_temperature(trip.get_trip_temp());
 				// TODO: If sensor supports polling
 				// update the polling threshold also.
 			}
@@ -290,7 +290,7 @@ void cthd_zone::update_trip_temp(cthd_trip_point &trip) {
 			trip_points[j].update_trip_temp(trip.get_trip_temp());
 			trip_points[j].update_trip_hyst(trip.get_trip_hyst());
 			if (trip.get_trip_type() == MAX) {
-				thd_model->set_max_temperature(trip.get_trip_temp());
+				thd_model.set_max_temperature(trip.get_trip_temp());
 				// TODO: If sensor supports polling
 				// update the polling threshold also.
 			}

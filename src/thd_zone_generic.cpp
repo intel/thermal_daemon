@@ -70,9 +70,9 @@ int cthd_zone_generic::read_trip_points() {
 				return THD_ERROR;
 			}
 			if (trip_pt_config.trip_pt_type == MAX) {
-				thd_model->set_max_temperature(trip_pt_config.temperature);
-				if (thd_model->get_set_point()) {
-					trip_ptr->update_trip_temp(thd_model->get_set_point());
+				thd_model.set_max_temperature(trip_pt_config.temperature);
+				if (thd_model.get_set_point()) {
+					trip_ptr->update_trip_temp(thd_model.get_set_point());
 				}
 			}
 

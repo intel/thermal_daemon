@@ -119,8 +119,8 @@ int cthd_zone_cpu::init() {
 		thd_log_info("Buggy max temp: to close to critical %d\n", max_temp);
 	}
 
-	thd_model->set_max_temperature(max_temp);
-	prev_set_point = set_point = thd_model->get_set_point();
+	thd_model.set_max_temperature(max_temp);
+	prev_set_point = set_point = thd_model.get_set_point();
 
 	return THD_SUCCESS;
 }
