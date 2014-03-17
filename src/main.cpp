@@ -347,7 +347,7 @@ int main(int argc, char *argv[]) {
 	{ NULL } };
 
 	if (!g_module_supported()) {
-		fprintf(stderr, _("GModules are not supported on your platform!\n"));
+		fprintf(stderr, "GModules are not supported on your platform!\n");
 		exit(EXIT_FAILURE);
 	}
 
@@ -365,17 +365,17 @@ int main(int argc, char *argv[]) {
 	g_option_context_add_main_entries(opt_ctx, options, NULL);
 
 	g_option_context_set_summary(opt_ctx,
-			_(
-					"Thermal daemon monitors temperature sensors and decides the best action "
-							"based on the temperature readings and user preferences."));
+
+	"Thermal daemon monitors temperature sensors and decides the best action "
+			"based on the temperature readings and user preferences.");
 
 	success = g_option_context_parse(opt_ctx, &argc, &argv, NULL);
 	g_option_context_free(opt_ctx);
 
 	if (!success) {
 		fprintf(stderr,
-				_(
-						"Invalid option.  Please use --help to see a list of valid options.\n"));
+
+		"Invalid option.  Please use --help to see a list of valid options.\n");
 		exit(EXIT_FAILURE);
 	}
 
@@ -385,7 +385,7 @@ int main(int argc, char *argv[]) {
 	}
 
 	if (getuid() != 0 && !test_mode) {
-		fprintf(stderr, _("You must be root to run thermald!\n"));
+		fprintf(stderr, "You must be root to run thermald!\n");
 		exit(EXIT_FAILURE);
 	}
 	if (g_mkdir_with_parents(TDRUNDIR, 0755) != 0) {
