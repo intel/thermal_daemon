@@ -135,7 +135,7 @@ bool cthd_trip_point::thd_trip_point_check(int id, unsigned int read_temp,
 					thd_log_info("Too early to act index %d tm %ld\n",
 							cdev->thd_cdev_get_index(),
 							tm - cdevs[i].last_op_time);
-					continue;
+					break;
 				}
 				cdevs[i].last_op_time = tm;
 			}
