@@ -73,6 +73,10 @@ Use "sudo stop thermald" to stop
 
 Releases
 
+Release 1.2
+- Several fixes for Klocworks and Coverity scans (0 issues remaining)
+- Baytrail RAPL support as this doesn't have max power limit value
+
 Release 1.1
 - Use powercap Intel RAPL driver
 - Use skin temperature sensor by default if available
