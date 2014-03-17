@@ -31,7 +31,8 @@ static void *rapl_periodic_callback(void *data) {
 	cthd_rapl_power_meter *rapl_cl = (cthd_rapl_power_meter*) data;
 
 	for (;;) {
-		rapl_cl->rapl_energy_loop();
+		if (!rapl_cl->rapl_energy_loop())
+			break;
 		sleep(rapl_cl->rapl_callback_timeout);
 	}
 
@@ -124,16 +125,19 @@ void cthd_rapl_power_meter::rapl_enable_periodic_timer() {
 			(void*) this);
 }
 
-void cthd_rapl_power_meter::rapl_energy_loop() {
+bool cthd_rapl_power_meter::rapl_energy_loop() {
 	csys_fs sys_fs;
 	int status;
 	unsigned long long counter;
 	unsigned long long diff;
 	time_t curr_time;
 
+	if (!enable_measurement)
+		return false;
+
 	curr_time = time(NULL);
 	if ((curr_time - last_time) <= 0)
-		return;
+		return true;
 	for (unsigned int i = 0; i < domain_list.size(); ++i) {
 		std::string buffer;
 		std::string path;
@@ -183,6 +187,8 @@ void cthd_rapl_power_meter::rapl_energy_loop() {
 		}
 	}
 	last_time = curr_time;
+
+	return true;
 }
 
 unsigned long long cthd_rapl_power_meter::rapl_action_get_energy(

@@ -56,13 +56,14 @@ private:
 	pthread_attr_t thd_attr;
 	unsigned int measure_mask;
 	bool enable_measurement;
+
 public:
 	static const int rapl_callback_timeout = 10; //seconds
 	cthd_rapl_power_meter(unsigned int mask = 0x01);
 
 	void rapl_read_domains(const char *base_path);
 	void rapl_enable_periodic_timer();
-	void rapl_energy_loop();
+	bool rapl_energy_loop();
 	void rapl_measure_power();
 	void rapl_start_measure_power() {
 		enable_measurement = true;
