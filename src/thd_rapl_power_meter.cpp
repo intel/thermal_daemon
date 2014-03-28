@@ -62,7 +62,6 @@ void cthd_rapl_power_meter::rapl_read_domains(const char *dir_name) {
 	if (rapl_present) {
 		DIR *dir;
 		struct dirent *dir_entry;
-		int run_cnt = 0;
 		thd_log_debug("RAPL base path %s\n", dir_name);
 		if ((dir = opendir(dir_name)) != NULL) {
 			while ((dir_entry = readdir(dir)) != NULL) {
