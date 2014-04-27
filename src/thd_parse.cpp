@@ -28,19 +28,17 @@
 
 #include "thd_parse.h"
 #include <stdlib.h>
+#include <algorithm>
 #include "thd_sys_fs.h"
 
 #define DEBUG_PARSER_PRINT(x,...)
 
 void cthd_parse::string_trim(std::string &str) {
-	std::string::size_type pos = str.find_last_not_of(' ');
-	if (pos != std::string::npos) {
-		str.erase(pos + 1);
-		pos = str.find_first_not_of(' ');
-		if (pos != std::string::npos)
-			str.erase(0, pos);
-	} else
-		str.erase(str.begin(), str.end());
+	std::string chars = "\n \t\r";
+
+	for (unsigned int i = 0; i < chars.length(); ++i) {
+		str.erase(std::remove(str.begin(), str.end(), chars[i]), str.end());
+	}
 }
 
 #ifdef ANDROID
