@@ -30,7 +30,8 @@ thermald_src_files := \
 		$(thermald_src_path)/thd_msr.cpp \
 		$(thermald_src_path)/thd_rapl_interface.cpp \
 		$(thermald_src_path)/thd_cdev_msr_rapl.cpp \
-		$(thermald_src_path)/thd_rapl_power_meter.cpp
+		$(thermald_src_path)/thd_rapl_power_meter.cpp \
+		$(thermald_src_path)/src/thd_trt_art_reader.cpp
 
 include external/stlport/libstlport.mk
 
