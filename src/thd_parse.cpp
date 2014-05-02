@@ -610,57 +610,49 @@ void cthd_parse::dump_thermal_conf() {
 }
 
 bool cthd_parse::platform_matched() {
-	csys_fs thd_sysfs("/sys/class/dmi/id/");
 
-	if (thd_sysfs.exists(std::string("product_uuid"))) {
-		thd_log_debug("checking UUID\n");
-		std::string str;
-		if (thd_sysfs.read("product_uuid", str) >= 0) {
-			thd_log_info("UUID is [%s]\n", str.c_str());
-			for (unsigned int i = 0; i < thermal_info_list.size(); ++i) {
-				if (thermal_info_list[i].uuid == "*") {
-					matched_thermal_info_index = i;
-					thd_log_info("UUID matched [wildcard]\n");
-					return true;
-				}
-				if (thermal_info_list[i].uuid == str) {
-					matched_thermal_info_index = i;
-					thd_log_info("Product UUID matched \n");
-					return true;
-				}
+	std::string line;
+
+	std::ifstream product_uuid("/sys/class/dmi/id/product_uuid");
+
+	if (product_uuid.is_open() && getline(product_uuid, line)) {
+		for (unsigned int i = 0; i < thermal_info_list.size(); ++i) {
+			if (!thermal_info_list[i].uuid.size())
+				continue;
+			string_trim(line);
+			thd_log_debug("config product uuid [%s] match with [%s]\n",
+					thermal_info_list[i].uuid.c_str(), line.c_str());
+			if (thermal_info_list[i].uuid == "*") {
+				matched_thermal_info_index = i;
+				thd_log_info("UUID matched [wildcard]\n");
+				return true;
+			}
+			if (line == thermal_info_list[i].uuid) {
+				matched_thermal_info_index = i;
+				thd_log_info("UUID matched \n");
+				return true;
 			}
 		}
 	}
 
-	if (thd_sysfs.exists(std::string("product_name"))) {
-		thd_log_debug("checking product name\n");
-		char product_name[128] = { };
-		// Use different read method as the product name contains spaces
-		if (thd_sysfs.read("product_name", product_name, 127) >= 0) {
-			product_name[127] = '\0';
-			int len = strlen(product_name);
-			if (!len)
-				return false;
-			for (int i = 0; i < len; ++i)
-				if (product_name[i] == '\n')
-					product_name[i] = '\0';
-			thd_log_info("product name is[%s]\n", product_name);
-			for (unsigned int i = 0; i < thermal_info_list.size(); ++i) {
-				if (!thermal_info_list[i].product_name.size())
-					continue;
-				thd_log_debug("config product name %s\n",
-						thermal_info_list[i].product_name.c_str());
-				if (thermal_info_list[i].product_name == "*") {
-					matched_thermal_info_index = i;
-					thd_log_info("Product Name matched [wildcard]\n");
-					return true;
-				}
-				if (thermal_info_list[i].product_name.compare(0,
-						strlen(product_name), product_name) == 0) {
-					matched_thermal_info_index = i;
-					thd_log_info("Product Name matched \n");
-					return true;
-				}
+	std::ifstream product_name("/sys/class/dmi/id/product_name");
+
+	if (product_name.is_open() && getline(product_name, line)) {
+		for (unsigned int i = 0; i < thermal_info_list.size(); ++i) {
+			if (!thermal_info_list[i].product_name.size())
+				continue;
+			string_trim(line);
+			thd_log_debug("config product name [%s] match with [%s]\n",
+					thermal_info_list[i].product_name.c_str(), line.c_str());
+			if (thermal_info_list[i].product_name == "*") {
+				matched_thermal_info_index = i;
+				thd_log_info("Product Name matched [wildcard]\n");
+				return true;
+			}
+			if (line == thermal_info_list[i].product_name) {
+				matched_thermal_info_index = i;
+				thd_log_info("Product Name matched \n");
+				return true;
 			}
 		}
 	}
