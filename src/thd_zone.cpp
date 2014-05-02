@@ -158,9 +158,6 @@ int cthd_zone::zone_update() {
 			}
 		}
 	}
-	ret = read_cdev_trip_points();
-	if (ret != THD_SUCCESS)
-		return THD_ERROR;
 
 	for (unsigned int i = 0; i < trip_points.size(); ++i) {
 		cthd_trip_point &trip_point = trip_points[i];
