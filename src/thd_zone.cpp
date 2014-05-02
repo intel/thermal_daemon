@@ -219,7 +219,8 @@ int cthd_zone::bind_cooling_device(trip_point_type_t type,
 	count = trip_points.size();
 	for (i = 0; i < count; ++i) {
 		cthd_trip_point &trip_point = trip_points[i];
-		if (trip_point.get_trip_type() == type
+		if ((trip_point.get_trip_type() == type)
+				&& (trip_point.get_trip_temp() > 0)
 				&& (trip_temp == 0 || trip_point.get_trip_temp() == trip_temp)) {
 			trip_point.thd_trip_point_add_cdev(*cdev,
 					cthd_trip_point::default_influence);
