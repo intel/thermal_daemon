@@ -30,6 +30,7 @@
 #include <stdlib.h>
 #include <algorithm>
 #include "thd_sys_fs.h"
+#include "thd_trt_art_reader.h"
 
 #define DEBUG_PARSER_PRINT(x,...)
 
@@ -74,8 +75,16 @@ cthd_parse::cthd_parse() :
 }
 
 int cthd_parse::parser_init() {
+	cthd_acpi_rel rel;
+	int ret;
 
-	doc = xmlReadFile(filename.c_str(), NULL, 0);
+	ret = rel.generate_conf(filename + ".auto");
+	if (!ret) {
+		thd_log_warn("Using generated %s\n", (filename + ".auto").c_str());
+		doc = xmlReadFile((filename + ".auto").c_str(), NULL, 0);
+	} else {
+		doc = xmlReadFile(filename.c_str(), NULL, 0);
+	}
 	if (doc == NULL) {
 		thd_log_warn("error: could not parse file %s\n", filename.c_str());
 		return THD_ERROR;
@@ -549,18 +558,20 @@ void cthd_parse::dump_thermal_conf() {
 			for (unsigned int k = 0;
 					k < thermal_info_list[i].zones[j].trip_pts.size(); ++k) {
 				thd_log_info("\t\t Trip Point %u \n", k);
-				thd_log_info("\t\t  temp id %d \n",
+				thd_log_info("\t\t  temp %d \n",
 						thermal_info_list[i].zones[j].trip_pts[k].temperature);
 				thd_log_info("\t\t  trip type %d \n",
 						thermal_info_list[i].zones[j].trip_pts[k].trip_pt_type);
 				thd_log_info("\t\t  hyst id %d \n",
 						thermal_info_list[i].zones[j].trip_pts[k].hyst);
+				thd_log_info("\t\t  sensor type %s \n",
+						thermal_info_list[i].zones[j].trip_pts[k].sensor_type.c_str());
 
 				for (unsigned int l = 0;
 						l
 								< thermal_info_list[i].zones[j].trip_pts[k].cdev_trips.size();
 						++l) {
-					thd_log_info("\t\t  Trip id %u \n", l);
+					thd_log_info("\t\t  cdev index %u \n", l);
 					thd_log_info("\t\t\t  type %s \n",
 							thermal_info_list[i].zones[j].trip_pts[k].cdev_trips[l].type.c_str());
 					thd_log_info("\t\t\t  influence %d \n",
