@@ -42,6 +42,10 @@ int cthd_zone_generic::read_trip_points() {
 		return THD_ERROR;
 	for (unsigned int i = 0; i < zone_config->trip_pts.size(); ++i) {
 		trip_point_t &trip_pt_config = zone_config->trip_pts[i];
+
+		if (!trip_pt_config.temperature)
+			continue;
+
 		cthd_sensor *sensor = thd_engine->search_sensor(
 				trip_pt_config.sensor_type);
 		if (!sensor) {
@@ -93,6 +97,12 @@ int cthd_zone_generic::read_trip_points() {
 			++trip_point_cnt;
 		}
 		delete trip_ptr;
+	}
+
+	if (!trip_points.size()) {
+		thd_log_info(
+				" cthd_zone_generic::read_trip_points fail: No valid trips\n");
+		return THD_ERROR;
 	}
 
 	return 0;
