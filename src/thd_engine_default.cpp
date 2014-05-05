@@ -274,23 +274,6 @@ int cthd_engine_default::read_thermal_zones() {
 			if (cpu_zone_created)
 				break;
 		}
-#ifdef ACTIVATE_SURFACE
-//	Enable when skin sensors are standardized
-	cthd_zone *surface;
-	surface = search_zone("Surface");
-
-	if (!surface || (surface && !surface->zone_active_status())) {
-		cthd_zone_surface *zone = new cthd_zone_surface(count);
-		if (zone->zone_update() == THD_SUCCESS) {
-			zones.push_back(zone);
-			++count;
-			zone->set_zone_active();
-		} else
-			delete zone;
-	} else {
-		thd_log_info("TSKN sensor was activated by config \n");
-	}
-#endif
 
 		if (!cpu_zone_created) {
 			// No coretemp sysfs exist, try hwmon
@@ -419,6 +402,26 @@ thd_log_debug("bind_cooling_device failed for cdev %s trip %s\n", cdev->get_cdev
 		}
 	}
 	zone_count = count;
+
+#ifdef ACTIVATE_SURFACE
+//	Enable when skin sensors are standardized
+	cthd_zone *surface;
+	surface = search_zone("Surface");
+
+	if (!surface || (surface && !surface->zone_active_status())) {
+		cthd_zone_surface *zone = new cthd_zone_surface(count);
+		if (zone->zone_update() == THD_SUCCESS) {
+			zones.push_back(zone);
+			++count;
+			zone->set_zone_active();
+		} else
+			delete zone;
+	} else {
+		thd_log_info("TSKN sensor was activated by config \n");
+	}
+#endif
+	zone_count = count;
+
 
 	for (unsigned int i = 0; i < zones.size(); ++i) {
 		zones[i]->zone_dump();
