@@ -137,7 +137,8 @@ public:
 	int update_max_temperature(int max_temp);
 
 	int bind_cooling_device(trip_point_type_t type, unsigned int trip_temp,
-			cthd_cdev *cdev);
+			cthd_cdev *cdev, int influence,
+			int sampling_period = 0);
 
 	void zone_dump() {
 		thd_log_info("Zone %d: %s, Active:%d Bind:%d Sensor_cnt:%lu\n", index,

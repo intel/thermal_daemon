@@ -372,8 +372,8 @@ int cthd_engine_default::read_thermal_zones() {
 							}
 							if (cdev) {
 								if (zone->bind_cooling_device(
-										trip_pt_config.trip_pt_type, 0,
-										cdev) == THD_SUCCESS) {
+										trip_pt_config.trip_pt_type, 0, cdev,
+										trip_pt_config.cdev_trips[j].influence) == THD_SUCCESS) {
 									thd_log_debug(
 											"bind %s to trip to sensor %s\n",
 											cdev->get_cdev_type().c_str(),
