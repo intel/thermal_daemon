@@ -126,6 +126,13 @@ int cthd_zone::zone_update() {
 	if (trip_points.size()) {
 		unsigned int polling_trip = 0;
 		unsigned int max_trip_temp = 0;
+
+		std::sort(trip_points.begin(), trip_points.end(), trip_sort);
+		thd_log_info("Sorted trip dump :\n");
+		for (unsigned int i = 0; i < trip_points.size(); ++i) {
+			trip_points[i].trip_dump();
+		}
+
 		// Set the lowest trip point as the threshold for sensor async mode
 		// Use that the lowest point, after that we poll
 		if (trip_points.size())

@@ -111,6 +111,9 @@ public:
 	void update_trip_temp(unsigned int _temp) {
 		temp = _temp;
 	}
+	void update_trip_type(trip_point_type_t _type) {
+		type = _type;
+	}
 	void update_trip_hyst(unsigned int _temp) {
 		hyst = _temp;
 	}
@@ -147,4 +150,7 @@ public:
 	}
 };
 
+static bool trip_sort(cthd_trip_point trip1, cthd_trip_point trip2) {
+	return (trip1.get_trip_temp() < trip2.get_trip_temp());
+}
 #endif
