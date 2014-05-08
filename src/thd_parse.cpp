@@ -182,12 +182,13 @@ int cthd_parse::parse_new_trip_point(xmlNode * a_node, xmlDoc *doc,
 int cthd_parse::parse_trip_points(xmlNode * a_node, xmlDoc *doc,
 		thermal_zone_t *info_ptr) {
 	xmlNode *cur_node = NULL;
-	trip_point_t trip_pt;
 
 	for (cur_node = a_node; cur_node; cur_node = cur_node->next) {
 		if (cur_node->type == XML_ELEMENT_NODE) {
 			DEBUG_PARSER_PRINT("node type: Element, name: %s value: %s\n", cur_node->name, xmlNodeListGetString(doc, cur_node->xmlChildrenNode, 1));
 			if (!strcasecmp((const char*) cur_node->name, "TripPoint")) {
+				trip_point_t trip_pt;
+
 				trip_pt.hyst = trip_pt.temperature = 0;
 				trip_pt.trip_pt_type = PASSIVE;
 				trip_pt.control_type = PARALLEL;
