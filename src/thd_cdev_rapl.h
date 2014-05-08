@@ -29,13 +29,13 @@
 #include "thd_sys_fs.h"
 
 class cthd_sysfs_cdev_rapl: public cthd_cdev {
-private:
+protected:
 	unsigned long phy_max;
 	int package_id;
 	int constraint_index;
 	bool dynamic_phy_max_enable;
 
-	bool calculate_phy_max();
+	virtual bool calculate_phy_max();
 
 public:
 	static const int rapl_no_time_windows = 6;

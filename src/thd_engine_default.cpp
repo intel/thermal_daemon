@@ -34,6 +34,7 @@
 #include "thd_cdev_intel_pstate_driver.h"
 #include "thd_zone_surface.h"
 #include "thd_cdev_msr_rapl.h"
+#include "thd_cdev_rapl_dram.h"
 
 #define ACTIVATE_SURFACE
 
@@ -575,6 +576,14 @@ int cthd_engine_default::read_cooling_devices() {
 		++cdev_cnt;
 	} else
 		delete cpu_freq_dev;
+
+	cthd_sysfs_cdev_rapl_dram *rapl_dram_dev = new cthd_sysfs_cdev_rapl_dram(cdev_cnt, 0);
+	rapl_dram_dev->set_cdev_type("rapl_controller_dram");
+	if (rapl_dram_dev->update() == THD_SUCCESS) {
+		cdevs.push_back(rapl_dram_dev);
+		++cdev_cnt;
+	} else
+		delete rapl_dram_dev;
 
 	// Dump all cooling devices
 	for (unsigned i = 0; i < cdevs.size(); ++i) {

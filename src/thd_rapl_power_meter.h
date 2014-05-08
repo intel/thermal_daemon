@@ -59,7 +59,7 @@ private:
 
 public:
 	static const int rapl_callback_timeout = 10; //seconds
-	cthd_rapl_power_meter(unsigned int mask = 0x01);
+	cthd_rapl_power_meter(unsigned int mask = PACKAGE | DRAM);
 
 	void rapl_read_domains(const char *base_path);
 	void rapl_enable_periodic_timer();
