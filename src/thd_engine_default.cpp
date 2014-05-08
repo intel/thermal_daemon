@@ -55,6 +55,9 @@
 static cooling_dev_t cpu_def_cooling_devices[] = { { true, CDEV_DEF_BIT_UNIT_VAL
 		| CDEV_DEF_BIT_READ_BACK | CDEV_DEF_BIT_MIN_STATE | CDEV_DEF_BIT_STEP,
 		0, ABSOULUTE_VALUE, 0, 0, 5, false, false, "intel_powerclamp", "", 4,
+		false, { 0.0, 0.0, 0.0 } }, { true, CDEV_DEF_BIT_UNIT_VAL
+		| CDEV_DEF_BIT_READ_BACK | CDEV_DEF_BIT_MIN_STATE | CDEV_DEF_BIT_STEP,
+		0, ABSOULUTE_VALUE, 0, 100, 5, false, false, "LCD", "", 4,
 		false, { 0.0, 0.0, 0.0 } } };
 
 cthd_engine_default::~cthd_engine_default() {
@@ -309,7 +312,7 @@ int cthd_engine_default::read_thermal_zones() {
 									zone_config->type.c_str());
 			cthd_zone *zone = search_zone(zone_config->type);
 			if (zone) {
-				activate = true;
+				activate = false;
 				thd_log_info("Zone already present %s \n",
 						zone_config->type.c_str());
 				for (unsigned int k = 0; k < zone_config->trip_pts.size();
@@ -351,7 +354,9 @@ int cthd_engine_default::read_thermal_zones() {
 									trip_pt_config.cdev_trips[j].type);
 							if (cdev) {
 								trip_pt.thd_trip_point_add_cdev(*cdev,
-										trip_pt_config.cdev_trips[j].influence);
+										trip_pt_config.cdev_trips[j].influence,
+										trip_pt_config.cdev_trips[j].sampling_period);
+								activate = true;
 							}
 						}
 						zone->add_trip(trip_pt);
@@ -361,7 +366,6 @@ int cthd_engine_default::read_thermal_zones() {
 						// Try to find some existing non zero trips and associate the cdevs
 						// This is the way from an XML config a generic cooling device
 						// can be bound. For example from ACPI thermal relationships tables
-						activate = false;
 						for (unsigned int j = 0;
 								j < trip_pt_config.cdev_trips.size(); ++j) {
 							cthd_cdev *cdev = search_cdev(
@@ -387,8 +391,11 @@ thd_log_debug("bind_cooling_device failed for cdev %s trip %s\n", cdev->get_cdev
 						}
 					}
 				}
-				if (activate)
+				if (activate) {
+					thd_log_debug("Activate zone %s\n",
+							zone->get_zone_type().c_str());
 					zone->set_zone_active();
+				}
 			} else {
 				cthd_zone_generic *zone = new cthd_zone_generic(count, i,
 						zone_config->type);
@@ -421,7 +428,6 @@ thd_log_debug("bind_cooling_device failed for cdev %s trip %s\n", cdev->get_cdev
 	}
 #endif
 	zone_count = count;
-
 
 	for (unsigned int i = 0; i < zones.size(); ++i) {
 		zones[i]->zone_dump();
