@@ -86,6 +86,8 @@ int cthd_sysfs_zone::read_trip_points() {
 		if (zone_sysfs.exists(hist_stream.str())) {
 			zone_sysfs.read(hist_stream.str(), _hist_str);
 			std::istringstream(_hist_str) >> hyst;
+			if (hyst < 1000 || hyst > 5000)
+				hyst = 1000;
 			thd_log_debug("read_trip_points %s:%s \n",
 					hist_stream.str().c_str(), _hist_str.c_str());
 		}
@@ -107,6 +109,7 @@ int cthd_sysfs_zone::read_trip_points() {
 			if (sensor) {
 				cthd_trip_point trip_pt(trip_point_cnt, trip_type, temp, hyst,
 						index, sensor->get_index());
+				trip_pt.thd_trip_point_set_control_type(SEQUENTIAL);
 				trip_points.push_back(trip_pt);
 				++trip_point_cnt;
 			}
