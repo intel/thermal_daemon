@@ -123,6 +123,12 @@ int cthd_zone::zone_update() {
 	if (ret != THD_SUCCESS)
 		return THD_ERROR;
 
+	ret = read_cdev_trip_points();
+	if (ret != THD_SUCCESS) {
+		thd_log_info("No cdev trip points loaded for zone index %d\n", index);
+		// Don't bail out as they may be attached by thermal relation tables
+	}
+
 	if (trip_points.size()) {
 		unsigned int polling_trip = 0;
 		unsigned int max_trip_temp = 0;
