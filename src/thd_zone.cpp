@@ -144,7 +144,7 @@ int cthd_zone::zone_update() {
 		if (trip_points.size())
 			polling_trip = trip_points[0].get_trip_temp();
 		for (unsigned int i = 0; i < trip_points.size(); ++i) {
-			if (polling_trip < trip_points[i].get_trip_temp())
+			if (polling_trip > trip_points[i].get_trip_temp())
 				polling_trip = trip_points[i].get_trip_temp();
 			if (trip_points[i].get_trip_type() == MAX)
 				max_trip_temp = trip_points[i].get_trip_temp();
@@ -162,7 +162,11 @@ int cthd_zone::zone_update() {
 					// we are notified, temp > max temp
 					thd_model.set_max_temperature(max_trip_temp);
 					polling_trip = thd_model.get_hot_zone_trigger_point();
+				} else {
+					if (polling_trip > def_async_trip_offset)
+						polling_trip -= def_async_trip_offset;
 				}
+
 				sensor->set_threshold(0, polling_trip);
 				cthd_trip_point trip_pt_polling(trip_points.size(), POLLING,
 						polling_trip, 0, index, sensor->get_index());

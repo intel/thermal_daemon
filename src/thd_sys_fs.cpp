@@ -179,6 +179,15 @@ bool csys_fs::exists() {
 	return csys_fs::exists("");
 }
 
+mode_t csys_fs::get_mode(const std::string &path) {
+	struct stat s;
+
+	if (stat((base_path + path).c_str(), &s) == 0)
+		return s.st_mode;
+	else
+		return 0;
+}
+
 int csys_fs::read_symbolic_link_value(const std::string &path, char *buf,
 		int len) {
 	std::string p = base_path + path;

@@ -119,7 +119,7 @@ int cthd_zone_cpu::init() {
 		thd_log_info("Buggy max temp: to close to critical %d\n", max_temp);
 	}
 
-	thd_model.set_max_temperature(max_temp + ((critical_temp - max_temp)/2));
+	thd_model.set_max_temperature(max_temp + ((critical_temp - max_temp) / 2));
 	prev_set_point = set_point = thd_model.get_set_point();
 
 	return THD_SUCCESS;
@@ -156,8 +156,8 @@ int cthd_zone_cpu::parse_cdev_order() {
 				load_cdev_xml(trip_pt_max, order_list);
 				trip_points.push_back(trip_pt_max);
 				trip_point_cnt++;
-				cthd_trip_point trip_pt_passive(trip_point_cnt, PASSIVE, max_temp,
-						def_hystersis, index, DEFAULT_SENSOR_ID);
+				cthd_trip_point trip_pt_passive(trip_point_cnt, PASSIVE,
+						max_temp, def_hystersis, index, DEFAULT_SENSOR_ID);
 				trip_pt_passive.thd_trip_point_set_control_type(SEQUENTIAL);
 				load_cdev_xml(trip_pt_passive, order_list);
 				trip_points.push_back(trip_pt_passive);
@@ -181,8 +181,8 @@ int cthd_zone_cpu::read_trip_points() {
 		thd_log_info("CDEVS order specified in thermal-cpu-cdev-order.xml\n");
 		return THD_SUCCESS;
 	}
-	cthd_trip_point trip_pt_max(trip_point_cnt, MAX, set_point,
-			def_hystersis, index, DEFAULT_SENSOR_ID);
+	cthd_trip_point trip_pt_max(trip_point_cnt, MAX, set_point, def_hystersis,
+			index, DEFAULT_SENSOR_ID);
 	trip_point_cnt++;
 	cthd_trip_point trip_pt_passive(trip_point_cnt, PASSIVE, max_temp,
 			def_hystersis, index, DEFAULT_SENSOR_ID);
@@ -224,6 +224,7 @@ int cthd_zone_cpu::zone_bind_sensors() {
 
 	cthd_sensor *sensor;
 	int status = THD_ERROR;
+	bool async_sensor = false;
 
 	if (init() != THD_SUCCESS)
 		return THD_ERROR;
@@ -231,6 +232,26 @@ int cthd_zone_cpu::zone_bind_sensors() {
 	sensor = thd_engine->search_sensor("pkg-temp-0");
 	if (sensor) {
 		bind_sensor(sensor);
+		async_sensor = true;
+	}
+
+	sensor = thd_engine->search_sensor("x86_pkg_temp");
+	if (sensor) {
+		bind_sensor(sensor);
+		async_sensor = true;
+	}
+
+	sensor = thd_engine->search_sensor("soc_dts0");
+	if (sensor) {
+		bind_sensor(sensor);
+		async_sensor = true;
+	}
+
+	if (async_sensor) {
+		sensor = thd_engine->search_sensor("hwmon");
+		if (sensor) {
+			sensor->set_async_capable(true);
+		}
 		return THD_SUCCESS;
 	}
 

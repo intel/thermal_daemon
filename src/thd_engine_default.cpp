@@ -58,8 +58,8 @@ static cooling_dev_t cpu_def_cooling_devices[] = { { true, CDEV_DEF_BIT_UNIT_VAL
 		0, ABSOULUTE_VALUE, 0, 0, 5, false, false, "intel_powerclamp", "", 4,
 		false, { 0.0, 0.0, 0.0 } }, { true, CDEV_DEF_BIT_UNIT_VAL
 		| CDEV_DEF_BIT_READ_BACK | CDEV_DEF_BIT_MIN_STATE | CDEV_DEF_BIT_STEP,
-		0, ABSOULUTE_VALUE, 0, 100, 5, false, false, "LCD", "", 4,
-		false, { 0.0, 0.0, 0.0 } } };
+		0, ABSOULUTE_VALUE, 0, 100, 5, false, false, "LCD", "", 4, false, { 0.0,
+				0.0, 0.0 } } };
 
 cthd_engine_default::~cthd_engine_default() {
 	if (parser_init_done)
@@ -105,6 +105,19 @@ int cthd_engine_default::read_thermal_sensors() {
 		// Force this to support async
 		sensor->set_async_capable(true);
 	}
+
+	sensor = search_sensor("x86_pkg_temp");
+	if (sensor) {
+		// Force this to support async
+		sensor->set_async_capable(true);
+	}
+
+	sensor = search_sensor("soc_dts0");
+	if (sensor) {
+		// Force this to support async
+		sensor->set_async_capable(true);
+	}
+
 	// Default CPU temperature zone
 	// Find path to read DTS temperature
 	for (i = 0; i < 2; ++i) {
@@ -143,8 +156,8 @@ int cthd_engine_default::read_thermal_sensors() {
 							if (dts_sysfs.exists(temp_input_str.str())) {
 								cthd_sensor *sensor = new cthd_sensor(index,
 										base_path[i] + entry->d_name + "/"
-												+ temp_input_str.str(),
-												"hwmon", SENSOR_TYPE_RAW);
+												+ temp_input_str.str(), "hwmon",
+										SENSOR_TYPE_RAW);
 								if (sensor->sensor_update() != THD_SUCCESS) {
 									delete sensor;
 									closedir(dir);
@@ -309,8 +322,7 @@ int cthd_engine_default::read_thermal_zones() {
 			thermal_zone_t *zone_config = parser.get_zone_dev_index(i);
 			if (!zone_config)
 				continue;
-			thd_log_debug("Look for Zone  [%s] \n",
-									zone_config->type.c_str());
+			thd_log_debug("Look for Zone  [%s] \n", zone_config->type.c_str());
 			cthd_zone *zone = search_zone(zone_config->type);
 			if (zone) {
 				activate = false;
@@ -385,7 +397,10 @@ int cthd_engine_default::read_thermal_zones() {
 											sensor->get_sensor_type().c_str());
 									activate = true;
 								} else {
-thd_log_debug("bind_cooling_device failed for cdev %s trip %s\n", cdev->get_cdev_type().c_str(), sensor->get_sensor_type().c_str());
+									thd_log_debug(
+											"bind_cooling_device failed for cdev %s trip %s\n",
+											cdev->get_cdev_type().c_str(),
+											sensor->get_sensor_type().c_str());
 								}
 
 							}
@@ -577,7 +592,8 @@ int cthd_engine_default::read_cooling_devices() {
 	} else
 		delete cpu_freq_dev;
 
-	cthd_sysfs_cdev_rapl_dram *rapl_dram_dev = new cthd_sysfs_cdev_rapl_dram(cdev_cnt, 0);
+	cthd_sysfs_cdev_rapl_dram *rapl_dram_dev = new cthd_sysfs_cdev_rapl_dram(
+			cdev_cnt, 0);
 	rapl_dram_dev->set_cdev_type("rapl_controller_dram");
 	if (rapl_dram_dev->update() == THD_SUCCESS) {
 		cdevs.push_back(rapl_dram_dev);
