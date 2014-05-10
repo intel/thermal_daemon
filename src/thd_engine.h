@@ -140,6 +140,9 @@ public:
 	void thd_engine_calibrate();
 	int thd_engine_set_user_max_temp(const char *zone_type,
 			const char *user_set_point);
+	int thd_engine_set_user_psv_temp(const char *zone_type,
+			const char *user_set_point);
+
 	void poll_enable_disable(bool status, message_capsul_t *msg);
 
 	cthd_cdev *thd_get_cdev_at_index(int index);

@@ -136,6 +136,8 @@ public:
 	}
 
 	int update_max_temperature(int max_temp);
+	int update_psv_temperature(int psv_temp);
+	int read_user_set_psv_temp();
 
 	int bind_cooling_device(trip_point_type_t type, unsigned int trip_temp,
 			cthd_cdev *cdev, int influence, int sampling_period = 0);

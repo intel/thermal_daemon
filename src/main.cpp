@@ -71,6 +71,8 @@ gboolean thd_dbus_interface_get_current_preference(PrefObject *obj,
 		gchar **pref_out, GError **error);
 gboolean thd_dbus_interface_set_user_max_temperature(PrefObject *obj,
 		gchar *zone_name, gchar *temperature, GError **error);
+gboolean thd_dbus_interface_set_user_passive_temperature(PrefObject *obj,
+		gchar *zone_name, gchar *temperature, GError **error);
 // This is a generated file, which expects the above prototypes
 #include "thd-dbus-interface.h"
 
@@ -170,6 +172,19 @@ gboolean thd_dbus_interface_set_user_max_temperature(PrefObject *obj,
 	g_assert(obj != NULL);
 	cthd_preference thd_pref;
 	if (thd_engine->thd_engine_set_user_max_temp(zone_name,
+			(char*) temperature) == THD_SUCCESS)
+		thd_engine->send_message(PREF_CHANGED, 0, NULL);
+
+	return TRUE;
+}
+
+gboolean thd_dbus_interface_set_user_passive_temperature(PrefObject *obj,
+		gchar *zone_name, gchar *temperature, GError **error) {
+	thd_log_debug("thd_dbus_interface_set_user_passive_temperature %s:%s\n", zone_name,
+			temperature);
+	g_assert(obj != NULL);
+	cthd_preference thd_pref;
+	if (thd_engine->thd_engine_set_user_psv_temp(zone_name,
 			(char*) temperature) == THD_SUCCESS)
 		thd_engine->send_message(PREF_CHANGED, 0, NULL);
 

@@ -109,6 +109,24 @@ void cthd_zone::update_zone_preference() {
 	}
 }
 
+int cthd_zone::read_user_set_psv_temp() {
+	std::stringstream filename;
+	int temp = -1;
+
+	filename << TDRUNDIR << "/" << "thd_user_psv_temp." << type_str << "."
+			<< "conf";
+	std::ifstream ifs(filename.str().c_str(), std::ifstream::in);
+	if (ifs.good()) {
+		ifs >> temp;
+		thd_log_info("read_user_set_psv_temp %d\n", temp);
+		if (temp < 1000)
+			temp = -1;
+	}
+	ifs.close();
+
+	return temp;
+}
+
 int cthd_zone::zone_update() {
 	int ret;
 
@@ -122,6 +140,13 @@ int cthd_zone::zone_update() {
 	ret = read_trip_points();
 	if (ret != THD_SUCCESS)
 		return THD_ERROR;
+
+	int usr_psv_temp = read_user_set_psv_temp();
+	if (usr_psv_temp > 0) {
+		cthd_trip_point trip_pt_passive(0, PASSIVE, usr_psv_temp, 0, index,
+		DEFAULT_SENSOR_ID);
+		update_trip_temp(trip_pt_passive);
+	}
 
 	ret = read_cdev_trip_points();
 	if (ret != THD_SUCCESS) {
@@ -274,6 +299,24 @@ int cthd_zone::update_max_temperature(int max_temp) {
 		return THD_ERROR;
 	}
 	temp_str << max_temp;
+	fout << temp_str.str();
+	fout.close();
+
+	return THD_SUCCESS;
+}
+
+int cthd_zone::update_psv_temperature(int psv_temp) {
+
+	std::stringstream filename;
+	std::stringstream temp_str;
+
+	filename << TDRUNDIR << "/" << "thd_user_psv_temp." << type_str << "."
+			<< "conf";
+	std::ofstream fout(filename.str().c_str());
+	if (!fout.good()) {
+		return THD_ERROR;
+	}
+	temp_str << psv_temp;
 	fout << temp_str.str();
 	fout.close();
 
