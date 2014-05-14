@@ -1,7 +1,7 @@
 /*
- * cthd_engine_defualt.cpp: Default thermal engine
- *
- * Copyright (C) 2013 Intel Corporation. All rights reserved.
+ * thd_default_binding.h: Default binding of  thermal zones
+ *	interface file
+ * Copyright (C) 2014 Intel Corporation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License version
@@ -22,32 +22,35 @@
  *
  */
 
-#ifndef THD_ENGINE_DEFAULT_H_
-#define THD_ENGINE_DEFAULT_H_
+#ifndef THD_DEFAULT_BINDING_H_
+#define THD_DEFAULT_BINDING_H_
 
 #include "thd_engine.h"
-#include "thd_zone_surface.h"
-#include "thd_default_binding.h"
+#include "thd_cdev.h"
 
-class cthd_engine_default: public cthd_engine {
+class cthd_default_binding {
 private:
-	int parser_init();
-	void parser_deinit();
-	int add_replace_cdev(cooling_dev_t *config);
+	int thd_read_default_thermal_zones();
+	cthd_cdev *cdev_gate;
+	unsigned int cpu_package_max_power;
 
-	bool parser_init_done;
-	cthd_default_binding def_binding;
+	bool blacklist_match(std::string name);
 
 public:
-	static const int power_clamp_reduction_percent = 5;
+	static const int def_gating_cdev_sampling_period = 30;
+	static const int def_starting_power_differential = 4000000;
 
-	cthd_engine_default() :
-			cthd_engine(), parser_init_done(false) {
+	cthd_default_binding() :
+			cdev_gate(NULL), cpu_package_max_power(0) {
 	}
-	~cthd_engine_default();
-	int read_thermal_zones();
-	int read_cooling_devices();
-	int read_thermal_sensors();
+	~ cthd_default_binding() {
+		if (cdev_gate)
+			delete cdev_gate;
+	}
+	void do_default_binding(std::vector<cthd_cdev *> &cdevs);
+
+	bool check_cpu_load();
+
 };
 
-#endif /* THD_ENGINE_DEFAULT_H_ */
+#endif /* THD_DEFAULT_BINDING_H_ */

@@ -445,9 +445,12 @@ int cthd_engine_default::read_thermal_zones() {
 #endif
 	zone_count = count;
 
+	def_binding.do_default_binding(cdevs);
+
 	for (unsigned int i = 0; i < zones.size(); ++i) {
 		zones[i]->zone_dump();
 	}
+
 	return THD_SUCCESS;
 }
 

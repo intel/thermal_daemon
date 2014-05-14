@@ -207,6 +207,14 @@ public:
 	cthd_sensor *get_sensor(int index);
 	cthd_zone *get_zone(int index);
 	cthd_zone *get_zone(std::string type);
+
+	unsigned int get_zone_count() {
+		return zones.size();
+	}
+	void add_zone(cthd_zone *zone) {
+		zones.push_back(zone);
+	}
+
 	;
 };
 

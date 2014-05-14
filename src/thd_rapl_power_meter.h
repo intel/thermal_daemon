@@ -44,6 +44,8 @@ typedef struct {
 	unsigned long long energy_cumulative_counter;
 	unsigned long long energy_counter;
 	unsigned int power;
+	unsigned int max_power;
+	unsigned int min_power;
 } rapl_domain_t;
 
 class cthd_rapl_power_meter {
@@ -71,9 +73,13 @@ public:
 	void rapl_stop_measure_power() {
 		enable_measurement = false;
 	}
+
 	// return in micro units to be compatible with kernel ABI
 	unsigned long long rapl_action_get_energy(domain_type type);
 	unsigned int rapl_action_get_power(domain_type type);
+	unsigned int rapl_action_get_power(domain_type type,
+			unsigned int *max_power, unsigned int *min_power);
+	unsigned int rapl_action_get_max_power(domain_type type);
 };
 
 #endif

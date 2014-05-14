@@ -76,6 +76,8 @@ void cthd_rapl_power_meter::rapl_read_domains(const char *dir_name) {
 				domain.max_energy_range = 0;
 				domain.max_energy_range_threshold = 0;
 				domain.power = 0;
+				domain.max_power = 0;
+				domain.min_power = 0;
 				domain.type = PACKAGE;
 
 				if (!strcmp(dir_entry->d_name, ".")
@@ -176,6 +178,14 @@ bool cthd_rapl_power_meter::rapl_energy_loop() {
 			if (counter)
 				domain_list[i].power = (domain_list[i].energy_counter - counter
 						+ diff) / (curr_time - last_time);
+			if (domain_list[i].power > domain_list[i].max_power)
+				domain_list[i].max_power = domain_list[i].power;
+
+			if (domain_list[i].min_power == 0)
+				domain_list[i].min_power = domain_list[i].power;
+			else if (domain_list[i].power < domain_list[i].min_power)
+				domain_list[i].min_power = domain_list[i].power;
+
 			thd_log_debug(" energy %d:%lld:%lld mj: %u mw \n",
 					domain_list[i].type,
 					domain_list[i].energy_cumulative_counter,
@@ -225,6 +235,67 @@ unsigned int cthd_rapl_power_meter::rapl_action_get_power(domain_type type) {
 				sleep(1);
 				rapl_energy_loop();
 				value = domain_list[i].power * 1000;
+			}
+			break;
+		}
+	}
+
+	return value;
+}
+
+unsigned int cthd_rapl_power_meter::rapl_action_get_max_power(
+		domain_type type) {
+	unsigned int value = 0;
+
+	if (!rapl_present)
+		return 0;
+
+	for (unsigned int i = 0; i < domain_list.size(); ++i) {
+		if (type == domain_list[i].type) {
+			int status;
+			std::string _path;
+			std::string _buffer;
+			csys_fs sys_fs;
+			unsigned int const_0_val, const_1_val;
+
+			const_0_val = 0;
+			const_1_val = 0;
+			_path = domain_list[i].path + "/" + "constraint_0_max_power_uw";
+			status = sys_fs.read(_path, _buffer);
+			if (status >= 0)
+				const_0_val = atoi(_buffer.c_str());
+
+			_path = domain_list[i].path + "/" + "constraint_1_max_power_uw";
+			status = sys_fs.read(_path, _buffer);
+			if (status >= 0)
+				const_1_val = atoi(_buffer.c_str());
+
+			value = const_1_val > const_0_val ? const_1_val : const_0_val;
+			if (value)
+				return value;
+		}
+	}
+
+	return value;
+}
+
+unsigned int cthd_rapl_power_meter::rapl_action_get_power(domain_type type,
+		unsigned int *max_power, unsigned int *min_power) {
+	unsigned int value = 0;
+
+	if (!rapl_present)
+		return 0;
+
+	for (unsigned int i = 0; i < domain_list.size(); ++i) {
+		if (type == domain_list[i].type) {
+			value = domain_list[i].power * 1000;
+			if (!value) {
+				rapl_energy_loop();
+				sleep(1);
+				rapl_energy_loop();
+				value = domain_list[i].power * 1000;
+				*max_power = domain_list[i].max_power * 1000;
+				*min_power = domain_list[i].min_power * 1000;
 			}
 			break;
 		}
