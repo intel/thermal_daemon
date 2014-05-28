@@ -266,7 +266,7 @@ int cthd_zone::bind_cooling_device(trip_point_type_t type,
 				&& (trip_point.get_trip_temp() > 0)
 				&& (trip_temp == 0 || trip_point.get_trip_temp() == trip_temp)) {
 			trip_point.thd_trip_point_add_cdev(*cdev,
-					cthd_trip_point::default_influence);
+					cthd_trip_point::default_influence, sampling_period);
 			added = true;
 			break;
 		}

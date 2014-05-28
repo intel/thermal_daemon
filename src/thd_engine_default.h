@@ -27,7 +27,7 @@
 
 #include "thd_engine.h"
 #include "thd_zone_surface.h"
-#include "thd_default_binding.h"
+#include "thd_cpu_default_binding.h"
 
 class cthd_engine_default: public cthd_engine {
 private:
@@ -36,7 +36,7 @@ private:
 	int add_replace_cdev(cooling_dev_t *config);
 
 	bool parser_init_done;
-	cthd_default_binding def_binding;
+	cthd_cpu_default_binding def_binding;
 
 public:
 	static const int power_clamp_reduction_percent = 5;

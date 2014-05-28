@@ -94,6 +94,10 @@ public:
 		zone_active = true;
 	}
 	;
+	void set_zone_inactive() {
+		zone_active = false;
+	}
+
 	bool zone_active_status() {
 		return zone_active;
 	}

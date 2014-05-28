@@ -28,10 +28,21 @@
 #include "thd_engine.h"
 #include "thd_cdev.h"
 
-class cthd_default_binding {
+typedef struct {
+	char zone_name[50 + 1];
+	int failures;
+} cpu_zone_stat_t;
+
+typedef struct {
+	std::string zone_name;
+	cthd_cdev *cdev_gate_entry;
+	cthd_cdev *cdev_gate_exit;
+	cthd_zone *zone;
+} cpu_zone_binding_t;
+
+class cthd_cpu_default_binding {
 private:
 	int thd_read_default_thermal_zones();
-	cthd_cdev *cdev_gate;
 	unsigned int cpu_package_max_power;
 
 	bool blacklist_match(std::string name);
@@ -40,16 +51,27 @@ public:
 	static const int def_gating_cdev_sampling_period = 30;
 	static const int def_starting_power_differential = 4000000;
 
-	cthd_default_binding() :
-			cdev_gate(NULL), cpu_package_max_power(0) {
+	std::vector<cpu_zone_binding_t*> cdev_list;
+
+	cthd_cpu_default_binding() :
+			cpu_package_max_power(0) {
 	}
-	~ cthd_default_binding() {
-		if (cdev_gate)
-			delete cdev_gate;
+	~ cthd_cpu_default_binding() {
+		for (unsigned int i = 0; i < cdev_list.size(); ++i) {
+			cpu_zone_binding_t *cdev_binding_info = cdev_list[i];
+			delete cdev_binding_info->cdev_gate_exit;
+			delete cdev_binding_info->cdev_gate_entry;
+			delete cdev_binding_info;
+		}
+		cdev_list.clear();
 	}
+
 	void do_default_binding(std::vector<cthd_cdev *> &cdevs);
 
 	bool check_cpu_load();
+
+	int read_zone_stat(std::string zone_name, cpu_zone_stat_t *stat);
+	void update_zone_stat(std::string zone_name, int fail_cnt);
 
 };
 
