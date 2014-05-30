@@ -144,7 +144,7 @@ int cthd_zone::zone_update() {
 	int usr_psv_temp = read_user_set_psv_temp();
 	if (usr_psv_temp > 0) {
 		cthd_trip_point trip_pt_passive(0, PASSIVE, usr_psv_temp, 0, index,
-		DEFAULT_SENSOR_ID);
+				DEFAULT_SENSOR_ID);
 		update_trip_temp(trip_pt_passive);
 	}
 
@@ -182,11 +182,23 @@ int cthd_zone::zone_update() {
 			sensor = sensors[i];
 			if (sensor->check_async_capable()) {
 				if (max_trip_temp) {
+					unsigned int _polling_trip;
 					// We have to guarantee MAX, so we better
 					// wake up before, so that by the time
 					// we are notified, temp > max temp
 					thd_model.set_max_temperature(max_trip_temp);
-					polling_trip = thd_model.get_hot_zone_trigger_point();
+					_polling_trip = thd_model.get_hot_zone_trigger_point();
+					if (polling_trip) {
+						if (_polling_trip < polling_trip) {
+							if ((polling_trip - _polling_trip)
+									< def_async_trip_offset)
+								polling_trip = _polling_trip
+										- def_async_trip_offset;
+							else
+								polling_trip = _polling_trip;
+						}
+					} else
+						polling_trip = _polling_trip;
 				} else {
 					if (polling_trip > def_async_trip_offset)
 						polling_trip -= def_async_trip_offset;
@@ -268,6 +280,7 @@ int cthd_zone::bind_cooling_device(trip_point_type_t type,
 			trip_point.thd_trip_point_add_cdev(*cdev,
 					cthd_trip_point::default_influence, sampling_period);
 			added = true;
+			zone_cdev_set_binded();
 			break;
 		}
 	}

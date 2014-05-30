@@ -106,6 +106,11 @@ public:
 		return zone_cdev_binded_status;
 	}
 
+	void zone_cdev_set_binded() {
+		thd_log_info("zone %s bounded \n", type_str.c_str());
+		zone_cdev_binded_status = true;
+	}
+
 	std::string get_zone_type() {
 		return type_str;
 	}
