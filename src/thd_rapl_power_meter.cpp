@@ -294,9 +294,9 @@ unsigned int cthd_rapl_power_meter::rapl_action_get_power(domain_type type,
 				sleep(1);
 				rapl_energy_loop();
 				value = domain_list[i].power * 1000;
-				*max_power = domain_list[i].max_power * 1000;
-				*min_power = domain_list[i].min_power * 1000;
 			}
+			*max_power = domain_list[i].max_power * 1000;
+			*min_power = domain_list[i].min_power * 1000;
 			break;
 		}
 	}
