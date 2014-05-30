@@ -605,12 +605,9 @@ int cthd_engine::check_cpu_id() {
 		i++;
 	}
 	if (!valid) {
-		thd_log_warn(" No support RAPL and Intel P state driver\n");
+		thd_log_warn(" Need Linux PowerCap sysfs \n");
 	}
 
-	if (!(edx & (1 << 5))) {
-		thd_log_warn("No MSR supported on processor \n");
-	}
 #endif
 	return THD_SUCCESS;
 }
