@@ -215,7 +215,7 @@ bool cthd_cpu_default_binding::check_cpu_load() {
 
 bool cthd_cpu_default_binding::blacklist_match(std::string name) {
 	int i = 0;
-	const char *blacklist_zones[] = { "cpu", "acpitz", "" };
+	const char *blacklist_zones[] = { "cpu", "acpitz", "Surface", "" };
 
 	while (blacklist_zones[i] != "") {
 		if (name == blacklist_zones[i])
@@ -246,7 +246,7 @@ void cthd_cpu_default_binding::do_default_binding(
 		if (blacklist_match(zone->get_zone_type())) {
 			continue;
 		}
-		if (!zone->read_cdev_trip_points()) {
+		if (!zone->zone_cdev_binded()) {
 			cpu_zone_binding_t *cdev_binding_info;
 
 			cdev_binding_info = new cpu_zone_binding_t;
