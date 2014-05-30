@@ -36,16 +36,22 @@ int cthd_zone_surface::read_trip_points() {
 	cthd_trip_point *trip_ptr = NULL;
 	bool add = false;
 	int i = 0;
+	cthd_zone *ref_zone = NULL;
 
 	if (!sensor)
 		return THD_ERROR;
 
 	while (skin_sensors[i]) {
 		cthd_zone *zone;
+
 		zone = thd_engine->search_zone(skin_sensors[i]);
-		if (zone && zone->zone_active_status()) {
-			thd_log_error("A skin sensor zone is already active \n");
-			return THD_ERROR;
+		if (zone) {
+			ref_zone = zone;
+			if (zone->zone_active_status()) {
+				thd_log_error("A skin sensor zone is already active \n");
+				return THD_ERROR;
+			}
+			break;
 		}
 		++i;
 	}
@@ -85,6 +91,9 @@ int cthd_zone_surface::read_trip_points() {
 		trip_points.push_back(*trip_ptr);
 	}
 	delete trip_ptr;
+
+	if (ref_zone)
+		ref_zone->zone_cdev_set_binded();
 
 	return THD_SUCCESS;
 }

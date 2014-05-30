@@ -116,6 +116,9 @@ unsigned int cthd_model::update_set_point(unsigned int curr_temp) {
 		else
 			set_point = _setpoint;
 
+		if (set_point < hot_zone)
+			set_point = hot_zone;
+
 		/*Remember some variables for next time*/
 		last_err = error;
 		last_time = now;

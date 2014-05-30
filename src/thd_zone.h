@@ -94,12 +94,21 @@ public:
 		zone_active = true;
 	}
 	;
+	void set_zone_inactive() {
+		zone_active = false;
+	}
+
 	bool zone_active_status() {
 		return zone_active;
 	}
 
 	bool zone_cdev_binded() {
 		return zone_cdev_binded_status;
+	}
+
+	void zone_cdev_set_binded() {
+		thd_log_info("zone %s bounded \n", type_str.c_str());
+		zone_cdev_binded_status = true;
 	}
 
 	std::string get_zone_type() {
