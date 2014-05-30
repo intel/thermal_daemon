@@ -90,6 +90,7 @@ int cthd_zone_generic::read_trip_points() {
 				trip_ptr->thd_trip_point_add_cdev(*cdev,
 						trip_pt_config.cdev_trips[j].influence,
 						trip_pt_config.cdev_trips[j].sampling_period);
+				zone_cdev_set_binded();
 			}
 		}
 		if (add) {
@@ -125,7 +126,8 @@ int cthd_zone_generic::zone_bind_sensors() {
 		trip_point_t &trip_pt_config = zone_config->trip_pts[i];
 		sensor = thd_engine->search_sensor(trip_pt_config.sensor_type);
 		if (!sensor) {
-			thd_log_error("XML zone: invalid sensor type \n");
+			thd_log_error("XML zone: invalid sensor type %s\n",
+					trip_pt_config.sensor_type.c_str());
 			continue;
 		}
 		bind_sensor(sensor);

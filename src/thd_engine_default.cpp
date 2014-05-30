@@ -369,6 +369,7 @@ int cthd_engine_default::read_thermal_zones() {
 								trip_pt.thd_trip_point_add_cdev(*cdev,
 										trip_pt_config.cdev_trips[j].influence,
 										trip_pt_config.cdev_trips[j].sampling_period);
+								zone->zone_cdev_set_binded();
 								activate = true;
 							}
 						}

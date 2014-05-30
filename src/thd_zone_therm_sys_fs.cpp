@@ -163,7 +163,7 @@ int cthd_sysfs_zone::read_cdev_trip_points() {
 					if (trip_cnt >= 0 && trip_cnt < trip_point_cnt) {
 						trip_points[trip_cnt].thd_trip_point_add_cdev_index(
 								atoi(ptr), cthd_trip_point::default_influence);
-						zone_cdev_binded_status = true;
+						zone_cdev_set_binded();
 					} else {
 						thd_log_debug("Invalid trip_cnt\n");
 					}
