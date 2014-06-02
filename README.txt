@@ -73,6 +73,10 @@ Use "sudo stop thermald" to stop
 
 Releases
 
+Release 1.3
+- Auto creation of configuration based on ACPI thermal relationship table
+- Default CPU bound load check for unbinded thermal sensors
+
 Release 1.2
 - Several fixes for Klocworks and Coverity scans (0 issues remaining)
 - Baytrail RAPL support as this doesn't have max power limit value
