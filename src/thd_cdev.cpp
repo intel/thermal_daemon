@@ -173,7 +173,7 @@ int cthd_cdev::thd_cdev_set_min_state(int zone_id) {
 	if (zone_mask != 0) {
 		thd_log_debug(
 				"skip to reduce current state as this is controlled by two zone actions and one is still on %x\n",
-				zone_mask);
+				(unsigned int) zone_mask);
 		return THD_SUCCESS;
 	}
 	trend_increase = false;

@@ -69,7 +69,7 @@ int cthd_sysfs_cdev_rapl_dram::update() {
 
 bool cthd_sysfs_cdev_rapl_dram::calculate_phy_max() {
 	if (dynamic_phy_max_enable) {
-		int curr_max_phy;
+		unsigned int curr_max_phy;
 		curr_max_phy = thd_engine->rapl_power_meter.rapl_action_get_power(DRAM);
 		thd_log_info("curr_phy_max = %u \n", curr_max_phy);
 		if (curr_max_phy < rapl_min_default_step)
