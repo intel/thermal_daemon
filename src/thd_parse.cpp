@@ -118,6 +118,8 @@ int cthd_parse::parse_new_trip_cdev(xmlNode * a_node, xmlDoc *doc,
 					"SamplingPeriod")) {
 				trip_cdev->sampling_period = atoi(tmp_value);
 			}
+			if (tmp_value)
+				xmlFree(tmp_value);
 		}
 	}
 

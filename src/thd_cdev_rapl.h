@@ -40,7 +40,7 @@ protected:
 public:
 	static const int rapl_no_time_windows = 6;
 	static const long def_rapl_time_window = 1000000; // micro seconds
-	static const int rapl_min_default_step = 500000; //0.5W
+	static const unsigned int rapl_min_default_step = 500000; //0.5W
 
 	static const int rapl_low_limit_percent = 25;
 	static const int rapl_power_dec_percent = 5;

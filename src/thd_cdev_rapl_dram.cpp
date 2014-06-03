@@ -57,6 +57,8 @@ int cthd_sysfs_cdev_rapl_dram::update() {
 		}
 	}
 
+	closedir(dir);
+
 	if (!found)
 		return THD_ERROR;
 
