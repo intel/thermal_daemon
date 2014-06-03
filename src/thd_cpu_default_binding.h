@@ -49,7 +49,7 @@ private:
 
 public:
 	static const int def_gating_cdev_sampling_period = 30;
-	static const int def_starting_power_differential = 4000000;
+	static const unsigned int def_starting_power_differential = 4000000;
 
 	std::vector<cpu_zone_binding_t*> cdev_list;
 
