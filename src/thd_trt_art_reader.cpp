@@ -104,19 +104,19 @@ int cthd_acpi_rel::generate_conf(std::string file_name) {
 		ret = -1;
 		goto cleanup;
 	}
-	conf_file << xml_hdr;
-	conf_file << conf_begin;
+	conf_file << xml_hdr.c_str();
+	conf_file << conf_begin.c_str();
 
 	prefix = indentation = "\t";
-	conf_file << indentation << "<Platform>" << "\n";
+	conf_file << indentation.c_str() << "<Platform>" << "\n";
 
 	create_platform_conf();
 	create_platform_pref(0);
 	create_thermal_zones();
 
-	conf_file << prefix << "</Platform>" << "\n";
+	conf_file << prefix.c_str() << "</Platform>" << "\n";
 
-	conf_file << conf_end;
+	conf_file << conf_end.c_str();
 	conf_file.close();
 
 	cleanup: if (trt_status > 0)
@@ -219,38 +219,38 @@ void cthd_acpi_rel::add_passive_trip_point(rel_object_t &rel_obj) {
 
 	string prefix = indentation + "\t";
 
-	conf_file << prefix << "<TripPoint>\n";
+	conf_file << prefix.c_str() << "<TripPoint>\n";
 
 	subtitute_string(SENSOR_DEV, rel_obj.target_sensor);
 
-	conf_file << prefix << "\t" << "<SensorType>" << rel_obj.target_sensor
+	conf_file << prefix.c_str() << "\t" << "<SensorType>" << rel_obj.target_sensor.c_str()
 			<< "</SensorType>\n";
 
-	conf_file << prefix << "\t" << "<Temperature>" << "*" << "</Temperature>\n";
+	conf_file << prefix.c_str() << "\t" << "<Temperature>" << "*" << "</Temperature>\n";
 
-	conf_file << prefix << "\t" << "<type>" << "passive" "</type>\n";
+	conf_file << prefix.c_str() << "\t" << "<type>" << "passive" "</type>\n";
 
-	conf_file << prefix << "\t" << "<ControlType>" << "SEQUENTIAL"
+	conf_file << prefix.c_str() << "\t" << "<ControlType>" << "SEQUENTIAL"
 			<< "</ControlType>\n";
 
 	for (unsigned int j = 0; j < rel_obj.trt_objects.size(); ++j) {
 		union trt_object *object = (union trt_object *) rel_obj.trt_objects[j];
 		string device_name = object->acpi_trt_entry.source_device;
 
-		conf_file << prefix << "\t" << "<CoolingDevice>\n";
+		conf_file << prefix.c_str() << "\t" << "<CoolingDevice>\n";
 
 		subtitute_string(TARGET_DEV, device_name);
 
-		conf_file << prefix << "\t\t" << "<type>" << device_name << "</type>\n";
-		conf_file << prefix << "\t\t" << "<influence>"
+		conf_file << prefix.c_str() << "\t\t" << "<type>" << device_name.c_str() << "</type>\n";
+		conf_file << prefix.c_str() << "\t\t" << "<influence>"
 				<< object->acpi_trt_entry.influence << "</influence>\n";
-		conf_file << prefix << "\t\t" << "<SamplingPeriod>"
+		conf_file << prefix.c_str() << "\t\t" << "<SamplingPeriod>"
 				<< object->acpi_trt_entry.sample_period * 100 / 1000
 				<< "</SamplingPeriod>\n";
 
-		conf_file << prefix << "\t" << "</CoolingDevice>\n";
+		conf_file << prefix.c_str() << "\t" << "</CoolingDevice>\n";
 	}
-	conf_file << prefix << "</TripPoint>\n";
+	conf_file << prefix.c_str() << "</TripPoint>\n";
 }
 
 void cthd_acpi_rel::add_active_trip_point(rel_object_t &rel_obj) {
@@ -259,34 +259,34 @@ void cthd_acpi_rel::add_active_trip_point(rel_object_t &rel_obj) {
 
 	string prefix = indentation + "\t";
 
-	conf_file << prefix << "<TripPoint>\n";
+	conf_file << prefix.c_str() << "<TripPoint>\n";
 
 	subtitute_string(SENSOR_DEV, rel_obj.target_sensor);
 
-	conf_file << prefix << "\t" << "<SensorType>" << rel_obj.target_sensor
+	conf_file << prefix.c_str() << "\t" << "<SensorType>" << rel_obj.target_sensor.c_str()
 			<< "</SensorType>\n";
 
-	conf_file << prefix << "\t" << "<Temperature>" << "*" << "</Temperature>\n";
+	conf_file << prefix.c_str() << "\t" << "<Temperature>" << "*" << "</Temperature>\n";
 
-	conf_file << prefix << "\t" << "<type>" << "active" "</type>\n";
+	conf_file << prefix.c_str() << "\t" << "<type>" << "active" "</type>\n";
 
-	conf_file << prefix << "\t" << "<ControlType>" << "SEQUENTIAL"
+	conf_file << prefix.c_str() << "\t" << "<ControlType>" << "SEQUENTIAL"
 			<< "</ControlType>\n";
 
 	for (unsigned int j = 0; j < rel_obj.art_objects.size(); ++j) {
 		union art_object *object = (union art_object *) rel_obj.art_objects[j];
 		string device_name = object->acpi_art_entry.source_device;
 
-		conf_file << prefix << "\t" << "<CoolingDevice>\n";
+		conf_file << prefix.c_str() << "\t" << "<CoolingDevice>\n";
 
 		subtitute_string(TARGET_DEV, device_name);
-		conf_file << prefix << "\t\t" << "<type>" << device_name << "</type>\n";
-		conf_file << prefix << "\t\t" << "<influence>"
+		conf_file << prefix.c_str() << "\t\t" << "<type>" << device_name.c_str() << "</type>\n";
+		conf_file << prefix.c_str() << "\t\t" << "<influence>"
 				<< object->acpi_art_entry.weight << "</influence>\n";
 
-		conf_file << prefix << "\t" << "</CoolingDevice>\n";
+		conf_file << prefix.c_str() << "\t" << "</CoolingDevice>\n";
 	}
-	conf_file << prefix << "</TripPoint>\n";
+	conf_file << prefix.c_str() << "</TripPoint>\n";
 }
 
 void cthd_acpi_rel::create_thermal_zone(string type) {
@@ -301,18 +301,18 @@ void cthd_acpi_rel::create_thermal_zone(string type) {
 			PRINT_ERROR("Empty target, skipping ..\n");
 			continue;
 		}
-		conf_file << prefix << "<ThermalZone>" << "\n";
+		conf_file << prefix.c_str() << "<ThermalZone>" << "\n";
 
 		subtitute_string(SOURCE_DEV, rel_list[i].target_device);
-		conf_file << prefix << "\t" << "<Type>" << rel_list[i].target_device
+		conf_file << prefix.c_str() << "\t" << "<Type>" << rel_list[i].target_device.c_str()
 				<< "</Type>" << "\n";
-		conf_file << prefix << "\t" << "<TripPoints>" << "\n";
+		conf_file << prefix.c_str() << "\t" << "<TripPoints>" << "\n";
 		indentation += "\t";
 		add_passive_trip_point(rel_list[i]);
 		add_active_trip_point(rel_list[i]);
-		conf_file << prefix << "\t" << "</TripPoints>" << "\n";
+		conf_file << prefix.c_str() << "\t" << "</TripPoints>" << "\n";
 
-		conf_file << prefix << "</ThermalZone>" << "\n";
+		conf_file << prefix.c_str() << "</ThermalZone>" << "\n";
 	}
 }
 
@@ -355,34 +355,39 @@ void cthd_acpi_rel::parse_target_devices() {
 
 void cthd_acpi_rel::create_thermal_zones() {
 	string prefix = indentation;
-	conf_file << prefix << "<ThermalZones>" << "\n";
+	conf_file << prefix.c_str() << "<ThermalZones>" << "\n";
 
 	// Read ...
 	create_thermal_zone("test");
 	//
-	conf_file << prefix << "</ThermalZones>" << "\n";
+	conf_file << prefix.c_str() << "</ThermalZones>" << "\n";
 
 }
 
 void cthd_acpi_rel::create_platform_conf() {
-	string line;
+//	string line;
 	string prefix;
 
 	indentation += "\t";
 
 	prefix = indentation;
-	conf_file << prefix << "<Name>" << "_TRT export" << "</Name>" << "\n";
+	conf_file << prefix.c_str() << "<Name>" << "_TRT export" << "</Name>" << "\n";
 
 	ifstream product_name("/sys/class/dmi/id/product_name");
 
-	conf_file << indentation << "<ProductName>";
-
+	conf_file << indentation.c_str() << "<ProductName>";
+#if 0
 	if (product_name.is_open() && getline(product_name, line)) {
-		conf_file << line;
+#else
+	char buffer[256];
+	if (product_name.is_open() && product_name.getline(buffer, sizeof(buffer))) {
+		string line(buffer);
+#endif
+		conf_file << line.c_str();
 	} else
 		conf_file << "*" << "\n";
 
-	conf_file << prefix << "</ProductName>" << "\n";
+	conf_file << prefix.c_str() << "</ProductName>" << "\n";
 }
 
 void cthd_acpi_rel::dump_trt() {
@@ -417,8 +422,8 @@ void cthd_acpi_rel::dump_art() {
 
 void cthd_acpi_rel::create_platform_pref(int perf) {
 	if (perf)
-		conf_file << indentation << "<Preference>PERFORMANCE</Preference>"
+		conf_file << indentation.c_str() << "<Preference>PERFORMANCE</Preference>"
 				<< "\n";
 	else
-		conf_file << indentation << "<Preference>QUIET</Preference>" << "\n";
+		conf_file << indentation.c_str() << "<Preference>QUIET</Preference>" << "\n";
 }

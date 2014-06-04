@@ -148,7 +148,9 @@ int csys_fs::read(const std::string &path, std::string &buf) {
 	std::string p = base_path + path;
 	int ret = 0;
 
+#ifndef ANDROID
 	try {
+#endif
 		std::ifstream f(p.c_str(), std::fstream::in);
 		if (f.fail()) {
 			thd_log_warn("sysfs read failed %s\n", path.c_str());
@@ -160,12 +162,13 @@ int csys_fs::read(const std::string &path, std::string &buf) {
 			ret = -EIO;
 		}
 		f.close();
+#ifndef ANDROID
 	} catch (const std::ifstream::failure& e) {
 		thd_log_warn("csys_fs::read exception %s\n", path.c_str());
 
 		ret = -EIO;
 	}
-
+#endif
 	return ret;
 }
 
