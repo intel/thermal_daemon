@@ -49,7 +49,7 @@ bool cthd_trip_point::thd_trip_point_check(int id, unsigned int read_temp,
 		return false;
 
 	if (read_temp == 0) {
-		thd_log_warn("TEMP == 0 pref: %d\n", pref);
+		thd_log_debug("TEMP == 0 pref: %d\n", pref);
 	}
 
 	if (type == CRITICAL) {
