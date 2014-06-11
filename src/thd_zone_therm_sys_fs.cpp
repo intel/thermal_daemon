@@ -66,7 +66,7 @@ int cthd_sysfs_zone::read_trip_points() {
 		std::string _temp_str;
 		std::string _hist_str;
 		trip_point_type_t trip_type;
-		unsigned int temp = 0, hyst = 1;
+		int temp = 0, hyst = 1;
 		mode_t mode = 0;
 		cthd_sensor *sensor;
 		bool wr_mode = false;
