@@ -177,6 +177,10 @@ int cthd_zone::zone_update() {
 					trip_points[i].get_trip_type(),
 					trip_points[i].get_trip_temp());
 		}
+
+		if (polling_trip > def_async_trip_offset)
+			polling_trip -= def_async_trip_offset;
+
 		for (unsigned int i = 0; i < sensors.size(); ++i) {
 			cthd_sensor *sensor;
 			sensor = sensors[i];
@@ -199,9 +203,6 @@ int cthd_zone::zone_update() {
 						}
 					} else
 						polling_trip = _polling_trip;
-				} else {
-					if (polling_trip > def_async_trip_offset)
-						polling_trip -= def_async_trip_offset;
 				}
 
 				sensor->set_threshold(0, polling_trip);
