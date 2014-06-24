@@ -85,7 +85,7 @@ int cthd_acpi_rel::generate_conf(std::string file_name) {
 
 	std::ifstream conf_file_check(file_name.c_str());
 	if (conf_file_check.is_open()) {
-		PRINT_ERROR(" File Exists: file_name, so ignore %s\n",
+		PRINT_ERROR(" File Exists: file_name %s, so no regenerate\n",
 				file_name.c_str());
 		conf_file_check.close();
 		return 0;
@@ -100,7 +100,7 @@ int cthd_acpi_rel::generate_conf(std::string file_name) {
 	}
 	conf_file.open(file_name.c_str());
 	if (!conf_file.is_open()) {
-		PRINT_ERROR(" failed to open output file\n");
+		PRINT_ERROR("failed to open output file [%s]\n", file_name.c_str());
 		ret = -1;
 		goto cleanup;
 	}

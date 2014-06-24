@@ -239,6 +239,17 @@ void cthd_cpu_default_binding::do_default_binding(
 		std::vector<cthd_cdev *> &cdevs) {
 	int count = 0;
 	int id = 0x1000;
+	cthd_cdev *cdev_rapl;
+	cthd_cdev *cdev_powerclamp;
+
+	cdev_rapl = thd_engine->search_cdev("rapl_controller");
+	cdev_powerclamp = thd_engine->search_cdev("intel_powerclamp");
+
+	if (!cdev_rapl && !cdev_powerclamp) {
+		thd_log_info(
+				"cthd_cpu_default_binding::do_default_binding: No relavent cpu cdevs\n");
+		return;
+	}
 
 	for (unsigned int i = 0; i < thd_engine->get_zone_count(); ++i) {
 		cthd_zone *zone = thd_engine->get_zone(i);
@@ -293,15 +304,9 @@ void cthd_cpu_default_binding::do_default_binding(
 				continue;
 			}
 
-			// Currently only considering CPU/SOC load is primary
-			cthd_cdev *cdev_rapl;
-			cdev_rapl = thd_engine->search_cdev("rapl_controller");
 			if (cdev_rapl) {
 				zone->bind_cooling_device(PASSIVE, 0, cdev_rapl, 20);
 			}
-			// Currently only considering CPU/SOC load is primary
-			cthd_cdev *cdev_powerclamp;
-			cdev_powerclamp = thd_engine->search_cdev("intel_powerclamp");
 			if (cdev_powerclamp) {
 				zone->bind_cooling_device(PASSIVE, 0, cdev_powerclamp, 20);
 			}

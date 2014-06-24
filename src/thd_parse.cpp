@@ -70,18 +70,20 @@ char *cthd_parse::char_trim(char *str) {
 
 cthd_parse::cthd_parse() :
 		matched_thermal_info_index(-1), doc(NULL), root_element(NULL) {
-	std::string name = TDCONFDIR;
-	filename = name + "/" "thermal-conf.xml";
+	std::string name_conf = TDCONFDIR;
+	std::string name_run = TDRUNDIR;
+	filename = name_conf + "/" + "thermal-conf.xml";
+	filename_auto = name_run + "/" + "thermal-conf.xml.auto";
 }
 
 int cthd_parse::parser_init() {
 	cthd_acpi_rel rel;
 	int ret;
 
-	ret = rel.generate_conf(filename + ".auto");
+	ret = rel.generate_conf(filename_auto);
 	if (!ret) {
-		thd_log_warn("Using generated %s\n", (filename + ".auto").c_str());
-		doc = xmlReadFile((filename + ".auto").c_str(), NULL, 0);
+		thd_log_warn("Using generated %s\n", filename_auto.c_str());
+		doc = xmlReadFile(filename_auto.c_str(), NULL, 0);
 	} else {
 		doc = xmlReadFile(filename.c_str(), NULL, 0);
 	}

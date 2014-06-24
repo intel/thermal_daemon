@@ -115,6 +115,7 @@ typedef struct {
 class cthd_parse {
 private:
 	std::string filename;
+	std::string filename_auto;
 	std::vector<thermal_info_t> thermal_info_list;
 	int matched_thermal_info_index;
 	xmlDoc *doc;
