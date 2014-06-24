@@ -1,7 +1,7 @@
 /*
- * cthd_engine_defualt.cpp: Default thermal engine
- *
- * Copyright (C) 2013 Intel Corporation. All rights reserved.
+ * cthd_cdev_rapl_dram.h: thermal cooling class interface
+ *	using RAPL DRAM
+ * Copyright (C) 2014 Intel Corporation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License version
@@ -22,32 +22,20 @@
  *
  */
 
-#ifndef THD_ENGINE_DEFAULT_H_
-#define THD_ENGINE_DEFAULT_H_
+#ifndef THD_CDEV_RAPL_DRAM_H_
+#define THD_CDEV_RAPL_DRAM_H_
 
-#include "thd_engine.h"
-#include "thd_zone_surface.h"
-#include "thd_cpu_default_binding.h"
+#include "thd_cdev_rapl.h"
 
-class cthd_engine_default: public cthd_engine {
+class cthd_sysfs_cdev_rapl_dram: public cthd_sysfs_cdev_rapl {
 private:
-	int parser_init();
-	void parser_deinit();
-	int add_replace_cdev(cooling_dev_t *config);
-
-	bool parser_init_done;
-	cthd_cpu_default_binding def_binding;
-
+	bool calculate_phy_max();
 public:
-	static const int power_clamp_reduction_percent = 5;
-
-	cthd_engine_default() :
-			cthd_engine(), parser_init_done(false) {
+	cthd_sysfs_cdev_rapl_dram(unsigned int _index, int _package) :
+			cthd_sysfs_cdev_rapl(_index, _package) {
 	}
-	~cthd_engine_default();
-	int read_thermal_zones();
-	int read_cooling_devices();
-	int read_thermal_sensors();
+
+	virtual int update();
 };
 
-#endif /* THD_ENGINE_DEFAULT_H_ */
+#endif /* THD_CDEV_RAPL_DRAM_H_ */

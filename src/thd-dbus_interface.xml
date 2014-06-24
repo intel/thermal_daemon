@@ -22,6 +22,11 @@
       <arg type="s" name="user_set_point_in_milli_degree_celsius" direction="in"/>
     </method>
 
+    <method name="SetUserPassiveTemperature">
+      <arg type="s" name="zone_name" direction="in"/>
+      <arg type="s" name="user_passive_control_in_milli_degree_celsius" direction="in"/>
+    </method>
+
     <!-- GetCurrentPreference: Returns the current preference -->
     <method name="GetCurrentPreference">
       <arg type="s" name="cur_pref" direction="out"/>

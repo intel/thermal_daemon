@@ -105,26 +105,36 @@ int cthd_cdev::thd_cdev_exponential_controller(int set_point, int target_temp,
 }
 
 int cthd_cdev::thd_cdev_set_state(int set_point, int target_temp,
-		int temperature, int state, int zone_id) {
+		int temperature, int state, int zone_id, int trip_id) {
 
 	time_t tm;
 	int ret;
 
 	time(&tm);
-	thd_log_debug(">>thd_cdev_set_state index:%d state:%d\n", index, state);
+	thd_log_debug(">>thd_cdev_set_state index:%d state:%d :%d:%d\n", index,
+			state, zone_id, trip_id);
 	if (last_state == state && (tm - last_action_time) <= debounce_interval) {
-		thd_log_debug("Ignore delay < debounce interval\n");
+		thd_log_debug(
+				"Ignore: delay < debounce interval : %d, %d, %d, %d, %d\n",
+				set_point, temperature, index, get_curr_state(), max_state);
 		return THD_SUCCESS;
 	}
 	last_state = state;
-	if (state)
+	if (state) {
 		zone_mask |= (1 << zone_id);
-	else {
-		zone_mask &= ~(1 << zone_id);
-		if (zone_mask != 0) {
-			thd_log_debug(
-					"skip to reduce current state as this is controlled by two zone actions and one is still on %x\n",
-					zone_mask);
+		trip_mask |= (1 << trip_id);
+	} else {
+
+		if (zone_mask & (1 << zone_id)) {
+			if (trip_mask & (1 << trip_id)) {
+				trip_mask &= ~(1 << trip_id);
+				zone_mask &= ~(1 << zone_id);
+			}
+		}
+		if (zone_mask != 0 || trip_mask != 0) {
+			thd_log_info(
+					"skip to reduce current state as this is controlled by two zone or trip actions and one is still on %lx:%lx\n",
+					zone_mask, trip_mask);
 			return THD_SUCCESS;
 		}
 	}
@@ -163,7 +173,7 @@ int cthd_cdev::thd_cdev_set_min_state(int zone_id) {
 	if (zone_mask != 0) {
 		thd_log_debug(
 				"skip to reduce current state as this is controlled by two zone actions and one is still on %x\n",
-				zone_mask);
+				(unsigned int) zone_mask);
 		return THD_SUCCESS;
 	}
 	trend_increase = false;

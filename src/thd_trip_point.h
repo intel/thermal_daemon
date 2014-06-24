@@ -66,8 +66,19 @@ private:
 	int sensor_id;
 	bool trip_on;
 	bool poll_on;
+
+	bool check_duplicate(cthd_cdev *cdev, int *index) {
+		for (unsigned int i = 0; i < cdevs.size(); ++i) {
+			if (cdevs[i].cdev->get_cdev_type() == cdev->get_cdev_type()) {
+				*index = i;
+				return true;
+			}
+		}
+		return false;
+	}
+
 public:
-	static const int default_influence = 100;
+	static const int default_influence = 0;
 	cthd_trip_point(int _index, trip_point_type_t _type, unsigned int _temp,
 			unsigned int _hyst, int _zone_id, int _sensor_id,
 			trip_control_type_t _control_type = PARALLEL);
@@ -100,6 +111,9 @@ public:
 	void update_trip_temp(unsigned int _temp) {
 		temp = _temp;
 	}
+	void update_trip_type(trip_point_type_t _type) {
+		type = _type;
+	}
 	void update_trip_hyst(unsigned int _temp) {
 		hyst = _temp;
 	}
@@ -107,7 +121,12 @@ public:
 		return sensor_id;
 	}
 	void trip_cdev_add(trip_pt_cdev_t trip_cdev) {
-		cdevs.push_back(trip_cdev);
+		int index;
+		if (check_duplicate(trip_cdev.cdev, &index)) {
+			cdevs[index].influence = trip_cdev.influence;
+		} else
+			cdevs.push_back(trip_cdev);
+
 		std::sort(cdevs.begin(), cdevs.end(), trip_cdev_sort);
 	}
 	void trip_dump() {
@@ -128,7 +147,14 @@ public:
 				"index %d: type:%s temp:%u hyst:%u zone id:%d sensor id:%d cdev size:%lu\n",
 				index, _type_str.c_str(), temp, hyst, zone_id, sensor_id,
 				(unsigned long) cdevs.size());
+		for (unsigned int i = 0; i < cdevs.size(); ++i) {
+			thd_log_info("cdev[%i] %s\n", i,
+					cdevs[i].cdev->get_cdev_type().c_str());
+		}
 	}
 };
 
+static bool trip_sort(cthd_trip_point trip1, cthd_trip_point trip2) {
+	return (trip1.get_trip_temp() < trip2.get_trip_temp());
+}
 #endif

@@ -70,6 +70,7 @@ protected:
 private:
 
 public:
+	static const unsigned int def_async_trip_offset = 5000;
 	cthd_zone(int _index, std::string control_path, sensor_relate_t rel =
 			SENSOR_INDEPENDENT);
 	virtual ~cthd_zone();
@@ -93,12 +94,21 @@ public:
 		zone_active = true;
 	}
 	;
+	void set_zone_inactive() {
+		zone_active = false;
+	}
+
 	bool zone_active_status() {
 		return zone_active;
 	}
 
 	bool zone_cdev_binded() {
 		return zone_cdev_binded_status;
+	}
+
+	void zone_cdev_set_binded() {
+		thd_log_info("zone %s bounded \n", type_str.c_str());
+		zone_cdev_binded_status = true;
 	}
 
 	std::string get_zone_type() {
@@ -135,9 +145,11 @@ public:
 	}
 
 	int update_max_temperature(int max_temp);
+	int update_psv_temperature(int psv_temp);
+	int read_user_set_psv_temp();
 
 	int bind_cooling_device(trip_point_type_t type, unsigned int trip_temp,
-			cthd_cdev *cdev);
+			cthd_cdev *cdev, int influence, int sampling_period = 0);
 
 	void zone_dump() {
 		thd_log_info("Zone %d: %s, Active:%d Bind:%d Sensor_cnt:%lu\n", index,

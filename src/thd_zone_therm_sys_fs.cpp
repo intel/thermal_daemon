@@ -66,7 +66,10 @@ int cthd_sysfs_zone::read_trip_points() {
 		std::string _temp_str;
 		std::string _hist_str;
 		trip_point_type_t trip_type;
-		unsigned int temp = 0, hyst = 1;
+		int temp = 0, hyst = 1;
+		mode_t mode = 0;
+		cthd_sensor *sensor;
+		bool wr_mode = false;
 
 		type_stream << trip_sysfs.str() << i << "_type";
 		if (zone_sysfs.exists(type_stream.str())) {
@@ -76,6 +79,7 @@ int cthd_sysfs_zone::read_trip_points() {
 		}
 		temp_stream << trip_sysfs.str() << i << "_temp";
 		if (zone_sysfs.exists(temp_stream.str())) {
+			mode = zone_sysfs.get_mode(temp_stream.str());
 			zone_sysfs.read(temp_stream.str(), _temp_str);
 			std::istringstream(_temp_str) >> temp;
 			thd_log_debug("read_trip_points %s:%s \n",
@@ -86,6 +90,8 @@ int cthd_sysfs_zone::read_trip_points() {
 		if (zone_sysfs.exists(hist_stream.str())) {
 			zone_sysfs.read(hist_stream.str(), _hist_str);
 			std::istringstream(_hist_str) >> hyst;
+			if (hyst < 1000 || hyst > 5000)
+				hyst = 1000;
 			thd_log_debug("read_trip_points %s:%s \n",
 					hist_stream.str().c_str(), _hist_str.c_str());
 		}
@@ -100,16 +106,20 @@ int cthd_sysfs_zone::read_trip_points() {
 			trip_type = PASSIVE;
 		else
 			trip_type = INVALID_TRIP_TYPE;
-		if (temp > 0 && trip_type != INVALID_TRIP_TYPE) {
-			cthd_sensor *sensor;
 
-			sensor = thd_engine->search_sensor(type_str);
-			if (sensor) {
-				cthd_trip_point trip_pt(trip_point_cnt, trip_type, temp, hyst,
-						index, sensor->get_index());
-				trip_points.push_back(trip_pt);
-				++trip_point_cnt;
-			}
+		sensor = thd_engine->search_sensor(type_str);
+		if (sensor && (mode & S_IWUSR)) {
+			sensor->set_async_capable(true);
+			wr_mode = true;
+		}
+
+		if (sensor && temp > 0 && trip_type != INVALID_TRIP_TYPE && !wr_mode) {
+
+			cthd_trip_point trip_pt(trip_point_cnt, trip_type, temp, hyst,
+					index, sensor->get_index());
+			trip_pt.thd_trip_point_set_control_type(SEQUENTIAL);
+			trip_points.push_back(trip_pt);
+			++trip_point_cnt;
 		}
 	}
 	thd_log_debug("read_trip_points Added %d trips \n", trip_point_cnt);
@@ -153,7 +163,7 @@ int cthd_sysfs_zone::read_cdev_trip_points() {
 					if (trip_cnt >= 0 && trip_cnt < trip_point_cnt) {
 						trip_points[trip_cnt].thd_trip_point_add_cdev_index(
 								atoi(ptr), cthd_trip_point::default_influence);
-						zone_cdev_binded_status = true;
+						zone_cdev_set_binded();
 					} else {
 						thd_log_debug("Invalid trip_cnt\n");
 					}

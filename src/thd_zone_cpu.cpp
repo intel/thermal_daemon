@@ -119,7 +119,7 @@ int cthd_zone_cpu::init() {
 		thd_log_info("Buggy max temp: to close to critical %d\n", max_temp);
 	}
 
-	thd_model.set_max_temperature(max_temp);
+	thd_model.set_max_temperature(max_temp + ((critical_temp - max_temp) / 2));
 	prev_set_point = set_point = thd_model.get_set_point();
 
 	return THD_SUCCESS;
@@ -150,11 +150,17 @@ int cthd_zone_cpu::parse_cdev_order() {
 		if ((ret = parser.start_parse()) == THD_SUCCESS) {
 			ret = parser.get_order_list(order_list);
 			if (ret == THD_SUCCESS) {
-				cthd_trip_point trip_pt(trip_point_cnt, MAX, set_point,
+				cthd_trip_point trip_pt_max(trip_point_cnt, MAX, set_point,
 						def_hystersis, index, DEFAULT_SENSOR_ID);
-				trip_pt.thd_trip_point_set_control_type(SEQUENTIAL);
-				load_cdev_xml(trip_pt, order_list);
-				trip_points.push_back(trip_pt);
+				trip_pt_max.thd_trip_point_set_control_type(SEQUENTIAL);
+				load_cdev_xml(trip_pt_max, order_list);
+				trip_points.push_back(trip_pt_max);
+				trip_point_cnt++;
+				cthd_trip_point trip_pt_passive(trip_point_cnt, PASSIVE,
+						max_temp, def_hystersis, index, DEFAULT_SENSOR_ID);
+				trip_pt_passive.thd_trip_point_set_control_type(SEQUENTIAL);
+				load_cdev_xml(trip_pt_passive, order_list);
+				trip_points.push_back(trip_pt_passive);
 				trip_point_cnt++;
 			}
 		}
@@ -175,18 +181,25 @@ int cthd_zone_cpu::read_trip_points() {
 		thd_log_info("CDEVS order specified in thermal-cpu-cdev-order.xml\n");
 		return THD_SUCCESS;
 	}
-	cthd_trip_point trip_pt_passive(trip_point_cnt, MAX, set_point,
+	cthd_trip_point trip_pt_max(trip_point_cnt, MAX, set_point, def_hystersis,
+			index, DEFAULT_SENSOR_ID);
+	trip_point_cnt++;
+	cthd_trip_point trip_pt_passive(trip_point_cnt, PASSIVE, max_temp,
 			def_hystersis, index, DEFAULT_SENSOR_ID);
 	trip_pt_passive.thd_trip_point_set_control_type(SEQUENTIAL);
+	trip_pt_max.thd_trip_point_set_control_type(SEQUENTIAL);
 	i = 0;
 	while (def_cooling_devices[i]) {
 		cdev = thd_engine->search_cdev(def_cooling_devices[i]);
 		if (cdev) {
+			trip_pt_max.thd_trip_point_add_cdev(*cdev,
+					cthd_trip_point::default_influence);
 			trip_pt_passive.thd_trip_point_add_cdev(*cdev,
 					cthd_trip_point::default_influence);
 		}
 		++i;
 	}
+	trip_points.push_back(trip_pt_max);
 	trip_points.push_back(trip_pt_passive);
 	trip_point_cnt++;
 
@@ -211,6 +224,7 @@ int cthd_zone_cpu::zone_bind_sensors() {
 
 	cthd_sensor *sensor;
 	int status = THD_ERROR;
+	bool async_sensor = false;
 
 	if (init() != THD_SUCCESS)
 		return THD_ERROR;
@@ -218,6 +232,26 @@ int cthd_zone_cpu::zone_bind_sensors() {
 	sensor = thd_engine->search_sensor("pkg-temp-0");
 	if (sensor) {
 		bind_sensor(sensor);
+		async_sensor = true;
+	}
+
+	sensor = thd_engine->search_sensor("x86_pkg_temp");
+	if (sensor) {
+		bind_sensor(sensor);
+		async_sensor = true;
+	}
+
+	sensor = thd_engine->search_sensor("soc_dts0");
+	if (sensor) {
+		bind_sensor(sensor);
+		async_sensor = true;
+	}
+
+	if (async_sensor) {
+		sensor = thd_engine->search_sensor("hwmon");
+		if (sensor) {
+			sensor->set_async_capable(true);
+		}
 		return THD_SUCCESS;
 	}
 

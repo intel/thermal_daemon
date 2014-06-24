@@ -109,6 +109,24 @@ void cthd_zone::update_zone_preference() {
 	}
 }
 
+int cthd_zone::read_user_set_psv_temp() {
+	std::stringstream filename;
+	int temp = -1;
+
+	filename << TDRUNDIR << "/" << "thd_user_psv_temp." << type_str << "."
+			<< "conf";
+	std::ifstream ifs(filename.str().c_str(), std::ifstream::in);
+	if (ifs.good()) {
+		ifs >> temp;
+		thd_log_info("read_user_set_psv_temp %d\n", temp);
+		if (temp < 1000)
+			temp = -1;
+	}
+	ifs.close();
+
+	return temp;
+}
+
 int cthd_zone::zone_update() {
 	int ret;
 
@@ -123,15 +141,35 @@ int cthd_zone::zone_update() {
 	if (ret != THD_SUCCESS)
 		return THD_ERROR;
 
+	int usr_psv_temp = read_user_set_psv_temp();
+	if (usr_psv_temp > 0) {
+		cthd_trip_point trip_pt_passive(0, PASSIVE, usr_psv_temp, 0, index,
+				DEFAULT_SENSOR_ID);
+		update_trip_temp(trip_pt_passive);
+	}
+
+	ret = read_cdev_trip_points();
+	if (ret != THD_SUCCESS) {
+		thd_log_info("No cdev trip points loaded for zone index %d\n", index);
+		// Don't bail out as they may be attached by thermal relation tables
+	}
+
 	if (trip_points.size()) {
 		unsigned int polling_trip = 0;
 		unsigned int max_trip_temp = 0;
+
+		std::sort(trip_points.begin(), trip_points.end(), trip_sort);
+		thd_log_info("Sorted trip dump :\n");
+		for (unsigned int i = 0; i < trip_points.size(); ++i) {
+			trip_points[i].trip_dump();
+		}
+
 		// Set the lowest trip point as the threshold for sensor async mode
 		// Use that the lowest point, after that we poll
 		if (trip_points.size())
 			polling_trip = trip_points[0].get_trip_temp();
 		for (unsigned int i = 0; i < trip_points.size(); ++i) {
-			if (polling_trip < trip_points[i].get_trip_temp())
+			if (polling_trip > trip_points[i].get_trip_temp())
 				polling_trip = trip_points[i].get_trip_temp();
 			if (trip_points[i].get_trip_type() == MAX)
 				max_trip_temp = trip_points[i].get_trip_temp();
@@ -139,17 +177,34 @@ int cthd_zone::zone_update() {
 					trip_points[i].get_trip_type(),
 					trip_points[i].get_trip_temp());
 		}
+
+		if (polling_trip > def_async_trip_offset)
+			polling_trip -= def_async_trip_offset;
+
 		for (unsigned int i = 0; i < sensors.size(); ++i) {
 			cthd_sensor *sensor;
 			sensor = sensors[i];
 			if (sensor->check_async_capable()) {
 				if (max_trip_temp) {
+					unsigned int _polling_trip;
 					// We have to guarantee MAX, so we better
 					// wake up before, so that by the time
 					// we are notified, temp > max temp
 					thd_model.set_max_temperature(max_trip_temp);
-					polling_trip = thd_model.get_hot_zone_trigger_point();
+					_polling_trip = thd_model.get_hot_zone_trigger_point();
+					if (polling_trip) {
+						if (_polling_trip < polling_trip) {
+							if ((polling_trip - _polling_trip)
+									< def_async_trip_offset)
+								polling_trip = _polling_trip
+										- def_async_trip_offset;
+							else
+								polling_trip = _polling_trip;
+						}
+					} else
+						polling_trip = _polling_trip;
 				}
+
 				sensor->set_threshold(0, polling_trip);
 				cthd_trip_point trip_pt_polling(trip_points.size(), POLLING,
 						polling_trip, 0, index, sensor->get_index());
@@ -158,9 +213,6 @@ int cthd_zone::zone_update() {
 			}
 		}
 	}
-	ret = read_cdev_trip_points();
-	if (ret != THD_SUCCESS)
-		return THD_ERROR;
 
 	for (unsigned int i = 0; i < trip_points.size(); ++i) {
 		cthd_trip_point &trip_point = trip_points[i];
@@ -214,7 +266,8 @@ void cthd_zone::zone_reset() {
 }
 
 int cthd_zone::bind_cooling_device(trip_point_type_t type,
-		unsigned int trip_temp, cthd_cdev *cdev) {
+		unsigned int trip_temp, cthd_cdev *cdev, int influence,
+		int sampling_period) {
 	int i, count;
 	bool added = false;
 
@@ -222,11 +275,13 @@ int cthd_zone::bind_cooling_device(trip_point_type_t type,
 	count = trip_points.size();
 	for (i = 0; i < count; ++i) {
 		cthd_trip_point &trip_point = trip_points[i];
-		if (trip_point.get_trip_type() == type
+		if ((trip_point.get_trip_type() == type)
+				&& (trip_point.get_trip_temp() > 0)
 				&& (trip_temp == 0 || trip_point.get_trip_temp() == trip_temp)) {
 			trip_point.thd_trip_point_add_cdev(*cdev,
-					cthd_trip_point::default_influence);
+					cthd_trip_point::default_influence, sampling_period);
 			added = true;
+			zone_cdev_set_binded();
 			break;
 		}
 	}
@@ -258,6 +313,24 @@ int cthd_zone::update_max_temperature(int max_temp) {
 		return THD_ERROR;
 	}
 	temp_str << max_temp;
+	fout << temp_str.str();
+	fout.close();
+
+	return THD_SUCCESS;
+}
+
+int cthd_zone::update_psv_temperature(int psv_temp) {
+
+	std::stringstream filename;
+	std::stringstream temp_str;
+
+	filename << TDRUNDIR << "/" << "thd_user_psv_temp." << type_str << "."
+			<< "conf";
+	std::ofstream fout(filename.str().c_str());
+	if (!fout.good()) {
+		return THD_ERROR;
+	}
+	temp_str << psv_temp;
 	fout << temp_str.str();
 	fout.close();
 

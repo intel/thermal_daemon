@@ -146,20 +146,29 @@ int csys_fs::read(const std::string &path, unsigned long *ptr_val) {
 
 int csys_fs::read(const std::string &path, std::string &buf) {
 	std::string p = base_path + path;
-
-	std::ifstream f(p.c_str(), std::fstream::in);
-	if (f.fail()) {
-		thd_log_warn("sysfs read failed %s\n", path.c_str());
-		return -EINVAL;
-	}
 	int ret = 0;
-	f >> buf;
-	if (f.bad()) {
-		thd_log_warn("sysfs read failed %s\n", path.c_str());
+
+#ifndef ANDROID
+	try {
+#endif
+		std::ifstream f(p.c_str(), std::fstream::in);
+		if (f.fail()) {
+			thd_log_warn("sysfs read failed %s\n", path.c_str());
+			return -EINVAL;
+		}
+		f >> buf;
+		if (f.bad()) {
+			thd_log_warn("sysfs read failed %s\n", path.c_str());
+			ret = -EIO;
+		}
+		f.close();
+#ifndef ANDROID
+	} catch (const std::ifstream::failure& e) {
+		thd_log_warn("csys_fs::read exception %s\n", path.c_str());
+
 		ret = -EIO;
 	}
-	f.close();
-
+#endif
 	return ret;
 }
 
@@ -171,6 +180,15 @@ bool csys_fs::exists(const std::string &path) {
 
 bool csys_fs::exists() {
 	return csys_fs::exists("");
+}
+
+mode_t csys_fs::get_mode(const std::string &path) {
+	struct stat s;
+
+	if (stat((base_path + path).c_str(), &s) == 0)
+		return s.st_mode;
+	else
+		return 0;
 }
 
 int csys_fs::read_symbolic_link_value(const std::string &path, char *buf,

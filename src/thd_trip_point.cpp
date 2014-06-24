@@ -49,7 +49,7 @@ bool cthd_trip_point::thd_trip_point_check(int id, unsigned int read_temp,
 		return false;
 
 	if (read_temp == 0) {
-		thd_log_warn("TEMP == 0 pref: %d\n", pref);
+		thd_log_debug("TEMP == 0 pref: %d\n", pref);
 	}
 
 	if (type == CRITICAL) {
@@ -146,7 +146,8 @@ bool cthd_trip_point::thd_trip_point_check(int id, unsigned int read_temp,
 				// No scope of control with this cdev
 				continue;
 			}
-			ret = cdev->thd_cdev_set_state(temp, temp, read_temp, 1, zone_id);
+			ret = cdev->thd_cdev_set_state(temp, temp, read_temp, 1, zone_id,
+					index);
 			if (control_type == SEQUENTIAL && ret == THD_SUCCESS) {
 				// Only one cdev activation
 				break;
@@ -165,7 +166,7 @@ bool cthd_trip_point::thd_trip_point_check(int id, unsigned int read_temp,
 				// No scope of control with this cdev
 				continue;
 			}
-			cdev->thd_cdev_set_state(temp, temp, read_temp, 0, zone_id);
+			cdev->thd_cdev_set_state(temp, temp, read_temp, 0, zone_id, index);
 			if (control_type == SEQUENTIAL) {
 				// Only one cdev activation
 				break;

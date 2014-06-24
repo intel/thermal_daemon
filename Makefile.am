@@ -70,7 +70,10 @@ thermald_SOURCES = \
 		src/thd_msr.cpp \
 		src/thd_rapl_interface.cpp \
 		src/thd_cdev_msr_rapl.cpp \
-		src/thd_rapl_power_meter.cpp
+		src/thd_rapl_power_meter.cpp \
+		src/thd_trt_art_reader.cpp \
+		src/thd_cdev_rapl_dram.cpp \
+		src/thd_cpu_default_binding.cpp
 
 man5_MANS = man/thermal-conf.xml.5
 man8_MANS = man/thermald.8

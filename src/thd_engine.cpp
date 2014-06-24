@@ -160,13 +160,11 @@ int cthd_engine::thd_engine_start(bool ignore_cpuid_check) {
 		return THD_FATAL_ERROR;
 	}
 	if (fcntl(wake_fds[0], F_SETFL, O_NONBLOCK) < 0) {
-		thd_log_error("Cannot set non-blocking on pipe: %s\n",
-			strerror(errno));
+		thd_log_error("Cannot set non-blocking on pipe: %s\n", strerror(errno));
 		return THD_FATAL_ERROR;
 	}
 	if (fcntl(wake_fds[1], F_SETFL, O_NONBLOCK) < 0) {
-		thd_log_error("Cannot set non-blocking on pipe: %s\n",
-			strerror(errno));
+		thd_log_error("Cannot set non-blocking on pipe: %s\n", strerror(errno));
 		return THD_FATAL_ERROR;
 	}
 	write_pipe_fd = wake_fds[1];
@@ -354,6 +352,27 @@ int cthd_engine::thd_engine_set_user_max_temp(const char *zone_type,
 		return THD_ERROR;
 	}
 	return zone->update_max_temperature(atoi(user_set_point));
+}
+
+int cthd_engine::thd_engine_set_user_psv_temp(const char *zone_type,
+		const char *user_set_point) {
+	std::string str(user_set_point);
+	cthd_zone *zone;
+
+	thd_log_debug("thd_engine_set_user_psv_temp %s\n", user_set_point);
+
+	std::locale loc;
+	if (std::isdigit(str[0], loc) == 0) {
+		thd_log_warn("thd_engine_set_user_psv_temp Invalid set point\n");
+		return THD_ERROR;
+	}
+
+	zone = get_zone(zone_type);
+	if (!zone) {
+		thd_log_warn("thd_engine_set_user_psv_temp Invalid zone\n");
+		return THD_ERROR;
+	}
+	return zone->update_psv_temperature(atoi(user_set_point));
 }
 
 void cthd_engine::thermal_zone_change(message_capsul_t *msg) {
@@ -586,12 +605,9 @@ int cthd_engine::check_cpu_id() {
 		i++;
 	}
 	if (!valid) {
-		thd_log_warn(" No support RAPL and Intel P state driver\n");
+		thd_log_warn(" Need Linux PowerCap sysfs \n");
 	}
 
-	if (!(edx & (1 << 5))) {
-		thd_log_warn("No MSR supported on processor \n");
-	}
 #endif
 	return THD_SUCCESS;
 }
