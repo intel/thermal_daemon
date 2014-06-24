@@ -73,7 +73,7 @@ static void subtitute_string(sub_type_t type, string &name) {
 cthd_acpi_rel::cthd_acpi_rel() :
 		rel_cdev("/dev/acpi_thermal_rel"), xml_hdr("<?xml version=\"1.0\"?>\n"), conf_begin(
 				"<ThermalConfiguration>\n"), conf_end(
-				"</ThermalConfiguration>\n"), conf_file(""), trt_data(NULL), trt_count(
+				"</ThermalConfiguration>\n"), conf_file(), trt_data(NULL), trt_count(
 				0), art_data(NULL), art_count(0) {
 
 }
