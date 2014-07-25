@@ -36,8 +36,6 @@
 #include "thd_cdev_msr_rapl.h"
 #include "thd_cdev_rapl_dram.h"
 
-#define ACTIVATE_SURFACE
-
 // Default CPU cooling devices, which are not part of thermal sysfs
 // Since non trivial initialization is not supported, we init all fields even if they are not needed
 /* Some security scan handler can't parse, the following block and generate unnecessary errors.
