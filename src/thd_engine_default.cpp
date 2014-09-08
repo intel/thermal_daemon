@@ -183,21 +183,7 @@ int cthd_engine_default::read_thermal_sensors() {
 	}
 	if (index == sensor_count) {
 		// No coretemp sysfs exist, try hwmon
-		thd_log_warn("Thermal DTS: No coretemp sysfs, trying hwmon \n");
-		cthd_sensor *sensor = new cthd_sensor(index,
-				"/sys/class/hwmon/hwmon0/temp1_input", "hwmon",
-				SENSOR_TYPE_RAW);
-		if (sensor->sensor_update() != THD_SUCCESS) {
-			delete sensor;
-			return THD_ERROR;
-		}
-		sensors.push_back(sensor);
-		++index;
-
-		if (index == sensor_count) {
-			thd_log_error("Thermal DTS or hwmon: No Zones present: \n");
-			return THD_FATAL_ERROR;
-		}
+		thd_log_warn("Thermal DTS: No coretemp sysfs found!!\n");
 	}
 
 	// Add from XML sensor config
@@ -297,24 +283,7 @@ int cthd_engine_default::read_thermal_zones() {
 		}
 
 		if (!cpu_zone_created) {
-			// No coretemp sysfs exist, try hwmon
-			thd_log_warn("Thermal DTS: No coretemp sysfs, trying hwmon \n");
-
-			cthd_zone_cpu *zone = new cthd_zone_cpu(count,
-					"/sys/class/hwmon/hwmon0/", 0);
-			if (zone->zone_update() == THD_SUCCESS) {
-				zone->set_zone_active();
-				zones.push_back(zone);
-				++count;
-				cpu_zone_created = true;
-			} else {
-				delete zone;
-			}
-
-			if (!cpu_zone_created) {
-				thd_log_error("Thermal DTS or hwmon: No Zones present: \n");
-				return THD_FATAL_ERROR;
-			}
+			thd_log_error("Thermal DTS or hwmon: No Zones present Need to configure manually\n");
 		}
 	}
 	zone_count = count;
@@ -449,6 +418,11 @@ int cthd_engine_default::read_thermal_zones() {
 	}
 #endif
 	zone_count = count;
+
+	if (!zone_count) {
+		thd_log_info("No Thermal Zones found \n");
+		return THD_FATAL_ERROR;
+	}
 
 	def_binding.do_default_binding(cdevs);
 
