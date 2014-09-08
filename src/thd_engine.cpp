@@ -45,10 +45,11 @@ static void *cthd_engine_thread(void *arg);
 cthd_engine::cthd_engine() :
 		cdev_cnt(0), zone_count(0), sensor_count(0), parse_thermal_zone_success(
 				false), parse_thermal_cdev_success(false), poll_timeout_msec(
-				-1), wakeup_fd(0), control_mode(COMPLEMENTRY), write_pipe_fd(0), preference(
-				0), status(true), thz_last_time(0), terminate(false), genuine_intel(
-				0), has_invariant_tsc(0), has_aperf(0), proc_list_matched(
-				false), poll_interval_sec(0), poll_sensor_mask(0) {
+				-1), wakeup_fd(-1), uevent_fd(-1), control_mode(COMPLEMENTRY), write_pipe_fd(
+				0), preference(0), status(true), thz_last_time(0), terminate(
+				false), genuine_intel(0), has_invariant_tsc(0), has_aperf(0), proc_list_matched(
+				false), poll_interval_sec(0), poll_sensor_mask(0), poll_fd_cnt(
+				0) {
 	thd_engine = pthread_t();
 	thd_attr = pthread_attr_t();
 	thd_cond_var = pthread_cond_t();
@@ -85,8 +86,9 @@ void cthd_engine::thd_engine_thread() {
 
 		rapl_power_meter.rapl_measure_power();
 
-		n = poll(poll_fds, THD_NUM_OF_POLL_FDS, poll_timeout_msec);
-		thd_log_debug("poll exit %d \n", n);
+		n = poll(poll_fds, poll_fd_cnt, poll_timeout_msec);
+		thd_log_debug("poll exit %d polls_fd event %d %d\n", n,
+				poll_fds[0].revents, poll_fds[1].revents);
 		if (n < 0) {
 			thd_log_warn("Write to pipe failed \n");
 			continue;
@@ -102,7 +104,7 @@ void cthd_engine::thd_engine_thread() {
 				zone->zone_temperature_notification(0, 0);
 			}
 		}
-		if (poll_fds[0].revents & POLLIN) {
+		if (uevent_fd >= 0 && poll_fds[uevent_fd].revents & POLLIN) {
 			// Kobj uevent
 			if (kobj_uevent.check_for_event()) {
 				time_t tm;
@@ -120,7 +122,7 @@ void cthd_engine::thd_engine_thread() {
 				thz_last_time = tm;
 			}
 		}
-		if (poll_fds[wakeup_fd].revents & POLLIN) {
+		if (wakeup_fd >= 0 && poll_fds[wakeup_fd].revents & POLLIN) {
 			message_capsul_t msg;
 
 			thd_log_debug("wakeup fd event\n");
@@ -168,12 +170,14 @@ int cthd_engine::thd_engine_start(bool ignore_cpuid_check) {
 		return THD_FATAL_ERROR;
 	}
 	write_pipe_fd = wake_fds[1];
-	wakeup_fd = THD_NUM_OF_POLL_FDS - 1;
 
 	memset(poll_fds, 0, sizeof(poll_fds));
+
+	wakeup_fd = poll_fd_cnt;
 	poll_fds[wakeup_fd].fd = wake_fds[0];
 	poll_fds[wakeup_fd].events = POLLIN;
 	poll_fds[wakeup_fd].revents = 0;
+	poll_fd_cnt++;
 
 	poll_timeout_msec = -1;
 	if (poll_interval_sec) {
@@ -222,16 +226,20 @@ int cthd_engine::thd_engine_start(bool ignore_cpuid_check) {
 		}
 	}
 
-	poll_fds[0].fd = kobj_uevent.kobj_uevent_open();
-	if (poll_fds[0].fd < 0) {
+	uevent_fd = poll_fd_cnt;
+	poll_fds[uevent_fd].fd = kobj_uevent.kobj_uevent_open();
+	if (poll_fds[uevent_fd].fd < 0) {
 		thd_log_warn("Invalid kobj_uevent handle\n");
+		uevent_fd = -1;
 		goto skip_kobj;
 	}
-	thd_log_info("FD = %d\n", poll_fds[0].fd);
+	thd_log_info("FD = %d\n", poll_fds[uevent_fd].fd);
 	kobj_uevent.register_dev_path(
 			(char *) "/devices/virtual/thermal/thermal_zone");
-	poll_fds[0].events = POLLIN;
-	poll_fds[0].revents = 0;
+	poll_fds[uevent_fd].events = POLLIN;
+	poll_fds[uevent_fd].revents = 0;
+	poll_fd_cnt++;
+
 	skip_kobj:
 #ifndef DISABLE_PTHREAD
 	// condition variable

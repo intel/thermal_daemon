@@ -85,6 +85,7 @@ private:
 
 	int poll_timeout_msec;
 	int wakeup_fd;
+	int uevent_fd;
 	control_mode_t control_mode;
 	int write_pipe_fd;
 	int preference;
@@ -108,6 +109,7 @@ private:
 	static const int thz_notify_debounce_interval = 3;
 
 	struct pollfd poll_fds[THD_NUM_OF_POLL_FDS];
+	int poll_fd_cnt;
 
 	cthd_kobj_uevent kobj_uevent;
 
