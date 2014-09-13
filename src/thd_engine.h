@@ -110,13 +110,14 @@ private:
 
 	struct pollfd poll_fds[THD_NUM_OF_POLL_FDS];
 	int poll_fd_cnt;
-
+	bool rt_kernel;
 	cthd_kobj_uevent kobj_uevent;
 
 	int proc_message(message_capsul_t *msg);
 	void process_pref_change();
 	void thermal_zone_change(message_capsul_t *msg);
 	void process_terminate();
+	void check_for_rt_kernel();
 
 public:
 	static const int max_thermal_zones = 10;
@@ -217,7 +218,9 @@ public:
 		zones.push_back(zone);
 	}
 
-	;
+	bool rt_kernel_status() {
+		return rt_kernel;
+	}
 };
 
 #endif /* THD_ENGINE_H_ */

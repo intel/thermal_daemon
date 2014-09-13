@@ -34,6 +34,7 @@
 #include <dirent.h>
 #include <errno.h>
 #include <sys/types.h>
+#include <sys/utsname.h>
 #include <cpuid.h>
 #include <locale>
 #include "thd_engine.h"
@@ -49,7 +50,7 @@ cthd_engine::cthd_engine() :
 				0), preference(0), status(true), thz_last_time(0), terminate(
 				false), genuine_intel(0), has_invariant_tsc(0), has_aperf(0), proc_list_matched(
 				false), poll_interval_sec(0), poll_sensor_mask(0), poll_fd_cnt(
-				0) {
+				0), rt_kernel(false) {
 	thd_engine = pthread_t();
 	thd_attr = pthread_attr_t();
 	thd_cond_var = pthread_cond_t();
@@ -154,6 +155,8 @@ int cthd_engine::thd_engine_start(bool ignore_cpuid_check) {
 		proc_list_matched = true;
 	} else
 		check_cpu_id();
+
+	check_for_rt_kernel();
 
 	// Pipe is used for communication between two processes
 	ret = pipe(wake_fds);
@@ -775,4 +778,29 @@ cthd_zone* cthd_engine::get_zone(std::string type) {
 	}
 
 	return NULL;
+}
+
+// Code copied from
+// https://rt.wiki.kernel.org/index.php/RT_PREEMPT_HOWTO#Runtime_detection_of_an_RT-PREEMPT_Kernel
+void cthd_engine::check_for_rt_kernel() {
+	struct utsname _uname;
+	char *crit1 = NULL;
+	int crit2 = 0;
+	FILE *fd;
+
+	uname(&_uname);
+	crit1 = strcasestr(_uname.version, "PREEMPT RT");
+
+	if ((fd = fopen("/sys/kernel/realtime", "r")) != NULL) {
+		int flag;
+		crit2 = ((fscanf(fd, "%d", &flag) == 1) && (flag == 1));
+		fclose(fd);
+	}
+	if (crit1 && crit2)
+		rt_kernel = true;
+	else
+		rt_kernel = false;
+
+	thd_log_info("Running on a %s kernel\n",
+			rt_kernel ? "PREEMPT RT" : "vanilla");
 }

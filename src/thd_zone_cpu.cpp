@@ -229,16 +229,20 @@ int cthd_zone_cpu::zone_bind_sensors() {
 	if (init() != THD_SUCCESS)
 		return THD_ERROR;
 
-	sensor = thd_engine->search_sensor("pkg-temp-0");
-	if (sensor) {
-		bind_sensor(sensor);
-		async_sensor = true;
+	if (!thd_engine->rt_kernel_status()) {
+		sensor = thd_engine->search_sensor("pkg-temp-0");
+		if (sensor) {
+			bind_sensor(sensor);
+			async_sensor = true;
+		}
 	}
 
-	sensor = thd_engine->search_sensor("x86_pkg_temp");
-	if (sensor) {
-		bind_sensor(sensor);
-		async_sensor = true;
+	if (!thd_engine->rt_kernel_status()) {
+		sensor = thd_engine->search_sensor("x86_pkg_temp");
+		if (sensor) {
+			bind_sensor(sensor);
+			async_sensor = true;
+		}
 	}
 
 	sensor = thd_engine->search_sensor("soc_dts0");
