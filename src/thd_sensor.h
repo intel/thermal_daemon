@@ -51,10 +51,10 @@ public:
 	virtual ~cthd_sensor() {
 	}
 	int sensor_update();
-	std::string get_sensor_type() {
+	virtual std::string get_sensor_type() {
 		return type_str;
 	}
-	unsigned int read_temperature();
+	virtual unsigned int read_temperature();
 	int get_index() {
 		return index;
 	}
@@ -69,7 +69,7 @@ public:
 	bool check_async_capable() {
 		return async_capable;
 	}
-	void sensor_dump() {
+	virtual void sensor_dump() {
 		thd_log_info("sensor index:%d %s Async:%d \n", index, type_str.c_str(),
 				async_capable);
 	}

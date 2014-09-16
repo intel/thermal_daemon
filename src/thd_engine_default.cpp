@@ -35,6 +35,7 @@
 #include "thd_zone_surface.h"
 #include "thd_cdev_msr_rapl.h"
 #include "thd_cdev_rapl_dram.h"
+#include "thd_sensor_virtual.h"
 
 // Default CPU cooling devices, which are not part of thermal sysfs
 // Since non trivial initialization is not supported, we init all fields even if they are not needed
@@ -199,15 +200,31 @@ int cthd_engine_default::read_thermal_sensors() {
 				if (sensor_config->mask & SENSOR_DEF_BIT_ASYNC_CAPABLE)
 					sensor->set_async_capable(sensor_config->async_capable);
 			} else {
-				cthd_sensor *sensor_new = new cthd_sensor(index,
-						sensor_config->path, sensor_config->name,
-						SENSOR_TYPE_RAW);
-				if (sensor_new->sensor_update() != THD_SUCCESS) {
-					delete sensor_new;
-					continue;
+				cthd_sensor *sensor_new = NULL;
+				if (sensor_config->virtual_sensor) {
+					cthd_sensor_virtual *sensor_virt = new cthd_sensor_virtual(index,
+							sensor_config->name,
+							sensor_config->sensor_link.name,
+							sensor_config->sensor_link.multiplier,
+							sensor_config->sensor_link.offset);
+					if (sensor_virt->sensor_update() != THD_SUCCESS) {
+						delete sensor_virt;
+						continue;
+					}
+					sensor_new = sensor_virt;
+				} else {
+					sensor_new = new cthd_sensor(index, sensor_config->path,
+							sensor_config->name,
+							SENSOR_TYPE_RAW);
+					if (sensor_new->sensor_update() != THD_SUCCESS) {
+						delete sensor_new;
+						continue;
+					}
 				}
-				sensors.push_back(sensor_new);
-				++index;
+				if (sensor_new) {
+					sensors.push_back(sensor_new);
+					++index;
+				}
 			}
 		}
 		sensor_count = index;

@@ -19,6 +19,7 @@ thermald_src_files := \
 		$(thermald_src_path)/thd_model.cpp \
 		$(thermald_src_path)/thd_parse.cpp \
 		$(thermald_src_path)/thd_sensor.cpp \
+		$(thermald_src_path)/thd_sensor_virtual.cpp \
 		$(thermald_src_path)/thd_kobj_uevent.cpp \
 		$(thermald_src_path)/thd_cdev_order_parser.cpp \
 		$(thermald_src_path)/thd_cdev_gen_sysfs.cpp \

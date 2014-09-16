@@ -59,6 +59,7 @@ thermald_SOURCES = \
 		src/thd_model.cpp \
 		src/thd_parse.cpp \
 		src/thd_sensor.cpp \
+		src/thd_sensor_virtual.cpp \
 		src/thd_kobj_uevent.cpp \
 		src/thd_cdev_order_parser.cpp \
 		src/thd_cdev_gen_sysfs.cpp \
