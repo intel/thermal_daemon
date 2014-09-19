@@ -41,10 +41,11 @@ thermald_LDADD = \
 		$(XML_LIBS)
 
 BUILT_SOURCES = \
-	thd-dbus-interface.h
+	thd_dbus_interface.h
 
 thermald_SOURCES = \
 		src/main.cpp \
+		src/thd_dbus_interface.cpp \
 		src/thd_engine.cpp \
 		src/thd_cdev.cpp \
 		src/thd_cdev_therm_sys_fs.cpp \
@@ -79,7 +80,7 @@ thermald_SOURCES = \
 man5_MANS = man/thermal-conf.xml.5
 man8_MANS = man/thermald.8
 
-thd-dbus-interface.h: $(top_srcdir)/src/thd-dbus_interface.xml
+thd_dbus_interface.h: $(top_srcdir)/src/thd_dbus_interface.xml
 	$(AM_V_GEN) dbus-binding-tool --prefix=thd_dbus_interface --mode=glib-server --output=$@ $<
 
 CLEANFILES = $(BUILT_SOURCES)

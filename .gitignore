@@ -33,6 +33,6 @@ ABOUT-NLS
 *.pc
 cscope.*out
 thermald
-thd-dbus-interface.h
+thd_dbus_interface.h
 .cproject
 .project
