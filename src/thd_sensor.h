@@ -40,6 +40,7 @@ protected:
 	bool sensor_active;
 	std::string type_str;
 	bool async_capable;
+	bool virtual_sensor;
 
 private:
 	std::vector<int> thresholds;
@@ -54,6 +55,11 @@ public:
 	virtual std::string get_sensor_type() {
 		return type_str;
 	}
+
+	virtual std::string get_sensor_path() {
+		return sensor_sysfs.get_base_path();
+	}
+
 	virtual unsigned int read_temperature();
 	int get_index() {
 		return index;
@@ -70,13 +76,16 @@ public:
 		return async_capable;
 	}
 	virtual void sensor_dump() {
-		thd_log_info("sensor index:%d %s Async:%d \n", index, type_str.c_str(),
-				async_capable);
+		thd_log_info("sensor index:%d %s %s Async:%d \n", index,
+				type_str.c_str(), sensor_sysfs.get_base_path(), async_capable);
 	}
 	// Even if sensors are capable of async, it is possible that it is not reliable enough
 	// at critical monitoring point. Sensors can be forced to go to poll mode at that temp
 	void sensor_poll_trip(bool status);
 
+	bool is_virtual() {
+		return virtual_sensor;
+	}
 };
 
 #endif /* THD_SENSOR_H_ */

@@ -47,6 +47,8 @@ public:
 					multiplier, offset);
 	}
 
+	int sensor_update_param(std::string new_dep_sensor, double slope, double intercept);
+
 };
 
 #endif /* THD_SENSOR_VIRTUAL_H_ */

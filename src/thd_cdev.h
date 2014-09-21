@@ -143,6 +143,12 @@ public:
 	void set_debounce_interval(int interval) {
 		debounce_interval = interval;
 	}
+	void set_min_state(int _min_state) {
+		min_state = _min_state;
+	}
+	void set_max_state(int _max_state) {
+		max_state = _max_state;
+	}
 	bool in_min_state() {
 		if ((min_state < max_state && get_curr_state() <= min_state)
 				|| (min_state > max_state && get_curr_state() >= min_state))

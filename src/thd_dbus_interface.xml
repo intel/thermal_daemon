@@ -19,12 +19,12 @@
 
     <method name="SetUserMaxTemperature">
       <arg type="s" name="zone_name" direction="in"/>
-      <arg type="s" name="user_set_point_in_milli_degree_celsius" direction="in"/>
+      <arg type="u" name="user_set_point_in_milli_degree_celsius" direction="in"/>
     </method>
 
     <method name="SetUserPassiveTemperature">
       <arg type="s" name="zone_name" direction="in"/>
-      <arg type="s" name="user_passive_control_in_milli_degree_celsius" direction="in"/>
+      <arg type="u" name="user_passive_control_in_milli_degree_celsius" direction="in"/>
     </method>
 
     <!-- GetCurrentPreference: Returns the current preference -->
@@ -32,7 +32,77 @@
       <arg type="s" name="cur_pref" direction="out"/>
     </method>
 
-    <method name="Calibrate">
+    <method name="AddSensor">
+      <arg type="s" name="sensor_name" direction="in"/>
+      <arg type="s" name="path" direction="in"/>
+    </method>
+
+    <method name="AddVirtualSensor">
+      <arg type="s" name="sensor_name" direction="in"/>
+      <arg type="s" name="dep_sensor_name" direction="in"/>
+      <arg type="d" name="slope" direction="in"/>
+      <arg type="d" name="intercept" direction="in"/>      
+    </method>
+
+    <method name="GetSensorInformation">
+      <arg type="u" name="index" direction="in"/>
+      <arg type="s" name="sensor" direction="out"/>
+      <arg type="s" name="path" direction="out"/>
+      <arg type="i" name="temp" direction="out"/>
+    </method>
+
+    <method name="AddZonePassive">
+      <arg type="s" name="zone_name" direction="in"/>
+      <arg type="u" name="trip_point_temp" direction="in"/>
+      <arg type="s" name="trip_point_sensor" direction="in"/>
+      <arg type="s" name="trip_point_cdev" direction="in"/>
+    </method>
+
+    <method name="DeleteZone">
+      <arg type="s" name="zone_name" direction="in"/>
+     </method>
+
+    <method name="SetZoneStatus">
+      <arg type="s" name="zone_name" direction="in"/>
+      <arg type="i" name="enable" direction="in"/>
+    </method>
+
+    <method name="GetZoneStatus">
+      <arg type="s" name="zone_name" direction="in"/>
+      <arg type="i" name="enable" direction="out"/>
+    </method>
+
+    <method name="AddTripPoint">
+      <arg type="s" name="zone_name" direction="in"/>
+      <arg type="u" name="trip_point_temp" direction="in"/>
+      <arg type="s" name="trip_point_sensor" direction="in"/>
+      <arg type="s" name="trip_point_cdev" direction="in"/>
+    </method>
+
+    <method name="DeleteTripPoint">
+      <arg type="s" name="zone_name" direction="in"/>
+      <arg type="u" name="trip_point_temp" direction="in"/>
+    </method>
+
+    <method name="AddCoolingDevice">
+      <arg type="s" name="cdev_name" direction="in"/>
+      <arg type="s" name="optional_path" direction="in"/>
+      <arg type="i" name="min_state" direction="in"/>
+      <arg type="i" name="max_state" direction="in"/>
+      <arg type="i" name="inc_step" direction="in"/>
+    </method>
+
+    <method name="UpdateCoolingDevice">
+      <arg type="s" name="cdev_name" direction="in"/>
+      <arg type="s" name="optional_path" direction="in"/>
+      <arg type="i" name="min_state" direction="in"/>
+      <arg type="i" name="max_state" direction="in"/>
+      <arg type="i" name="inc_step" direction="in"/>
+    </method>
+
+
+    <method name="DisableCoolingDevice">
+      <arg type="s" name="cdev_name" direction="in"/>
     </method>
 
     <method name="Terminate">

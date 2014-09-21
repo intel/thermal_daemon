@@ -56,6 +56,7 @@ thermald_SOURCES = \
 		src/thd_zone_surface.cpp \
 		src/thd_zone_cpu.cpp \
 		src/thd_zone_therm_sys_fs.cpp \
+		src/thd_zone_dynamic.cpp \
 		src/thd_preference.cpp \
 		src/thd_model.cpp \
 		src/thd_parse.cpp \

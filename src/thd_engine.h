@@ -32,6 +32,7 @@
 #include "thd_sys_fs.h"
 #include "thd_preference.h"
 #include "thd_sensor.h"
+#include "thd_sensor_virtual.h"
 #include "thd_zone.h"
 #include "thd_cdev.h"
 #include "thd_parse.h"
@@ -46,10 +47,9 @@ typedef enum {
 	TERMINATE,
 	PREF_CHANGED,
 	THERMAL_ZONE_NOTIFY,
-	CALIBRATE,
 	RELOAD_ZONES,
 	POLL_ENABLE,
-	POLL_DISABLE
+	POLL_DISABLE,
 } message_name_t;
 
 // This defines whether the thermal control is entirey done by
@@ -102,8 +102,8 @@ private:
 
 	pthread_t thd_engine;
 	pthread_attr_t thd_attr;
-	pthread_cond_t thd_cond_var;
-	pthread_mutex_t thd_cond_mutex;
+
+	pthread_mutex_t thd_engine_mutex;
 
 	std::vector<std::string> zone_preferences;
 	static const int thz_notify_debounce_interval = 3;
@@ -221,6 +221,24 @@ public:
 	bool rt_kernel_status() {
 		return rt_kernel;
 	}
+
+	// User/External messages
+	int user_add_sensor(std::string name, std::string path);
+	cthd_sensor *user_get_sensor(unsigned int index);
+	int user_add_virtual_sensor(std::string name, std::string dep_sensor,
+			double slope, double intercept);
+
+	int user_set_psv_temp(std::string name, unsigned int temp);
+	int user_set_max_temp(std::string name, unsigned int temp);
+	int user_add_zone(std::string zone_name, unsigned int trip_temp,
+			std::string sensor_name, std::string cdev_name);
+	int user_set_zone_status(std::string name, int status);
+	int user_get_zone_status(std::string name, int *status);
+	int user_delete_zone(std::string name);
+
+	int user_add_cdev(std::string cdev_name, std::string cdev_path,
+			int min_state, int max_state, int step);
+
 };
 
 #endif /* THD_ENGINE_H_ */
