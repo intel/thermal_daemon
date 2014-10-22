@@ -1,14 +1,14 @@
 Name:           thermal-daemon
-Version:        1.03
-Release:        1%{?dist}
+Version: v1.3
+Release: 3%{?dist}
 Summary:        The "Linux Thermal Daemon" program from 01.org
 
 License:        GPLv2+
 URL:            https://github.com/01org/thermal_daemon
 %global pkgname thermal_daemon
-%global commit  3ba658cff9c9237bb49a94aa553c77f57e1f8664
+%global commit  0225c182da262492fb99055975b7d462e68d7490
 %global shortcommit %(c=%{commit}; echo ${c:0:7})
-Source0:        https://github.com/01org/thermal_daemon/archive/%{commit}/%{pkgname}-v%{version}-%{shortcommit}.tar.gz
+Source0:        https://github.com/01org/thermal_daemon/archive/%{commit}/%{pkgname}-%{version}-%{shortcommit}.tar.gz
 
 BuildRequires:  automake
 BuildRequires:  autoconf
@@ -24,7 +24,7 @@ Requires(postun): systemd-units
 Thermal Daemon monitors and controls platform temperature.
 
 %prep
-%setup -qn %{pkgname}-%{commit}
+%setup -qn %{pkgname}-%{shortcommit}
 
 %build
 autoreconf -f -i
@@ -51,12 +51,16 @@ make %{?_smp_mflags}
 %config(noreplace) %{_sysconfdir}/dbus-1/system.d/org.freedesktop.thermald.conf
 %{_datadir}/dbus-1/system-services/org.freedesktop.thermald.service
 %config(noreplace) %{_sysconfdir}/thermald/thermal-conf.xml
-%config(noreplace) %{_sysconfdir}/thermald/thermal-cdev-order.xml
+%config(noreplace) %{_sysconfdir}/thermald/thermal-cpu-cdev-order.xml
 %doc COPYING README.txt
-%{_mandir}/man1/thermald.1.gz
+%{_mandir}/man8/thermald.8.gz
+%{_mandir}/man5/thermal-conf.xml.5.gz
 %{_unitdir}/thermald.service
+%exclude %{_sysconfdir}/init
 
 %changelog
+* Fri Oct 17 2014 António Meireles <antonio.meireles@reformi.st> 1.3-3
+- update spec file
 * Tue Oct 01 2013 Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com> 1.03-1
 - Upgraded to thermal daemon 1.03
 * Mon Jun 24 2013 Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com> 1.02-5
