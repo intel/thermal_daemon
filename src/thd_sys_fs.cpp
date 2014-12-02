@@ -196,6 +196,7 @@ int csys_fs::read_symbolic_link_value(const std::string &path, char *buf,
 	std::string p = base_path + path;
 	int ret = ::readlink(p.c_str(), buf, len);
 	if (ret < 0) {
+		*buf = '\0';
 		thd_log_warn("read_symbolic_link %s\n", path.c_str());
 		return -errno;
 	}
