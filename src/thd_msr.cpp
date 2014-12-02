@@ -469,8 +469,6 @@ int cthd_msr::inc_freq_state() {
 		if (ret < 0)
 			return THD_ERROR;
 		thd_log_debug("perf_ctl current %x\n", (unsigned int) val);
-		if (ret < 0)
-			return THD_ERROR;
 
 		current_clock = (val >> 8) & 0xff;
 		current_clock++;
