@@ -98,7 +98,7 @@ int cthd_intel_p_state_cdev::update() {
 	thd_log_info("Use Default pstate drv settings\n");
 	max_state = default_max_state;
 	min_compensation = 0;
-	unit_value = 100 / max_state;
+	unit_value = 100.0 / max_state;
 	curr_state = 0;
 	thd_log_debug(
 			"cooling dev index:%d, curr_state:%d, max_state:%d, unit:%f, min_com:%d, type:%s\n",
