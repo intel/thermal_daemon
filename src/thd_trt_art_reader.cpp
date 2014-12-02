@@ -142,6 +142,7 @@ int cthd_acpi_rel::read_art() {
 	ret = ioctl(fd, ACPI_THERMAL_GET_ART_COUNT, &count);
 	if (ret < 0) {
 		PRINT_ERROR(" failed to GET COUNT on %s\n", rel_cdev.c_str());
+		close(fd);
 		return -1;
 	}
 	PRINT_DEBUG("ART count %lu ...\n", count);
@@ -149,6 +150,7 @@ int cthd_acpi_rel::read_art() {
 	ret = ioctl(fd, ACPI_THERMAL_GET_ART_LEN, &length);
 	if (ret < 0 || !length) {
 		PRINT_ERROR(" failed to GET LEN on %s\n", rel_cdev.c_str());
+		close(fd);
 		return -1;
 	}
 	PRINT_DEBUG("ART length %lu ...\n", length);
@@ -156,11 +158,13 @@ int cthd_acpi_rel::read_art() {
 	art_data = (unsigned char*) new char[length];
 	if (!art_data) {
 		PRINT_ERROR("cannot allocate buffer %lu to read ART\n", length);
+		close(fd);
 		return -1;
 	}
 	ret = ioctl(fd, ACPI_THERMAL_GET_ART, art_data);
 	if (ret < 0) {
 		PRINT_ERROR(" failed to GET ART on %s\n", rel_cdev.c_str());
+		close(fd);
 		return -1;
 	}
 	art_count = count;
@@ -185,6 +189,7 @@ int cthd_acpi_rel::read_trt() {
 	ret = ioctl(fd, ACPI_THERMAL_GET_TRT_COUNT, &count);
 	if (ret < 0) {
 		PRINT_ERROR(" failed to GET COUNT on %s\n", rel_cdev.c_str());
+		close(fd);
 		return -1;
 	}
 	PRINT_DEBUG("TRT count %lu ...\n", count);
@@ -192,17 +197,20 @@ int cthd_acpi_rel::read_trt() {
 	ret = ioctl(fd, ACPI_THERMAL_GET_TRT_LEN, &length);
 	if (ret < 0 || !length) {
 		PRINT_ERROR(" failed to GET LEN on %s\n", rel_cdev.c_str());
+		close(fd);
 		return -1;
 	}
 
 	trt_data = (unsigned char*) new char[length];
 	if (!trt_data) {
 		PRINT_ERROR("cannot allocate buffer %lu to read TRT\n", length);
+		close(fd);
 		return -1;
 	}
 	ret = ioctl(fd, ACPI_THERMAL_GET_TRT, trt_data);
 	if (ret < 0) {
 		PRINT_ERROR(" failed to GET TRT on %s\n", rel_cdev.c_str());
+		close(fd);
 		return -1;
 	}
 	trt_count = count;
