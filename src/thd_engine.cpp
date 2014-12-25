@@ -209,6 +209,8 @@ int cthd_engine::thd_engine_start(bool ignore_cpuid_check) {
 		return THD_FATAL_ERROR;
 	}
 
+	parser.set_default_preference();
+
 	// Check if polling is disabled and sensors don't support
 	// async mode, in that enable force polling
 	if (!poll_interval_sec) {
@@ -276,6 +278,7 @@ int cthd_engine::thd_engine_start(bool ignore_cpuid_check) {
 		}
 	}
 #endif
+	thd_pref.refresh();
 	preference = thd_pref.get_preference();
 	thd_log_info("Current user preference is %d\n", preference);
 
