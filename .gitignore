@@ -36,3 +36,4 @@ thermald
 thd-dbus-interface.h
 .cproject
 .project
+*thermald.service
