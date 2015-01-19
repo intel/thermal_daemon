@@ -29,7 +29,7 @@ sbin_PROGRAMS = thermald
 thermald_CPPFLAGS = \
 	-I@top_srcdir@/src \
 	-DTDLOCALEDIR=\"$(datadir)/locale\" \
-	-DGLIBC_SUPPORT
+	-DGLIB_SUPPORT
 
 thermald_includedir = @top_srcdir@
 thermald_LDADD = \
