@@ -140,7 +140,7 @@ int cthd_sysfs_zone::read_cdev_trip_points() {
 		std::stringstream trip_pt_stream, cdev_stream;
 		std::string trip_pt_str;
 		int trip_cnt = -1;
-		char buf[50], *ptr;
+		char buf[51], *ptr;
 		trip_pt_stream << cdev_sysfs.str() << i << "_trip_point";
 
 		if (zone_sysfs.exists(trip_pt_stream.str())) {
@@ -154,7 +154,7 @@ int cthd_sysfs_zone::read_cdev_trip_points() {
 		if (zone_sysfs.exists(cdev_stream.str())) {
 			thd_log_debug("cdev%d present\n", i);
 			int ret = zone_sysfs.read_symbolic_link_value(cdev_stream.str(),
-					buf, 50);
+					buf, sizeof(buf) - 1);
 			if (ret == 0) {
 				ptr = strstr(buf, "cooling_device");
 				if (ptr) {
