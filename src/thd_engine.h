@@ -90,7 +90,8 @@ private:
 	int write_pipe_fd;
 	int preference;
 	bool status;
-	time_t thz_last_time;
+	time_t thz_last_uevent_time;
+	time_t thz_last_temp_ind_time;
 	bool terminate;
 	int genuine_intel;
 	int has_invariant_tsc;

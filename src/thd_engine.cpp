@@ -49,10 +49,10 @@ cthd_engine::cthd_engine() :
 		cdev_cnt(0), zone_count(0), sensor_count(0), parse_thermal_zone_success(
 				false), parse_thermal_cdev_success(false), poll_timeout_msec(
 				-1), wakeup_fd(-1), uevent_fd(-1), control_mode(COMPLEMENTRY), write_pipe_fd(
-				0), preference(0), status(true), thz_last_time(0), terminate(
-				false), genuine_intel(0), has_invariant_tsc(0), has_aperf(0), proc_list_matched(
-				false), poll_interval_sec(0), poll_sensor_mask(0), poll_fd_cnt(
-				0), rt_kernel(false) {
+				0), preference(0), status(true), thz_last_uevent_time(0), thz_last_temp_ind_time(
+				0), terminate(false), genuine_intel(0), has_invariant_tsc(0), has_aperf(
+				0), proc_list_matched(false), poll_interval_sec(0), poll_sensor_mask(
+				0), poll_fd_cnt(0), rt_kernel(false) {
 	thd_engine = pthread_t();
 	thd_attr = pthread_attr_t();
 
@@ -82,6 +82,8 @@ cthd_engine::~cthd_engine() {
 void cthd_engine::thd_engine_thread() {
 	unsigned int i;
 	int n;
+	time_t tm;
+	int poll_timeout_sec = poll_timeout_msec / 1000;
 
 	thd_log_info("thd_engine_thread begin\n");
 	for (;;) {
@@ -97,7 +99,9 @@ void cthd_engine::thd_engine_thread() {
 			thd_log_warn("Write to pipe failed \n");
 			continue;
 		}
-		if (n == 0) {
+		time(&tm);
+
+		if (n == 0 || (tm - thz_last_temp_ind_time) >= poll_timeout_sec) {
 			if (!status) {
 				thd_log_warn("Thermal Daemon is disabled \n");
 				continue;
@@ -109,6 +113,7 @@ void cthd_engine::thd_engine_thread() {
 				zone->zone_temperature_notification(0, 0);
 			}
 			pthread_mutex_unlock(&thd_engine_mutex);
+			thz_last_temp_ind_time = tm;
 		}
 		if (uevent_fd >= 0 && poll_fds[uevent_fd].revents & POLLIN) {
 			// Kobj uevent
@@ -117,7 +122,8 @@ void cthd_engine::thd_engine_thread() {
 
 				time(&tm);
 				thd_log_debug("kobj uevent for thermal\n");
-				if ((tm - thz_last_time) >= thz_notify_debounce_interval) {
+				if ((tm - thz_last_uevent_time)
+						>= thz_notify_debounce_interval) {
 					pthread_mutex_lock(&thd_engine_mutex);
 					for (i = 0; i < zones.size(); ++i) {
 						cthd_zone *zone = zones[i];
@@ -127,7 +133,7 @@ void cthd_engine::thd_engine_thread() {
 				} else {
 					thd_log_debug("IGNORE THZ kevent\n");
 				}
-				thz_last_time = tm;
+				thz_last_uevent_time = tm;
 			}
 		}
 		if (wakeup_fd >= 0 && poll_fds[wakeup_fd].revents & POLLIN) {
