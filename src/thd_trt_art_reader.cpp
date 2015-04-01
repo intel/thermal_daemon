@@ -22,6 +22,7 @@
  *
  */
 #include "thd_common.h"
+#include "thd_sys_fs.h"
 
 #include "thd_trt_art_reader.h"
 #include "acpi_thermal_rel_ioct.h"
@@ -50,13 +51,64 @@ typedef enum {
 	TARGET_DEV, SOURCE_DEV, SENSOR_DEV
 } sub_type_t;
 
+/*
+ * The _TRT and _ART table may refer to entry, for which we have
+ * we need to tie to some control device, which is not enumerated
+ * as a thermal cooling device. In this case, we substitute them
+ * to a inbuilt standard name.
+ */
+static void associate_device(sub_type_t type, string &name) {
+	DIR *dir;
+	struct dirent *entry;
+	std::string base_path = "/sys/bus/platform/devices/";
+
+	if ((dir = opendir(base_path.c_str())) != NULL) {
+		while ((entry = readdir(dir)) != NULL) {
+			if (!strncmp(entry->d_name, "INT340", strlen("INT340"))) {
+				char buf[256];
+				int ret;
+				std::string name_path = base_path + entry->d_name
+						+ "/firmware_node";
+				ret = readlink(name_path.c_str(), buf, sizeof(buf) - 1);
+				if (ret > 0) {
+					buf[ret] = '\0';
+					name_path.clear();
+					name_path = base_path + entry->d_name + "/"
+							+ std::string(buf) + "/";
+					csys_fs acpi_sysfs(name_path.c_str());
+					std::string uid;
+					if (!acpi_sysfs.exists("uid"))
+						continue;
+					ret = acpi_sysfs.read("uid", uid);
+					if (ret < 0)
+						continue;
+					if (name == uid) {
+						if (name_path.find("INT3406") != std::string::npos) {
+							name = "DISP";
+						} else if (name_path.find("INT3402")
+								!= std::string::npos) {
+							name = "TMEM";
+						} else if (name_path.find("INT3401")
+								!= std::string::npos) {
+							name = "TCPU";
+						}
+						return;
+					}
+				}
+			}
+		}
+		closedir(dir);
+	}
+}
+
 static void subtitute_string(sub_type_t type, string &name) {
 	int i = 0;
 	sub_string_t *list;
 
-	if (type == TARGET_DEV)
+	if (type == TARGET_DEV) {
+		associate_device(type, name);
 		list = target_substitue_strings;
-	else if (type == SOURCE_DEV)
+	} else if (type == SOURCE_DEV)
 		list = source_substitue_strings;
 	else
 		list = sensor_substitue_strings;
@@ -231,10 +283,11 @@ void cthd_acpi_rel::add_passive_trip_point(rel_object_t &rel_obj) {
 
 	subtitute_string(SENSOR_DEV, rel_obj.target_sensor);
 
-	conf_file << prefix.c_str() << "\t" << "<SensorType>" << rel_obj.target_sensor.c_str()
-			<< "</SensorType>\n";
+	conf_file << prefix.c_str() << "\t" << "<SensorType>"
+			<< rel_obj.target_sensor.c_str() << "</SensorType>\n";
 
-	conf_file << prefix.c_str() << "\t" << "<Temperature>" << "*" << "</Temperature>\n";
+	conf_file << prefix.c_str() << "\t" << "<Temperature>" << "*"
+			<< "</Temperature>\n";
 
 	conf_file << prefix.c_str() << "\t" << "<type>" << "passive" "</type>\n";
 
@@ -249,7 +302,8 @@ void cthd_acpi_rel::add_passive_trip_point(rel_object_t &rel_obj) {
 
 		subtitute_string(TARGET_DEV, device_name);
 
-		conf_file << prefix.c_str() << "\t\t" << "<type>" << device_name.c_str() << "</type>\n";
+		conf_file << prefix.c_str() << "\t\t" << "<type>" << device_name.c_str()
+				<< "</type>\n";
 		conf_file << prefix.c_str() << "\t\t" << "<influence>"
 				<< object->acpi_trt_entry.influence << "</influence>\n";
 		conf_file << prefix.c_str() << "\t\t" << "<SamplingPeriod>"
@@ -271,10 +325,11 @@ void cthd_acpi_rel::add_active_trip_point(rel_object_t &rel_obj) {
 
 	subtitute_string(SENSOR_DEV, rel_obj.target_sensor);
 
-	conf_file << prefix.c_str() << "\t" << "<SensorType>" << rel_obj.target_sensor.c_str()
-			<< "</SensorType>\n";
+	conf_file << prefix.c_str() << "\t" << "<SensorType>"
+			<< rel_obj.target_sensor.c_str() << "</SensorType>\n";
 
-	conf_file << prefix.c_str() << "\t" << "<Temperature>" << "*" << "</Temperature>\n";
+	conf_file << prefix.c_str() << "\t" << "<Temperature>" << "*"
+			<< "</Temperature>\n";
 
 	conf_file << prefix.c_str() << "\t" << "<type>" << "active" "</type>\n";
 
@@ -288,7 +343,8 @@ void cthd_acpi_rel::add_active_trip_point(rel_object_t &rel_obj) {
 		conf_file << prefix.c_str() << "\t" << "<CoolingDevice>\n";
 
 		subtitute_string(TARGET_DEV, device_name);
-		conf_file << prefix.c_str() << "\t\t" << "<type>" << device_name.c_str() << "</type>\n";
+		conf_file << prefix.c_str() << "\t\t" << "<type>" << device_name.c_str()
+				<< "</type>\n";
 		conf_file << prefix.c_str() << "\t\t" << "<influence>"
 				<< object->acpi_art_entry.weight << "</influence>\n";
 
@@ -312,8 +368,8 @@ void cthd_acpi_rel::create_thermal_zone(string type) {
 		conf_file << prefix.c_str() << "<ThermalZone>" << "\n";
 
 		subtitute_string(SOURCE_DEV, rel_list[i].target_device);
-		conf_file << prefix.c_str() << "\t" << "<Type>" << rel_list[i].target_device.c_str()
-				<< "</Type>" << "\n";
+		conf_file << prefix.c_str() << "\t" << "<Type>"
+				<< rel_list[i].target_device.c_str() << "</Type>" << "\n";
 		conf_file << prefix.c_str() << "\t" << "<TripPoints>" << "\n";
 		indentation += "\t";
 		add_passive_trip_point(rel_list[i]);
@@ -379,7 +435,8 @@ void cthd_acpi_rel::create_platform_conf() {
 	indentation += "\t";
 
 	prefix = indentation;
-	conf_file << prefix.c_str() << "<Name>" << "_TRT export" << "</Name>" << "\n";
+	conf_file << prefix.c_str() << "<Name>" << "_TRT export" << "</Name>"
+			<< "\n";
 
 	ifstream product_name("/sys/class/dmi/id/product_name");
 
@@ -388,7 +445,8 @@ void cthd_acpi_rel::create_platform_conf() {
 	if (product_name.is_open() && getline(product_name, line)) {
 #else
 	char buffer[256];
-	if (product_name.is_open() && product_name.getline(buffer, sizeof(buffer))) {
+	if (product_name.is_open()
+			&& product_name.getline(buffer, sizeof(buffer))) {
 		string line(buffer);
 #endif
 		conf_file << line.c_str();
@@ -430,8 +488,9 @@ void cthd_acpi_rel::dump_art() {
 
 void cthd_acpi_rel::create_platform_pref(int perf) {
 	if (perf)
-		conf_file << indentation.c_str() << "<Preference>PERFORMANCE</Preference>"
-				<< "\n";
+		conf_file << indentation.c_str()
+				<< "<Preference>PERFORMANCE</Preference>" << "\n";
 	else
-		conf_file << indentation.c_str() << "<Preference>QUIET</Preference>" << "\n";
+		conf_file << indentation.c_str() << "<Preference>QUIET</Preference>"
+				<< "\n";
 }
