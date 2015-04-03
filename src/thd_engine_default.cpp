@@ -36,6 +36,7 @@
 #include "thd_cdev_msr_rapl.h"
 #include "thd_cdev_rapl_dram.h"
 #include "thd_sensor_virtual.h"
+#include "thd_cdev_backlight.h"
 
 // Default CPU cooling devices, which are not part of thermal sysfs
 // Since non trivial initialization is not supported, we init all fields even if they are not needed
@@ -599,6 +600,18 @@ int cthd_engine_default::read_cooling_devices() {
 		++cdev_cnt;
 	} else
 		delete rapl_dram_dev;
+
+	cthd_cdev *cdev = search_cdev("LCD");
+	if (!cdev) {
+		cthd_cdev_backlight *backlight_dev = new cthd_cdev_backlight(cdev_cnt,
+				0);
+		backlight_dev->set_cdev_type("LCD");
+		if (backlight_dev->update() == THD_SUCCESS) {
+			cdevs.push_back(backlight_dev);
+			++cdev_cnt;
+		} else
+			delete backlight_dev;
+	}
 
 	// Dump all cooling devices
 	for (unsigned i = 0; i < cdevs.size(); ++i) {
