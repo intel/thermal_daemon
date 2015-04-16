@@ -129,15 +129,14 @@ bool check_thermald_running() {
 	return false;
 }
 
+// SIGTERM & SIGINT handler
 void sig_int_handler(int signum) {
-	// control+c handler
 	thd_engine->thd_engine_terminate();
 	sleep(1);
-	delete thd_engine;
-
 	if (g_main_loop)
 		g_main_loop_quit(g_main_loop);
-
+	delete thd_engine;
+	exit(EXIT_SUCCESS);
 }
 
 // main function
@@ -248,8 +247,10 @@ int main(int argc, char *argv[]) {
 		exit(EXIT_FAILURE);
 	}
 
-	if (no_daemon)
+	if (no_daemon) {
 		signal(SIGINT, sig_int_handler);
+		signal(SIGTERM, sig_int_handler);
+	}
 
 	// Initialize the GType/GObject system
 	g_type_init();

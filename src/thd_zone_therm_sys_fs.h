@@ -31,12 +31,14 @@ class cthd_sysfs_zone: public cthd_zone {
 private:
 	int trip_point_cnt;
 	cthd_zone *zone;
+	std::vector<int> initial_trip_values;
 
 public:
 	static const int max_trip_points = 50;
 	static const int max_cool_devs = 50;
 
 	cthd_sysfs_zone(int count, std::string path);
+	~cthd_sysfs_zone();
 
 	virtual int read_trip_points();
 	virtual int read_cdev_trip_points();
