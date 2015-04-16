@@ -35,6 +35,10 @@ int cthd_cdev_backlight::update() {
 			return ret;
 		std::istringstream(temp_str) >> max_state;
 	}
+
+	if (max_state <= 0)
+		return THD_ERROR;
+
 	set_inc_dec_value(max_state * (float) 10 / 100);
 
 	return 0;
@@ -45,7 +49,7 @@ void cthd_cdev_backlight::set_curr_state(int state, int arg) {
 
 	ret = cdev_sysfs.write("brightness", max_state - state);
 	if (ret < 0) {
-		thd_log_warn("Failed to write brightness");
+		thd_log_warn("Failed to write brightness\n");
 		return;
 	}
 	curr_state = state;
