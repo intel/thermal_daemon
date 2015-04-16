@@ -38,14 +38,15 @@ typedef struct {
 } sub_string_t;
 
 sub_string_t source_substitue_strings[] = { { "B0D4", "cpu" },
-		{ "TCPU", "cpu" }, { NULL, NULL } };
+		{ "TCPU", "cpu" }, { "B0DB", "cpu" }, { NULL, NULL } };
 
 sub_string_t target_substitue_strings[] = { { "B0D4", "rapl_controller" }, {
 		"DPLY", "LCD" }, { "DISP", "LCD" }, { "TMEM", "rapl_controller_dram" },
-		{ "TCPU", "rapl_controller" }, { NULL, NULL } };
+		{ "TCPU", "rapl_controller" }, { "B0DB", "rapl_controller" }, { NULL,
+		NULL } };
 
 sub_string_t sensor_substitue_strings[] = { { "B0D4", "hwmon" }, { "TCPU",
-		"hwmon" }, { NULL, NULL } };
+		"hwmon" }, { "B0DB", "hwmon" }, { NULL, NULL } };
 
 typedef enum {
 	TARGET_DEV, SOURCE_DEV, SENSOR_DEV
@@ -77,10 +78,19 @@ static void associate_device(sub_type_t type, string &name) {
 							+ std::string(buf) + "/";
 					csys_fs acpi_sysfs(name_path.c_str());
 					std::string uid;
-					if (!acpi_sysfs.exists("uid"))
-						continue;
-					ret = acpi_sysfs.read("uid", uid);
-					if (ret < 0)
+					if (acpi_sysfs.exists("uid")) {
+						ret = acpi_sysfs.read("uid", uid);
+						if (ret < 0)
+							continue;
+					} else if (acpi_sysfs.exists("path")) {
+						ret = acpi_sysfs.read("path", uid);
+						if (ret < 0)
+							continue;
+						unsigned pos = uid.find_last_of(".");
+						if (pos != string::npos) {
+							uid = uid.substr(pos + 1);
+						}
+					} else
 						continue;
 					if (name == uid) {
 						if (name_path.find("INT3406") != std::string::npos) {
