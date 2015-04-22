@@ -218,6 +218,10 @@ int main(int argc, char *argv[]) {
 			no_daemon, thd_poll_interval, exclusive_control);
 
 	thd_engine = new cthd_engine_default();
+	if (!thd_engine) {
+		fprintf(stderr, "Memory Alloc Failure!\n");
+		exit(EXIT_FAILURE);
+	}
 	if (exclusive_control)
 		thd_engine->set_control_mode(EXCLUSIVE);
 
