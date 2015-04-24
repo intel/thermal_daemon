@@ -26,7 +26,6 @@
 #define THD_ENGINE_DEFAULT_H_
 
 #include "thd_engine.h"
-#include "thd_zone_surface.h"
 #include "thd_cpu_default_binding.h"
 
 class cthd_engine_default: public cthd_engine {

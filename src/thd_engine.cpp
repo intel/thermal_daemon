@@ -46,7 +46,7 @@
 static void *cthd_engine_thread(void *arg);
 
 cthd_engine::cthd_engine() :
-		cdev_cnt(0), zone_count(0), sensor_count(0), parse_thermal_zone_success(
+		current_cdev_index(0), current_zone_index(0), current_sensor_index(0), parse_thermal_zone_success(
 				false), parse_thermal_cdev_success(false), poll_timeout_msec(
 				-1), wakeup_fd(-1), uevent_fd(-1), control_mode(COMPLEMENTRY), write_pipe_fd(
 				0), preference(0), status(true), thz_last_uevent_time(0), thz_last_temp_ind_time(
@@ -470,7 +470,7 @@ int cthd_engine::proc_message(message_capsul_t *msg) {
 }
 
 cthd_cdev *cthd_engine::thd_get_cdev_at_index(int index) {
-	for (int i = 0; i < cdev_cnt; ++i) {
+	for (int i = 0; i < (int) cdevs.size(); ++i) {
 		if (cdevs[i]->thd_cdev_get_index() == index)
 			return cdevs[i];
 	}
@@ -632,6 +632,7 @@ void cthd_engine::thd_read_default_thermal_sensors() {
 	DIR *dir;
 	struct dirent *entry;
 	const std::string base_path = "/sys/class/thermal/";
+	int max_index = 0;
 
 	thd_log_debug("thd_read_default_thermal_sensors \n");
 	if ((dir = opendir(base_path.c_str())) != NULL) {
@@ -640,6 +641,8 @@ void cthd_engine::thd_read_default_thermal_sensors() {
 					strlen("thermal_zone"))) {
 				int i;
 				i = atoi(entry->d_name + strlen("thermal_zone"));
+				if (i > max_index)
+					max_index = i;
 				cthd_sensor *sensor = new cthd_sensor(i,
 						base_path + entry->d_name + "/", "");
 				if (sensor->sensor_update() != THD_SUCCESS) {
@@ -651,15 +654,18 @@ void cthd_engine::thd_read_default_thermal_sensors() {
 		}
 		closedir(dir);
 	}
-	sensor_count = sensors.size();
-	thd_log_info("thd_read_default_thermal_sensors loaded %d sensors \n",
-			sensor_count);
+	if (sensors.size())
+		current_sensor_index = max_index + 1;
+
+	thd_log_info("thd_read_default_thermal_sensors loaded %lu sensors \n",
+			sensors.size());
 }
 
 void cthd_engine::thd_read_default_thermal_zones() {
 	DIR *dir;
 	struct dirent *entry;
 	const std::string base_path = "/sys/class/thermal/";
+	int max_index = 0;
 
 	thd_log_debug("thd_read_default_thermal_zones \n");
 	if ((dir = opendir(base_path.c_str())) != NULL) {
@@ -668,6 +674,8 @@ void cthd_engine::thd_read_default_thermal_zones() {
 					strlen("thermal_zone"))) {
 				int i;
 				i = atoi(entry->d_name + strlen("thermal_zone"));
+				if (i > max_index)
+					max_index = i;
 				cthd_sysfs_zone *zone = new cthd_sysfs_zone(i,
 						"/sys/class/thermal/thermal_zone");
 				if (zone->zone_update() != THD_SUCCESS) {
@@ -681,9 +689,10 @@ void cthd_engine::thd_read_default_thermal_zones() {
 		}
 		closedir(dir);
 	}
-	zone_count = zones.size();
-	thd_log_info("thd_read_default_thermal_zones loaded %d zones \n",
-			zone_count);
+	if (zones.size())
+		current_zone_index = max_index + 1;
+	thd_log_info("thd_read_default_thermal_zones loaded %lu zones \n",
+			zones.size());
 }
 
 void cthd_engine::thd_read_default_cooling_devices() {
@@ -691,6 +700,7 @@ void cthd_engine::thd_read_default_cooling_devices() {
 	DIR *dir;
 	struct dirent *entry;
 	const std::string base_path = "/sys/class/thermal/";
+	int max_index = 0;
 
 	thd_log_debug("thd_read_default_cooling devices \n");
 	if ((dir = opendir(base_path.c_str())) != NULL) {
@@ -699,6 +709,8 @@ void cthd_engine::thd_read_default_cooling_devices() {
 					strlen("cooling_device"))) {
 				int i;
 				i = atoi(entry->d_name + strlen("cooling_device"));
+				if (i > max_index)
+					max_index = i;
 				cthd_sysfs_cdev *cdev = new cthd_sysfs_cdev(i,
 						"/sys/class/thermal/");
 				if (cdev->update() != THD_SUCCESS) {
@@ -710,9 +722,11 @@ void cthd_engine::thd_read_default_cooling_devices() {
 		}
 		closedir(dir);
 	}
-	cdev_cnt = cdevs.size();
-	thd_log_info("thd_read_default_cooling devices loaded %d cdevs \n",
-			cdev_cnt);
+	if (cdevs.size())
+		current_cdev_index = max_index + 1;
+
+	thd_log_info("thd_read_default_cooling devices loaded %lu cdevs \n",
+			cdevs.size());
 }
 
 cthd_zone* cthd_engine::search_zone(std::string name) {
@@ -812,7 +826,6 @@ void cthd_engine::check_for_rt_kernel() {
 
 int cthd_engine::user_add_sensor(std::string name, std::string path) {
 	cthd_sensor *sensor;
-	int index;
 
 	pthread_mutex_lock(&thd_engine_mutex);
 
@@ -824,15 +837,14 @@ int cthd_engine::user_add_sensor(std::string name, std::string path) {
 			return THD_SUCCESS;
 		}
 	}
-	index = sensors.size();
-	sensor = new cthd_sensor(index, path, name, SENSOR_TYPE_RAW);
+	sensor = new cthd_sensor(current_sensor_index, path, name, SENSOR_TYPE_RAW);
 	if (sensor->sensor_update() != THD_SUCCESS) {
 		delete sensor;
 		pthread_mutex_unlock(&thd_engine_mutex);
 		return THD_ERROR;
 	}
 	sensors.push_back(sensor);
-	sensor_count++;
+	++current_sensor_index;
 	pthread_mutex_unlock(&thd_engine_mutex);
 
 	send_message(WAKEUP, 0, 0);
@@ -843,7 +855,6 @@ int cthd_engine::user_add_sensor(std::string name, std::string path) {
 int cthd_engine::user_add_virtual_sensor(std::string name,
 		std::string dep_sensor, double slope, double intercept) {
 	cthd_sensor *sensor;
-	int index;
 	int ret;
 
 	pthread_mutex_lock(&thd_engine_mutex);
@@ -864,18 +875,17 @@ int cthd_engine::user_add_virtual_sensor(std::string name,
 			return ret;
 		}
 	}
-	index = sensors.size();
 	cthd_sensor_virtual *virt_sensor;
 
-	virt_sensor = new cthd_sensor_virtual(index, name, dep_sensor, slope,
-			intercept);
+	virt_sensor = new cthd_sensor_virtual(current_sensor_index, name,
+			dep_sensor, slope, intercept);
 	if (virt_sensor->sensor_update() != THD_SUCCESS) {
 		delete virt_sensor;
 		pthread_mutex_unlock(&thd_engine_mutex);
 		return THD_ERROR;
 	}
 	sensors.push_back(virt_sensor);
-	sensor_count++;
+	++current_sensor_index;
 	pthread_mutex_unlock(&thd_engine_mutex);
 
 	send_message(WAKEUP, 0, 0);
@@ -930,11 +940,9 @@ int cthd_engine::user_set_max_temp(std::string name, unsigned int temp) {
 int cthd_engine::user_add_zone(std::string zone_name, unsigned int trip_temp,
 		std::string sensor_name, std::string cdev_name) {
 	int ret = THD_SUCCESS;
-	int index;
 
-	index = zones.size();
-	cthd_zone_dynamic *zone = new cthd_zone_dynamic(index, zone_name, trip_temp,
-			PASSIVE, sensor_name, cdev_name);
+	cthd_zone_dynamic *zone = new cthd_zone_dynamic(current_zone_index,
+			zone_name, trip_temp, PASSIVE, sensor_name, cdev_name);
 	if (!zone) {
 		return THD_ERROR;
 	}
@@ -943,7 +951,7 @@ int cthd_engine::user_add_zone(std::string zone_name, unsigned int trip_temp,
 		zones.push_back(zone);
 		pthread_mutex_unlock(&thd_engine_mutex);
 		zone->set_zone_active();
-		zone_count++;
+		++current_zone_index;
 	}
 
 	for (unsigned int i = 0; i < zones.size(); ++i) {
@@ -1017,16 +1025,14 @@ int cthd_engine::user_delete_zone(std::string name) {
 int cthd_engine::user_add_cdev(std::string cdev_name, std::string cdev_path,
 		int min_state, int max_state, int step) {
 	cthd_cdev *cdev;
-	int index;
 
 	pthread_mutex_lock(&thd_engine_mutex);
 	// Check if there is existing cdev with this name and path
 	cdev = search_cdev(cdev_name);
 	if (!cdev) {
-		index = cdevs.size();
 		cthd_gen_sysfs_cdev *cdev_sysfs;
 
-		cdev_sysfs = new cthd_gen_sysfs_cdev(index, cdev_path);
+		cdev_sysfs = new cthd_gen_sysfs_cdev(current_cdev_index, cdev_path);
 		if (!cdev_sysfs) {
 			pthread_mutex_unlock(&thd_engine_mutex);
 			return THD_ERROR;
@@ -1039,7 +1045,7 @@ int cthd_engine::user_add_cdev(std::string cdev_name, std::string cdev_path,
 		}
 		pthread_mutex_lock(&thd_engine_mutex);
 		cdevs.push_back(cdev_sysfs);
-
+		++current_cdev_index;
 		cdev = cdev_sysfs;
 	}
 	cdev->set_min_state(min_state);

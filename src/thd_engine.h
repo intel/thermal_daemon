@@ -75,9 +75,9 @@ protected:
 	std::vector<cthd_zone *> zones;
 	std::vector<cthd_sensor *> sensors;
 	std::vector<cthd_cdev *> cdevs;
-	int cdev_cnt;
-	int zone_count;
-	int sensor_count;
+	int current_cdev_index;
+	int current_zone_index;
+	int current_sensor_index;
 	bool parse_thermal_zone_success;
 	bool parse_thermal_cdev_success;
 
