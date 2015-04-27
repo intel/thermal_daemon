@@ -49,4 +49,7 @@ public:
 	int read_thermal_sensors();
 };
 
+int thd_engine_create_default_engine(bool ignore_cpuid_check,
+		bool exclusive_control);
+
 #endif /* THD_ENGINE_DEFAULT_H_ */

@@ -68,9 +68,6 @@ int thd_poll_interval = 4; //in seconds
 // check cpuid
 static gboolean ignore_cpuid_check = false;
 
-// Thermal engine
-cthd_engine *thd_engine;
-
 gboolean exclusive_control = FALSE;
 
 static GMainLoop *g_main_loop;
@@ -277,14 +274,8 @@ int main(int argc, char *argv[]) {
 		}
 	}
 
-	thd_engine = new cthd_engine_default();
-	if (exclusive_control)
-		thd_engine->set_control_mode(EXCLUSIVE);
-
-	// Initialize thermald objects
-	thd_engine->set_poll_interval(thd_poll_interval);
-	if (thd_engine->thd_engine_start(ignore_cpuid_check) != THD_SUCCESS) {
-		thd_log_error("THD engine start failed:\n");
+	if (thd_engine_create_default_engine((bool)ignore_cpuid_check,
+			(bool)exclusive_control) != THD_SUCCESS) {
 		closelog();
 		exit(EXIT_FAILURE);
 	}

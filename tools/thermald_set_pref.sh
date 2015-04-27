@@ -9,6 +9,7 @@ echo "4 : CALIBRATE"
 echo "5 : SET USER DEFINED CPU MAX temp"
 echo "6 : SET USER DEFINED CPU PASSIVE temp"
 echo "7 : TERMINATE"
+echo "8 : REINIT"
 echo "A : Add sensor test"
 echo "B : Get Sensor Information"
 echo "C : Add zone test"
@@ -49,6 +50,9 @@ dbus-send --system --dest=org.freedesktop.thermald /org/freedesktop/thermald org
 ;;
 
 7) dbus-send --system --dest=org.freedesktop.thermald /org/freedesktop/thermald org.freedesktop.thermald.Terminate
+;;
+
+8) dbus-send --system --dest=org.freedesktop.thermald /org/freedesktop/thermald org.freedesktop.thermald.Reinit
 ;;
 
 A)

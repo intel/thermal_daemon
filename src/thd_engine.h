@@ -134,6 +134,9 @@ public:
 	void set_control_mode(control_mode_t mode) {
 		control_mode = mode;
 	}
+	control_mode_t get_control_mode() {
+		return control_mode;
+	}
 	void thd_engine_thread();
 	int thd_engine_start(bool ignore_cpuid_check);
 	int thd_engine_stop();

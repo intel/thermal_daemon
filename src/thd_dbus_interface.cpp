@@ -42,6 +42,8 @@ GType pref_object_get_type(void);
 G_DEFINE_TYPE(PrefObject, pref_object, G_TYPE_OBJECT)
 
 gboolean thd_dbus_interface_terminate(PrefObject *obj, GError **error);
+gboolean thd_dbus_interface_reinit(PrefObject *obj, GError **error);
+
 gboolean thd_dbus_interface_set_current_preference(PrefObject *obj, gchar *pref,
 		GError **error);
 gboolean thd_dbus_interface_get_current_preference(PrefObject *obj,
@@ -159,6 +161,22 @@ gboolean thd_dbus_interface_get_current_preference(PrefObject *obj,
 
 gboolean thd_dbus_interface_terminate(PrefObject *obj, GError **error) {
 	thd_engine->thd_engine_terminate();
+	return TRUE;
+}
+
+gboolean thd_dbus_interface_reinit(PrefObject *obj, GError **error) {
+	bool exclusive_control = false;
+
+	thd_engine->thd_engine_terminate();
+	sleep(1);
+	delete thd_engine;
+	sleep(2);
+	if (thd_engine->get_control_mode() == EXCLUSIVE)
+		exclusive_control = true;
+	if (thd_engine_create_default_engine(true, exclusive_control) != THD_SUCCESS) {
+		return FALSE;
+	}
+
 	return TRUE;
 }
 

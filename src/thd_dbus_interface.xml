@@ -105,6 +105,9 @@
       <arg type="s" name="cdev_name" direction="in"/>
     </method>
 
+    <method name="Reinit">
+    </method>
+
     <method name="Terminate">
     </method>
 
