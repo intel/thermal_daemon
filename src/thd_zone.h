@@ -115,6 +115,10 @@ public:
 		return type_str;
 	}
 
+	std::string get_zone_path() {
+		return zone_sysfs.get_base_path();
+	}
+
 	void set_zone_type(std::string type) {
 		type_str = type;
 	}
@@ -150,6 +154,24 @@ public:
 
 	int bind_cooling_device(trip_point_type_t type, unsigned int trip_temp,
 			cthd_cdev *cdev, int influence, int sampling_period = 0);
+
+	int get_sensor_count() {
+		return sensors.size();
+	}
+
+	cthd_sensor *get_sensor_at_index(unsigned int index) {
+		if (index < sensors.size())
+			return sensors[index];
+		else
+			return NULL;
+	}
+
+	cthd_trip_point *get_trip_at_index(unsigned int index) {
+		if (index < trip_points.size())
+			return &trip_points[index];
+		else
+			return NULL;
+	}
 
 	void zone_dump() {
 		thd_log_info("Zone %d: %s, Active:%d Bind:%d Sensor_cnt:%lu\n", index,

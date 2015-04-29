@@ -27,6 +27,8 @@
 #include "thd_engine.h"
 #include "thd_engine_default.h"
 #include "thd_sensor.h"
+#include "thd_zone.h"
+#include "thd_trip_point.h"
 
 typedef struct {
 	GObject parent;
@@ -81,6 +83,29 @@ gboolean thd_dbus_interface_add_cooling_device(PrefObject *obj,
 gboolean thd_dbus_interface_update_cooling_device(PrefObject *obj,
 		gchar *cdev_name, gchar *path, gint min_state, gint max_state,
 		gint step, GError **error);
+
+gboolean thd_dbus_interface_get_sensor_count(PrefObject *obj, int *status,
+		GError **error);
+
+gboolean thd_dbus_interface_get_zone_count(PrefObject *obj, int *status,
+		GError **error);
+
+gboolean thd_dbus_interface_get_zone_information(PrefObject *obj, gint index,
+		gchar **zone_out, gint *sensor_count, gint *trip_count, GError **error);
+
+gboolean thd_dbus_interface_get_zone_sensor_at_index(PrefObject *obj,
+		gint zone_index, gint sensor_index, gchar **sensor_out, GError **error);
+
+gboolean thd_dbus_interface_get_zone_trip_at_index(PrefObject *obj,
+		gint zone_index, gint trip_index, int *temp, int *trip_type,
+		int *sensor_id, int *cdev_size, GArray **cdev_ids, GError **error);
+
+gboolean thd_dbus_interface_get_cdev_count(PrefObject *obj, int *status,
+		GError **error);
+
+gboolean thd_dbus_interface_get_cdev_information(PrefObject *obj, gint index,
+		gchar **cdev_out, gint *min_state, gint *max_state, gint *curr_state,
+		GError **error);
 
 // To be implemented
 gboolean thd_dbus_interface_add_trip_point(PrefObject *obj, gchar *name,
@@ -282,6 +307,149 @@ gboolean thd_dbus_interface_get_sensor_information(PrefObject *obj, gint index,
 	*temp = (gint) sensor->read_temperature();
 	*sensor_out = sensor_str;
 	*path = path_str;
+
+	return TRUE;
+}
+
+gboolean thd_dbus_interface_get_sensor_count(PrefObject *obj, int *count,
+		GError **error) {
+
+	*count = thd_engine->get_sensor_count();
+
+	return TRUE;
+}
+
+gboolean thd_dbus_interface_get_zone_count(PrefObject *obj, int *count,
+		GError **error) {
+
+	*count = thd_engine->get_zone_count();
+
+	return TRUE;
+}
+
+gboolean thd_dbus_interface_get_zone_information(PrefObject *obj, gint index,
+		gchar **zone_out, gint *sensor_count, gint *trip_count,
+		GError **error) {
+	char error_str[] = "Invalid Contents";
+	char *zone_str;
+
+	thd_log_debug("thd_dbus_interface_get_zone_information %d\n", index);
+
+	cthd_zone *zone = thd_engine->user_get_zone(index);
+	if (!zone)
+		return FALSE;
+
+	zone_str = g_new(char, MAX_DBUS_REPLY_STR_LEN + 1);
+	if (!zone_str)
+		return FALSE;
+
+	strncpy(zone_str, zone->get_zone_type().c_str(),
+	MAX_DBUS_REPLY_STR_LEN);
+	zone_str[MAX_DBUS_REPLY_STR_LEN] = '\0';
+	*zone_out = zone_str;
+	*sensor_count = zone->get_sensor_count();
+	*trip_count = zone->get_trip_count();
+
+	return TRUE;
+}
+
+gboolean thd_dbus_interface_get_zone_sensor_at_index(PrefObject *obj,
+		gint zone_index, gint sensor_index, gchar **sensor_out,
+		GError **error) {
+	char error_str[] = "Invalid Contents";
+	char *sensor_str;
+
+	thd_log_debug("thd_dbus_interface_get_zone_sensor_at_index %d\n",
+			zone_index);
+
+	cthd_zone *zone = thd_engine->user_get_zone(zone_index);
+	if (!zone)
+		return FALSE;
+
+	cthd_sensor *sensor = zone->get_sensor_at_index(sensor_index);
+	if (!zone)
+		return FALSE;
+
+	sensor_str = g_new(char, MAX_DBUS_REPLY_STR_LEN + 1);
+	if (!sensor_str)
+		return FALSE;
+
+	strncpy(sensor_str, sensor->get_sensor_type().c_str(),
+	MAX_DBUS_REPLY_STR_LEN);
+	sensor_str[MAX_DBUS_REPLY_STR_LEN] = '\0';
+	*sensor_out = sensor_str;
+
+	return TRUE;
+}
+
+gboolean thd_dbus_interface_get_zone_trip_at_index(PrefObject *obj,
+		gint zone_index, gint trip_index, int *temp, int *trip_type,
+		int *sensor_id, int *cdev_size, GArray **cdev_ids, GError **error) {
+	char error_str[] = "Invalid Contents";
+
+	thd_log_debug("thd_dbus_interface_get_zone_sensor_at_index %d\n",
+			zone_index);
+
+	cthd_zone *zone = thd_engine->user_get_zone(zone_index);
+	if (!zone)
+		return FALSE;
+
+	cthd_trip_point *trip = zone->get_trip_at_index(trip_index);
+
+	*temp = trip->get_trip_temp();
+	*trip_type = trip->get_trip_type();
+	*sensor_id = trip->get_sensor_id();
+	*cdev_size = trip->get_cdev_count();
+	if (*cdev_size <= 0)
+		return TRUE;
+
+	GArray *garray;
+
+	garray = g_array_new(FALSE, FALSE, sizeof(gint));
+	for (int i = 0; i < *cdev_size; i++) {
+		trip_pt_cdev_t cdev_trip;
+		int index;
+		cdev_trip = trip->get_cdev_at_index(i);
+		index = cdev_trip.cdev->thd_cdev_get_index();
+		g_array_prepend_val(garray, index);
+	}
+
+	*cdev_ids = garray;
+
+	return TRUE;
+}
+
+gboolean thd_dbus_interface_get_cdev_count(PrefObject *obj, int *count,
+		GError **error) {
+
+	*count = thd_engine->get_cdev_count();
+
+	return TRUE;
+}
+
+gboolean thd_dbus_interface_get_cdev_information(PrefObject *obj, gint index,
+		gchar **cdev_out, gint *min_state, gint *max_state, gint *curr_state,
+		GError **error) {
+	char error_str[] = "Invalid Contents";
+	char *cdev_str;
+
+	thd_log_debug("thd_dbus_interface_get_cdev_information %d\n", index);
+
+	cthd_cdev *cdev = thd_engine->user_get_cdev(index);
+	if (!cdev)
+		return FALSE;
+
+	cdev_str = g_new(char, MAX_DBUS_REPLY_STR_LEN + 1);
+	if (!cdev_str)
+		return FALSE;
+
+	strncpy(cdev_str, cdev->get_cdev_type().c_str(),
+	MAX_DBUS_REPLY_STR_LEN);
+	cdev_str[MAX_DBUS_REPLY_STR_LEN] = '\0';
+	*cdev_out = cdev_str;
+	*min_state = cdev->get_min_state();
+	*max_state = cdev->get_max_state();
+	*curr_state = cdev->get_curr_state();
 
 	return TRUE;
 }

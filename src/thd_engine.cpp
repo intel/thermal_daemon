@@ -901,6 +901,20 @@ cthd_sensor *cthd_engine::user_get_sensor(unsigned int index) {
 		return NULL;
 }
 
+cthd_zone *cthd_engine::user_get_zone(unsigned int index) {
+	if (index < zones.size())
+		return zones[index];
+	else
+		return NULL;
+}
+
+cthd_cdev *cthd_engine::user_get_cdev(unsigned int index) {
+	if (index < cdevs.size())
+		return cdevs[index];
+	else
+		return NULL;
+}
+
 int cthd_engine::user_set_psv_temp(std::string name, unsigned int temp) {
 	cthd_zone *zone;
 	int ret;

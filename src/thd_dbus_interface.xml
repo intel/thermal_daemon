@@ -44,11 +44,54 @@
       <arg type="d" name="intercept" direction="in"/>      
     </method>
 
+    <method name="GetSensorCount">
+      <arg type="u" name="count" direction="out"/>
+    </method>
+
     <method name="GetSensorInformation">
       <arg type="u" name="index" direction="in"/>
       <arg type="s" name="sensor" direction="out"/>
       <arg type="s" name="path" direction="out"/>
       <arg type="i" name="temp" direction="out"/>
+    </method>
+
+    <method name="GetZoneCount">
+      <arg type="u" name="count" direction="out"/>
+    </method>
+
+    <method name="GetZoneInformation">
+      <arg type="u" name="index" direction="in"/>
+      <arg type="s" name="zone" direction="out"/>
+      <arg type="i" name="sensor_count" direction="out"/>
+      <arg type="i" name="trip_count" direction="out"/>
+    </method>
+
+    <method name="GetZoneSensorAtIndex">
+      <arg type="u" name="zone_index" direction="in"/>
+      <arg type="u" name="sensor_index" direction="in"/>
+      <arg type="s" name="sensor_type" direction="out"/>
+    </method>
+
+    <method name="GetZoneTripAtIndex">
+      <arg type="u" name="zone_index" direction="in"/>
+      <arg type="u" name="trip_index" direction="in"/>
+      <arg type="i" name="temp" direction="out"/>
+      <arg type="i" name="trip_type" direction="out"/>
+      <arg type="i" name="sensor_id" direction="out"/>
+      <arg type="i" name="cdev_size" direction="out"/>
+      <arg type="ai" name="cdev_ids" direction="out"/>
+    </method>
+
+    <method name="GetCdevCount">
+      <arg type="u" name="count" direction="out"/>
+    </method>
+
+    <method name="GetCdevInformation">
+      <arg type="u" name="index" direction="in"/>
+      <arg type="s" name="type" direction="out"/>
+      <arg type="i" name="min_state" direction="out"/>
+      <arg type="i" name="max_state" direction="out"/>
+      <arg type="i" name="current_state" direction="out"/>
     </method>
 
     <method name="AddZonePassive">

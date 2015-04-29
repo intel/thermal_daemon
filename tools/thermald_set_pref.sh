@@ -17,6 +17,13 @@ echo "D : Set zone test"
 echo "E : Get zone test"
 echo "F : Delete zone test"
 echo "G : Add cdev test"
+echo "H : Get Sensor Count"
+echo "I : Get Zone Count"
+echo "J : Get Zone Information"
+echo "K : Get Zone Sensor Information"
+echo "L : Get Zone Trip Information"
+echo "M : Get cdev count"
+echo "N : Get cdev Information"
 
 echo -n " Enter thermald preference [1..6]: "
 read opt_no
@@ -81,6 +88,34 @@ dbus-send --system --dest=org.freedesktop.thermald /org/freedesktop/thermald org
 
 G)
 dbus-send --system --dest=org.freedesktop.thermald /org/freedesktop/thermald org.freedesktop.thermald.AddCoolingDevice string:"TEST_CDEV" string:"/sys/class/thermal/cooling_device0/cur_state" int32:0 int32:1 int32:1
+;;
+
+H)
+dbus-send --system --dest=org.freedesktop.thermald --print-reply /org/freedesktop/thermald org.freedesktop.thermald.GetSensorCount
+;;
+
+I)
+dbus-send --system --dest=org.freedesktop.thermald --print-reply /org/freedesktop/thermald org.freedesktop.thermald.GetZoneCount
+;;
+
+J)
+dbus-send --system --dest=org.freedesktop.thermald --print-reply /org/freedesktop/thermald org.freedesktop.thermald.GetZoneInformation uint32:0
+;;
+
+K)
+dbus-send --system --dest=org.freedesktop.thermald --print-reply /org/freedesktop/thermald org.freedesktop.thermald.GetZoneSensorAtIndex uint32:0 uint32:0
+;;
+
+L)
+dbus-send --system --dest=org.freedesktop.thermald --print-reply /org/freedesktop/thermald org.freedesktop.thermald.GetZoneTripAtIndex uint32:0 uint32:0
+;;
+
+M)
+dbus-send --system --dest=org.freedesktop.thermald --print-reply /org/freedesktop/thermald org.freedesktop.thermald.GetCdevCount
+;;
+
+N)
+dbus-send --system --dest=org.freedesktop.thermald --print-reply /org/freedesktop/thermald org.freedesktop.thermald.GetCdevInformation uint32:0
 ;;
 
 *) echo "Invalid option"

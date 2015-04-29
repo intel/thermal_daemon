@@ -215,9 +215,18 @@ public:
 	cthd_zone *get_zone(int index);
 	cthd_zone *get_zone(std::string type);
 
+	unsigned int get_sensor_count() {
+		return sensors.size();
+	}
+
 	unsigned int get_zone_count() {
 		return zones.size();
 	}
+
+	unsigned int get_cdev_count() {
+		return cdevs.size();
+	}
+
 	void add_zone(cthd_zone *zone) {
 		zones.push_back(zone);
 	}
@@ -229,6 +238,7 @@ public:
 	// User/External messages
 	int user_add_sensor(std::string name, std::string path);
 	cthd_sensor *user_get_sensor(unsigned int index);
+	cthd_zone *user_get_zone(unsigned int index);
 	int user_add_virtual_sensor(std::string name, std::string dep_sensor,
 			double slope, double intercept);
 
@@ -242,7 +252,7 @@ public:
 
 	int user_add_cdev(std::string cdev_name, std::string cdev_path,
 			int min_state, int max_state, int step);
-
+	cthd_cdev *user_get_cdev(unsigned int index);
 };
 
 #endif /* THD_ENGINE_H_ */
