@@ -365,6 +365,34 @@ int cthd_parse::parse_thermal_zones(xmlNode * a_node, xmlDoc *doc,
 	return THD_SUCCESS;
 }
 
+int cthd_parse::parse_new_sensor_link(xmlNode * a_node, xmlDoc *doc,
+		thermal_sensor_link_t *info_ptr) {
+
+	xmlNode *cur_node = NULL;
+	char *tmp_value;
+
+	for (cur_node = a_node; cur_node; cur_node = cur_node->next) {
+		if (cur_node->type == XML_ELEMENT_NODE) {
+			DEBUG_PARSER_PRINT("node type: Element, name: %s value: %s\n", cur_node->name, xmlNodeListGetString(doc, cur_node->xmlChildrenNode, 1));
+			tmp_value = (char*) xmlNodeListGetString(doc,
+					cur_node->xmlChildrenNode, 1);
+			if (!strcasecmp((const char*) cur_node->name, "SensorType")) {
+				info_ptr->name.assign(tmp_value);
+				string_trim(info_ptr->name);
+			} else if (!strcasecmp((const char*) cur_node->name,
+					"Multiplier")) {
+				info_ptr->multiplier = atof(tmp_value);
+			} else if (!strcasecmp((const char*) cur_node->name, "Offset")) {
+				info_ptr->offset = atof(tmp_value);
+			}
+			if (tmp_value)
+				xmlFree(tmp_value);
+		}
+	}
+
+	return THD_SUCCESS;
+}
+
 int cthd_parse::parse_new_sensor(xmlNode * a_node, xmlDoc *doc,
 		thermal_sensor_t *info_ptr) {
 	xmlNode *cur_node = NULL;
@@ -386,6 +414,12 @@ int cthd_parse::parse_new_sensor(xmlNode * a_node, xmlDoc *doc,
 					"AsyncCapable")) {
 				info_ptr->async_capable = atoi(tmp_value);
 				info_ptr->mask |= SENSOR_DEF_BIT_ASYNC_CAPABLE;
+			} else if (!strcasecmp((const char*) cur_node->name, "Virtual")) {
+				info_ptr->virtual_sensor = atoi(tmp_value);
+			} else if (!strcasecmp((const char*) cur_node->name,
+					"SensorLink")) {
+				parse_new_sensor_link(cur_node->children, doc,
+						&info_ptr->sensor_link);
 			}
 			if (tmp_value)
 				xmlFree(tmp_value);
@@ -408,6 +442,7 @@ int cthd_parse::parse_thermal_sensors(xmlNode * a_node, xmlDoc *doc,
 				sensor.path.clear();
 				sensor.async_capable = false;
 				sensor.mask = 0;
+				sensor.virtual_sensor = false;
 				parse_new_sensor(cur_node->children, doc, &sensor);
 				info_ptr->sensors.push_back(sensor);
 			}
@@ -555,6 +590,16 @@ void cthd_parse::dump_thermal_conf() {
 					thermal_info_list[i].sensors[j].path.c_str());
 			thd_log_info("\t Async Capable: %d\n",
 					thermal_info_list[i].sensors[j].async_capable);
+			thd_log_info("\t Virtual: %d\n",
+					thermal_info_list[i].sensors[j].virtual_sensor);
+			if (thermal_info_list[i].sensors[j].virtual_sensor) {
+				thd_log_info("\t\t Link type: %s\n",
+						thermal_info_list[i].sensors[j].sensor_link.name.c_str());
+				thd_log_info("\t\t Link mult: %f\n",
+						thermal_info_list[i].sensors[j].sensor_link.multiplier);
+				thd_log_info("\t\t Link offset: %f\n",
+						thermal_info_list[i].sensors[j].sensor_link.offset);
+			}
 		}
 		for (unsigned int j = 0; j < thermal_info_list[i].zones.size(); ++j) {
 			thd_log_info("\tZone %u \n", j);

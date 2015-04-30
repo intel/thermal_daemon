@@ -85,6 +85,10 @@ void cthd_rapl_power_meter::rapl_read_domains(const char *dir_name) {
 					continue;
 				thd_log_debug("RAPL domain dir %s\n", dir_entry->d_name);
 				path << dir_name << dir_entry->d_name << "/" << "name";
+				if (!sys_fs.exists(path.str())) {
+					thd_log_debug(" %s doesn't exist\n", path.str().c_str());
+					continue;
+				}
 				status = sys_fs.read(path.str(), buffer);
 				if (status < 0)
 					continue;

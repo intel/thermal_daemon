@@ -35,9 +35,6 @@
 int thd_poll_interval = 4; //in seconds
 static int pid_file_handle;
 
-// Thermal engine
-cthd_engine *thd_engine;
-
 // Stop daemon
 static void daemonShutdown() {
 	if (pid_file_handle)
@@ -217,21 +214,11 @@ int main(int argc, char *argv[]) {
 			"Linux Thermal Daemon is starting mode %d : poll_interval %d :ex_control %d\n",
 			no_daemon, thd_poll_interval, exclusive_control);
 
-	thd_engine = new cthd_engine_default();
-	if (!thd_engine) {
-		fprintf(stderr, "Memory Alloc Failure!\n");
+	if (thd_engine_create_default_engine(false,
+			exclusive_control) != THD_SUCCESS) {
 		exit(EXIT_FAILURE);
 	}
-	if (exclusive_control)
-		thd_engine->set_control_mode(EXCLUSIVE);
 
-	thd_engine->set_poll_interval(thd_poll_interval);
-
-	// Initialize thermald objects
-	if (thd_engine->thd_engine_start(false) != THD_SUCCESS) {
-		thd_log_error("thermald engine start failed:\n");
-		exit(EXIT_FAILURE);
-	}
 #ifdef VALGRIND_TEST
 	// lots of STL lib function don't free memory
 	// when called with exit().

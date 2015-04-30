@@ -28,7 +28,7 @@
 cthd_sensor::cthd_sensor(int _index, std::string control_path,
 		std::string _type_str, int _type) :
 		index(_index), type(_type), sensor_sysfs(control_path.c_str()), sensor_active(
-				false), type_str(_type_str), async_capable(false), thresholds(0) {
+				false), type_str(_type_str), async_capable(false), virtual_sensor(false), thresholds(0) {
 
 }
 

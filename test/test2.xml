@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<!--
+Auto Test 2: Two cooling device to one zone
+Make sure that influence is used to pick the first cdev
+-->
+       <ThermalConfiguration>
+		<Platform>
+                 <Name>THD_TEST_0</Name>
+                 <ProductName>*</ProductName>
+                 <Preference>QUIET</Preference>
+                 <ThermalZones>
+                      <ThermalZone>
+                           <Type>thd_test_0</Type>
+                           <TripPoints>
+                                     <TripPoint>
+                                          <SensorType>thd_test_0</SensorType>
+                                          <Temperature>*</Temperature>
+                                          <type>passive</type>
+                                     <CoolingDevice>
+                                          <Type>thd_cdev_0</Type>
+					  <influence> 80 </influence>
+                                     </CoolingDevice>
+                                     <CoolingDevice>
+                                          <Type>thd_cdev_1</Type>
+					  <influence> 100 </influence>
+                                     </CoolingDevice>
+                                     </TripPoint>
+                           </TripPoints>
+                      </ThermalZone>
+                 </ThermalZones>
+            </Platform>
+       </ThermalConfiguration>
+

@@ -41,10 +41,11 @@ thermald_LDADD = \
 		$(XML_LIBS)
 
 BUILT_SOURCES = \
-	thd-dbus-interface.h
+	thd_dbus_interface.h
 
 thermald_SOURCES = \
 		src/main.cpp \
+		src/thd_dbus_interface.cpp \
 		src/thd_engine.cpp \
 		src/thd_cdev.cpp \
 		src/thd_cdev_therm_sys_fs.cpp \
@@ -55,10 +56,12 @@ thermald_SOURCES = \
 		src/thd_zone_surface.cpp \
 		src/thd_zone_cpu.cpp \
 		src/thd_zone_therm_sys_fs.cpp \
+		src/thd_zone_dynamic.cpp \
 		src/thd_preference.cpp \
 		src/thd_model.cpp \
 		src/thd_parse.cpp \
 		src/thd_sensor.cpp \
+		src/thd_sensor_virtual.cpp \
 		src/thd_kobj_uevent.cpp \
 		src/thd_cdev_order_parser.cpp \
 		src/thd_cdev_gen_sysfs.cpp \
@@ -73,12 +76,13 @@ thermald_SOURCES = \
 		src/thd_rapl_power_meter.cpp \
 		src/thd_trt_art_reader.cpp \
 		src/thd_cdev_rapl_dram.cpp \
-		src/thd_cpu_default_binding.cpp
+		src/thd_cpu_default_binding.cpp \
+		src/thd_cdev_backlight.cpp
 
 man5_MANS = man/thermal-conf.xml.5
 man8_MANS = man/thermald.8
 
-thd-dbus-interface.h: $(top_srcdir)/src/thd-dbus_interface.xml
+thd_dbus_interface.h: $(top_srcdir)/src/thd_dbus_interface.xml
 	$(AM_V_GEN) dbus-binding-tool --prefix=thd_dbus_interface --mode=glib-server --output=$@ $<
 
 CLEANFILES = $(BUILT_SOURCES)

@@ -1,5 +1,5 @@
 /*
- * cthd_engine_defualt.cpp: Default thermal engine
+ * thd_sensor_virtual.h: thermal sensor virtual class interface
  *
  * Copyright (C) 2013 Intel Corporation. All rights reserved.
  *
@@ -22,34 +22,33 @@
  *
  */
 
-#ifndef THD_ENGINE_DEFAULT_H_
-#define THD_ENGINE_DEFAULT_H_
+#ifndef THD_SENSOR_VIRTUAL_H_
+#define THD_SENSOR_VIRTUAL_H_
 
-#include "thd_engine.h"
-#include "thd_cpu_default_binding.h"
+#include "thd_sensor.h"
 
-class cthd_engine_default: public cthd_engine {
+class cthd_sensor_virtual: public cthd_sensor {
 private:
-	int parser_init();
-	void parser_deinit();
-	int add_replace_cdev(cooling_dev_t *config);
-
-	bool parser_init_done;
-	cthd_cpu_default_binding def_binding;
+	cthd_sensor *link_sensor;
+	std::string link_type_str;
+	double multiplier;
+	double offset;
 
 public:
-	static const int power_clamp_reduction_percent = 5;
-
-	cthd_engine_default() :
-			cthd_engine(), parser_init_done(false) {
+	cthd_sensor_virtual(int _index, std::string _type_str,
+			std::string _link_type_str, double multiplier, double offset);
+	~cthd_sensor_virtual();
+	int sensor_update();
+	unsigned int read_temperature();
+	virtual void sensor_dump() {
+		if (link_sensor)
+			thd_log_info("sensor index:%d %s virtual link %s %f %f \n", index,
+					type_str.c_str(), link_sensor->get_sensor_type().c_str(),
+					multiplier, offset);
 	}
-	~cthd_engine_default();
-	int read_thermal_zones();
-	int read_cooling_devices();
-	int read_thermal_sensors();
+
+	int sensor_update_param(std::string new_dep_sensor, double slope, double intercept);
+
 };
 
-int thd_engine_create_default_engine(bool ignore_cpuid_check,
-		bool exclusive_control);
-
-#endif /* THD_ENGINE_DEFAULT_H_ */
+#endif /* THD_SENSOR_VIRTUAL_H_ */

@@ -44,6 +44,8 @@ A cooling device can be either active or passive. An example of an active device
 .TP
 	- cpufreq
 .TP
+	- LCD
+.TP
 The thermal sysfs under Linux (/sys/class/thermal) provides a way to represent per platform ACPI configuration. The kernel thermal governor uses this data to keep the platform thermals under control. But there are some limitations, which thermald tries to resolve. For example:
 .TP
 - If the ACPI data is not optimized or buggy. In this case thermal-conf.xml can be used to correct the behavior without change in BIOS.
@@ -195,5 +197,172 @@ The configuration file format confirms to XML specifications. A set of tags defi
 </Platform>
 .TP
 </ThermalConfiguration>
+.SH EXAMPLE CONFIGURATIONS
 .TP
-
+Example 1: This is a very simple configuration, to change the passive limit on the CPU. Instead of default, this new temperature 86C in the configuration is used. This will start cooling, once the temperature reaches 86C.
+.TP
+<?xml version="1.0"?>
+.TP
+<ThermalConfiguration>
+.TP
+        <Platform>
+.TP
+                <Name>Overide CPU default passive</Name>
+.TP
+                <ProductName>*</ProductName>
+.TP
+                <Preference>QUIET</Preference>
+.TP
+                <ThermalZones>
+.TP
+                        <ThermalZone>
+.TP
+                                <Type>cpu</Type>
+.TP
+                                <TripPoints>
+.TP
+                                                <TripPoint>
+.TP
+                                                        <Temperature>86000</Temperature>
+.TP
+                                                        <type>passive</type>
+.TP
+                                                </TripPoint>
+.TP
+                                </TripPoints>
+.TP
+                        </ThermalZone>
+.TP
+                </ThermalZones>
+.TP
+        </Platform>
+.TP
+</ThermalConfiguration>
+.TP
+Example 2: In this configuration, we are controlling backlight when some sensor "SEN2" reaches 60C. Here "LCD" is a standard cooling device, which uses Linux backlight sysfs interface. "SEN2" is a valid thermal zone in Linux thermal sysfs on the test platform, hence we don't need to provide path for sysfs for "SEN2". The Linux thermal sysfs is already parsed and loaded by thermald program.
+.TP
+<?xml version="1.0"?>
+.TP
+<ThermalConfiguration>
+.TP
+	<Platform>
+.TP
+		<Name>Change Backlight</Name>
+.TP
+		<ProductName>*</ProductName>
+.TP
+		<Preference>QUIET</Preference>
+.TP
+		<ThermalZones>
+.TP
+			<ThermalZone>
+.TP
+				<Type>LCD_Zone</Type>
+.TP
+				<TripPoints>
+.TP
+						<TripPoint>
+.TP
+							<SensorType>SEN2</SensorType>
+.TP
+							<Temperature>60000</Temperature>
+.TP
+							<type>passive</type>
+.TP
+						<CoolingDevice>
+.TP
+							<Type>LCD</Type>
+.TP
+						</CoolingDevice>
+.TP
+						</TripPoint>
+.TP
+				</TripPoints>
+.TP
+			</ThermalZone>
+.TP
+		</ThermalZones>
+.TP
+	</Platform>
+.TP
+</ThermalConfiguration>
+.TP
+Example 3: In this example Lenovo Thinkpad X220 and fan speed is controlled. Here a cooling device "_Fan", can be controlled via sysfs
+/sys/devices/platform/thinkpad_hwmon/pwm1. When the x86_pkg_temp reaches 45C, Fan is started with increasing speeds, if the temperature can't be controlled at 45C.
+.TP
+<?xml version="1.0"?>
+.TP
+<ThermalConfiguration>
+.TP
+<Platform>
+.TP
+<Name>Lenovo ThinkPad X220</Name>
+.TP
+<ProductName>*</ProductName>
+.TP
+<Preference>QUIET</Preference>
+.TP
+<ThermalZones>
+.TP
+                <ThermalZone>
+.TP
+                                <Type>x86_pkg_temp</Type>
+.TP
+                                <TripPoints>
+.TP
+                                                <TripPoint>
+.TP
+                                                                <SensorType>x86_pkg_temp</SensorType>
+.TP
+                                                                <Temperature>45000</Temperature>
+.TP
+                                                                <type>passive</type>
+.TP
+                                                                <ControlType>SEQUENTIAL</ControlType>
+.TP
+                                                                <CoolingDevice>
+.TP
+                                                                                <index>1</index>
+.TP
+                                                                                <type>_Fan</type>
+.TP
+                                                                                <influence> 100 </influence>
+.TP
+                                                                                <SamplingPeriod> 12 </SamplingPeriod>
+.TP
+                                                                </CoolingDevice>
+.TP
+                                                </TripPoint>
+.TP
+                                </TripPoints>
+.TP
+                </ThermalZone>
+.TP
+</ThermalZones>
+.TP
+<CoolingDevices>
+.TP
+                <CoolingDevice>
+.TP
+                                <Type>_Fan</Type>
+.TP
+                                <Path>/sys/devices/platform/thinkpad_hwmon/pwm1</Path>
+.TP
+                                <MinState>0</MinState>
+.TP
+                                <IncDecStep>30</IncDecStep>
+.TP
+                                <ReadBack> 0 </ReadBack>
+.TP
+                                <MaxState>255</MaxState>
+.TP
+                                <DebouncePeriod>5</DebouncePeriod>
+.TP
+                </CoolingDevice>
+.TP
+</CoolingDevices>
+.TP
+</Platform>
+.TP
+</ThermalConfiguration>
+.TP

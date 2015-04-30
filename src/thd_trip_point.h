@@ -32,6 +32,8 @@
 #include <time.h>
 #include <vector>
 #include <algorithm>    // std::sort
+#include <stdexcept>
+
 typedef enum {
 	CRITICAL, MAX, PASSIVE, ACTIVE, POLLING, INVALID_TRIP_TYPE
 } trip_point_type_t;
@@ -120,6 +122,18 @@ public:
 	int get_sensor_id() {
 		return sensor_id;
 	}
+
+	unsigned int get_cdev_count() {
+		return cdevs.size();
+	}
+
+	trip_pt_cdev_t &get_cdev_at_index(unsigned int index) {
+		if (index < cdevs.size())
+			return cdevs[index];
+		else
+			throw std::invalid_argument("index");
+	}
+
 	void trip_cdev_add(trip_pt_cdev_t trip_cdev) {
 		int index;
 		if (check_duplicate(trip_cdev.cdev, &index)) {

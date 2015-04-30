@@ -35,6 +35,8 @@
 #include "thd_zone_surface.h"
 #include "thd_cdev_msr_rapl.h"
 #include "thd_cdev_rapl_dram.h"
+#include "thd_sensor_virtual.h"
+#include "thd_cdev_backlight.h"
 
 // Default CPU cooling devices, which are not part of thermal sysfs
 // Since non trivial initialization is not supported, we init all fields even if they are not needed
@@ -96,7 +98,7 @@ int cthd_engine_default::read_thermal_sensors() {
 	int i;
 
 	thd_read_default_thermal_sensors();
-	index = sensor_count;
+	index = current_sensor_index;
 
 	sensor = search_sensor("pkg-temp-0");
 	if (sensor) {
@@ -178,14 +180,14 @@ int cthd_engine_default::read_thermal_sensors() {
 			}
 			closedir(dir);
 		}
-		if (index != sensor_count)
+		if (index != current_sensor_index)
 			break;
 	}
-	if (index == sensor_count) {
+	if (index == current_sensor_index) {
 		// No coretemp sysfs exist, try hwmon
 		thd_log_warn("Thermal DTS: No coretemp sysfs found!!\n");
 	}
-
+	current_sensor_index = index;
 	// Add from XML sensor config
 	if (!parser_init() && parser.platform_matched()) {
 		for (int i = 0; i < parser.sensor_count(); ++i) {
@@ -199,19 +201,36 @@ int cthd_engine_default::read_thermal_sensors() {
 				if (sensor_config->mask & SENSOR_DEF_BIT_ASYNC_CAPABLE)
 					sensor->set_async_capable(sensor_config->async_capable);
 			} else {
-				cthd_sensor *sensor_new = new cthd_sensor(index,
-						sensor_config->path, sensor_config->name,
-						SENSOR_TYPE_RAW);
-				if (sensor_new->sensor_update() != THD_SUCCESS) {
-					delete sensor_new;
-					continue;
+				cthd_sensor *sensor_new = NULL;
+				if (sensor_config->virtual_sensor) {
+					cthd_sensor_virtual *sensor_virt = new cthd_sensor_virtual(
+							index, sensor_config->name,
+							sensor_config->sensor_link.name,
+							sensor_config->sensor_link.multiplier,
+							sensor_config->sensor_link.offset);
+					if (sensor_virt->sensor_update() != THD_SUCCESS) {
+						delete sensor_virt;
+						continue;
+					}
+					sensor_new = sensor_virt;
+				} else {
+					sensor_new = new cthd_sensor(index, sensor_config->path,
+							sensor_config->name,
+							SENSOR_TYPE_RAW);
+					if (sensor_new->sensor_update() != THD_SUCCESS) {
+						delete sensor_new;
+						continue;
+					}
 				}
-				sensors.push_back(sensor_new);
-				++index;
+				if (sensor_new) {
+					sensors.push_back(sensor_new);
+					++index;
+				}
 			}
 		}
-		sensor_count = index;
 	}
+
+	current_sensor_index = index;
 
 	for (unsigned int i = 0; i < sensors.size(); ++i) {
 		sensors[i]->sensor_dump();
@@ -221,7 +240,7 @@ int cthd_engine_default::read_thermal_sensors() {
 }
 
 int cthd_engine_default::read_thermal_zones() {
-	int count = 0;
+	int index;
 	DIR *dir;
 	struct dirent *entry;
 	const std::string base_path[] = { "/sys/devices/platform/",
@@ -229,7 +248,7 @@ int cthd_engine_default::read_thermal_zones() {
 	int i;
 
 	thd_read_default_thermal_zones();
-	count = zone_count;
+	index = current_zone_index;
 
 	if (!search_zone("cpu")) {
 		bool cpu_zone_created = false;
@@ -263,14 +282,14 @@ int cthd_engine_default::read_thermal_zones() {
 						if (name != "coretemp")
 							continue;
 
-						cthd_zone_cpu *zone = new cthd_zone_cpu(count,
+						cthd_zone_cpu *zone = new cthd_zone_cpu(index,
 								base_path[i] + entry->d_name + "/",
 								atoi(entry->d_name + strlen("coretemp.")));
 						if (zone->zone_update() == THD_SUCCESS) {
 							zone->set_zone_active();
 							zones.push_back(zone);
-							++count;
 							cpu_zone_created = true;
+							++index;
 						} else {
 							delete zone;
 						}
@@ -283,10 +302,11 @@ int cthd_engine_default::read_thermal_zones() {
 		}
 
 		if (!cpu_zone_created) {
-			thd_log_error("Thermal DTS or hwmon: No Zones present Need to configure manually\n");
+			thd_log_error(
+					"Thermal DTS or hwmon: No Zones present Need to configure manually\n");
 		}
 	}
-	zone_count = count;
+	current_zone_index = index;
 
 	// Add from XML thermal zone
 	if (!parser_init() && parser.platform_matched()) {
@@ -364,7 +384,8 @@ int cthd_engine_default::read_thermal_zones() {
 							if (cdev) {
 								if (zone->bind_cooling_device(
 										trip_pt_config.trip_pt_type, 0, cdev,
-										trip_pt_config.cdev_trips[j].influence) == THD_SUCCESS) {
+										trip_pt_config.cdev_trips[j].influence,
+										trip_pt_config.cdev_trips[j].sampling_period) == THD_SUCCESS) {
 									thd_log_debug(
 											"bind %s to trip to sensor %s\n",
 											cdev->get_cdev_type().c_str(),
@@ -387,18 +408,18 @@ int cthd_engine_default::read_thermal_zones() {
 					zone->set_zone_active();
 				}
 			} else {
-				cthd_zone_generic *zone = new cthd_zone_generic(count, i,
+				cthd_zone_generic *zone = new cthd_zone_generic(index, i,
 						zone_config->type);
 				if (zone->zone_update() == THD_SUCCESS) {
 					zones.push_back(zone);
-					++count;
+					++index;
 					zone->set_zone_active();
 				} else
 					delete zone;
 			}
 		}
 	}
-	zone_count = count;
+	current_zone_index = index;
 
 #ifdef ACTIVATE_SURFACE
 //	Enable when skin sensors are standardized
@@ -406,20 +427,20 @@ int cthd_engine_default::read_thermal_zones() {
 	surface = search_zone("Surface");
 
 	if (!surface || (surface && !surface->zone_active_status())) {
-		cthd_zone_surface *zone = new cthd_zone_surface(count);
+		cthd_zone_surface *zone = new cthd_zone_surface(index);
 		if (zone->zone_update() == THD_SUCCESS) {
 			zones.push_back(zone);
-			++count;
+			++index;
 			zone->set_zone_active();
 		} else
-			delete zone;
+		delete zone;
 	} else {
 		thd_log_info("TSKN sensor was activated by config \n");
 	}
+	current_zone_index = index;
 #endif
-	zone_count = count;
 
-	if (!zone_count) {
+	if (!zones.size()) {
 		thd_log_info("No Thermal Zones found \n");
 		return THD_FATAL_ERROR;
 	}
@@ -436,7 +457,6 @@ int cthd_engine_default::read_thermal_zones() {
 int cthd_engine_default::add_replace_cdev(cooling_dev_t *config) {
 	cthd_cdev *cdev;
 	bool cdev_present = false;
-	int current_cdev_index = cdev_cnt;
 	bool percent_unit = false;
 
 	// Check if there is existing cdev with this name and path
@@ -460,6 +480,7 @@ int cthd_engine_default::add_replace_cdev(cooling_dev_t *config) {
 			return THD_ERROR;
 		}
 		cdevs.push_back(cdev);
+		++current_cdev_index;
 	}
 
 	if (config->mask & CDEV_DEF_BIT_UNIT_VAL) {
@@ -499,9 +520,6 @@ int cthd_engine_default::add_replace_cdev(cooling_dev_t *config) {
 		cdev->enable_pid();
 		cdev->set_pid_param(config->pid.Kp, config->pid.Ki, config->pid.Kd);
 	}
-	//cdev->cdev_dump();
-
-	current_cdev_index++;
 
 	return THD_SUCCESS;
 
@@ -513,43 +531,42 @@ int cthd_engine_default::read_cooling_devices() {
 
 	// Read first all the default cooling devices added by kernel
 	thd_read_default_cooling_devices();
-	int current_cdev_index = cdev_cnt;
 
 	// Add RAPL cooling device
-	cthd_sysfs_cdev_rapl *rapl_dev = new cthd_sysfs_cdev_rapl(cdev_cnt, 0);
+	cthd_sysfs_cdev_rapl *rapl_dev = new cthd_sysfs_cdev_rapl(
+			current_cdev_index, 0);
 	rapl_dev->set_cdev_type("rapl_controller");
 	if (rapl_dev->update() == THD_SUCCESS) {
 		cdevs.push_back(rapl_dev);
-		++cdev_cnt;
+		++current_cdev_index;
 	} else {
 		delete rapl_dev;
 		if (processor_id_match()) {
 			// RAPL control via MSR
-			cthd_cdev_rapl_msr *rapl_msr_dev = new cthd_cdev_rapl_msr(cdev_cnt,
-					0);
+			cthd_cdev_rapl_msr *rapl_msr_dev = new cthd_cdev_rapl_msr(
+					current_cdev_index, 0);
 			rapl_msr_dev->set_cdev_type("rapl_controller");
 			if (rapl_msr_dev->update() == THD_SUCCESS) {
 				cdevs.push_back(rapl_msr_dev);
-				++cdev_cnt;
+				++current_cdev_index;
 			} else
 				delete rapl_msr_dev;
 		}
 	}
 	// Add Intel P state driver as cdev
-	cthd_intel_p_state_cdev *pstate_dev = new cthd_intel_p_state_cdev(cdev_cnt);
+	cthd_intel_p_state_cdev *pstate_dev = new cthd_intel_p_state_cdev(
+			current_cdev_index);
 	pstate_dev->set_cdev_type("intel_pstate");
 	if (pstate_dev->update() == THD_SUCCESS) {
 		cdevs.push_back(pstate_dev);
-		++cdev_cnt;
+		++current_cdev_index;
 	} else
 		delete pstate_dev;
 
 	// Add statically defined cooling devices
 	size = sizeof(cpu_def_cooling_devices) / sizeof(cooling_dev_t);
 	for (i = 0; i < size; ++i) {
-		if (add_replace_cdev(&cpu_def_cooling_devices[i]) == THD_SUCCESS)
-			current_cdev_index++;
-		cdev_cnt = current_cdev_index;
+		add_replace_cdev(&cpu_def_cooling_devices[i]);
 	}
 
 	// Add from XML cooling device config
@@ -558,30 +575,39 @@ int cthd_engine_default::read_cooling_devices() {
 			cooling_dev_t *cdev_config = parser.get_cool_dev_index(i);
 			if (!cdev_config)
 				continue;
-
-			if (add_replace_cdev(cdev_config) == THD_SUCCESS) {
-				current_cdev_index++;
-			}
+			add_replace_cdev(cdev_config);
 		}
-		cdev_cnt = current_cdev_index;
 	}
 
-	cthd_cdev_cpufreq *cpu_freq_dev = new cthd_cdev_cpufreq(cdev_cnt, -1);
+	cthd_cdev_cpufreq *cpu_freq_dev = new cthd_cdev_cpufreq(current_cdev_index,
+			-1);
 	cpu_freq_dev->set_cdev_type("cpufreq");
 	if (cpu_freq_dev->update() == THD_SUCCESS) {
 		cdevs.push_back(cpu_freq_dev);
-		++cdev_cnt;
+		++current_cdev_index;
 	} else
 		delete cpu_freq_dev;
 
 	cthd_sysfs_cdev_rapl_dram *rapl_dram_dev = new cthd_sysfs_cdev_rapl_dram(
-			cdev_cnt, 0);
+			current_cdev_index, 0);
 	rapl_dram_dev->set_cdev_type("rapl_controller_dram");
 	if (rapl_dram_dev->update() == THD_SUCCESS) {
 		cdevs.push_back(rapl_dram_dev);
-		++cdev_cnt;
+		++current_cdev_index;
 	} else
 		delete rapl_dram_dev;
+
+	cthd_cdev *cdev = search_cdev("LCD");
+	if (!cdev) {
+		cthd_cdev_backlight *backlight_dev = new cthd_cdev_backlight(
+				current_cdev_index, 0);
+		backlight_dev->set_cdev_type("LCD");
+		if (backlight_dev->update() == THD_SUCCESS) {
+			cdevs.push_back(backlight_dev);
+			++current_cdev_index;
+		} else
+			delete backlight_dev;
+	}
 
 	// Dump all cooling devices
 	for (unsigned i = 0; i < cdevs.size(); ++i) {
@@ -591,3 +617,21 @@ int cthd_engine_default::read_cooling_devices() {
 	return THD_SUCCESS;
 }
 
+// Thermal engine
+cthd_engine *thd_engine;
+
+int thd_engine_create_default_engine(bool ignore_cpuid_check,
+		bool exclusive_control) {
+	thd_engine = new cthd_engine_default();
+	if (exclusive_control)
+		thd_engine->set_control_mode(EXCLUSIVE);
+
+	// Initialize thermald objects
+	thd_engine->set_poll_interval(thd_poll_interval);
+	if (thd_engine->thd_engine_start(ignore_cpuid_check) != THD_SUCCESS) {
+		thd_log_error("THD engine start failed:\n");
+		return THD_ERROR;
+	}
+
+	return THD_SUCCESS;
+}

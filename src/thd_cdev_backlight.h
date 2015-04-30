@@ -1,7 +1,7 @@
 /*
- * thd_zone_therm_sys_fs.h: thermal zone class interface
- *	for thermal sysfs
- * Copyright (C) 2012 Intel Corporation. All rights reserved.
+ * thd_cdev_backlight.h: thermal backlight cooling interface
+ *
+ * Copyright (C) 2015 Intel Corporation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License version
@@ -22,28 +22,21 @@
  *
  */
 
-#ifndef THD_ZONE_THERM_SYS_FS_H_
-#define THD_ZONE_THERM_SYS_FS_H_
+#ifndef SRC_THD_CDEV_BACKLIGHT_H_
+#define SRC_THD_CDEV_BACKLIGHT_H_
 
-#include "thd_zone.h"
+#include "thd_cdev.h"
 
-class cthd_sysfs_zone: public cthd_zone {
+class cthd_cdev_backlight: public cthd_cdev {
 private:
-	int trip_point_cnt;
-	cthd_zone *zone;
-	std::vector<int> initial_trip_values;
 
 public:
-	static const int max_trip_points = 50;
-	static const int max_cool_devs = 50;
+	cthd_cdev_backlight(unsigned int _index, int _cpu_index) :
+			cthd_cdev(_index, "/sys/class/backlight/intel_backlight/") {
+	}
 
-	cthd_sysfs_zone(int count, std::string path);
-	~cthd_sysfs_zone();
-
-	virtual int read_trip_points();
-	virtual int read_cdev_trip_points();
-	virtual int zone_bind_sensors();
-
+	void set_curr_state(int state, int arg);
+	int update();
 };
 
-#endif /* THD_ZONE_THERM_SYS_FS_H_ */
+#endif /* SRC_THD_CDEV_BACKLIGHT_H_ */

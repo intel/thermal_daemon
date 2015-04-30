@@ -124,6 +124,8 @@ int cthd_sysfs_cdev_rapl::update() {
 	std::stringstream temp_str;
 	int _index = -1;
 	unsigned long constraint_phy_max;
+	bool ppcc = false;
+	std::string domain_name;
 
 	for (i = 0; i < rapl_no_time_windows; ++i) {
 		temp_str << "constraint_" << i << "_name";
@@ -141,48 +143,57 @@ int cthd_sysfs_cdev_rapl::update() {
 		return THD_ERROR;
 	}
 
-	temp_str.str(std::string());
-	temp_str << "constraint_" << _index << "_max_power_uw";
-	if (!cdev_sysfs.exists(temp_str.str())) {
-		thd_log_info("powercap RAPL no max power limit range %s \n",
-				temp_str.str().c_str());
-		return THD_ERROR;
-	}
-	if (cdev_sysfs.read(temp_str.str(), &phy_max) < 0) {
-		thd_log_info("powercap RAPL invalid max power limit range \n");
-		thd_log_info("Calculate dynamically phy_max \n");
-		phy_max = 0;
-		thd_engine->rapl_power_meter.rapl_start_measure_power();
-		max_state = rapl_min_default_step;
-		set_inc_dec_value(rapl_min_default_step);
-		dynamic_phy_max_enable = true;
-		return THD_SUCCESS;
-	}
+	cdev_sysfs.read("name", domain_name);
+	if (domain_name == "package-0")
+		ppcc = read_ppcc_power_limits();
 
-	std::stringstream temp_power_str;
-	temp_power_str.str(std::string());
-	temp_power_str << "constraint_" << _index << "_power_limit_uw";
-	if (!cdev_sysfs.exists(temp_power_str.str())) {
-		thd_log_info("powercap RAPL no  power limit uw %s \n",
-				temp_str.str().c_str());
-		return THD_ERROR;
-	}
-	if (cdev_sysfs.read(temp_power_str.str(), &constraint_phy_max) <= 0) {
-		thd_log_info("powercap RAPL invalid max power limit range \n");
-		constraint_phy_max = 0;
-	}
-	if (constraint_phy_max > phy_max) {
-		thd_log_info(
-				"Default constraint power limit is more than max power %lu:%lu\n",
-				constraint_phy_max, phy_max);
-		phy_max = constraint_phy_max;
-	}
-	thd_log_info("powercap RAPL max power limit range %lu \n", phy_max);
+	if (ppcc) {
+		phy_max = pl0_max_pwr;
+		set_inc_dec_value(pl0_step_pwr);
+		max_state = pl0_max_pwr - pl0_min_pwr;
+	} else {
+		temp_str.str(std::string());
+		temp_str << "constraint_" << _index << "_max_power_uw";
+		if (!cdev_sysfs.exists(temp_str.str())) {
+			thd_log_info("powercap RAPL no max power limit range %s \n",
+					temp_str.str().c_str());
+			return THD_ERROR;
+		}
+		if (cdev_sysfs.read(temp_str.str(), &phy_max) < 0) {
+			thd_log_info("powercap RAPL invalid max power limit range \n");
+			thd_log_info("Calculate dynamically phy_max \n");
+			phy_max = 0;
+			thd_engine->rapl_power_meter.rapl_start_measure_power();
+			max_state = rapl_min_default_step;
+			set_inc_dec_value(rapl_min_default_step);
+			dynamic_phy_max_enable = true;
+			return THD_SUCCESS;
+		}
 
-	set_inc_dec_value(phy_max * (float) rapl_power_dec_percent / 100);
-	max_state = phy_max;
-	max_state -= (float) max_state * rapl_low_limit_percent / 100;
+		std::stringstream temp_power_str;
+		temp_power_str.str(std::string());
+		temp_power_str << "constraint_" << _index << "_power_limit_uw";
+		if (!cdev_sysfs.exists(temp_power_str.str())) {
+			thd_log_info("powercap RAPL no  power limit uw %s \n",
+					temp_str.str().c_str());
+			return THD_ERROR;
+		}
+		if (cdev_sysfs.read(temp_power_str.str(), &constraint_phy_max) <= 0) {
+			thd_log_info("powercap RAPL invalid max power limit range \n");
+			constraint_phy_max = 0;
+		}
+		if (constraint_phy_max > phy_max) {
+			thd_log_info(
+					"Default constraint power limit is more than max power %lu:%lu\n",
+					constraint_phy_max, phy_max);
+			phy_max = constraint_phy_max;
+		}
+		thd_log_info("powercap RAPL max power limit range %lu \n", phy_max);
 
+		set_inc_dec_value(phy_max * (float) rapl_power_dec_percent / 100);
+		max_state = phy_max;
+		max_state -= (float) max_state * rapl_low_limit_percent / 100;
+	}
 	std::stringstream time_window;
 	temp_str.str(std::string());
 	temp_str << "constraint_" << _index << "_time_window_us";
@@ -191,7 +202,10 @@ int cthd_sysfs_cdev_rapl::update() {
 				temp_str.str().c_str());
 		return THD_ERROR;
 	}
-	time_window << def_rapl_time_window;
+	if (pl0_min_window)
+		time_window << pl0_min_window;
+	else
+		time_window << def_rapl_time_window;
 	cdev_sysfs.write(temp_str.str(), time_window.str());
 
 	std::stringstream enable;
@@ -206,7 +220,49 @@ int cthd_sysfs_cdev_rapl::update() {
 	thd_log_debug("RAPL max limit %d increment: %d\n", max_state, inc_dec_val);
 	constraint_index = _index;
 	set_pid_param(1000, 100, 10);
-	//enable_pid();
 
 	return THD_SUCCESS;
+}
+
+bool cthd_sysfs_cdev_rapl::read_ppcc_power_limits() {
+	csys_fs sys_fs;
+
+	if (sys_fs.exists("/sys/bus/pci/devices/0000:00:04.0/power_limits/"))
+		sys_fs.update_path("/sys/bus/pci/devices/0000:00:04.0/power_limits/");
+	else if (sys_fs.exists("/sys/bus/pci/devices/0000:00:0b.0/power_limits/"))
+		sys_fs.update_path("/sys/bus/pci/devices/0000:00:0b.0/power_limits/");
+	else if (sys_fs.exists(
+			"/sys/bus/platform/devices/INT3401:00/power_limits/"))
+		sys_fs.update_path(
+				"/sys/bus/platform/devices/INT3401:00/power_limits/");
+	else
+		return false;
+
+	if (sys_fs.exists("power_limit_0_max_uw")) {
+		if (sys_fs.read("power_limit_0_max_uw", &pl0_max_pwr) <= 0)
+			return false;
+	}
+
+	if (sys_fs.exists("power_limit_0_min_uw")) {
+		if (sys_fs.read("power_limit_0_min_uw", &pl0_min_pwr) <= 0)
+			return false;
+	}
+
+	if (sys_fs.exists("power_limit_0_tmin_us")) {
+		if (sys_fs.read("power_limit_0_tmin_us", &pl0_min_window) <= 0)
+			return false;
+	}
+
+	if (sys_fs.exists("power_limit_0_step_uw")) {
+		if (sys_fs.read("power_limit_0_step_uw", &pl0_step_pwr) <= 0)
+			return false;
+	}
+
+	if (pl0_max_pwr && pl0_min_pwr && pl0_min_window && pl0_step_pwr) {
+		thd_log_info("ppcc limits max:%u min:%u  min_win:%u step:%u\n",
+				pl0_max_pwr, pl0_min_pwr, pl0_min_window, pl0_step_pwr);
+		return true;
+	}
+
+	return false;
 }

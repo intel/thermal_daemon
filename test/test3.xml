@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<!--
+Auto Test 1: Simple association with sample period
+-->
+       <ThermalConfiguration>
+		<Platform>
+                 <Name>THD_TEST_0</Name>
+                 <ProductName>*</ProductName>
+                 <Preference>QUIET</Preference>
+                 <ThermalZones>
+                      <ThermalZone>
+                           <Type>thd_test_0</Type>
+                           <TripPoints>
+                                     <TripPoint>
+                                          <SensorType>thd_test_0</SensorType>
+                                          <Temperature>*</Temperature>
+                                          <type>passive</type>
+                                     <CoolingDevice>
+                                          <Type>thd_cdev_0</Type>
+					  <SamplingPeriod> 10 </SamplingPeriod>
+                                     </CoolingDevice>
+                                     </TripPoint>
+                           </TripPoints>
+                      </ThermalZone>
+                 </ThermalZones>
+            </Platform>
+       </ThermalConfiguration>
+

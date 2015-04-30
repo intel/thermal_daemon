@@ -41,6 +41,20 @@ cthd_sysfs_zone::cthd_sysfs_zone(int count, std::string path) :
 	thd_log_debug("Thermal Zone %d:%s\n", index, type_str.c_str());
 }
 
+cthd_sysfs_zone::~cthd_sysfs_zone() {
+	std::stringstream trip_sysfs;
+	trip_sysfs << index << "/" << "trip_point_";
+
+	for (unsigned int i = 0; i < initial_trip_values.size(); ++i) {
+		std::stringstream temp_stream;
+		temp_stream << trip_sysfs.str() << i << "_temp";
+		if (initial_trip_values[i] >= 0
+				&& zone_sysfs.exists(temp_stream.str())) {
+			zone_sysfs.write(temp_stream.str(), initial_trip_values[i]);
+		}
+	}
+}
+
 int cthd_sysfs_zone::zone_bind_sensors() {
 	cthd_sensor *sensor;
 
@@ -111,7 +125,9 @@ int cthd_sysfs_zone::read_trip_points() {
 		if (sensor && (mode & S_IWUSR)) {
 			sensor->set_async_capable(true);
 			wr_mode = true;
-		}
+			initial_trip_values.push_back(temp);
+		} else
+			initial_trip_values.push_back(-1);
 
 		if (sensor && temp > 0 && trip_type != INVALID_TRIP_TYPE && !wr_mode) {
 
