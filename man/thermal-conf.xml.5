@@ -244,7 +244,8 @@ Example 2: In this configuration, we are controlling backlight when some sensor 
 <?xml version="1.0"?>
 .TP
 <ThermalConfiguration>
-.TP	<Platform>
+.TP
+	<Platform>
 .TP
 		<Name>Change Backlight</Name>
 .TP
@@ -288,19 +289,8 @@ Example 2: In this configuration, we are controlling backlight when some sensor 
 .TP
 Example 3: In this example Lenovo Thinkpad X220 and fan speed is controlled. Here a cooling device "_Fan", can be controlled via sysfs
 /sys/devices/platform/thinkpad_hwmon/pwm1. When the x86_pkg_temp reaches 45C, Fan is started with increasing speeds, if the temperature can't be controlled at 45C.
-
-.TP
-<!--
 .TP
 <?xml version="1.0"?>
-.TP
-<!--
-.TP
-use "man thermal-conf.xml" for details
-.TP
--->
-.TP
-<!-- BEGIN -->
 .TP
 <ThermalConfiguration>
 .TP
@@ -375,6 +365,4 @@ use "man thermal-conf.xml" for details
 </Platform>
 .TP
 </ThermalConfiguration>
-.TP
-<!-- END -->
 .TP
