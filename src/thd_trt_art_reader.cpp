@@ -86,8 +86,8 @@ static void associate_device(sub_type_t type, string &name) {
 						ret = acpi_sysfs.read("path", uid);
 						if (ret < 0)
 							continue;
-						unsigned pos = uid.find_last_of(".");
-						if (pos != string::npos) {
+						size_t pos = uid.find_last_of(".");
+						if (pos != std::string::npos) {
 							uid = uid.substr(pos + 1);
 						}
 					} else
@@ -102,6 +102,7 @@ static void associate_device(sub_type_t type, string &name) {
 								!= std::string::npos) {
 							name = "TCPU";
 						}
+						closedir(dir);
 						return;
 					}
 				}

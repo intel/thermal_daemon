@@ -120,8 +120,11 @@ bool check_thermald_running() {
 	if (lockf(pid_file_handle, F_TLOCK, 0) == -1) {
 		/* Couldn't get lock on lock file */
 		thd_log_error("Couldn't get lock file %d\n", getpid());
+		close(pid_file_handle);
 		return true;
 	}
+
+	close(pid_file_handle);
 
 	return false;
 }
