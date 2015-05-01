@@ -73,6 +73,20 @@ Use "sudo stop thermald" to stop
 
 Releases
 
+Release 1.4
+- Extension of DBUS I/F for developing Monitoring and Control GUI
+- Added exampled to thermal-conf man page
+- Support INT340X class of thermal control introduced in kernel 4.0
+- Reinit without restart thermald to load new parameters like new control temperature
+- Fix indexes when Linux thermal sysfs doesn't have contiguous zone numbering
+- Support for new Intel SoC platforms
+- Introduce back-light control as the Linux back light cooling device is removed
+- Restore modified passive trip points in thermal zones on exit
+- Virtual Sensor definition
+- Fix loop when uevents floods the system
+- Error message removal for rapl sysfs traversal
+- Coverity error
+
 Release 1.3
 - Auto creation of configuration based on ACPI thermal relationship table
 - Default CPU bound load check for unbinded thermal sensors
