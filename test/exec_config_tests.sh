@@ -256,3 +256,57 @@ if [ $curr_state -ne 0 ]; then
 else
 	echo "Test passed"
 fi
+
+# Test 5
+echo "Executing test 5: Test case where sensor/zone/cdev are not"
+echo " in thermal sysfs and still able to control"
+
+cp test5.xml $CONF_FILE
+dbus-send --system --dest=org.freedesktop.thermald /org/freedesktop/thermald org.freedesktop.thermald.Reinit
+sleep 5
+
+THD5_ZONE=/sys/kernel/thermald_test
+THD5_CDEV=/sys/kernel/thermald_test
+echo "Current temperature"
+cat ${THD5_ZONE}/sensor_temp
+sleep 2
+echo 50000 > ${THD5_ZONE}/sensor_temp
+echo "Emulate temp to"
+cat ${THD5_ZONE}
+COUNTER=0
+while [  $COUNTER -lt 10 ]; do
+	curr_state=$(cat ${THD5_CDEV}/control_state)
+	echo "current state for thd_cdev_0" ${curr_state}
+	if [ $curr_state -eq 10 ]; then
+		echo "Reached Max State"
+		break
+	fi
+	sleep 5
+	let COUNTER=COUNTER+1
+done
+
+if [ $curr_state -ne 10 ]; then
+	echo "Test Failed"
+	exit 1
+else
+	echo "Test passed"
+fi
+cat ${THD5_CDEV}
+echo 10000 > ${THD5_ZONE}/sensor_temp
+COUNTER=0
+while [  $COUNTER -lt 10 ]; do
+	curr_state=$(cat ${THD5_CDEV}/control_state)
+	echo "current state for thd_cdev_0" ${curr_state}
+	if [ $curr_state -eq 0 ]; then
+		echo "Reached Min State"
+		break
+	fi
+	sleep 5
+	let COUNTER=COUNTER+1
+done
+if [ $curr_state -ne 0 ]; then
+	echo "Test Failed"
+	exit 1
+else
+	echo "Test passed"
+fi

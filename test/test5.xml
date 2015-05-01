@@ -1,0 +1,48 @@
+<?xml version="1.0"?>
+<!--
+Create sensor and control device from non thermal sysfs
+This shows that thermald can get temp and control via any
+sysfs entry
+-->
+       <ThermalConfiguration>
+		<Platform>
+                 <Name>sysfs_zone_test</Name>
+                 <ProductName>*</ProductName>
+                 <Preference>QUIET</Preference>
+
+		<ThermalSensors>
+			<ThermalSensor>
+                      		<Type>sysfs_sensor_0</Type>
+                      		<Path>/sys/kernel/thermald_test/sensor_temp</Path>
+                      		<AsyncCapable>0</AsyncCapable>
+                 	</ThermalSensor>
+		</ThermalSensors>
+
+                 <ThermalZones>
+                      <ThermalZone>
+                           <Type>sysfs_thermal_zone_0</Type>
+                           <TripPoints>
+                                     <TripPoint>
+                                          <SensorType>sysfs_sensor_0</SensorType>
+                                          <Temperature>40000</Temperature>
+                                          <type>passive</type>
+                                     <CoolingDevice>
+                                          <Type>sysfs_cdev_0</Type>
+                                     </CoolingDevice>
+                                     </TripPoint>
+                           </TripPoints>
+                      </ThermalZone>
+                 </ThermalZones>
+
+		<CoolingDevices>
+			<CoolingDevice>
+				<Type>sysfs_cdev_0</Type>
+				<Path>/sys/kernel/thermald_test/control_state</Path>
+				<MinState>0</MinState>
+				<IncDecStep>1</IncDecStep>
+				<MaxState>10</MaxState>
+			</CoolingDevice>
+		</CoolingDevices>
+
+            </Platform>
+       </ThermalConfiguration>
