@@ -1057,7 +1057,6 @@ int cthd_engine::user_add_cdev(std::string cdev_name, std::string cdev_path,
 			pthread_mutex_unlock(&thd_engine_mutex);
 			return THD_ERROR;
 		}
-		pthread_mutex_lock(&thd_engine_mutex);
 		cdevs.push_back(cdev_sysfs);
 		++current_cdev_index;
 		cdev = cdev_sysfs;

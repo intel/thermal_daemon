@@ -367,7 +367,7 @@ gboolean thd_dbus_interface_get_zone_sensor_at_index(PrefObject *obj,
 		return FALSE;
 
 	cthd_sensor *sensor = zone->get_sensor_at_index(sensor_index);
-	if (!zone)
+	if (!sensor)
 		return FALSE;
 
 	sensor_str = g_new(char, MAX_DBUS_REPLY_STR_LEN + 1);
