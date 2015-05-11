@@ -21,6 +21,7 @@
  * Author Name <Srinivas.Pandruvada@linux.intel.com>
  *
  */
+#include <dirent.h>
 #include "thd_common.h"
 #include "thd_sys_fs.h"
 
