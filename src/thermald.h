@@ -58,7 +58,7 @@
 #include "config.h"
 
 #define LOCKF_SUPPORT
-#ifdef GLIBC_SUPPORT
+#ifdef GLIB_SUPPORT
 #include <glib.h>
 #include <dbus/dbus.h>
 #include <dbus/dbus-glib-lowlevel.h>
