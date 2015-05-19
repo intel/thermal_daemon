@@ -214,6 +214,7 @@ public:
 	cthd_sensor *get_sensor(int index);
 	cthd_zone *get_zone(int index);
 	cthd_zone *get_zone(std::string type);
+	int get_sensor_temperature(int index, unsigned int *temperature);
 
 	unsigned int get_sensor_count() {
 		return sensors.size();

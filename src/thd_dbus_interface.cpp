@@ -87,6 +87,9 @@ gboolean thd_dbus_interface_update_cooling_device(PrefObject *obj,
 gboolean thd_dbus_interface_get_sensor_count(PrefObject *obj, int *status,
 		GError **error);
 
+gboolean thd_dbus_interface_get_sensor_temperature(PrefObject *obj, int index,
+		unsigned int *temperature, GError **error);
+
 gboolean thd_dbus_interface_get_zone_count(PrefObject *obj, int *status,
 		GError **error);
 
@@ -543,6 +546,18 @@ gboolean thd_dbus_interface_update_cooling_device(PrefObject *obj,
 	return thd_dbus_interface_add_cooling_device(obj, cdev_name, path,
 			min_state, max_state, step, error);
 
+}
+
+gboolean thd_dbus_interface_get_sensor_temperature(PrefObject *obj, int index,
+		unsigned int *temperature, GError **error) {
+	int ret;
+
+	ret = thd_engine->get_sensor_temperature(index, temperature);
+
+	if (ret == THD_SUCCESS)
+		return TRUE;
+	else
+		return FALSE;
 }
 
 // Setup dbus server
