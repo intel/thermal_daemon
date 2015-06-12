@@ -25,8 +25,18 @@ echo "L : Get Zone Trip Information"
 echo "M : Get cdev count"
 echo "N : Get cdev Information"
 
-echo -n " Enter thermald preference [1..6]: "
-read opt_no
+arg="0"
+if [[ "$1" != "" ]]; then 
+        if [[ "$2" != "" ]]; then
+		arg=$2
+	fi
+
+	opt_no=$1
+	echo "Taking command line argument as choice!"
+else 
+	echo -n " Enter thermald preference [1..6]: "
+	read opt_no
+fi
 
 case $opt_no in
 0) dbus-send --system --dest=org.freedesktop.thermald /org/freedesktop/thermald org.freedesktop.thermald.SetCurrentPreference string:"FALLBACK"
@@ -103,11 +113,11 @@ dbus-send --system --dest=org.freedesktop.thermald --print-reply /org/freedeskto
 ;;
 
 K)
-dbus-send --system --dest=org.freedesktop.thermald --print-reply /org/freedesktop/thermald org.freedesktop.thermald.GetZoneSensorAtIndex uint32:0 uint32:0
+dbus-send --system --dest=org.freedesktop.thermald --print-reply /org/freedesktop/thermald org.freedesktop.thermald.GetZoneSensorAtIndex uint32:0 uint32:$arg
 ;;
 
 L)
-dbus-send --system --dest=org.freedesktop.thermald --print-reply /org/freedesktop/thermald org.freedesktop.thermald.GetZoneTripAtIndex uint32:0 uint32:0
+dbus-send --system --dest=org.freedesktop.thermald --print-reply /org/freedesktop/thermald org.freedesktop.thermald.GetZoneTripAtIndex uint32:0 uint32:$arg
 ;;
 
 M)
@@ -115,9 +125,10 @@ dbus-send --system --dest=org.freedesktop.thermald --print-reply /org/freedeskto
 ;;
 
 N)
-dbus-send --system --dest=org.freedesktop.thermald --print-reply /org/freedesktop/thermald org.freedesktop.thermald.GetCdevInformation uint32:0
+dbus-send --system --dest=org.freedesktop.thermald --print-reply /org/freedesktop/thermald org.freedesktop.thermald.GetCdevInformation uint32:$arg
 ;;
 
 *) echo "Invalid option"
 
 esac
+
