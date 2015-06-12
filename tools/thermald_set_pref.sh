@@ -1,5 +1,6 @@
 #!/bin/sh
 
+
 echo "****thermald preference****"
 echo "0 : DEFAULT"
 echo "1 : PERFORMANCE"
