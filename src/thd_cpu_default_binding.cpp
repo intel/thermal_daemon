@@ -216,7 +216,7 @@ bool cthd_cpu_default_binding::check_cpu_load() {
 bool cthd_cpu_default_binding::blacklist_match(std::string name) {
 	int i = 0;
 	const char *blacklist_zones[] = { "cpu", "acpitz", "Surface", "pkg-temp-0",
-			"x86_pkg_temp", "soc_dts0", "soc_dts1", "" };
+			"x86_pkg_temp", "soc_dts0", "soc_dts1", "B0D4", "B0DB", "" };
 
 	while (blacklist_zones[i][0] != '\0') {
 		if (name == blacklist_zones[i])

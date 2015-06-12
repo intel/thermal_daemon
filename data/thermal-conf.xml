@@ -70,6 +70,22 @@ use "man thermal-conf.xml" for details
 			<!-- If async capable, then we don't need to poll -->
 			<AsyncCapable>1</AsyncCapable>
 		</ThermalSensor>
+		<ThermalSensor>
+			<!-- Examle of a virtual sensor. This sensor
+				depends on other real sensor or
+				virtual sensor.
+				E.g. here the temp will be
+				 temp of example_sensor_1 * 0.5 + 10
+			-->
+			<Type>example_virtual_sensor</Type>
+			<Virtual>1</Virtual>
+			<SensorLink>
+				<SensorType>example_sensor_1</SensorType>
+				<Multiplier> 0.5 </Multiplier>
+				<Offset> 10 </Offset>
+			</SensorLink>
+		</ThermalSensor>
+
 	</ThermalSensors>
 	<ThermalZones>
 		<ThermalZone>

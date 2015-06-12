@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!DOCTYPE node PUBLIC
+  "-//freedesktop//DTD D-Bus Object Introspection 1.0//EN"
+  "http://standards.freedesktop.org/dbus/1.0/introspect.dtd">
+
+<node>
+  <interface name="org.freedesktop.thermald">
+
+    <!-- SetCurrentPreference(G_TYPE_STRING new_pref): 
+    preference string values:
+        "PERFORMANCE" : performance driven policy (ACPI: ACTIVE)
+        "ENERGY_CONSERVE" : Energy conservation "Quiet" mode(ACPI: PASSIVE)
+	"DISABLE": Disable thermal daemon
+    -->
+    <method name="SetCurrentPreference">
+      <arg type="s" name="new_pref" direction="in"/>
+    </method>
+
+    <method name="SetUserMaxTemperature">
+      <arg type="s" name="zone_name" direction="in"/>
+      <arg type="u" name="user_set_point_in_milli_degree_celsius" direction="in"/>
+    </method>
+
+    <method name="SetUserPassiveTemperature">
+      <arg type="s" name="zone_name" direction="in"/>
+      <arg type="u" name="user_passive_control_in_milli_degree_celsius" direction="in"/>
+    </method>
+
+    <!-- GetCurrentPreference: Returns the current preference -->
+    <method name="GetCurrentPreference">
+      <arg type="s" name="cur_pref" direction="out"/>
+    </method>
+
+    <method name="AddSensor">
+      <arg type="s" name="sensor_name" direction="in"/>
+      <arg type="s" name="path" direction="in"/>
+    </method>
+
+    <method name="AddVirtualSensor">
+      <arg type="s" name="sensor_name" direction="in"/>
+      <arg type="s" name="dep_sensor_name" direction="in"/>
+      <arg type="d" name="slope" direction="in"/>
+      <arg type="d" name="intercept" direction="in"/>      
+    </method>
+
+    <method name="GetSensorCount">
+      <arg type="u" name="count" direction="out"/>
+    </method>
+
+    <method name="GetSensorInformation">
+      <arg type="u" name="index" direction="in"/>
+      <arg type="s" name="sensor" direction="out"/>
+      <arg type="s" name="path" direction="out"/>
+      <arg type="i" name="temp" direction="out"/>
+    </method>
+
+    <method name="GetZoneCount">
+      <arg type="u" name="count" direction="out"/>
+    </method>
+
+    <method name="GetZoneInformation">
+      <arg type="u" name="index" direction="in"/>
+      <arg type="s" name="zone" direction="out"/>
+      <arg type="i" name="sensor_count" direction="out"/>
+      <arg type="i" name="trip_count" direction="out"/>
+    </method>
+
+    <method name="GetZoneSensorAtIndex">
+      <arg type="u" name="zone_index" direction="in"/>
+      <arg type="u" name="sensor_index" direction="in"/>
+      <arg type="s" name="sensor_type" direction="out"/>
+    </method>
+
+    <method name="GetZoneTripAtIndex">
+      <arg type="u" name="zone_index" direction="in"/>
+      <arg type="u" name="trip_index" direction="in"/>
+      <arg type="i" name="temp" direction="out"/>
+      <arg type="i" name="trip_type" direction="out"/>
+      <arg type="i" name="sensor_id" direction="out"/>
+      <arg type="i" name="cdev_size" direction="out"/>
+      <arg type="ai" name="cdev_ids" direction="out"/>
+    </method>
+
+    <method name="GetCdevCount">
+      <arg type="u" name="count" direction="out"/>
+    </method>
+
+    <method name="GetCdevInformation">
+      <arg type="u" name="index" direction="in"/>
+      <arg type="s" name="type" direction="out"/>
+      <arg type="i" name="min_state" direction="out"/>
+      <arg type="i" name="max_state" direction="out"/>
+      <arg type="i" name="current_state" direction="out"/>
+    </method>
+
+    <method name="AddZonePassive">
+      <arg type="s" name="zone_name" direction="in"/>
+      <arg type="u" name="trip_point_temp" direction="in"/>
+      <arg type="s" name="trip_point_sensor" direction="in"/>
+      <arg type="s" name="trip_point_cdev" direction="in"/>
+    </method>
+
+    <method name="DeleteZone">
+      <arg type="s" name="zone_name" direction="in"/>
+     </method>
+
+    <method name="SetZoneStatus">
+      <arg type="s" name="zone_name" direction="in"/>
+      <arg type="i" name="enable" direction="in"/>
+    </method>
+
+    <method name="GetZoneStatus">
+      <arg type="s" name="zone_name" direction="in"/>
+      <arg type="i" name="enable" direction="out"/>
+    </method>
+
+    <method name="AddTripPoint">
+      <arg type="s" name="zone_name" direction="in"/>
+      <arg type="u" name="trip_point_temp" direction="in"/>
+      <arg type="s" name="trip_point_sensor" direction="in"/>
+      <arg type="s" name="trip_point_cdev" direction="in"/>
+    </method>
+
+    <method name="DeleteTripPoint">
+      <arg type="s" name="zone_name" direction="in"/>
+      <arg type="u" name="trip_point_temp" direction="in"/>
+    </method>
+
+    <method name="AddCoolingDevice">
+      <arg type="s" name="cdev_name" direction="in"/>
+      <arg type="s" name="optional_path" direction="in"/>
+      <arg type="i" name="min_state" direction="in"/>
+      <arg type="i" name="max_state" direction="in"/>
+      <arg type="i" name="inc_step" direction="in"/>
+    </method>
+
+    <method name="UpdateCoolingDevice">
+      <arg type="s" name="cdev_name" direction="in"/>
+      <arg type="s" name="optional_path" direction="in"/>
+      <arg type="i" name="min_state" direction="in"/>
+      <arg type="i" name="max_state" direction="in"/>
+      <arg type="i" name="inc_step" direction="in"/>
+    </method>
+
+
+    <method name="DisableCoolingDevice">
+      <arg type="s" name="cdev_name" direction="in"/>
+    </method>
+
+    <method name="Reinit">
+    </method>
+
+    <method name="Terminate">
+    </method>
+
+  </interface>
+</node>

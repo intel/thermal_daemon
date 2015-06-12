@@ -1,0 +1,43 @@
+<?xml version="1.0"?>
+<!--
+Auto Test 1: one cdev in multiple zones,
+one zone crossed passive, make sure that the other zone
+doesn't deactivate an activated cdev
+-->
+       <ThermalConfiguration>
+		<Platform>
+                 <Name>THD_TEST_0</Name>
+                 <ProductName>*</ProductName>
+                 <Preference>QUIET</Preference>
+                 <ThermalZones>
+                      <ThermalZone>
+                           <Type>thd_test_0</Type>
+                           <TripPoints>
+                                     <TripPoint>
+                                          <SensorType>thd_test_0</SensorType>
+                                          <Temperature>*</Temperature>
+                                          <type>passive</type>
+                                     <CoolingDevice>
+                                          <Type>thd_cdev_0</Type>
+                                     </CoolingDevice>
+                                     </TripPoint>
+                           </TripPoints>
+                      </ThermalZone>
+                      <ThermalZone>
+                           <Type>thd_test_1</Type>
+                           <TripPoints>
+                                     <TripPoint>
+                                          <SensorType>thd_test_1</SensorType>
+                                          <Temperature>*</Temperature>
+                                          <type>passive</type>
+                                     <CoolingDevice>
+                                          <Type>thd_cdev_0</Type>
+                                     </CoolingDevice>
+                                     </TripPoint>
+                           </TripPoints>
+                      </ThermalZone>
+
+                 </ThermalZones>
+            </Platform>
+       </ThermalConfiguration>
+

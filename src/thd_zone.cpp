@@ -144,7 +144,7 @@ int cthd_zone::zone_update() {
 	int usr_psv_temp = read_user_set_psv_temp();
 	if (usr_psv_temp > 0) {
 		cthd_trip_point trip_pt_passive(0, PASSIVE, usr_psv_temp, 0, index,
-				DEFAULT_SENSOR_ID);
+		DEFAULT_SENSOR_ID);
 		update_trip_temp(trip_pt_passive);
 	}
 
@@ -278,8 +278,8 @@ int cthd_zone::bind_cooling_device(trip_point_type_t type,
 		if ((trip_point.get_trip_type() == type)
 				&& (trip_point.get_trip_temp() > 0)
 				&& (trip_temp == 0 || trip_point.get_trip_temp() == trip_temp)) {
-			trip_point.thd_trip_point_add_cdev(*cdev,
-					cthd_trip_point::default_influence, sampling_period);
+			trip_point.thd_trip_point_add_cdev(*cdev, influence,
+					sampling_period);
 			added = true;
 			zone_cdev_set_binded();
 			break;

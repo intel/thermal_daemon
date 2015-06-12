@@ -1,7 +1,7 @@
 /*
- * thd_zone_therm_sys_fs.h: thermal zone class interface
- *	for thermal sysfs
- * Copyright (C) 2012 Intel Corporation. All rights reserved.
+ * thd_cdev_backlight.cpp: thermal backlight cooling implementation
+ *
+ * Copyright (C) 2015 Intel Corporation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License version
@@ -22,28 +22,35 @@
  *
  */
 
-#ifndef THD_ZONE_THERM_SYS_FS_H_
-#define THD_ZONE_THERM_SYS_FS_H_
+#include "thd_cdev_backlight.h"
 
-#include "thd_zone.h"
+int cthd_cdev_backlight::update() {
+	int ret;
 
-class cthd_sysfs_zone: public cthd_zone {
-private:
-	int trip_point_cnt;
-	cthd_zone *zone;
-	std::vector<int> initial_trip_values;
+	if (cdev_sysfs.exists()) {
+		std::string temp_str;
 
-public:
-	static const int max_trip_points = 50;
-	static const int max_cool_devs = 50;
+		ret = cdev_sysfs.read("max_brightness", temp_str);
+		if (ret < 0)
+			return ret;
+		std::istringstream(temp_str) >> max_state;
+	}
 
-	cthd_sysfs_zone(int count, std::string path);
-	~cthd_sysfs_zone();
+	if (max_state <= 0)
+		return THD_ERROR;
 
-	virtual int read_trip_points();
-	virtual int read_cdev_trip_points();
-	virtual int zone_bind_sensors();
+	set_inc_dec_value(max_state * (float) 10 / 100);
 
-};
+	return 0;
+}
 
-#endif /* THD_ZONE_THERM_SYS_FS_H_ */
+void cthd_cdev_backlight::set_curr_state(int state, int arg) {
+	int ret;
+
+	ret = cdev_sysfs.write("brightness", max_state - state);
+	if (ret < 0) {
+		thd_log_warn("Failed to write brightness\n");
+		return;
+	}
+	curr_state = state;
+}

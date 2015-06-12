@@ -53,10 +53,18 @@ typedef struct {
 } pid_control_t;
 
 typedef struct {
+	std::string name;
+	double multiplier;
+	double offset;
+} thermal_sensor_link_t;
+
+typedef struct {
 	unsigned int mask;
 	std::string name;
 	std::string path;
 	bool async_capable;
+	bool virtual_sensor;
+	thermal_sensor_link_t sensor_link;
 } thermal_sensor_t;
 
 typedef struct {
@@ -139,6 +147,8 @@ private:
 			thermal_info_t *info_ptr);
 	int parse_new_sensor(xmlNode * a_node, xmlDoc *doc,
 			thermal_sensor_t *info_ptr);
+	int parse_new_sensor_link(xmlNode * a_node, xmlDoc *doc,
+			thermal_sensor_link_t *info_ptr);
 	int parse_thermal_sensors(xmlNode * a_node, xmlDoc *doc,
 			thermal_info_t *info_ptr);
 	int parse_cooling_devs(xmlNode * a_node, xmlDoc *doc,

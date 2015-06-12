@@ -32,6 +32,7 @@
 #include "thd_sys_fs.h"
 #include "thd_preference.h"
 #include "thd_sensor.h"
+#include "thd_sensor_virtual.h"
 #include "thd_zone.h"
 #include "thd_cdev.h"
 #include "thd_parse.h"
@@ -46,10 +47,9 @@ typedef enum {
 	TERMINATE,
 	PREF_CHANGED,
 	THERMAL_ZONE_NOTIFY,
-	CALIBRATE,
 	RELOAD_ZONES,
 	POLL_ENABLE,
-	POLL_DISABLE
+	POLL_DISABLE,
 } message_name_t;
 
 // This defines whether the thermal control is entirey done by
@@ -75,9 +75,9 @@ protected:
 	std::vector<cthd_zone *> zones;
 	std::vector<cthd_sensor *> sensors;
 	std::vector<cthd_cdev *> cdevs;
-	int cdev_cnt;
-	int zone_count;
-	int sensor_count;
+	int current_cdev_index;
+	int current_zone_index;
+	int current_sensor_index;
 	bool parse_thermal_zone_success;
 	bool parse_thermal_cdev_success;
 
@@ -90,7 +90,8 @@ private:
 	int write_pipe_fd;
 	int preference;
 	bool status;
-	time_t thz_last_time;
+	time_t thz_last_uevent_time;
+	time_t thz_last_temp_ind_time;
 	bool terminate;
 	int genuine_intel;
 	int has_invariant_tsc;
@@ -102,8 +103,8 @@ private:
 
 	pthread_t thd_engine;
 	pthread_attr_t thd_attr;
-	pthread_cond_t thd_cond_var;
-	pthread_mutex_t thd_cond_mutex;
+
+	pthread_mutex_t thd_engine_mutex;
 
 	std::vector<std::string> zone_preferences;
 	static const int thz_notify_debounce_interval = 3;
@@ -132,6 +133,9 @@ public:
 	virtual ~cthd_engine();
 	void set_control_mode(control_mode_t mode) {
 		control_mode = mode;
+	}
+	control_mode_t get_control_mode() {
+		return control_mode;
 	}
 	void thd_engine_thread();
 	int thd_engine_start(bool ignore_cpuid_check);
@@ -211,9 +215,18 @@ public:
 	cthd_zone *get_zone(int index);
 	cthd_zone *get_zone(std::string type);
 
+	unsigned int get_sensor_count() {
+		return sensors.size();
+	}
+
 	unsigned int get_zone_count() {
 		return zones.size();
 	}
+
+	unsigned int get_cdev_count() {
+		return cdevs.size();
+	}
+
 	void add_zone(cthd_zone *zone) {
 		zones.push_back(zone);
 	}
@@ -221,6 +234,25 @@ public:
 	bool rt_kernel_status() {
 		return rt_kernel;
 	}
+
+	// User/External messages
+	int user_add_sensor(std::string name, std::string path);
+	cthd_sensor *user_get_sensor(unsigned int index);
+	cthd_zone *user_get_zone(unsigned int index);
+	int user_add_virtual_sensor(std::string name, std::string dep_sensor,
+			double slope, double intercept);
+
+	int user_set_psv_temp(std::string name, unsigned int temp);
+	int user_set_max_temp(std::string name, unsigned int temp);
+	int user_add_zone(std::string zone_name, unsigned int trip_temp,
+			std::string sensor_name, std::string cdev_name);
+	int user_set_zone_status(std::string name, int status);
+	int user_get_zone_status(std::string name, int *status);
+	int user_delete_zone(std::string name);
+
+	int user_add_cdev(std::string cdev_name, std::string cdev_path,
+			int min_state, int max_state, int step);
+	cthd_cdev *user_get_cdev(unsigned int index);
 };
 
 #endif /* THD_ENGINE_H_ */
