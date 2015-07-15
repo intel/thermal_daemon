@@ -285,7 +285,6 @@ gboolean thd_dbus_interface_add_virtual_sensor(PrefObject *obj, gchar *name,
 
 gboolean thd_dbus_interface_get_sensor_information(PrefObject *obj, gint index,
 		gchar **sensor_out, gchar **path, gint *temp, GError **error) {
-	char error_str[] = "Invalid Contents";
 	char *sensor_str;
 	char *path_str;
 
@@ -337,7 +336,6 @@ gboolean thd_dbus_interface_get_zone_count(PrefObject *obj, int *count,
 gboolean thd_dbus_interface_get_zone_information(PrefObject *obj, gint index,
 		gchar **zone_out, gint *sensor_count, gint *trip_count,
 		GError **error) {
-	char error_str[] = "Invalid Contents";
 	char *zone_str;
 
 	thd_log_debug("thd_dbus_interface_get_zone_information %d\n", index);
@@ -363,7 +361,6 @@ gboolean thd_dbus_interface_get_zone_information(PrefObject *obj, gint index,
 gboolean thd_dbus_interface_get_zone_sensor_at_index(PrefObject *obj,
 		gint zone_index, gint sensor_index, gchar **sensor_out,
 		GError **error) {
-	char error_str[] = "Invalid Contents";
 	char *sensor_str;
 
 	thd_log_debug("thd_dbus_interface_get_zone_sensor_at_index %d\n",
@@ -392,8 +389,6 @@ gboolean thd_dbus_interface_get_zone_sensor_at_index(PrefObject *obj,
 gboolean thd_dbus_interface_get_zone_trip_at_index(PrefObject *obj,
 		gint zone_index, gint trip_index, int *temp, int *trip_type,
 		int *sensor_id, int *cdev_size, GArray **cdev_ids, GError **error) {
-	char error_str[] = "Invalid Contents";
-
 	thd_log_debug("thd_dbus_interface_get_zone_sensor_at_index %d\n",
 			zone_index);
 
@@ -437,7 +432,6 @@ gboolean thd_dbus_interface_get_cdev_count(PrefObject *obj, int *count,
 gboolean thd_dbus_interface_get_cdev_information(PrefObject *obj, gint index,
 		gchar **cdev_out, gint *min_state, gint *max_state, gint *curr_state,
 		GError **error) {
-	char error_str[] = "Invalid Contents";
 	char *cdev_str;
 
 	thd_log_debug("thd_dbus_interface_get_cdev_information %d\n", index);
@@ -543,8 +537,6 @@ gboolean thd_dbus_interface_add_cooling_device(PrefObject *obj,
 gboolean thd_dbus_interface_update_cooling_device(PrefObject *obj,
 		gchar *cdev_name, gchar *path, gint min_state, gint max_state,
 		gint step, GError **error) {
-	int ret;
-
 	g_assert(obj != NULL);
 
 	return thd_dbus_interface_add_cooling_device(obj, cdev_name, path,
