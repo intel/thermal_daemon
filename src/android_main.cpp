@@ -197,7 +197,7 @@ int main(int argc, char *argv[]) {
 		exit(EXIT_FAILURE);
 	}
 
-	if ((c = mkdir(TDRUNDIR, 0755)) != 0) {
+	if (mkdir(TDRUNDIR, 0755) != 0) {
 		if (errno != EEXIST) {
 			fprintf(stderr, "Cannot create '%s': %s\n", TDRUNDIR,
 					strerror(errno));
