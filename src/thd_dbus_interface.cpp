@@ -402,13 +402,13 @@ gboolean thd_dbus_interface_get_zone_trip_at_index(PrefObject *obj,
 		return FALSE;
 
 	cthd_trip_point *trip = zone->get_trip_at_index(trip_index);
+	if (!trip)
+		return FALSE;
 
 	*temp = trip->get_trip_temp();
 	*trip_type = trip->get_trip_type();
 	*sensor_id = trip->get_sensor_id();
 	*cdev_size = trip->get_cdev_count();
-	if (*cdev_size <= 0)
-		return TRUE;
 
 	GArray *garray;
 
