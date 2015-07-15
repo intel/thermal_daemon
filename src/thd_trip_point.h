@@ -162,7 +162,7 @@ public:
 				index, _type_str.c_str(), temp, hyst, zone_id, sensor_id,
 				(unsigned long) cdevs.size());
 		for (unsigned int i = 0; i < cdevs.size(); ++i) {
-			thd_log_info("cdev[%i] %s\n", i,
+			thd_log_info("cdev[%u] %s\n", i,
 					cdevs[i].cdev->get_cdev_type().c_str());
 		}
 	}
