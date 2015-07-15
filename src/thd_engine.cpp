@@ -778,6 +778,14 @@ cthd_sensor* cthd_engine::get_sensor(int index) {
 		return NULL;
 }
 
+int cthd_engine::get_sensor_temperature(int index, unsigned int *temperature) {
+	if (index >= 0 && index < (int) sensors.size()) {
+		*temperature = sensors[index]->read_temperature();
+		return THD_SUCCESS;
+	} else
+		return THD_ERROR;
+}
+
 cthd_zone* cthd_engine::get_zone(int index) {
 	if (index == -1)
 		return NULL;

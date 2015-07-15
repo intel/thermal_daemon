@@ -87,6 +87,9 @@ gboolean thd_dbus_interface_update_cooling_device(PrefObject *obj,
 gboolean thd_dbus_interface_get_sensor_count(PrefObject *obj, int *status,
 		GError **error);
 
+gboolean thd_dbus_interface_get_sensor_temperature(PrefObject *obj, int index,
+		unsigned int *temperature, GError **error);
+
 gboolean thd_dbus_interface_get_zone_count(PrefObject *obj, int *status,
 		GError **error);
 
@@ -184,8 +187,12 @@ gboolean thd_dbus_interface_get_current_preference(PrefObject *obj,
 	return TRUE;
 }
 
+void (*thd_dbus_exit_callback)(int);
 gboolean thd_dbus_interface_terminate(PrefObject *obj, GError **error) {
 	thd_engine->thd_engine_terminate();
+	if (thd_dbus_exit_callback)
+		thd_dbus_exit_callback(0);
+
 	return TRUE;
 }
 
@@ -395,13 +402,13 @@ gboolean thd_dbus_interface_get_zone_trip_at_index(PrefObject *obj,
 		return FALSE;
 
 	cthd_trip_point *trip = zone->get_trip_at_index(trip_index);
+	if (!trip)
+		return FALSE;
 
 	*temp = trip->get_trip_temp();
 	*trip_type = trip->get_trip_type();
 	*sensor_id = trip->get_sensor_id();
 	*cdev_size = trip->get_cdev_count();
-	if (*cdev_size <= 0)
-		return TRUE;
 
 	GArray *garray;
 
@@ -545,13 +552,27 @@ gboolean thd_dbus_interface_update_cooling_device(PrefObject *obj,
 
 }
 
+gboolean thd_dbus_interface_get_sensor_temperature(PrefObject *obj, int index,
+		unsigned int *temperature, GError **error) {
+	int ret;
+
+	ret = thd_engine->get_sensor_temperature(index, temperature);
+
+	if (ret == THD_SUCCESS)
+		return TRUE;
+	else
+		return FALSE;
+}
+
 // Setup dbus server
-int thd_dbus_server_init() {
+int thd_dbus_server_init(void (*exit_handler)(int)) {
 	DBusGConnection *bus;
 	DBusGProxy *bus_proxy;
 	GError *error = NULL;
 	guint result;
 	PrefObject *value_obj;
+
+	thd_dbus_exit_callback = exit_handler;
 
 	bus = dbus_g_bus_get(DBUS_BUS_SYSTEM, &error);
 	if (error != NULL) {

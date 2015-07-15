@@ -50,7 +50,7 @@
 #define TD_DIST_VERSION PACKAGE_VERSION
 #endif
 
-extern int thd_dbus_server_init();
+extern int thd_dbus_server_init(void (*exit_handler)(int));
 
 // Default log level
 static int thd_log_level = G_LOG_LEVEL_ERROR | G_LOG_LEVEL_CRITICAL
@@ -263,7 +263,7 @@ int main(int argc, char *argv[]) {
 	}
 
 	if (dbus_enable)
-		thd_dbus_server_init();
+		thd_dbus_server_init(sig_int_handler);
 
 	if (!no_daemon) {
 		printf("Ready to serve requests: Daemonizing.. %d\n", thd_daemonize);

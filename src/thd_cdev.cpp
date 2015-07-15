@@ -132,7 +132,7 @@ int cthd_cdev::thd_cdev_set_state(int set_point, int target_temp,
 			}
 		}
 		if (zone_mask != 0 || trip_mask != 0) {
-			thd_log_info(
+			thd_log_debug(
 					"skip to reduce current state as this is controlled by two zone or trip actions and one is still on %lx:%lx\n",
 					zone_mask, trip_mask);
 			return THD_SUCCESS;

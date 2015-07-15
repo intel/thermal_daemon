@@ -55,6 +55,11 @@
       <arg type="i" name="temp" direction="out"/>
     </method>
 
+    <method name="GetSensorTemperature">
+      <arg type="u" name="index" direction="in"/>
+      <arg type="u" name="temperature" direction="out"/>
+    </method>
+
     <method name="GetZoneCount">
       <arg type="u" name="count" direction="out"/>
     </method>
