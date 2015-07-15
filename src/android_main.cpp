@@ -163,7 +163,6 @@ int main(int argc, char *argv[]) {
 	if (argc > 1) {
 		while ((c = getopt_long(argc, argv, short_options, long_options,
 				&option_index)) != -1) {
-			int this_option_optind = optind ? optind : 1;
 			switch (c) {
 			case 'h':
 				print_usage(stdout, 0);
