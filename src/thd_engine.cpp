@@ -657,7 +657,7 @@ void cthd_engine::thd_read_default_thermal_sensors() {
 	if (sensors.size())
 		current_sensor_index = max_index + 1;
 
-	thd_log_info("thd_read_default_thermal_sensors loaded %lu sensors \n",
+	thd_log_info("thd_read_default_thermal_sensors loaded %zu sensors \n",
 			sensors.size());
 }
 
@@ -691,7 +691,7 @@ void cthd_engine::thd_read_default_thermal_zones() {
 	}
 	if (zones.size())
 		current_zone_index = max_index + 1;
-	thd_log_info("thd_read_default_thermal_zones loaded %lu zones \n",
+	thd_log_info("thd_read_default_thermal_zones loaded %zu zones \n",
 			zones.size());
 }
 
@@ -725,7 +725,7 @@ void cthd_engine::thd_read_default_cooling_devices() {
 	if (cdevs.size())
 		current_cdev_index = max_index + 1;
 
-	thd_log_info("thd_read_default_cooling devices loaded %lu cdevs \n",
+	thd_log_info("thd_read_default_cooling devices loaded %zu cdevs \n",
 			cdevs.size());
 }
 
