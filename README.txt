@@ -73,6 +73,10 @@ Use "sudo stop thermald" to stop
 
 Releases
 
+Release 1.41
+- One new dbus message to get temp
+- Fixes to prevent warnings
+
 Release 1.4
 - Extension of DBUS I/F for developing Monitoring and Control GUI
 - Added exampled to thermal-conf man page
