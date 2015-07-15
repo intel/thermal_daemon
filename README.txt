@@ -73,7 +73,7 @@ Use "sudo stop thermald" to stop
 
 Releases
 
-Release 1.41
+Release 1.4.3
 - One new dbus message to get temp
 - Fixes to prevent warnings
 
