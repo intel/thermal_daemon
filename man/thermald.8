@@ -36,7 +36,6 @@ temperature and applies compensation using available cooling methods.
 
 By default, it monitors CPU temperature using available CPU digital temperature sensors and maintains CPU temperature under control, before HW takes aggressive correction action.
 
-.TP
 Thermal daemon looks for thermal sensors and thermal cooling drivers in the Linux thermal sysfs (/sys/class/thermal) and builds a
 list of sensors and cooling drivers. Each of the thermal sensors can optionally be binded to a cooling drivers by the in kernel
 drivers. In this case the Linux kernel thermal core can directly take actions based on the temperature trip points, for each sensor
@@ -51,8 +50,6 @@ When there is a sensor, which has no associate cooling device, via configuration
 this sensor is tested for relationship with CPU load dynamically up to maximum 3 times. If there is no relationship, then
 it is added to a black list of unbinded sensors and not tried again.
 
-
-.TP
 Optionally thermal daemon can act as an exclusive thermal controller by using thermal sysfs and acting as a user space governor.
 In this case kernel thermal core is not active and decision is taken by thermal daemon only.
 
