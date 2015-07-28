@@ -176,7 +176,7 @@ Version 0.3
 - Added P states t states turbo states as the cooling methods
 - No longer depend on any thermal sysfs, zone cooling device by default
 - Uses DTS core temperature and p/turbo/t states to cool system
-- By default only will use DTS core temerature and p/turbo/t states only
+- By default only will use DTS core temperature and p/turbo/t states only
 - All the previous controls based on the zones/cdevs and XML configuration is only done, when activated via command line
 - The set points are calculated and stored in a config file when it hits thermal threshold and adjusted based
 on slope and angular increments to dynamically adjust set point

@@ -170,7 +170,7 @@ int main(int argc, char *argv[]) {
 					"Enable Dbus."), NULL }, { "exclusive-control", 0, 0,
 			G_OPTION_ARG_NONE, &exclusive_control, N_(
 					"Take over thermal control from kernel thermal driver."),
-			NULL }, { "ingore-cpuid-check", 0, 0, G_OPTION_ARG_NONE,
+			NULL }, { "ignore-cpuid-check", 0, 0, G_OPTION_ARG_NONE,
 			&ignore_cpuid_check, N_("Ignore CPU ID check."), NULL },
 
 	{ NULL } };
