@@ -185,7 +185,7 @@ int cthd_engine_default::read_thermal_sensors() {
 	}
 	if (index == current_sensor_index) {
 		// No coretemp sysfs exist, try hwmon
-		thd_log_warn("Thermal DTS: No coretemp sysfs found!!\n");
+		thd_log_warn("Thermal DTS: No coretemp sysfs found\n");
 	}
 	current_sensor_index = index;
 	// Add from XML sensor config
