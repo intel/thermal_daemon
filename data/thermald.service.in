@@ -3,6 +3,7 @@ Description=Thermal Daemon Service
 
 [Service]
 Type=dbus
+SuccessExitStatus=1
 BusName=org.freedesktop.thermald
 ExecStart=@sbindir@/thermald --no-daemon --dbus-enable
 
