@@ -422,7 +422,7 @@ void cthd_acpi_rel::parse_target_devices() {
 				object_finder(art[i].acpi_art_entry.target_device));
 
 		if (find_iter == rel_list.end()) {
-			rel_obj.art_objects.push_back(&trt[i]);
+			rel_obj.art_objects.push_back(&art[i]);
 			rel_list.push_back(rel_obj);
 		} else
 			find_iter->art_objects.push_back(&art[i]);
