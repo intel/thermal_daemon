@@ -249,7 +249,7 @@ int main(int argc, char *argv[]) {
 	g_log_set_handler(NULL, G_LOG_LEVEL_MASK, thd_logger, NULL);
 
 	if (check_thermald_running()) {
-		thd_log_fatal(
+		thd_log_error(
 				"An instance of thermald is already running, exiting ...\n");
 		exit(EXIT_FAILURE);
 	}
