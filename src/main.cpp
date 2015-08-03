@@ -52,6 +52,10 @@
 
 extern int thd_dbus_server_init(void (*exit_handler)(int));
 
+// Lock file
+static int lock_file_handle = -1;
+static const char *lock_file = TDRUNDIR "/thermald.pid";
+
 // Default log level
 static int thd_log_level = G_LOG_LEVEL_ERROR | G_LOG_LEVEL_CRITICAL
 		| G_LOG_LEVEL_WARNING | G_LOG_LEVEL_MESSAGE | G_LOG_LEVEL_INFO;
@@ -105,26 +109,28 @@ void thd_logger(const gchar *log_domain, GLogLevelFlags log_level,
 		g_print("%s", message);
 }
 
-bool check_thermald_running() {
-	const char *lock_file = TDRUNDIR
-	"/thermald.pid";
-	int pid_file_handle;
+void clean_up_lockfile(void) {
+	if (lock_file_handle != -1) {
+		(void)close(lock_file_handle);
+		(void)unlink(lock_file);
+	}
+}
 
-	pid_file_handle = open(lock_file, O_RDWR | O_CREAT, 0600);
-	if (pid_file_handle == -1) {
+bool check_thermald_running() {
+
+	lock_file_handle = open(lock_file, O_RDWR | O_CREAT, 0600);
+	if (lock_file_handle == -1) {
 		/* Couldn't open lock file */
 		thd_log_error("Could not open PID lock file %s, exiting\n", lock_file);
 		return false;
 	}
 	/* Try to lock file */
-	if (lockf(pid_file_handle, F_TLOCK, 0) == -1) {
+	if (lockf(lock_file_handle, F_TLOCK, 0) == -1) {
 		/* Couldn't get lock on lock file */
 		thd_log_error("Couldn't get lock file %d\n", getpid());
-		close(pid_file_handle);
+		close(lock_file_handle);
 		return true;
 	}
-
-	close(pid_file_handle);
 
 	return false;
 }
@@ -136,6 +142,7 @@ void sig_int_handler(int signum) {
 	if (g_main_loop)
 		g_main_loop_quit(g_main_loop);
 	delete thd_engine;
+	clean_up_lockfile();
 	exit(EXIT_SUCCESS);
 }
 
@@ -258,6 +265,7 @@ int main(int argc, char *argv[]) {
 	// Create a main loop that will dispatch callbacks
 	g_main_loop = g_main_loop_new(NULL, FALSE);
 	if (g_main_loop == NULL) {
+		clean_up_lockfile();
 		thd_log_error("Couldn't create GMainLoop:\n");
 		return THD_FATAL_ERROR;
 	}
@@ -272,6 +280,7 @@ int main(int argc, char *argv[]) {
 				TD_DIST_VERSION);
 
 		if (daemon(0, 0) != 0) {
+			clean_up_lockfile();
 			thd_log_error("Failed to daemonize.\n");
 			return THD_FATAL_ERROR;
 		}
@@ -279,6 +288,7 @@ int main(int argc, char *argv[]) {
 
 	if (thd_engine_create_default_engine((bool)ignore_cpuid_check,
 			(bool)exclusive_control) != THD_SUCCESS) {
+		clean_up_lockfile();
 		closelog();
 		exit(EXIT_FAILURE);
 	}
@@ -289,5 +299,6 @@ int main(int argc, char *argv[]) {
 	thd_log_warn("Oops g main loop exit..\n");
 
 	fprintf(stdout, "Exiting ..\n");
+	clean_up_lockfile();
 	closelog();
 }
