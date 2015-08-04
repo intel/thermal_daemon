@@ -1,0 +1,43 @@
+/*
+ * Thermal Monitor displays current temperature readings on a graph
+ * Copyright (c) 2015, Intel Corporation.
+ *
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms and conditions of the GNU General Public License,
+ * version 3 or later, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+ * more details.
+*/
+
+Compatibility with thermald
+--------------------------------------------
+This tool requires thermald version "1.4.3" or later.
+
+Building the Thermal Monitor with Qt Creator
+--------------------------------------------
+
+The project uses Qt 5 for the graphical user interface portion of the thermal monitor.  A normal distribution of Qt includes Qt Creator, the IDE used for editing the forms and code.  Using Creator Qt is the easiest way to build the project.
+
+Open Qt Creator, click File->Open File or Project, browse the project files to open ThermalMonitor.pro.  The project files are displayed on the left side under Headers, Sources, and Forms.  Build the project by clicking Build->Build Project (or Ctrl-b).  A solid green status bar in the lower right corner indicates a successful build.
+
+
+Running the project
+-------------------
+
+Note: you cannot run the project from within Qt Creator due to the root access necessary to interface with the thermal daemon (thermald).  Instead, locate the Qt build directory, which should be in ../build-ThermalMonitor-BUILD_TYPE, where BUILD_TYPE describes the build, such as Desktop_Qt_5_4_2_GCC_64bit-Debug.  Run the project as root from the build directory:
+
+sudo ./ThermalMonitor
+
+
+Building the Thermal Monitor with make
+--------------------------------------
+
+Normally Qt Creator handles the compilation of the project.  If you wish to use the command line to compile, then you first have to create a makefile.  Qmake will create the makefile for you based on the project file.  Qmake resided in /opt/Qt/5.4/gcc_64/bin on our system.  Invoke with:
+
+qmake ThermalMonitor.pro
+
+After the makefile has been created, use 'make' to build the project.  The object files and executable will be in the same directory as the source code, a different location than when using Qt Creator.  Use 'make clean' to clean up everything except the executable.
+

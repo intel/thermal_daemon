@@ -1,0 +1,32 @@
+#-------------------------------------------------
+#
+# Project created by QtCreator 2015-05-13T11:28:27
+#
+#-------------------------------------------------
+
+QT       += core gui dbus
+
+greaterThan(QT_MAJOR_VERSION, 4): QT += widgets printsupport
+
+TARGET = ThermalMonitor
+TEMPLATE = app
+
+SOURCES += main.cpp\
+        mainwindow.cpp \
+    qcustomplot/qcustomplot.cpp \
+    thermaldinterface.cpp \
+    pollingdialog.cpp \
+    sensorsdialog.cpp \
+    logdialog.cpp
+
+HEADERS  += mainwindow.h \
+    qcustomplot/qcustomplot.h \
+    thermaldinterface.h \
+    pollingdialog.h \
+    sensorsdialog.h \
+    logdialog.h
+
+FORMS    += mainwindow.ui \
+    pollingdialog.ui \
+    sensorsdialog.ui \
+    logdialog.ui
