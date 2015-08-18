@@ -17,6 +17,9 @@
 
 #include <QMainWindow>
 #include <QVector>
+#include <QLabel>
+#include <QMessageBox>
+#include <QDesktopWidget>
 #include <string>
 #include <QVBoxLayout>
 #include "qcustomplot/qcustomplot.h"
