@@ -53,7 +53,7 @@ void cthd_sysfs_cdev_rapl::set_curr_state(int state, int arg) {
 		cdev_sysfs.write("enabled", "1");
 	}
 	state_str << new_state;
-	thd_log_info("set cdev state index %d state %d wr:%d\n", index, state,
+	thd_log_debug("set cdev state index %d state %d wr:%d\n", index, state,
 			new_state);
 	tc_state_dev << "constraint_" << constraint_index << "_power_limit_uw";
 	if (cdev_sysfs.write(tc_state_dev.str(), state_str.str()) < 0)
@@ -84,7 +84,7 @@ void cthd_sysfs_cdev_rapl::set_curr_state_raw(int state, int arg) {
 	if (cdev_sysfs.write(tc_state_dev.str(), state_str.str()) < 0)
 		curr_state = (state == 0) ? 0 : max_state;
 
-	thd_log_info("set cdev state raw index %d state %d wr:%d\n", index, state,
+	thd_log_debug("set cdev state raw index %d state %d wr:%d\n", index, state,
 			new_state);
 
 }
@@ -94,7 +94,7 @@ bool cthd_sysfs_cdev_rapl::calculate_phy_max() {
 		unsigned int curr_max_phy;
 		curr_max_phy = thd_engine->rapl_power_meter.rapl_action_get_power(
 				PACKAGE);
-		thd_log_info("curr_phy_max = %u \n", curr_max_phy);
+		thd_log_debug("curr_phy_max = %u \n", curr_max_phy);
 		if (curr_max_phy < rapl_min_default_step)
 			return false;
 		if (phy_max < curr_max_phy) {
@@ -102,7 +102,7 @@ bool cthd_sysfs_cdev_rapl::calculate_phy_max() {
 			set_inc_dec_value(phy_max * (float) rapl_power_dec_percent / 100);
 			max_state = phy_max;
 			max_state -= (float) max_state * rapl_low_limit_percent / 100;
-			thd_log_info("PHY_MAX %lu, step %d, max_state %d\n", phy_max,
+			thd_log_debug("PHY_MAX %lu, step %d, max_state %d\n", phy_max,
 					inc_dec_val, max_state);
 		}
 	}
@@ -259,7 +259,7 @@ bool cthd_sysfs_cdev_rapl::read_ppcc_power_limits() {
 	}
 
 	if (pl0_max_pwr && pl0_min_pwr && pl0_min_window && pl0_step_pwr) {
-		thd_log_info("ppcc limits max:%u min:%u  min_win:%u step:%u\n",
+		thd_log_debug("ppcc limits max:%u min:%u  min_win:%u step:%u\n",
 				pl0_max_pwr, pl0_min_pwr, pl0_min_window, pl0_step_pwr);
 		return true;
 	}
