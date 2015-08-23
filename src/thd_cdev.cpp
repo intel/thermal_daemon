@@ -96,7 +96,7 @@ int cthd_cdev::thd_cdev_exponential_controller(int set_point, int target_temp,
 		}
 	}
 
-	thd_log_info("Set : %d, %d, %d, %d, %d\n", set_point, temperature, index,
+	thd_log_debug("Set : %d, %d, %d, %d, %d\n", set_point, temperature, index,
 			get_curr_state(), max_state);
 
 	thd_log_debug("<<thd_cdev_set_state %d\n", state);
@@ -153,7 +153,7 @@ int cthd_cdev::thd_cdev_set_state(int set_point, int target_temp,
 		if (ret < get_min_state())
 			ret = get_min_state();
 		set_curr_state_raw(ret, zone_id);
-		thd_log_info("Set : %d, %d, %d, %d, %d\n", set_point, temperature,
+		thd_log_debug("Set : %d, %d, %d, %d, %d\n", set_point, temperature,
 				index, get_curr_state(), max_state);
 		ret = THD_SUCCESS;
 	} else {
