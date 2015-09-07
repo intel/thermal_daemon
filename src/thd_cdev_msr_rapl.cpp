@@ -28,18 +28,16 @@
 #include "thd_cdev_msr_rapl.h"
 
 void cthd_cdev_rapl_msr::set_curr_state(int state, int arg) {
-	int new_state;
-
 	if (!control_start && state == inc_dec_val) {
 		thd_log_debug("rapl state control begin\n");
 		rapl.store_pkg_power_limit();
 		control_start = true;
 	}
 	if (state < inc_dec_val) {
-		new_state = 0;
 		curr_state = 0;
 	} else {
-		new_state = phy_max - state;
+		int new_state = phy_max - state;
+
 		curr_state = state;
 		thd_log_debug("rapl state = %d new_state = %d\n", state, new_state);
 		rapl.set_pkg_power_limit(1, new_state); //thd_engine->def_poll_interval/1000 - 1, new_state);
