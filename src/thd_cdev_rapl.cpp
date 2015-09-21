@@ -37,7 +37,6 @@ void cthd_sysfs_cdev_rapl::set_curr_state(int state, int arg) {
 	int new_state;
 
 	if (state < inc_dec_val) {
-		new_state = 0;
 		curr_state = 0;
 		cdev_sysfs.write("enabled", "0");
 		new_state = phy_max;

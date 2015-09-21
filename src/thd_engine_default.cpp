@@ -629,7 +629,7 @@ int thd_engine_create_default_engine(bool ignore_cpuid_check,
 	// Initialize thermald objects
 	thd_engine->set_poll_interval(thd_poll_interval);
 	if (thd_engine->thd_engine_start(ignore_cpuid_check) != THD_SUCCESS) {
-		thd_log_error("THD engine start failed:\n");
+		thd_log_error("THD engine start failed\n");
 		return THD_ERROR;
 	}
 
