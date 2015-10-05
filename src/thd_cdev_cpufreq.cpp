@@ -129,7 +129,7 @@ int cthd_cdev_cpufreq::init() {
 
 		if (freq_int >= scaling_min_frequency
 				&& freq_int <= scaling_max_frequency) {
-			cpufreqs.push_back(freq_int);
+			add_frequency(freq_int);
 		}
 	}
 
@@ -140,6 +140,16 @@ int cthd_cdev_cpufreq::init() {
 	pstate_active_freq_index = 0;
 
 	return THD_SUCCESS;
+}
+
+void cthd_cdev_cpufreq::add_frequency(unsigned int freq_int) {
+	if (cpufreqs.empty() || cpufreqs.at(0) > (int) freq_int)
+		cpufreqs.push_back(freq_int);
+	else {
+		std::vector<int>::iterator it;
+		it = cpufreqs.begin();
+		cpufreqs.insert(it, freq_int);
+	}
 }
 
 void cthd_cdev_cpufreq::set_curr_state(int state, int arg) {
