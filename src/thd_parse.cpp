@@ -721,6 +721,15 @@ bool cthd_parse::platform_matched() {
 			}
 		}
 	}
+	for (unsigned int i = 0; i < thermal_info_list.size(); ++i) {
+		if (!thermal_info_list[i].uuid.size())
+			continue;
+		if (!thermal_info_list[i].product_name.compare(0, 1, "*")) {
+			matched_thermal_info_index = i;
+			thd_log_info("Product Name matched \n");
+			return true;
+		}
+	}
 
 	return false;
 }
