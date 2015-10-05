@@ -70,9 +70,8 @@ char *cthd_parse::char_trim(char *str) {
 
 cthd_parse::cthd_parse() :
 		matched_thermal_info_index(-1), doc(NULL), root_element(NULL) {
-	std::string name_conf = TDCONFDIR;
 	std::string name_run = TDRUNDIR;
-	filename = name_conf + "/" + "thermal-conf.xml";
+	filename = name_run + "/" + "thermal-conf.xml";
 	filename_auto = name_run + "/" + "thermal-conf.xml.auto";
 }
 
