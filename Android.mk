@@ -37,8 +37,6 @@ thermald_src_files := \
 		$(thermald_src_path)/thd_cpu_default_binding.cpp \
 		$(thermald_src_path)/thd_cdev_backlight.cpp
 
-include external/stlport/libstlport.mk
-
 LOCAL_C_INCLUDES += $(LOCAL_PATH) $(thermald_src_path) \
 			external/icu4c/common \
 			external/libxml2/include \
@@ -47,7 +45,7 @@ LOCAL_C_INCLUDES += $(LOCAL_PATH) $(thermald_src_path) \
 LOCAL_MODULE_TAGS := optional
 LOCAL_CFLAGS := -fpermissive -DTDRUNDIR='"/data/thermal-daemon"' -DTDCONFDIR='"/system/etc/thermal-daemon"'
 LOCAL_STATIC_LIBRARIES := libxml2
-LOCAL_SHARED_LIBRARIES := liblog libcutils libdl libstlport libicuuc libicui18n
+LOCAL_SHARED_LIBRARIES := liblog libcutils libdl libc++ libicuuc libicui18n libbinder libutils
 LOCAL_PRELINK_MODULE := false
 LOCAL_SRC_FILES := $(thermald_src_files)
 LOCAL_MODULE := thermal-daemon

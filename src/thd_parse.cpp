@@ -42,16 +42,6 @@ void cthd_parse::string_trim(std::string &str) {
 	}
 }
 
-#ifdef ANDROID
-// Very simple version just checking for 0x20 not other white space chars
-bool isspace(int c) {
-	if (c == ' ')
-		return true;
-	else
-		return false;
-}
-#endif
-
 char *cthd_parse::char_trim(char *str) {
 	int i;
 

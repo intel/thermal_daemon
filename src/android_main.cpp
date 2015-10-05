@@ -30,6 +30,7 @@
 #include "thd_engine.h"
 #include "thd_engine_default.h"
 #include "thd_parse.h"
+#include <sys/file.h>
 
 // getdtablesize() is removed from bionic/libc in LPDK*/
 // use POSIX alternative available. Otherwise fail
