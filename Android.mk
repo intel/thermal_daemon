@@ -35,7 +35,7 @@ thermald_src_files := \
 		$(thermald_src_path)/thd_trt_art_reader.cpp \
 		$(thermald_src_path)/thd_cdev_rapl_dram.cpp \
 		$(thermald_src_path)/thd_cpu_default_binding.cpp \
-		$(thermald_src_path)/src/thd_cdev_backlight.cpp
+		$(thermald_src_path)/thd_cdev_backlight.cpp
 
 include external/stlport/libstlport.mk
 
