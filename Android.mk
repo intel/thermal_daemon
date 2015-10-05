@@ -45,7 +45,7 @@ LOCAL_C_INCLUDES += $(LOCAL_PATH) $(thermald_src_path) \
 			system/core/include/
 
 LOCAL_MODULE_TAGS := optional
-LOCAL_CFLAGS := -fpermissive -DTDRUNDIR='"data/thermal-daemon"' -DTDCONFDIR='"system/etc/thermal-daemon"'
+LOCAL_CFLAGS := -fpermissive -DTDRUNDIR='"/data/thermal-daemon"' -DTDCONFDIR='"/system/etc/thermal-daemon"'
 LOCAL_STATIC_LIBRARIES := libxml2
 LOCAL_SHARED_LIBRARIES := liblog libcutils libdl libstlport libicuuc libicui18n
 LOCAL_PRELINK_MODULE := false
