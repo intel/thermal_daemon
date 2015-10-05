@@ -36,6 +36,8 @@
 #  ifdef _POSIX_OPEN_MAX
 #   define   getdtablesize()	(_POSIX_OPEN_MAX)
 # endif
+// for AID_* constatns
+#include <private/android_filesystem_config.h>
 
 // getdtablesize() is removed from bionic/libc in LPDK*/
 // use POSIX alternative available. Otherwise fail
@@ -161,6 +163,7 @@ int main(int argc, char *argv[]) {
 	bool no_daemon = false;
 	bool exclusive_control = false;
 	bool test_mode = false;
+	bool is_privileged_user = false;
 
 	const char* const short_options = "hvnp:de";
 	static struct option long_options[] = {
@@ -203,9 +206,11 @@ int main(int argc, char *argv[]) {
 			}
 		}
 	}
-	if (getuid() != 0 && !test_mode) {
-		fprintf(stderr, "You must be root to run thermal daemon!\n");
-		exit(EXIT_FAILURE);
+
+	is_privileged_user = (getuid() == 0) || (getuid() == AID_SYSTEM);
+	if (!is_privileged_user && !test_mode) {
+		thd_log_error("You do not have correct permissions to run thermal dameon!\n");
+		exit(1);
 	}
 
 	if (mkdir(TDRUNDIR, 0755) != 0) {

@@ -41,7 +41,8 @@ include external/stlport/libstlport.mk
 
 LOCAL_C_INCLUDES += $(LOCAL_PATH) $(thermald_src_path) \
 			external/icu4c/common \
-			external/libxml2/include
+			external/libxml2/include \
+			system/core/include/
 
 LOCAL_MODULE_TAGS := optional
 LOCAL_CFLAGS := -fpermissive -DTDRUNDIR='"data/thermal-daemon"' -DTDCONFDIR='"system/etc/thermal-daemon"'
