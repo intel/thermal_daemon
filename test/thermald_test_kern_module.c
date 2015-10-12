@@ -38,7 +38,7 @@ static struct thermald_sensor *sensors[SENSOR_COUNT];
 static struct thermald_cdev *cdevs[CDEV_COUNT];
 
 static int sys_get_curr_temp(struct thermal_zone_device *tzd,
-				unsigned long *temp)
+				int *temp)
 {
 	*temp = 10000;
 
@@ -46,7 +46,7 @@ static int sys_get_curr_temp(struct thermal_zone_device *tzd,
 }
 
 static int sys_get_trip_temp(struct thermal_zone_device *tzd,
-                             int trip, unsigned long *temp)
+                             int trip, int *temp)
 {
 	*temp = 40000;
 
