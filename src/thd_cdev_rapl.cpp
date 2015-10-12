@@ -159,7 +159,8 @@ int cthd_sysfs_cdev_rapl::update() {
 			return THD_ERROR;
 		}
 		if (cdev_sysfs.read(temp_str.str(), &phy_max) < 0) {
-			thd_log_info("powercap RAPL invalid max power limit range \n");
+			thd_log_info("%s:powercap RAPL invalid max power limit range \n",
+					domain_name.c_str());
 			thd_log_info("Calculate dynamically phy_max \n");
 			phy_max = 0;
 			thd_engine->rapl_power_meter.rapl_start_measure_power();
