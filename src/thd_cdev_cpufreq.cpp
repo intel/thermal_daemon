@@ -178,7 +178,7 @@ void cthd_cdev_cpufreq::set_curr_state(int state, int arg) {
 }
 
 int cthd_cdev_cpufreq::get_max_state() {
-	return cpufreqs.size();
+	return cpufreqs.size() - 1;
 }
 
 int cthd_cdev_cpufreq::update() {
