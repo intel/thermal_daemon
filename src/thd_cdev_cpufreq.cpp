@@ -89,8 +89,8 @@ int cthd_cdev_cpufreq::init() {
 	// Check scaling max frequency and min frequency
 	// Remove frequencies above and below this in the freq list
 	// The available list contains these frequencies even if they are not allowed
-	unsigned int scaling_min_frqeuency = 0;
-	unsigned int scaling_max_frqeuency = 0;
+	unsigned int scaling_min_frequency = 0;
+	unsigned int scaling_max_frequency = 0;
 	for (int i = cpu_start_index; i <= cpu_end_index; ++i) {
 		std::stringstream str;
 		std::string freq_str;
@@ -99,8 +99,8 @@ int cthd_cdev_cpufreq::init() {
 			cdev_sysfs.read(str.str(), freq_str);
 			unsigned int freq_int;
 			std::istringstream(freq_str) >> freq_int;
-			if (scaling_min_frqeuency == 0 || freq_int < scaling_min_frqeuency)
-				scaling_min_frqeuency = freq_int;
+			if (scaling_min_frequency == 0 || freq_int < scaling_min_frequency)
+				scaling_min_frequency = freq_int;
 		}
 	}
 
@@ -113,13 +113,13 @@ int cthd_cdev_cpufreq::init() {
 
 			unsigned int freq_int;
 			std::istringstream(freq_str) >> freq_int;
-			if (scaling_max_frqeuency == 0 || freq_int > scaling_max_frqeuency)
-				scaling_max_frqeuency = freq_int;
+			if (scaling_max_frequency == 0 || freq_int > scaling_max_frequency)
+				scaling_max_frequency = freq_int;
 		}
 	}
 
-	thd_log_debug("cpu freq max %u min %u\n", scaling_max_frqeuency,
-			scaling_min_frqeuency);
+	thd_log_debug("cpu freq max %u min %u\n", scaling_max_frequency,
+			scaling_min_frequency);
 
 	for (unsigned int i = 0; i < _cpufreqs.size(); ++i) {
 		thd_log_debug("cpu freq Add %d: %s\n", i, _cpufreqs[i].c_str());
@@ -127,8 +127,8 @@ int cthd_cdev_cpufreq::init() {
 		unsigned int freq_int;
 		std::istringstream(_cpufreqs[i]) >> freq_int;
 
-		if (freq_int >= scaling_min_frqeuency
-				&& freq_int <= scaling_max_frqeuency) {
+		if (freq_int >= scaling_min_frequency
+				&& freq_int <= scaling_max_frequency) {
 			cpufreqs.push_back(freq_int);
 		}
 	}
