@@ -1,0 +1,70 @@
+<?xml version="1.0"?>
+<!--
+This example explains how a single real cooling device can be divided
+into logical cooling devices with different minimum and maximum states.
+In this case three trips are associated with three logical cooling
+devices with same path but different minimum and maximum.
+-->
+       <ThermalConfiguration>
+		<Platform>
+                 <Name>THD_TEST_0</Name>
+                 <ProductName>*</ProductName>
+                 <Preference>QUIET</Preference>
+                 <ThermalZones>
+                      <ThermalZone>
+                           <Type>thd_test_ex_0</Type>
+                           <TripPoints>
+                                     <TripPoint>
+                                          <SensorType>thd_test_0</SensorType>
+                                          <Temperature>40000</Temperature>
+                                          <type>passive</type>
+                                     	<CoolingDevice>
+                                          <Type>thd_cdev_0_cap_3</Type>
+                                     	</CoolingDevice>
+                                     </TripPoint>
+                                     <TripPoint>
+                                          <SensorType>thd_test_0</SensorType>
+                                          <Temperature>50000</Temperature>
+                                          <type>passive</type>
+                                     	<CoolingDevice>
+                                          <Type>thd_cdev_0_cap_6</Type>
+                                     	</CoolingDevice>
+                                     </TripPoint>
+                                     <TripPoint>
+                                          <SensorType>thd_test_0</SensorType>
+                                          <Temperature>60000</Temperature>
+                                          <type>passive</type>
+                                     	<CoolingDevice>
+                                          <Type>thd_cdev_0_cap_9</Type>
+                                     	</CoolingDevice>
+                                     </TripPoint>
+
+                           </TripPoints>
+                      </ThermalZone>
+                 </ThermalZones>
+		<CoolingDevices>
+			<CoolingDevice>
+				<Path>/sys/class/thermal/cooling_device7/cur_state</Path>
+				<Type>thd_cdev_0_cap_3</Type>
+				<MinState>0</MinState>
+				<IncDecStep>1</IncDecStep>
+				<MaxState>3</MaxState>
+			</CoolingDevice>
+			<CoolingDevice>
+				<Path>/sys/class/thermal/cooling_device7/cur_state</Path>
+				<Type>thd_cdev_0_cap_6</Type>
+				<MinState>4</MinState>
+				<IncDecStep>1</IncDecStep>
+				<MaxState>6</MaxState>
+			</CoolingDevice>
+			<CoolingDevice>
+				<Path>/sys/class/thermal/cooling_device7/cur_state</Path>
+				<Type>thd_cdev_0_cap_9</Type>
+				<MinState>9</MinState>
+				<IncDecStep>1</IncDecStep>
+				<MaxState>10</MaxState>
+			</CoolingDevice>
+		</CoolingDevices>
+            </Platform>
+       </ThermalConfiguration>
+
