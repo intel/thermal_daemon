@@ -141,13 +141,21 @@ bool cthd_trip_point::thd_trip_point_check(int id, unsigned int read_temp,
 			}
 			thd_log_debug("cdev at index %d:%s\n", cdev->thd_cdev_get_index(),
 					cdev->get_cdev_type().c_str());
-			if (cdev->in_max_state()) {
+			/*
+			 * When the cdev is already in max state, we skip this cdev.
+			 * Also when the target state if any for the current trip is greater
+			 * or equal than the current state of the cdev, then also skip.
+			 */
+			if (cdev->in_max_state()
+					|| (cdevs[i].target_state != TRIP_PT_INVALID_TARGET_STATE
+							&& cdev->cmp_current_state(cdevs[i].target_state)
+									<= 0)) {
 				thd_log_debug("Need to switch to next cdev \n");
 				// No scope of control with this cdev
 				continue;
 			}
 			ret = cdev->thd_cdev_set_state(temp, temp, read_temp, 1, zone_id,
-					index);
+					index, cdevs[i].target_state);
 			if (control_type == SEQUENTIAL && ret == THD_SUCCESS) {
 				// Only one cdev activation
 				break;
@@ -166,7 +174,8 @@ bool cthd_trip_point::thd_trip_point_check(int id, unsigned int read_temp,
 				// No scope of control with this cdev
 				continue;
 			}
-			cdev->thd_cdev_set_state(temp, temp, read_temp, 0, zone_id, index);
+			cdev->thd_cdev_set_state(temp, temp, read_temp, 0, zone_id, index,
+					TRIP_PT_INVALID_TARGET_STATE);
 			if (control_type == SEQUENTIAL) {
 				// Only one cdev activation
 				break;
@@ -178,12 +187,13 @@ bool cthd_trip_point::thd_trip_point_check(int id, unsigned int read_temp,
 }
 
 void cthd_trip_point::thd_trip_point_add_cdev(cthd_cdev &cdev, int influence,
-		int sampling_period) {
+		int sampling_period, int target_state) {
 	trip_pt_cdev_t thd_cdev;
 	thd_cdev.cdev = &cdev;
 	thd_cdev.influence = influence;
 	thd_cdev.sampling_priod = sampling_period;
 	thd_cdev.last_op_time = 0;
+	thd_cdev.target_state = target_state;
 	trip_cdev_add(thd_cdev);
 }
 

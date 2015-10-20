@@ -153,7 +153,8 @@ public:
 	int read_user_set_psv_temp();
 
 	int bind_cooling_device(trip_point_type_t type, unsigned int trip_temp,
-			cthd_cdev *cdev, int influence, int sampling_period = 0);
+			cthd_cdev *cdev, int influence, int sampling_period = 0,
+			int target_state = TRIP_PT_INVALID_TARGET_STATE);
 
 	int get_sensor_count() {
 		return sensors.size();

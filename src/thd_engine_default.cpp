@@ -361,7 +361,8 @@ int cthd_engine_default::read_thermal_zones() {
 							if (cdev) {
 								trip_pt.thd_trip_point_add_cdev(*cdev,
 										trip_pt_config.cdev_trips[j].influence,
-										trip_pt_config.cdev_trips[j].sampling_period);
+										trip_pt_config.cdev_trips[j].sampling_period,
+										trip_pt_config.cdev_trips[j].target_state);
 								zone->zone_cdev_set_binded();
 								activate = true;
 							}
@@ -385,7 +386,8 @@ int cthd_engine_default::read_thermal_zones() {
 								if (zone->bind_cooling_device(
 										trip_pt_config.trip_pt_type, 0, cdev,
 										trip_pt_config.cdev_trips[j].influence,
-										trip_pt_config.cdev_trips[j].sampling_period) == THD_SUCCESS) {
+										trip_pt_config.cdev_trips[j].sampling_period,
+										trip_pt_config.cdev_trips[j].target_state) == THD_SUCCESS) {
 									thd_log_debug(
 											"bind %s to trip to sensor %s\n",
 											cdev->get_cdev_type().c_str(),

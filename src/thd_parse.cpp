@@ -46,9 +46,9 @@ void cthd_parse::string_trim(std::string &str) {
 // Very simple version just checking for 0x20 not other white space chars
 bool isspace(int c) {
 	if (c == ' ')
-	return true;
+		return true;
 	else
-	return false;
+		return false;
 }
 #endif
 
@@ -126,6 +126,9 @@ int cthd_parse::parse_new_trip_cdev(xmlNode * a_node, xmlDoc *doc,
 			} else if (!strcasecmp((const char*) cur_node->name,
 					"SamplingPeriod")) {
 				trip_cdev->sampling_period = atoi(tmp_value);
+			} else if (!strcasecmp((const char*) cur_node->name,
+					"TargetState")) {
+				trip_cdev->target_state = atoi(tmp_value);
 			}
 			if (tmp_value)
 				xmlFree(tmp_value);
@@ -157,6 +160,7 @@ int cthd_parse::parse_new_trip_point(xmlNode * a_node, xmlDoc *doc,
 					"CoolingDevice")) {
 				trip_cdev.influence = 0;
 				trip_cdev.sampling_period = 0;
+				trip_cdev.target_state = TRIP_PT_INVALID_TARGET_STATE;
 				trip_cdev.type.clear();
 				parse_new_trip_cdev(cur_node->children, doc, &trip_cdev);
 				trip_pt->cdev_trips.push_back(trip_cdev);
@@ -635,6 +639,11 @@ void cthd_parse::dump_thermal_conf() {
 							thermal_info_list[i].zones[j].trip_pts[k].cdev_trips[l].influence);
 					thd_log_info("\t\t\t  SamplingPeriod %d \n",
 							thermal_info_list[i].zones[j].trip_pts[k].cdev_trips[l].sampling_period);
+					if (thermal_info_list[i].zones[j].trip_pts[k].cdev_trips[l].target_state
+							!= TRIP_PT_INVALID_TARGET_STATE)
+						thd_log_info("\t\t\t  TargetState %d \n",
+								thermal_info_list[i].zones[j].trip_pts[k].cdev_trips[l].target_state);
+
 				}
 			}
 		}
