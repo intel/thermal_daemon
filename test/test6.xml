@@ -1,0 +1,53 @@
+<?xml version="1.0"?>
+<!--
+This test configuration tests how target state can be set. Here we also
+test if multiple target state for multiple trips to the same cooling
+device. Here two trips have target state the last trip doesn't have
+any target state and will go upto max. Make sure that system behaves
+any temperature chage"
+- 40 to 50 to 60
+- Directly to 60
+- Wild wings between 10 to 60C
+-->
+       <ThermalConfiguration>
+		<Platform>
+                 <Name>THD_TEST_0</Name>
+                 <ProductName>*</ProductName>
+                 <Preference>QUIET</Preference>
+                 <ThermalZones>
+                      <ThermalZone>
+                           <Type>thd_test_ex_0</Type>
+                           <TripPoints>
+                                     <TripPoint>
+                                          <SensorType>thd_test_0</SensorType>
+                                          <Temperature>40000</Temperature>
+                                          <type>passive</type>
+                                     	<CoolingDevice>
+                                          <Type>thd_cdev_0</Type>
+					  <TargetState> 3 </TargetState>
+                                     	</CoolingDevice>
+                                     </TripPoint>
+                                     <TripPoint>
+                                          <SensorType>thd_test_0</SensorType>
+                                          <Temperature>50000</Temperature>
+                                          <type>passive</type>
+                                     	<CoolingDevice>
+                                          <Type>thd_cdev_0</Type>
+					  <TargetState> 6 </TargetState>
+                                     	</CoolingDevice>
+                                     </TripPoint>
+                                     <TripPoint>
+                                          <SensorType>thd_test_0</SensorType>
+                                          <Temperature>60000</Temperature>
+                                          <type>passive</type>
+                                     	<CoolingDevice>
+                                          <Type>thd_cdev_0</Type>
+                                     	</CoolingDevice>
+                                     </TripPoint>
+
+                           </TripPoints>
+                      </ThermalZone>
+                 </ThermalZones>
+            </Platform>
+       </ThermalConfiguration>
+
