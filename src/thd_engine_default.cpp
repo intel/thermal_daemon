@@ -69,7 +69,7 @@ cthd_engine_default::~cthd_engine_default() {
 int cthd_engine_default::parser_init() {
 	if (parser_init_done)
 		return THD_SUCCESS;
-	if (parser.parser_init() == THD_SUCCESS) {
+	if (parser.parser_init(get_config_file()) == THD_SUCCESS) {
 		if (parser.start_parse() == THD_SUCCESS) {
 			parser.dump_thermal_conf();
 			parser_init_done = true;
@@ -621,13 +621,16 @@ int cthd_engine_default::read_cooling_devices() {
 cthd_engine *thd_engine;
 
 int thd_engine_create_default_engine(bool ignore_cpuid_check,
-		bool exclusive_control) {
+		bool exclusive_control, const char *conf_file) {
 	thd_engine = new cthd_engine_default();
 	if (exclusive_control)
 		thd_engine->set_control_mode(EXCLUSIVE);
 
 	// Initialize thermald objects
 	thd_engine->set_poll_interval(thd_poll_interval);
+	if (conf_file)
+		thd_engine->set_config_file(conf_file);
+
 	if (thd_engine->thd_engine_start(ignore_cpuid_check) != THD_SUCCESS) {
 		thd_log_error("THD engine start failed\n");
 		return THD_ERROR;

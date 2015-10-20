@@ -50,6 +50,5 @@ public:
 };
 
 int thd_engine_create_default_engine(bool ignore_cpuid_check,
-		bool exclusive_control);
-
+		bool exclusive_control, const char *config_file);
 #endif /* THD_ENGINE_DEFAULT_H_ */

@@ -100,6 +100,7 @@ private:
 	int poll_interval_sec;
 	cthd_preference thd_pref;
 	unsigned int poll_sensor_mask;
+	std::string config_file;
 
 	pthread_t thd_engine;
 	pthread_attr_t thd_attr;
@@ -207,6 +208,12 @@ public:
 	}
 	int get_preference() {
 		return preference;
+	}
+	void set_config_file(std::string conf_file) {
+		config_file = conf_file;
+	}
+	std::string get_config_file() {
+		return config_file;
 	}
 	cthd_zone *search_zone(std::string name);
 	cthd_cdev *search_cdev(std::string name);

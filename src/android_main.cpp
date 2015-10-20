@@ -213,8 +213,8 @@ int main(int argc, char *argv[]) {
 			"Linux Thermal Daemon is starting mode %d : poll_interval %d :ex_control %d\n",
 			no_daemon, thd_poll_interval, exclusive_control);
 
-	if (thd_engine_create_default_engine(false,
-			exclusive_control) != THD_SUCCESS) {
+	if (thd_engine_create_default_engine(false, exclusive_control,
+			NULL) != THD_SUCCESS) {
 		exit(EXIT_FAILURE);
 	}
 

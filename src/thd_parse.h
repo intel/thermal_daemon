@@ -162,7 +162,7 @@ private:
 
 public:
 	cthd_parse();
-	int parser_init();
+	int parser_init(std::string config_file);
 	void parser_deinit();
 	int start_parse();
 	void dump_thermal_conf();

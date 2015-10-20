@@ -111,8 +111,8 @@ void thd_logger(const gchar *log_domain, GLogLevelFlags log_level,
 
 void clean_up_lockfile(void) {
 	if (lock_file_handle != -1) {
-		(void)close(lock_file_handle);
-		(void)unlink(lock_file);
+		(void) close(lock_file_handle);
+		(void) unlink(lock_file);
 	}
 }
 
@@ -153,6 +153,7 @@ int main(int argc, char *argv[]) {
 	gboolean log_debug = FALSE;
 	gboolean no_daemon = FALSE;
 	gboolean test_mode = FALSE;
+	gchar *conf_file = NULL;
 	gint poll_interval = -1;
 	gboolean success;
 	GOptionContext *opt_ctx;
@@ -178,9 +179,9 @@ int main(int argc, char *argv[]) {
 			G_OPTION_ARG_NONE, &exclusive_control, N_(
 					"Take over thermal control from kernel thermal driver."),
 			NULL }, { "ignore-cpuid-check", 0, 0, G_OPTION_ARG_NONE,
-			&ignore_cpuid_check, N_("Ignore CPU ID check."), NULL },
-
-	{ NULL } };
+			&ignore_cpuid_check, N_("Ignore CPU ID check."), NULL }, {
+			"config-file", 0, 0, G_OPTION_ARG_STRING, &conf_file, N_(
+					"configuration file"), NULL }, { NULL } };
 
 	if (!g_module_supported()) {
 		fprintf(stderr, "GModules are not supported on your platform!\n");
@@ -286,8 +287,8 @@ int main(int argc, char *argv[]) {
 		}
 	}
 
-	if (thd_engine_create_default_engine((bool)ignore_cpuid_check,
-			(bool)exclusive_control) != THD_SUCCESS) {
+	if (thd_engine_create_default_engine((bool) ignore_cpuid_check,
+			(bool) exclusive_control, conf_file) != THD_SUCCESS) {
 		clean_up_lockfile();
 		closelog();
 		exit(EXIT_FAILURE);

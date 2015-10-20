@@ -46,9 +46,9 @@ void cthd_parse::string_trim(std::string &str) {
 // Very simple version just checking for 0x20 not other white space chars
 bool isspace(int c) {
 	if (c == ' ')
-		return true;
+	return true;
 	else
-		return false;
+	return false;
 }
 #endif
 
@@ -76,19 +76,26 @@ cthd_parse::cthd_parse() :
 	filename_auto = name_run + "/" + "thermal-conf.xml.auto";
 }
 
-int cthd_parse::parser_init() {
+int cthd_parse::parser_init(std::string config_file) {
 	cthd_acpi_rel rel;
+	const char *xml_config_file;
 	int ret;
 
-	ret = rel.generate_conf(filename_auto);
-	if (!ret) {
-		thd_log_warn("Using generated %s\n", filename_auto.c_str());
-		doc = xmlReadFile(filename_auto.c_str(), NULL, 0);
+	if (config_file.empty()) {
+		ret = rel.generate_conf(filename_auto);
+		if (!ret) {
+			thd_log_warn("Using generated %s\n", filename_auto.c_str());
+			xml_config_file = filename_auto.c_str();
+		} else {
+			xml_config_file = filename.c_str();
+		}
 	} else {
-		doc = xmlReadFile(filename.c_str(), NULL, 0);
+		xml_config_file = config_file.c_str();
 	}
+
+	doc = xmlReadFile(xml_config_file, NULL, 0);
 	if (doc == NULL) {
-		thd_log_warn("error: could not parse file %s\n", filename.c_str());
+		thd_log_warn("error: could not parse file %s\n", xml_config_file);
 		return THD_ERROR;
 	}
 	root_element = xmlDocGetRootElement(doc);
