@@ -446,9 +446,9 @@ int cthd_engine_default::read_thermal_zones() {
 		thd_log_info("No Thermal Zones found \n");
 		return THD_FATAL_ERROR;
 	}
-
+#ifdef AUTO_DETECT_RELATIONSHIP
 	def_binding.do_default_binding(cdevs);
-
+#endif
 	for (unsigned int i = 0; i < zones.size(); ++i) {
 		zones[i]->zone_dump();
 	}
