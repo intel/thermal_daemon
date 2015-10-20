@@ -58,7 +58,7 @@ static const char *lock_file = TDRUNDIR "/thermald.pid";
 
 // Default log level
 static int thd_log_level = G_LOG_LEVEL_ERROR | G_LOG_LEVEL_CRITICAL
-		| G_LOG_LEVEL_WARNING | G_LOG_LEVEL_MESSAGE | G_LOG_LEVEL_INFO;
+		| G_LOG_LEVEL_WARNING;
 
 // Daemonize or not
 static gboolean thd_daemonize;
