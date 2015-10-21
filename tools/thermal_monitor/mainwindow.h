@@ -17,9 +17,6 @@
 
 #include <QMainWindow>
 #include <QVector>
-#include <QLabel>
-#include <QMessageBox>
-#include <QDesktopWidget>
 #include <string>
 #include <QVBoxLayout>
 #include "qcustomplot/qcustomplot.h"
@@ -28,6 +25,13 @@
 namespace Ui {
 class MainWindow;
 }
+
+typedef struct {
+    QString display_name;
+    QString sensor_name;
+    int index;
+    int zone;
+} sensorZoneInformationType;
 
 class MainWindow : public QMainWindow
 {
@@ -38,7 +42,6 @@ public:
     ~MainWindow();
 
     void displayTemperature(QCustomPlot *customPlot);
-    int addNewTemperatureSensor(QCustomPlot *customPlot, QString name);
     int addNewTemperatureTemperatureSample(int index, double temperature);
     bool getVisibleState(int index);
 
@@ -51,6 +54,8 @@ public slots:
     void changeGraphVisibilitySlot(uint index, bool visible);
     void changeLogVariables(bool log_enabled, bool log_vis_only,
                         QString log_file_name);
+    void setTripSetpoint(uint zone, uint trip, int temperature);
+    void setTripVisibility(uint zone, uint trip, bool visibility);
 
 private slots:
     void updateTemperatureDataSlot();
@@ -60,6 +65,7 @@ private slots:
     void on_actionLog_triggered();
     void on_action_About_triggered();
     void on_actionE_xit_triggered();
+    void on_action_Trips_triggered();
 
 private:
     Ui::MainWindow *ui;
@@ -70,11 +76,11 @@ private:
     QVector<double> temperature_samples[MAX_TEMP_INPUT_COUNT];
     int current_sample_index[MAX_TEMP_INPUT_COUNT];
     uint temp_poll_interval;
-    QString *sensor_name;
     bool *sensor_visibility;
-    QLabel *sensor_label;
+   // QLabel *sensor_label;
     QLabel *sensor_temp;
-    QVector<QCPItemLine *> trips;
+    QVector<QVector<QCPItemLine *> > trips;
+    QVector<sensorZoneInformationType>sensor_types;
 
     QVBoxLayout *layout;
     QWidget *window;

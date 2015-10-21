@@ -33,7 +33,7 @@ void SensorsDialog::disableCheckbox(int index)
 {
     QCheckBox *cb = getCheckboxPtr(index);
 
-    if (cb != NULL){
+    if (cb != NULL) {
         cb->setText("");
         cb->setEnabled(false);
         cb->setVisible(false);
@@ -44,7 +44,7 @@ void SensorsDialog::setupCheckbox(int index, QString name, bool checked)
 {
     QCheckBox *cb = getCheckboxPtr(index);
 
-    if (cb != NULL){
+    if (cb != NULL) {
         cb->setText(name);
         cb->setChecked(checked);
     }
@@ -52,7 +52,7 @@ void SensorsDialog::setupCheckbox(int index, QString name, bool checked)
 
 QCheckBox* SensorsDialog::getCheckboxPtr(int index)
 {
-    if (index >= 0 && index < MAX_NUMBER_SENSOR_VISIBILITY_CHECKBOXES){
+    if (index >= 0 && index < MAX_NUMBER_SENSOR_VISIBILITY_CHECKBOXES) {
         switch(index){
         case 0: return ui->checkBox;
             break;

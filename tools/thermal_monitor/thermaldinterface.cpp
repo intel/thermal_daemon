@@ -13,14 +13,9 @@
 */
 
 #include <QtDebug>
+#include <QTreeWidgetItem>
 #include "thermaldinterface.h"
-
-#define CRITICAL_TRIP 0
-#define MAX_TRIP 1
-#define PASSIVE_TRIP 2
-#define ACTIVE_TRIP 3
-#define POLLING_TRIP 4
-#define INVALID_TRIP 5
+#include "tripsdialog.h"
 
 ThermaldInterface::ThermaldInterface() :
     iface(NULL)
@@ -137,12 +132,7 @@ int ThermaldInterface::initialize()
 
             if (getTripInformation(i, j, new_trip) >= 0){
                 zones[i].trips.append(new_trip);
-/*                qDebug() << "zone" << i << "trip" << j
-                         << "temp" << new_trip.temp
-                         << "type" << new_trip.trip_type
-                         << "id" << new_trip.sensor_id
-                         << "cdev_size" << new_trip.cdev_size;
-*/                // Figure out the lowest valid trip index
+                // Figure out the lowest valid trip index
                 if (new_trip.trip_type == CRITICAL_TRIP ||
                         new_trip.trip_type == PASSIVE_TRIP ||
                         new_trip.trip_type == ACTIVE_TRIP){
@@ -303,7 +293,6 @@ int ThermaldInterface::getTripInformation(uint zone_index,
                                           uint trip_index, tripInformationType &info)
 {
     QDBusMessage result;
-    QDBusArgument argue;
 
     result = iface->call("GetZoneTripAtIndex", zone_index, trip_index);
 
@@ -316,7 +305,6 @@ int ThermaldInterface::getTripInformation(uint zone_index,
         return 0;
     } else if (result.signature().isEmpty()){
         // If we get and empty response, then ignore it, but return error code
-        //        qDebug() << "empty response" << zone_index << trip_index;
         return -1;
     } else {
         qCritical() << "error from" << iface->interface() <<  result.errorMessage()
@@ -337,8 +325,49 @@ int ThermaldInterface::getLowestValidTripTempForZone(uint zone)
     }
 }
 
-uint ThermaldInterface::getTripCountForZone(uint zone)
+int ThermaldInterface::getSensorCountForZone(uint zone)
 {
+    if (zone < (uint)zones.count()){
+        return (uint)zones[zone].sensor_count;
+    } else {
+        qCritical() << "error: ThermaldInterface::getSensorCountForZone"
+                    << "zone index" << zone << "is >= than zone count"
+                    << zones.count();
+        return -1;
+    }
+}
+
+int ThermaldInterface::getSensorTypeForZone(uint zone, uint index, QString &sensor_type)
+{
+    QDBusMessage result;
+    result = iface->call("GetZoneSensorAtIndex", zone, index);
+
+    if (result.type() == QDBusMessage::ReplyMessage) {
+        sensor_type = result.arguments().at(0).toString();
+        return 0;
+    } else {
+        qCritical() << "error from" << iface->interface() <<  result.errorMessage();
+        return -1;
+    }
+}
+
+int ThermaldInterface::getSensorIndex(QString sensor_type)
+{
+    for (uint i = 0; i < (uint)sensors.count(); i++){
+        if(sensor_type == sensors[i].name)
+                return (int)i;
+    }
+    return -1;
+}
+
+int ThermaldInterface::getTripCountForZone(uint zone)
+{
+    /* Yo!  zones[i].trip_count is the theoretical count
+     * but  zones[i].trips.count() is the actual valid count
+     *
+     * So when you want the trip count for any given zone,
+     * use zones[i].trips.count()
+     */
     if (zone < (uint)zones.count()){
         return (uint)zones[zone].trips.count();
     } else {
@@ -349,7 +378,7 @@ uint ThermaldInterface::getTripCountForZone(uint zone)
     }
 }
 
-uint ThermaldInterface::getTripTempForZone(uint zone, uint trip)
+int ThermaldInterface::getTripTempForZone(uint zone, uint trip)
 {
     if (zone < (uint)zones.count()){
         if (trip < zones[zone].trip_count){
@@ -368,15 +397,40 @@ uint ThermaldInterface::getTripTempForZone(uint zone, uint trip)
     }
 }
 
+int ThermaldInterface::getTripTypeForZone(uint zone, uint trip)
+{
+    if (zone < (uint)zones.count()){
+        if (trip < zones[zone].trip_count){
+            return zones[zone].trips[trip].trip_type;
+        } else {
+            qCritical() << "error: ThermaldInterface::getTripTypeForZone"
+                        << "trip index" << trip << "is >= than trip count"
+                        << zones[zone].trip_count;
+            return -1;
+        }
+    } else {
+        qCritical() << "error: ThermaldInterface::getTripTypeForZone"
+                    << "zone index" << zone << "is >= than zone count"
+                    << zones.count();
+        return -1;
+    }
+}
+
+zoneInformationType* ThermaldInterface::getZone(uint zone)
+{
+    if (zone < (uint)zones.count()){
+        return &zones[zone];
+    } else {
+        qCritical() << "error: ThermaldInterface::getZone"
+                    << "zone index" << zone << "is >= than zone count"
+                    << zones.count();
+        return NULL;
+    }
+}
+
 uint ThermaldInterface::getZoneCount()
 {
-    /* Yo!  zones[i].trip_count is the theoretical count
-     * but  zones[i].trips.count() is the actual valid count
-     *
-     * So when you want the trip count for any given zone,
-     * use zones[i].trips.count()
-     */
-    return zones.count();
+    return (uint)zones.count();
 }
 
 QString ThermaldInterface::getZoneName(uint zone)
@@ -406,3 +460,76 @@ int ThermaldInterface::getZoneInformation(uint index, zoneInformationType &info)
         return -1;
     }
 }
+
+int ThermaldInterface::setTripTempForZone(uint zone, uint trip, int temperature)
+{
+    if (zone < (uint)zones.count()){
+        if (trip < zones[zone].trip_count){
+            zones[zone].trips[trip].temp = temperature;
+            // tell thermald to change the temperature for max and passive
+            if (zones[zone].trips[trip].trip_type == MAX_TRIP){
+                iface->call("SetUserMaxTemperature", zones[zone].name,
+                            (uint)(temperature * 1000));
+                return 0;
+            } else if (zones[zone].trips[trip].trip_type == PASSIVE_TRIP){
+                iface->call("SetUserPassiveTemperature", zones[zone].name,
+                            (uint)(temperature * 1000));
+                // Call reinit from thermald in order to get the change to stick
+                iface->call("Reinit");
+                return 0;
+            } else {
+                qCritical() << "error: ThermaldInterface::setTripTempForZone"
+                            << "trip type is not 'max' or 'passive'"
+                            << "zone" << zone << "trip" << trip;
+                return -1;
+            }
+        } else {
+            qCritical() << "error: ThermaldInterface::setTripTempForZone"
+                        << "trip index" << trip << "is >= than trip count"
+                        << zones[zone].trip_count;
+            return -1;
+        }
+    } else {
+        qCritical() << "error: ThermaldInterface::setTripTempForZone"
+                    << "zone index" << zone << "is >= than zone count"
+                    << zones.count();
+        return -1;
+    }
+}
+
+void ThermaldInterface::setTripVisibility(uint zone, uint trip, bool visibility)
+{
+    if (zone < (uint)zones.count()){
+        if (trip < zones[zone].trip_count){
+            zones[zone].trips[trip].visible = visibility;
+        } else {
+            qCritical() << "error: ThermaldInterface::setTripVisibility"
+                        << "trip index" << trip << "is >= than trip count"
+                        << zones[zone].trip_count;
+        }
+    } else {
+        qCritical() << "error: ThermaldInterface::setTripVisibility"
+                    << "zone index" << zone << "is >= than zone count"
+                    << zones.count();
+    }
+}
+
+bool ThermaldInterface::tripVisibility(uint zone, uint trip)
+{
+    if (zone < (uint)zones.count()){
+        if (trip < zones[zone].trip_count){
+            return zones[zone].trips[trip].visible;
+        } else {
+            qCritical() << "error: ThermaldInterface::tripVisibility"
+                        << "trip index" << trip << "is >= than trip count"
+                        << zones[zone].trip_count;
+            return false;
+        }
+    } else {
+        qCritical() << "error: ThermaldInterface::tripVisibility"
+                    << "zone index" << zone << "is >= than zone count"
+                    << zones.count();
+        return false;
+    }
+}
+
