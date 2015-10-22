@@ -17,16 +17,19 @@ SOURCES += main.cpp\
     thermaldinterface.cpp \
     pollingdialog.cpp \
     sensorsdialog.cpp \
-    logdialog.cpp
+    logdialog.cpp \
+    tripsdialog.cpp
 
 HEADERS  += mainwindow.h \
     qcustomplot/qcustomplot.h \
     thermaldinterface.h \
     pollingdialog.h \
     sensorsdialog.h \
-    logdialog.h
+    logdialog.h \
+    tripsdialog.h
 
 FORMS    += mainwindow.ui \
     pollingdialog.ui \
     sensorsdialog.ui \
-    logdialog.ui
+    logdialog.ui \
+    tripsdialog.ui
