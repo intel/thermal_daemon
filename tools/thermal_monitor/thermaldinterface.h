@@ -21,6 +21,13 @@
 #define SERVICE_NAME            "org.freedesktop.thermald"
 #define MAX_TEMP_INPUT_COUNT 64
 
+#define CRITICAL_TRIP 0
+#define MAX_TRIP 1
+#define PASSIVE_TRIP 2
+#define ACTIVE_TRIP 3
+#define POLLING_TRIP 4
+#define INVALID_TRIP 5
+
 typedef struct {
     QString name;
     int min_state;
@@ -37,6 +44,7 @@ typedef struct {
 typedef struct {
     int temp;
     int trip_type;
+    bool visible;
     int sensor_id;
     int cdev_size;
     QList<int> cdev_ids; // Not currently using
@@ -67,12 +75,22 @@ public:
     QString getSensorName(uint index);
     QString getSensorPath(uint index);
     int getSensorTemperature(uint index);
+    int getSensorIndex(QString sensor_type);
+
+    int getSensorCountForZone(uint zone);
+    int getSensorTypeForZone(uint zone, uint index, QString &sensor_type);
 
     int getLowestValidTripTempForZone(uint zone);
-    uint getTripCountForZone(uint zone);
-    uint getTripTempForZone(uint zone, uint trip);
+    int getTripCountForZone(uint zone);
+    int getTripTempForZone(uint zone, uint trip);
+    int getTripTypeForZone(uint zone, uint trip);
+    zoneInformationType* getZone(uint zone);
     uint getZoneCount();
     QString getZoneName(uint zone);
+    int setTripTempForZone(uint zone, uint trip, int temperature);
+
+    bool tripVisibility(uint zone, uint trip);
+    void setTripVisibility(uint zone, uint trip, bool visibility);
 
 private:
     QDBusInterface *iface;

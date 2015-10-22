@@ -29,12 +29,10 @@
 
 class cthd_cdev_backlight: public cthd_cdev {
 private:
+	static const std::string backlight_devices[];
 
 public:
-	cthd_cdev_backlight(unsigned int _index, int _cpu_index) :
-			cthd_cdev(_index, "/sys/class/backlight/intel_backlight/") {
-	}
-
+	cthd_cdev_backlight(unsigned int _index, int _cpu_index);
 	void set_curr_state(int state, int arg);
 	int update();
 };

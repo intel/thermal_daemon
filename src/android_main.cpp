@@ -30,6 +30,21 @@
 #include "thd_engine.h"
 #include "thd_engine_default.h"
 #include "thd_parse.h"
+#include <sys/file.h>
+
+// getdtablesize() is removed from bionic/libc in LPDK*/
+// use POSIX alternative available. Otherwise fail
+#  ifdef _POSIX_OPEN_MAX
+#   define   getdtablesize()	(_POSIX_OPEN_MAX)
+# endif
+// for AID_* constatns
+#include <private/android_filesystem_config.h>
+
+// getdtablesize() is removed from bionic/libc in LPDK*/
+// use POSIX alternative available. Otherwise fail
+#  ifdef _POSIX_OPEN_MAX
+#   define   getdtablesize()	(_POSIX_OPEN_MAX)
+# endif
 
 // poll mode
 int thd_poll_interval = 4; //in seconds
@@ -137,8 +152,9 @@ static void print_usage(FILE* stream, int exit_code) {
 	fprintf(stream, "  --help Display this usage information.\n"
 			"  --version Show version.\n"
 			"  --no-daemon No daemon.\n"
-			"  --poll-interval poll interval 0 to disable.\n"
-			"  --exclusive_control to act as exclusive thermal controller. \n");
+			"  --poll-interval Poll interval 0 to disable.\n"
+			"  --exclusive_control To act as exclusive thermal controller.\n"
+			"  --config-file Configuration file to use other than the default config. \n");
 
 	exit(exit_code);
 }
@@ -149,8 +165,10 @@ int main(int argc, char *argv[]) {
 	bool no_daemon = false;
 	bool exclusive_control = false;
 	bool test_mode = false;
+	bool is_privileged_user = false;
+	char *conf_file = NULL;
 
-	const char* const short_options = "hvnp:de";
+	const char* const short_options = "hvnp:detc:";
 	static struct option long_options[] = {
 			{ "help", no_argument, 0, 'h' },
 			{ "version", no_argument, 0, 'v' },
@@ -158,6 +176,7 @@ int main(int argc, char *argv[]) {
 			{ "poll-interval", required_argument, 0, 'p' },
 			{ "exclusive_control", no_argument, 0, 'e' },
 			{ "test-mode", no_argument, 0, 't' },
+			{ "config-file", required_argument, 0, 'c' },
 			{ NULL, 0, NULL, 0 } };
 
 	if (argc > 1) {
@@ -183,6 +202,9 @@ int main(int argc, char *argv[]) {
 			case 't':
 				test_mode = true;
 				break;
+			case 'c':
+				conf_file = optarg;
+				break;
 			case -1:
 			case 0:
 				break;
@@ -191,9 +213,11 @@ int main(int argc, char *argv[]) {
 			}
 		}
 	}
-	if (getuid() != 0 && !test_mode) {
-		fprintf(stderr, "You must be root to run thermal daemon!\n");
-		exit(EXIT_FAILURE);
+
+	is_privileged_user = (getuid() == 0) || (getuid() == AID_SYSTEM);
+	if (!is_privileged_user && !test_mode) {
+		thd_log_error("You do not have correct permissions to run thermal dameon!\n");
+		exit(1);
 	}
 
 	if (mkdir(TDRUNDIR, 0755) != 0) {
@@ -213,8 +237,8 @@ int main(int argc, char *argv[]) {
 			"Linux Thermal Daemon is starting mode %d : poll_interval %d :ex_control %d\n",
 			no_daemon, thd_poll_interval, exclusive_control);
 
-	if (thd_engine_create_default_engine(false,
-			exclusive_control) != THD_SUCCESS) {
+	if (thd_engine_create_default_engine(false, exclusive_control,
+			conf_file) != THD_SUCCESS) {
 		exit(EXIT_FAILURE);
 	}
 

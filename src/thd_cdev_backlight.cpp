@@ -23,6 +23,25 @@
  */
 
 #include "thd_cdev_backlight.h"
+#define MAX_BACKLIGHT_DEV 4
+
+const std::string cthd_cdev_backlight::backlight_devices[MAX_BACKLIGHT_DEV] = {
+	            "/sys/class/backlight/intel_backlight",
+	            "/sys/class/backlight/acpi_video0",
+	            "/sys/class/leds/lcd-backlight",
+	            "/sys/class/backlight/lcd-backlight"
+};
+
+cthd_cdev_backlight::cthd_cdev_backlight(unsigned int _index, int _cpu_index):
+		cthd_cdev(_index, backlight_devices[0]) {
+		int active_device = 0;
+		do {
+			cdev_sysfs.update_path(backlight_devices[active_device]);
+			if (update() == THD_SUCCESS)
+				break;
+			active_device++;
+		}while (active_device <  MAX_BACKLIGHT_DEV);
+}
 
 int cthd_cdev_backlight::update() {
 	int ret;
@@ -41,7 +60,7 @@ int cthd_cdev_backlight::update() {
 
 	set_inc_dec_value(max_state * (float) 10 / 100);
 
-	return 0;
+	return THD_SUCCESS;
 }
 
 void cthd_cdev_backlight::set_curr_state(int state, int arg) {

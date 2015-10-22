@@ -71,6 +71,7 @@ typedef struct {
 	std::string type;
 	int influence;
 	int sampling_period;
+	int target_state;
 } trip_cdev_t;
 
 typedef struct {
@@ -162,7 +163,7 @@ private:
 
 public:
 	cthd_parse();
-	int parser_init();
+	int parser_init(std::string config_file);
 	void parser_deinit();
 	int start_parse();
 	void dump_thermal_conf();

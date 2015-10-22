@@ -52,7 +52,7 @@ void cthd_zone::thermal_zone_temp_change(int id, unsigned int temp, int pref) {
 	bool reset = false;
 
 	count = trip_points.size();
-	for (i = count - 1; i >= 0; --i) {
+	for (i = 0; i < count; ++i) {
 		cthd_trip_point &trip_point = trip_points[i];
 		if (trip_point.get_trip_type() == MAX) {
 			thd_model.add_sample(zone_temp);
@@ -159,7 +159,8 @@ int cthd_zone::zone_update() {
 		unsigned int max_trip_temp = 0;
 
 		std::sort(trip_points.begin(), trip_points.end(), trip_sort);
-		thd_log_info("Sorted trip dump :\n");
+		thd_log_info("Sorted trip dump zone index:%d type:%s:\n", index,
+				type_str.c_str());
 		for (unsigned int i = 0; i < trip_points.size(); ++i) {
 			trip_points[i].trip_dump();
 		}
@@ -267,7 +268,7 @@ void cthd_zone::zone_reset() {
 
 int cthd_zone::bind_cooling_device(trip_point_type_t type,
 		unsigned int trip_temp, cthd_cdev *cdev, int influence,
-		int sampling_period) {
+		int sampling_period, int target_state) {
 	int i, count;
 	bool added = false;
 
@@ -279,7 +280,7 @@ int cthd_zone::bind_cooling_device(trip_point_type_t type,
 				&& (trip_point.get_trip_temp() > 0)
 				&& (trip_temp == 0 || trip_point.get_trip_temp() == trip_temp)) {
 			trip_point.thd_trip_point_add_cdev(*cdev, influence,
-					sampling_period);
+					sampling_period, target_state);
 			added = true;
 			zone_cdev_set_binded();
 			break;

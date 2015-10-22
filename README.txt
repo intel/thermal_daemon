@@ -73,6 +73,14 @@ Use "sudo stop thermald" to stop
 
 Releases
 
+Release 1.5-rc1
+- Default warning level increase so that doesn't print much in logs
+- Add new feature to set specific target state on reaching a threshold,
+this allows multiple thresholds (trips)
+- Android update for build
+- Additional backlight devices
+- New option to specify config file via command line
+
 Release 1.4.3
 - One new dbus message to get temp
 - Fixes to prevent warnings

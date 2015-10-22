@@ -43,11 +43,13 @@ typedef enum {
 	SEQUENTIAL  // one after other once the previous cdev reaches its max state
 } trip_control_type_t;
 
+#define TRIP_PT_INVALID_TARGET_STATE	0xffffff
 typedef struct {
 	cthd_cdev *cdev;
 	int influence;
 	int sampling_priod;
 	time_t last_op_time;
+	int target_state;
 } trip_pt_cdev_t;
 
 #define DEFAULT_SENSOR_ID	0xFFFF
@@ -88,7 +90,8 @@ public:
 			bool *reset);
 
 	void thd_trip_point_add_cdev(cthd_cdev &cdev, int influence,
-			int sampling_period = 0);
+			int sampling_period = 0, int target_state =
+					TRIP_PT_INVALID_TARGET_STATE);
 
 	void thd_trip_cdev_state_reset();
 	int thd_trip_point_value() {
@@ -130,8 +133,10 @@ public:
 	trip_pt_cdev_t &get_cdev_at_index(unsigned int index) {
 		if (index < cdevs.size())
 			return cdevs[index];
+#ifndef ANDROID
 		else
 			throw std::invalid_argument("index");
+#endif
 	}
 
 	void trip_cdev_add(trip_pt_cdev_t trip_cdev) {

@@ -41,6 +41,7 @@
     <addaction name="actionSet_Polling_Interval"/>
     <addaction name="actionSensors"/>
     <addaction name="actionLog"/>
+    <addaction name="action_Trips"/>
     <addaction name="separator"/>
     <addaction name="actionClear"/>
     <addaction name="separator"/>
@@ -89,6 +90,11 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+Q</string>
+   </property>
+  </action>
+  <action name="action_Trips">
+   <property name="text">
+    <string>&amp;Trips</string>
    </property>
   </action>
  </widget>

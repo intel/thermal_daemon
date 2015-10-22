@@ -205,7 +205,14 @@ gboolean thd_dbus_interface_reinit(PrefObject *obj, GError **error) {
 	sleep(2);
 	if (thd_engine->get_control_mode() == EXCLUSIVE)
 		exclusive_control = true;
-	if (thd_engine_create_default_engine(true, exclusive_control) != THD_SUCCESS) {
+
+	std::string config_file = thd_engine->get_config_file();
+	const char *conf_file = NULL;
+	if (!config_file.empty())
+		conf_file = config_file.c_str();
+
+	if (thd_engine_create_default_engine(true, exclusive_control,
+			conf_file) != THD_SUCCESS) {
 		return FALSE;
 	}
 

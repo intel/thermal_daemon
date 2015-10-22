@@ -42,16 +42,6 @@ void cthd_parse::string_trim(std::string &str) {
 	}
 }
 
-#ifdef ANDROID
-// Very simple version just checking for 0x20 not other white space chars
-bool isspace(int c) {
-	if (c == ' ')
-		return true;
-	else
-		return false;
-}
-#endif
-
 char *cthd_parse::char_trim(char *str) {
 	int i;
 
@@ -70,25 +60,31 @@ char *cthd_parse::char_trim(char *str) {
 
 cthd_parse::cthd_parse() :
 		matched_thermal_info_index(-1), doc(NULL), root_element(NULL) {
-	std::string name_conf = TDCONFDIR;
 	std::string name_run = TDRUNDIR;
-	filename = name_conf + "/" + "thermal-conf.xml";
+	filename = name_run + "/" + "thermal-conf.xml";
 	filename_auto = name_run + "/" + "thermal-conf.xml.auto";
 }
 
-int cthd_parse::parser_init() {
+int cthd_parse::parser_init(std::string config_file) {
 	cthd_acpi_rel rel;
+	const char *xml_config_file;
 	int ret;
 
-	ret = rel.generate_conf(filename_auto);
-	if (!ret) {
-		thd_log_warn("Using generated %s\n", filename_auto.c_str());
-		doc = xmlReadFile(filename_auto.c_str(), NULL, 0);
+	if (config_file.empty()) {
+		ret = rel.generate_conf(filename_auto);
+		if (!ret) {
+			thd_log_warn("Using generated %s\n", filename_auto.c_str());
+			xml_config_file = filename_auto.c_str();
+		} else {
+			xml_config_file = filename.c_str();
+		}
 	} else {
-		doc = xmlReadFile(filename.c_str(), NULL, 0);
+		xml_config_file = config_file.c_str();
 	}
+
+	doc = xmlReadFile(xml_config_file, NULL, 0);
 	if (doc == NULL) {
-		thd_log_warn("error: could not parse file %s\n", filename.c_str());
+		thd_log_warn("error: could not parse file %s\n", xml_config_file);
 		return THD_ERROR;
 	}
 	root_element = xmlDocGetRootElement(doc);
@@ -119,6 +115,9 @@ int cthd_parse::parse_new_trip_cdev(xmlNode * a_node, xmlDoc *doc,
 			} else if (!strcasecmp((const char*) cur_node->name,
 					"SamplingPeriod")) {
 				trip_cdev->sampling_period = atoi(tmp_value);
+			} else if (!strcasecmp((const char*) cur_node->name,
+					"TargetState")) {
+				trip_cdev->target_state = atoi(tmp_value);
 			}
 			if (tmp_value)
 				xmlFree(tmp_value);
@@ -150,6 +149,7 @@ int cthd_parse::parse_new_trip_point(xmlNode * a_node, xmlDoc *doc,
 					"CoolingDevice")) {
 				trip_cdev.influence = 0;
 				trip_cdev.sampling_period = 0;
+				trip_cdev.target_state = TRIP_PT_INVALID_TARGET_STATE;
 				trip_cdev.type.clear();
 				parse_new_trip_cdev(cur_node->children, doc, &trip_cdev);
 				trip_pt->cdev_trips.push_back(trip_cdev);
@@ -628,6 +628,11 @@ void cthd_parse::dump_thermal_conf() {
 							thermal_info_list[i].zones[j].trip_pts[k].cdev_trips[l].influence);
 					thd_log_info("\t\t\t  SamplingPeriod %d \n",
 							thermal_info_list[i].zones[j].trip_pts[k].cdev_trips[l].sampling_period);
+					if (thermal_info_list[i].zones[j].trip_pts[k].cdev_trips[l].target_state
+							!= TRIP_PT_INVALID_TARGET_STATE)
+						thd_log_info("\t\t\t  TargetState %d \n",
+								thermal_info_list[i].zones[j].trip_pts[k].cdev_trips[l].target_state);
+
 				}
 			}
 		}
@@ -704,6 +709,15 @@ bool cthd_parse::platform_matched() {
 				thd_log_info("Product Name matched \n");
 				return true;
 			}
+		}
+	}
+	for (unsigned int i = 0; i < thermal_info_list.size(); ++i) {
+		if (!thermal_info_list[i].uuid.size())
+			continue;
+		if (!thermal_info_list[i].product_name.compare(0, 1, "*")) {
+			matched_thermal_info_index = i;
+			thd_log_info("Product Name matched \n");
+			return true;
 		}
 	}
 

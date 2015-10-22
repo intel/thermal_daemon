@@ -26,10 +26,19 @@
 #define THD_CDEV_H
 
 #include <time.h>
+#include <vector>
 #include "thd_common.h"
 #include "thd_sys_fs.h"
 #include "thd_preference.h"
 #include "thd_pid.h"
+
+typedef struct {
+	int zone;
+	int trip;
+	int target_value;
+} zone_trip_limits_t;
+
+#define ZONE_TRIP_LIMIT_COUNT	12
 
 class cthd_cdev {
 
@@ -55,6 +64,7 @@ protected:
 	bool pid_enable;
 	cthd_pid pid_ctrl;
 	int last_state;
+	std::vector<zone_trip_limits_t> zone_trip_limits;
 
 private:
 	unsigned int int_2_pow(int pow) {
@@ -81,7 +91,8 @@ public:
 	virtual ~cthd_cdev() {
 	}
 	virtual int thd_cdev_set_state(int set_point, int target_temp,
-			int temperature, int state, int zone_id, int trip_id);
+			int temperature, int state, int zone_id, int trip_id,
+			int target_value);
 
 	virtual int thd_cdev_set_min_state(int zone_id);
 
@@ -161,6 +172,26 @@ public:
 				|| (min_state > max_state && get_curr_state() <= get_max_state()))
 			return true;
 		return false;
+	}
+
+	int cmp_current_state(int state) {
+		if (get_curr_state() == state)
+			return 0;
+
+		if (min_state < max_state) {
+			if (state > get_curr_state())
+				return 1;
+			else
+				return -1;
+		}
+
+		if (min_state > max_state) {
+			if (state > get_curr_state())
+				return -1;
+			else
+				return 1;
+		}
+		return 0;
 	}
 
 	std::string get_cdev_type() {
