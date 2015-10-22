@@ -152,8 +152,9 @@ static void print_usage(FILE* stream, int exit_code) {
 	fprintf(stream, "  --help Display this usage information.\n"
 			"  --version Show version.\n"
 			"  --no-daemon No daemon.\n"
-			"  --poll-interval poll interval 0 to disable.\n"
-			"  --exclusive_control to act as exclusive thermal controller. \n");
+			"  --poll-interval Poll interval 0 to disable.\n"
+			"  --exclusive_control To act as exclusive thermal controller.\n"
+			"  --config-file Configuration file to use other than the default config. \n");
 
 	exit(exit_code);
 }
@@ -165,8 +166,9 @@ int main(int argc, char *argv[]) {
 	bool exclusive_control = false;
 	bool test_mode = false;
 	bool is_privileged_user = false;
+	char *conf_file = NULL;
 
-	const char* const short_options = "hvnp:de";
+	const char* const short_options = "hvnp:detc:";
 	static struct option long_options[] = {
 			{ "help", no_argument, 0, 'h' },
 			{ "version", no_argument, 0, 'v' },
@@ -174,6 +176,7 @@ int main(int argc, char *argv[]) {
 			{ "poll-interval", required_argument, 0, 'p' },
 			{ "exclusive_control", no_argument, 0, 'e' },
 			{ "test-mode", no_argument, 0, 't' },
+			{ "config-file", required_argument, 0, 'c' },
 			{ NULL, 0, NULL, 0 } };
 
 	if (argc > 1) {
@@ -198,6 +201,9 @@ int main(int argc, char *argv[]) {
 				break;
 			case 't':
 				test_mode = true;
+				break;
+			case 'c':
+				conf_file = optarg;
 				break;
 			case -1:
 			case 0:
@@ -232,7 +238,7 @@ int main(int argc, char *argv[]) {
 			no_daemon, thd_poll_interval, exclusive_control);
 
 	if (thd_engine_create_default_engine(false, exclusive_control,
-			NULL) != THD_SUCCESS) {
+			conf_file) != THD_SUCCESS) {
 		exit(EXIT_FAILURE);
 	}
 
