@@ -8,7 +8,7 @@ use "man thermal-conf.xml" for details
 <ThermalConfiguration>
 <Platform>
 	<Name>Generic X86 Laptop Device</Name>
-	<ProductName>*</ProductName>
+	<ProductName>EXAMPLE_SYSTEM</ProductName>
 	<Preference>QUIET</Preference>
 	<ThermalSensors>
 		<ThermalSensor>
