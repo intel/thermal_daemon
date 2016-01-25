@@ -163,7 +163,7 @@ int csys_fs::read(const std::string &path, std::string &buf) {
 		}
 		f.close();
 #ifndef ANDROID
-	} catch (const std::ifstream::failure& e) {
+	} catch (...) {
 		thd_log_warn("csys_fs::read exception %s\n", path.c_str());
 
 		ret = -EIO;
