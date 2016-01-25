@@ -62,29 +62,6 @@ static cooling_dev_t cpu_def_cooling_devices[] = { { true, CDEV_DEF_BIT_UNIT_VAL
 				0.0, 0.0 } } };
 
 cthd_engine_default::~cthd_engine_default() {
-	if (parser_init_done)
-		parser.parser_deinit();
-}
-
-int cthd_engine_default::parser_init() {
-	if (parser_init_done)
-		return THD_SUCCESS;
-	if (parser.parser_init(get_config_file()) == THD_SUCCESS) {
-		if (parser.start_parse() == THD_SUCCESS) {
-			parser.dump_thermal_conf();
-			parser_init_done = true;
-			return THD_SUCCESS;
-		}
-	}
-
-	return THD_ERROR;
-}
-
-void cthd_engine_default::parser_deinit() {
-	if (parser_init_done) {
-		parser.parser_deinit();
-		parser_init_done = false;
-	}
 }
 
 int cthd_engine_default::read_thermal_sensors() {
