@@ -212,7 +212,7 @@ int cthd_sysfs_cdev_rapl::update() {
 	temp_str.str(std::string());
 	temp_str << "enabled";
 	if (!cdev_sysfs.exists(temp_str.str())) {
-		thd_log_info("powercap RAPL no enabled %s \n", temp_str.str().c_str());
+		thd_log_info("powercap RAPL not enabled %s \n", temp_str.str().c_str());
 		return THD_ERROR;
 	}
 	cdev_sysfs.write(temp_str.str(), "0");
