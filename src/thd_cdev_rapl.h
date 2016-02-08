@@ -38,6 +38,7 @@ protected:
 	unsigned int pl0_min_pwr;
 	unsigned int pl0_min_window;
 	unsigned int pl0_step_pwr;
+	bool bios_locked;
 
 	virtual bool calculate_phy_max();
 	virtual bool read_ppcc_power_limits();
