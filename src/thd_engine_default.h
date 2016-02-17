@@ -30,18 +30,15 @@
 
 class cthd_engine_default: public cthd_engine {
 private:
-	int parser_init();
-	void parser_deinit();
 	int add_replace_cdev(cooling_dev_t *config);
 
-	bool parser_init_done;
 	cthd_cpu_default_binding def_binding;
 
 public:
 	static const int power_clamp_reduction_percent = 5;
 
 	cthd_engine_default() :
-			cthd_engine(), parser_init_done(false) {
+			cthd_engine() {
 	}
 	~cthd_engine_default();
 	int read_thermal_zones();
