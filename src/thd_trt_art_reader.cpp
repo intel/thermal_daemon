@@ -39,7 +39,8 @@ typedef struct {
 } sub_string_t;
 
 sub_string_t source_substitue_strings[] = { { "B0D4", "cpu" },
-		{ "TCPU", "cpu" }, { "B0DB", "cpu" }, { NULL, NULL } };
+		{ "TCPU", "cpu" }, { "B0DB", "cpu" }, { "TPCH", "pch_wildcat_point" },
+		{ NULL, NULL } };
 
 sub_string_t target_substitue_strings[] = { { "B0D4", "rapl_controller" }, {
 		"DPLY", "LCD" }, { "DISP", "LCD" }, { "TMEM", "rapl_controller_dram" },
@@ -47,7 +48,8 @@ sub_string_t target_substitue_strings[] = { { "B0D4", "rapl_controller" }, {
 		NULL } };
 
 sub_string_t sensor_substitue_strings[] = { { "B0D4", "hwmon" }, { "TCPU",
-		"hwmon" }, { "B0DB", "hwmon" }, { NULL, NULL } };
+		"hwmon" }, { "B0DB", "hwmon" }, { "TPCH", "pch_wildcat_point" },
+		{ NULL, NULL } };
 
 typedef enum {
 	TARGET_DEV, SOURCE_DEV, SENSOR_DEV

@@ -34,7 +34,10 @@ void cthd_sysfs_cdev_rapl::set_curr_state(int state, int arg) {
 	std::stringstream tc_state_dev;
 
 	std::stringstream state_str;
-	int new_state;
+	int new_state, ret;
+
+	if (bios_locked)
+		return;
 
 	if (state < inc_dec_val) {
 		curr_state = 0;
@@ -55,15 +58,23 @@ void cthd_sysfs_cdev_rapl::set_curr_state(int state, int arg) {
 	thd_log_debug("set cdev state index %d state %d wr:%d\n", index, state,
 			new_state);
 	tc_state_dev << "constraint_" << constraint_index << "_power_limit_uw";
-	if (cdev_sysfs.write(tc_state_dev.str(), state_str.str()) < 0)
+	ret = cdev_sysfs.write(tc_state_dev.str(), state_str.str());
+	if (ret < 0) {
 		curr_state = (state == 0) ? 0 : max_state;
-
+		if (ret == -ENODATA) {
+			thd_log_info("powercap RAPL is BIOS locked, cannot update\n");
+			bios_locked = true;
+		}
+	}
 }
 
 void cthd_sysfs_cdev_rapl::set_curr_state_raw(int state, int arg) {
 	std::stringstream state_str;
 	std::stringstream tc_state_dev;
-	int new_state;
+	int new_state, ret;
+
+	if (bios_locked)
+		return;
 
 	if (state <= min_state)
 		new_state = phy_max;
@@ -80,12 +91,17 @@ void cthd_sysfs_cdev_rapl::set_curr_state_raw(int state, int arg) {
 	state_str << new_state;
 
 	tc_state_dev << "constraint_" << constraint_index << "_power_limit_uw";
-	if (cdev_sysfs.write(tc_state_dev.str(), state_str.str()) < 0)
+	ret = cdev_sysfs.write(tc_state_dev.str(), state_str.str());
+	if (ret < 0) {
 		curr_state = (state == 0) ? 0 : max_state;
+		if (ret == -ENODATA) {
+			thd_log_info("powercap RAPL is BIOS locked, cannot update\n");
+			bios_locked = true;
+		}
+	}
 
 	thd_log_debug("set cdev state raw index %d state %d wr:%d\n", index, state,
 			new_state);
-
 }
 
 bool cthd_sysfs_cdev_rapl::calculate_phy_max() {
@@ -212,7 +228,7 @@ int cthd_sysfs_cdev_rapl::update() {
 	temp_str.str(std::string());
 	temp_str << "enabled";
 	if (!cdev_sysfs.exists(temp_str.str())) {
-		thd_log_info("powercap RAPL no enabled %s \n", temp_str.str().c_str());
+		thd_log_info("powercap RAPL not enabled %s \n", temp_str.str().c_str());
 		return THD_ERROR;
 	}
 	cdev_sysfs.write(temp_str.str(), "0");
