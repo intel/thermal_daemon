@@ -1,23 +1,23 @@
 Name:           thermal-daemon
-Version: v1.3
-Release: 3%{?dist}
+Version:        1.5
+Release:        3%{?dist}
 Summary:        The "Linux Thermal Daemon" program from 01.org
 
 License:        GPLv2+
 URL:            https://github.com/01org/thermal_daemon
-%global pkgname thermal_daemon
-%global commit  0225c182da262492fb99055975b7d462e68d7490
-%global shortcommit %(c=%{commit}; echo ${c:0:7})
+%global         pkgname thermal_daemon
+%global         commit  0c4c71577849399d65cdb7d856cc813763f429b8
+%global         shortcommit %(c=%{commit}; echo ${c:0:7})
 Source0:        https://github.com/01org/thermal_daemon/archive/%{commit}/%{pkgname}-%{version}-%{shortcommit}.tar.gz
 
-BuildRequires:  automake
-BuildRequires:  autoconf
-BuildRequires:  glib-devel
-BuildRequires:  dbus-glib-devel
-BuildRequires:  libxml2-devel
-BuildRequires:  systemd
-Requires(post): systemd-units
-Requires(preun): systemd-units
+BuildRequires:    automake
+BuildRequires:    autoconf
+BuildRequires:    glib-devel
+BuildRequires:    dbus-glib-devel
+BuildRequires:    libxml2-devel
+BuildRequires:    systemd
+Requires(post):   systemd-units
+Requires(preun):  systemd-units
 Requires(postun): systemd-units
 
 %description
@@ -59,6 +59,8 @@ make %{?_smp_mflags}
 %exclude %{_sysconfdir}/init
 
 %changelog
+* Tue Mar 29 2016 Alexey Slaykovsky <alexey@slaykovsky.com> 1.5-3
+- Updated spec file for a Thermal Daemon 1.5.3 version
 * Fri Oct 17 2014 António Meireles <antonio.meireles@reformi.st> 1.3-3
 - update spec file
 * Tue Oct 01 2013 Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com> 1.03-1
