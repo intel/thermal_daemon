@@ -4,15 +4,15 @@ if HAVE_SYSTEMD
 systemdsystemunit_DATA = \
 	thermald.service
 
-thermald.service: thermald.service.in
-	$(edit) $< >$@
-
 servicedir = $(datadir)/dbus-1/system-services
-service_in_files = org.freedesktop.thermald.service.in
+service_in_files = org.freedesktop.thermald.service.in thermald.service.in
 service_DATA = $(service_in_files:.service.in=.service)
 
 $(service_DATA): $(service_in_files) Makefile
 	$(edit) $< >$@
+
+dbusservicedir = $(DBUS_SYS_DIR)
+dbusservice_DATA = org.freedesktop.thermald.conf
 endif
 
 edit = sed \
@@ -21,19 +21,15 @@ edit = sed \
 	-e 's|@sysconfdir[@]|$(sysconfdir)|g' \
 	-e 's|@localstatedir[@]|$(localstatedir)|g'
 
-dbusservicedir = $(DBUS_SYS_DIR)
-dbusservice_DATA = org.freedesktop.thermald.conf
-
 tdconfigdir = $(tdconfdir)
 tdconfig_DATA = thermal-conf.xml \
 	thermal-cpu-cdev-order.xml
 
-upstartconfdir = /etc/init
+upstartconfdir = $(sysconfdir)/init
 upstartconf_DATA = thermald.conf
 
 EXTRA_DIST = \
-	thermald.service.in \
-	org.freedesktop.thermald.service.in \
+	$(service_in_files) \
 	$(dbusservice_DATA) \
 	$(tdconfig_DATA) \
 	$(upstartconf_DATA)
