@@ -30,7 +30,7 @@
 
 using namespace std;
 
-#define PRINT_ERROR(...)	thd_log_error(__VA_ARGS__)
+#define PRINT_ERROR(...)	thd_log_info(__VA_ARGS__)
 #define PRINT_DEBUG(...)	thd_log_debug(__VA_ARGS__)
 
 typedef struct {
