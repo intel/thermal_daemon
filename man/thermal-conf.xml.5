@@ -32,7 +32,7 @@ $(TDCONFDIR)/etc/thermald/thermal-conf.xml
 .B thermal-conf.xml
 is a configuration file for the thermal daemon. It is used to configure thermal sensors, zone and cooling devices.The location of this file depends on the configuration option used during build time.
 .TP
-The terminology used in this file confirms to "Advanced Configuration and Power Interface Specification". The ACPI thermal model is based around conceptual platform regions called thermal zones that physically contain devices, thermal sensors, and cooling controls. For example of a thermal zone can be a CPU or a laptop cover. A zone can contain multiple sensors for monitoring temperature. A cooling device provides interface to reduce the temperature of a source device, which causes increase in the temperature. An example of a cooling device is a FAN or some Linux driver which can throttle the source device.
+The terminology used in this file conforms to "Advanced Configuration and Power Interface Specification". The ACPI thermal model is based around conceptual platform regions called thermal zones that physically contain devices, thermal sensors, and cooling controls. For example of a thermal zone can be a CPU or a laptop cover. A zone can contain multiple sensors for monitoring temperature. A cooling device provides interface to reduce the temperature of a source device, which causes increase in the temperature. An example of a cooling device is a FAN or some Linux driver which can throttle the source device.
 .TP
 A thermal zone configuration includes one or more trip points. A trip point is a temperature at which a cooling device needs to be activated.
 .TP
@@ -57,7 +57,7 @@ The thermal sysfs under Linux (/sys/class/thermal) provides a way to represent p
 - Specify thermal relationships. A zone can be influenced by multiple source devices with varying degrees. In this case thermal-conf.xml can be used to define the relative influence for apply compensation.
 
 .SH FILE FORMAT
-The configuration file format confirms to XML specifications. A set of tags defined to define platform, sensors, zones, cooling devices and trip points.
+The configuration file format conforms to XML specifications. A set of tags defined to define platform, sensors, zones, cooling devices and trip points.
 .TP
 <ThermalConfiguration>
 .TP
@@ -69,7 +69,7 @@ The configuration file format confirms to XML specifications. A set of tags defi
 .TP
 	<UUID>Example UUID</UUID>
 .TP
-	configuration file format confirms to XML specifications. A set of tags defined to define platform, sensors, zones,  cooling
+	configuration file format conforms to XML specifications. A set of tags defined to define platform, sensors, zones,  cooling
        devices and trip points.
 
        <ThermalConfiguration>
