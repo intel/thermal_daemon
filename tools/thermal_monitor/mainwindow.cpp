@@ -11,6 +11,8 @@
  * more details.
 */
 
+#include <QMessageBox>
+#include <QDesktopWidget>
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "pollingdialog.h"

@@ -13,6 +13,7 @@
 */
 
 #include <QApplication>
+#include <QMessageBox>
 #include "mainwindow.h"
 #include <unistd.h>
 
