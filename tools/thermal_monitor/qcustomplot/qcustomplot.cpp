@@ -2847,9 +2847,18 @@ QCPLayoutElement *QCPLayoutGrid::takeAt(int index)
 {
   if (QCPLayoutElement *el = elementAt(index))
   {
-    releaseElement(el);
-    mElements[index / columnCount()][index % columnCount()] = 0;
-    return el;
+    int count = columnCount();
+
+    if (count == 0)
+    {
+      qDebug() << Q_FUNC_INFO << "Attempt to divide by zero";
+      return 0;
+    } else
+    {
+      releaseElement(el);
+      mElements[index / count][index % count] = 0;
+      return el;
+    }
   } else
   {
     qDebug() << Q_FUNC_INFO << "Attempt to take invalid index:" << index;
