@@ -13,6 +13,10 @@ tripsDialog::tripsDialog(QWidget *parent, ThermaldInterface *therm) :
     ui->label_2->setText("");
     ui->lineEdit->setEnabled(false);
     ui->lineEdit->setValidator(new QIntValidator);
+
+    this->last_item = NULL;
+    this->last_trip = 0;
+    this->last_zone = 0;
 }
 
 tripsDialog::~tripsDialog()
