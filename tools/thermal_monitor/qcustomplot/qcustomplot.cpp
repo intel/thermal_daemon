@@ -5359,7 +5359,10 @@ double QCPAxis::coordToPixel(double value) const
         if (!mRangeReversed)
           return baseLog(value/mRange.lower)/baseLog(mRange.upper/mRange.lower)*mAxisRect->width()+mAxisRect->left();
         else
-          return baseLog(mRange.upper/value)/baseLog(mRange.upper/mRange.lower)*mAxisRect->width()+mAxisRect->left();
+          if (value == 0)
+            return 0;
+          else
+            return baseLog(mRange.upper/value)/baseLog(mRange.upper/mRange.lower)*mAxisRect->width()+mAxisRect->left();
       }
     }
   } else // orientation() == Qt::Vertical
@@ -5381,7 +5384,10 @@ double QCPAxis::coordToPixel(double value) const
         if (!mRangeReversed)
           return mAxisRect->bottom()-baseLog(value/mRange.lower)/baseLog(mRange.upper/mRange.lower)*mAxisRect->height();
         else
-          return mAxisRect->bottom()-baseLog(mRange.upper/value)/baseLog(mRange.upper/mRange.lower)*mAxisRect->height();
+          if (value == 0)
+            return 0;
+          else
+            return mAxisRect->bottom()-baseLog(mRange.upper/value)/baseLog(mRange.upper/mRange.lower)*mAxisRect->height();
       }
     }
   }
