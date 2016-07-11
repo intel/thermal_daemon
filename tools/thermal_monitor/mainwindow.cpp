@@ -187,9 +187,9 @@ void MainWindow::displayTemperature(QCustomPlot *customPlot)
 
         // Draw a dashed horz line for each min valid trip temperature
         QVector<QCPItemLine *> these_trips;
-        uint trip_count = thermaldInterface.getTripCountForZone(zone);
+        int trip_count = thermaldInterface.getTripCountForZone(zone);
         if (trip_count > 0) {
-            for (uint trip = 0; trip < trip_count; trip++){
+            for (int trip = 0; trip < trip_count; trip++){
                 QCPItemLine *line = new QCPItemLine(customPlot);
                 customPlot->addItem(line);
                 temp = thermaldInterface.getTripTempForZone(zone, trip);
