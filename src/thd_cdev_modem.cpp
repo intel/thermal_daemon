@@ -128,6 +128,9 @@ cthd_cdev_modem::ofono_signal_handler (DBusConnection *conn,
 
 cthd_cdev_modem::cthd_cdev_modem(unsigned int _index, std::string control_path)
 		: cthd_cdev(_index, "") {
+	throttling = false;
+	online = false;
+
 	if (control_path.length() > 0)
 		modem_path.assign(control_path);
 	else
