@@ -2833,10 +2833,13 @@ int QCPLayoutGrid::elementCount() const
 /* inherits documentation from base class */
 QCPLayoutElement *QCPLayoutGrid::elementAt(int index) const
 {
-  if (index >= 0 && index < elementCount())
-    return mElements.at(index / columnCount()).at(index % columnCount());
-  else
-    return 0;
+  if (index >= 0 && index < elementCount()) {
+    int count = columnCount();
+
+    if (count != 0)
+      return mElements.at(index / count).at(index % count);
+  }
+  return 0;
 }
 
 /* inherits documentation from base class */
