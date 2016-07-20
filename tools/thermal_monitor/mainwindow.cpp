@@ -39,6 +39,8 @@ MainWindow::MainWindow(QWidget *parent) :
     logging_enabled(false),
     log_visible_only(false)
 {
+    setupMenus();
+
     int ret;
 
     ret = thermaldInterface.initialize();
@@ -103,6 +105,19 @@ MainWindow::MainWindow(QWidget *parent) :
     setCentralWidget(window);
 
     displayTemperature(ui->customPlot);
+}
+
+void MainWindow::setupMenus()
+{
+    QMenu *settingsMenu = menuBar()->addMenu("&Settings");
+    settingsMenu->addAction("Configure &logging", this, SLOT(configureLogging()));
+    settingsMenu->addAction("Configure &trips", this, SLOT(configureTrips()));
+    settingsMenu->addAction("Configure &polling interval", this, SLOT(configurePollingInterval()));
+    settingsMenu->addAction("Configure &sensors", this, SLOT(configureSensors()));
+    settingsMenu->addAction("&Clear settings and quit", this, SLOT(clearAndExit()));
+    settingsMenu->addAction("&Quit", this, SLOT(close()), QKeySequence::Quit);
+    QMenu *helpMenu = menuBar()->addMenu("&Help");
+    helpMenu->addAction("&About", this, SLOT(showAboutDialog()));
 }
 
 MainWindow::~MainWindow()
@@ -465,14 +480,14 @@ void MainWindow::setTripVisibility(uint zone, uint trip, bool visibility)
     trips[zone][trip]->setVisible(visibility);
 }
 
-void MainWindow::on_actionClear_triggered()
+void MainWindow::clearAndExit()
 {
     QSettings settings;
     settings.clear();
     QCoreApplication::quit();
 }
 
-void MainWindow::on_actionSet_Polling_Interval_triggered()
+void MainWindow::configurePollingInterval()
 {
     PollingDialog *p = new PollingDialog(this, temp_poll_interval);
 
@@ -481,7 +496,7 @@ void MainWindow::on_actionSet_Polling_Interval_triggered()
     p->show(); // non-modal
 }
 
-void MainWindow::on_actionSensors_triggered()
+void MainWindow::configureSensors()
 {
     SensorsDialog dialog(this);
 
@@ -500,7 +515,7 @@ void MainWindow::on_actionSensors_triggered()
     }
 }
 
-void MainWindow::on_actionLog_triggered()
+void MainWindow::configureLogging()
 {
     LogDialog *l = new LogDialog(this);
 
@@ -510,29 +525,17 @@ void MainWindow::on_actionLog_triggered()
     l->show();
 }
 
-void MainWindow::on_action_About_triggered()
+void MainWindow::showAboutDialog()
 {
-    QMessageBox msgBox;
     QString str;
-
-    str = QString("<p align='center'>Thermal Monitor<br><br>"
-                  "Version %1<br><br>"
-                  "GUI for Linux thermal daemon (thermald)<br><br>"
-                  "Copyright (c) 2015, Intel Corporation</p>")
+    str = QString("<h3>Thermal Monitor %1</h3>"
+                  "<p>GUI for Linux thermal daemon (thermald)</p>"
+                  "<p>Copyright (c) 2015, Intel Corporation</p>")
             .arg(QString(VERSION_NUMBER));
-    msgBox.setText(str);
-    msgBox.setStandardButtons(QMessageBox::Ok);
-    msgBox.setWindowTitle(QString("About Thermal Monitor"));
-    msgBox.exec();
+    QMessageBox::about(this, "About Thermal Monitor", str);
 }
 
-
-void MainWindow::on_actionE_xit_triggered()
-{
-    close();
-}
-
-void MainWindow::on_action_Trips_triggered()
+void MainWindow::configureTrips()
 {
     tripsDialog *t = new tripsDialog(this, &thermaldInterface);
 

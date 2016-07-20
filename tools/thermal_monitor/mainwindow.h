@@ -57,15 +57,15 @@ public slots:
     void setTripSetpoint(uint zone, uint trip, int temperature);
     void setTripVisibility(uint zone, uint trip, bool visibility);
 
-private slots:
     void updateTemperatureDataSlot();
-    void on_actionClear_triggered();
-    void on_actionSet_Polling_Interval_triggered();
-    void on_actionSensors_triggered();
-    void on_actionLog_triggered();
-    void on_action_About_triggered();
-    void on_actionE_xit_triggered();
-    void on_action_Trips_triggered();
+
+private slots:
+    void clearAndExit();
+    void configurePollingInterval();
+    void configureSensors();
+    void configureLogging();
+    void showAboutDialog();
+    void configureTrips();
 
 private:
     Ui::MainWindow *ui;

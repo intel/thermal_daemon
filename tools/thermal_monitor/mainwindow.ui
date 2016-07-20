@@ -25,31 +25,6 @@
     </property>
    </widget>
   </widget>
-  <widget class="QMenuBar" name="menuBar">
-   <property name="geometry">
-    <rect>
-     <x>0</x>
-     <y>0</y>
-     <width>400</width>
-     <height>26</height>
-    </rect>
-   </property>
-   <widget class="QMenu" name="menuFile">
-    <property name="title">
-     <string>&amp;Settings</string>
-    </property>
-    <addaction name="actionSet_Polling_Interval"/>
-    <addaction name="actionSensors"/>
-    <addaction name="actionLog"/>
-    <addaction name="action_Trips"/>
-    <addaction name="separator"/>
-    <addaction name="actionClear"/>
-    <addaction name="separator"/>
-    <addaction name="action_About"/>
-    <addaction name="actionE_xit"/>
-   </widget>
-   <addaction name="menuFile"/>
-  </widget>
   <widget class="QToolBar" name="mainToolBar">
    <attribute name="toolBarArea">
     <enum>TopToolBarArea</enum>
@@ -59,44 +34,6 @@
    </attribute>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
-  <action name="actionClear">
-   <property name="text">
-    <string>&amp;Clear Settings and Exit</string>
-   </property>
-  </action>
-  <action name="actionSet_Polling_Interval">
-   <property name="text">
-    <string>Set &amp;Polling Interval</string>
-   </property>
-  </action>
-  <action name="actionSensors">
-   <property name="text">
-    <string>&amp;Sensors</string>
-   </property>
-  </action>
-  <action name="actionLog">
-   <property name="text">
-    <string>&amp;Log</string>
-   </property>
-  </action>
-  <action name="action_About">
-   <property name="text">
-    <string>&amp;About</string>
-   </property>
-  </action>
-  <action name="actionE_xit">
-   <property name="text">
-    <string>E&amp;xit</string>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl+Q</string>
-   </property>
-  </action>
-  <action name="action_Trips">
-   <property name="text">
-    <string>&amp;Trips</string>
-   </property>
-  </action>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
  <customwidgets>
