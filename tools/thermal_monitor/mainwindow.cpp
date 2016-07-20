@@ -114,9 +114,6 @@ MainWindow::~MainWindow()
     }
     delete[] sensor_visibility;
     delete[] sensor_temp;
-    delete window;
-    delete layout;
-    delete ui;
 }
 
 void MainWindow::closeEvent(QCloseEvent *event)
