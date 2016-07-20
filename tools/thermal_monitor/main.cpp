@@ -49,11 +49,17 @@ int main(int argc, char *argv[])
         }
     }
 
+    ThermaldInterface thermaldInterface;
+    if (!thermaldInterface.initialize()) {
+        QMessageBox::critical(0, "Can't establish link with thermal daemon.", " Make sure that thermal daemon started with --dbus-enable option and that you're in the 'power' group.\n");
+        return 1;
+    }
+
     QCoreApplication::setOrganizationDomain("intel.com");
     QCoreApplication::setOrganizationName("Intel");
     QCoreApplication::setApplicationName("ThermalMonitor");
 
-    MainWindow w;
+    MainWindow w(&thermaldInterface);
     w.show();
 
     return a.exec();

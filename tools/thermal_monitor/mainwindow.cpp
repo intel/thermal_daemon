@@ -29,38 +29,15 @@
 #define CUSTOMPLOT_YAXIS_RANGE 120
 #define VERSION_NUMBER "1.1"
 
-MainWindow::MainWindow(QWidget *parent) :
-    QMainWindow(parent),
+MainWindow::MainWindow(ThermaldInterface *thermaldInterface) : QMainWindow(),
     temp_samples(SAMPLE_STORE_SIZE),
     currentTempsensorIndex(0),
     temp_poll_interval(DEFAULT_TEMP_POLL_INTERVAL_MS),
+    m_thermaldInterface(thermaldInterface),
     logging_enabled(false),
     log_visible_only(false),
     m_plotWidget(new QCustomPlot)
 {
-    int ret = thermaldInterface.initialize();
-    if (ret < 0) {
-        QMessageBox msgBox;
-        QString str;
-
-        str = QString("Can't establish link with thermal daemon."
-                      " Make sure that thermal daemon started with --dbus-enable option and that you're in the 'power' group.\n");
-        msgBox.setText(str);
-        msgBox.setStandardButtons(QMessageBox::Abort);
-        int ret = msgBox.exec();
-
-        switch (ret) {
-        case QMessageBox::Abort:
-            // Abort was clicked
-            abort();
-            break;
-        default:
-            // should never be reached
-            qFatal("main: unexpected button result");
-            break;
-        }
-        return;
-    }
 
     // Build up a color vector for holding a good variety
     colors.append(Qt::red);
@@ -137,15 +114,15 @@ void MainWindow::setupPlotWidget()
     pen.setWidth(1);
 
     currentTempsensorIndex = 0;
-    for (uint zone = 0; zone < thermaldInterface.getZoneCount(); zone++) {
+    for (uint zone = 0; zone < m_thermaldInterface->getZoneCount(); zone++) {
 
-        zoneInformationType *zone_info = thermaldInterface.getZone(zone);
+        zoneInformationType *zone_info = m_thermaldInterface->getZone(zone);
         if (!zone_info)
             continue;
 
         pen.setColor(colors[zone % colors.count()]);
 
-        int sensor_cnt_per_zone = thermaldInterface.getSensorCountForZone(zone);
+        int sensor_cnt_per_zone = m_thermaldInterface->getSensorCountForZone(zone);
         if (sensor_cnt_per_zone <= 0)
             break;
 
@@ -157,7 +134,7 @@ void MainWindow::setupPlotWidget()
 
             sensorZoneInformationType sensor_info;
 
-            if (thermaldInterface.getSensorTypeForZone(zone, cnt, sensor_type) < 0)
+            if (m_thermaldInterface->getSensorTypeForZone(zone, cnt, sensor_type) < 0)
                 continue;
 
             sensor_name.append(zone_info->name);
@@ -168,7 +145,7 @@ void MainWindow::setupPlotWidget()
             m_plotWidget->graph(currentTempsensorIndex)->setName(sensor_name);
             m_plotWidget->graph(currentTempsensorIndex)->setPen(pen);
             current_sample_index[currentTempsensorIndex] = 0;
-            sensor_info.index = thermaldInterface.getSensorIndex(sensor_type);
+            sensor_info.index = m_thermaldInterface->getSensorIndex(sensor_type);
             sensor_info.display_name = sensor_name;
             sensor_info.sensor_name = sensor_type;
             sensor_info.zone = zone;
@@ -183,21 +160,21 @@ void MainWindow::setupPlotWidget()
 
         // Draw a dashed horz line for each min valid trip temperature
         QVector<QCPItemLine *> these_trips;
-        int trip_count = thermaldInterface.getTripCountForZone(zone);
+        int trip_count = m_thermaldInterface->getTripCountForZone(zone);
         if (trip_count > 0) {
             for (int trip = 0; trip < trip_count; trip++){
                 QCPItemLine *line = new QCPItemLine(m_plotWidget);
                 m_plotWidget->addItem(line);
-                temp = thermaldInterface.getTripTempForZone(zone, trip);
+                temp = m_thermaldInterface->getTripTempForZone(zone, trip);
                 line->start->setCoords(0, temp);
                 line->end->setCoords(SAMPLE_STORE_SIZE - 1, temp);
                 line->setPen(pen);
-                if (temp == thermaldInterface.getLowestValidTripTempForZone(zone)) {
+                if (temp == m_thermaldInterface->getLowestValidTripTempForZone(zone)) {
                     line->setVisible(true);
-                    thermaldInterface.setTripVisibility(zone, trip, true);
+                    m_thermaldInterface->setTripVisibility(zone, trip, true);
                 } else {
                     line->setVisible(false);
-                    thermaldInterface.setTripVisibility(zone, trip, false);
+                    m_thermaldInterface->setTripVisibility(zone, trip, false);
                 }
                 these_trips.append(line);
             }
@@ -206,12 +183,12 @@ void MainWindow::setupPlotWidget()
     }
 
     // Now display sensors which are not part of any zone. Users can use this and assign to some zone
-    for (uint i = 0; i < thermaldInterface.getSensorCount(); ++i) {
+    for (uint i = 0; i < m_thermaldInterface->getSensorCount(); ++i) {
         sensorInformationType info;
         QString name;
         bool found = false;
 
-        name = thermaldInterface.getSensorName(i);
+        name = m_thermaldInterface->getSensorName(i);
         if (!name.isEmpty()){
             // search if this is already registered as part of a zone sensor
             for (int j = 0; j < sensor_types.count(); ++j) {
@@ -233,7 +210,7 @@ void MainWindow::setupPlotWidget()
                 m_plotWidget->graph(currentTempsensorIndex)->setName(sensor_name);
                 m_plotWidget->graph(currentTempsensorIndex)->setPen(pen);
                 current_sample_index[currentTempsensorIndex] = 0;
-                sensor_info.index = thermaldInterface.getSensorIndex(name);
+                sensor_info.index = m_thermaldInterface->getSensorIndex(name);
                 sensor_info.display_name = sensor_name;
                 sensor_info.sensor_name = name;
                 sensor_info.zone = -1;
@@ -254,7 +231,7 @@ void MainWindow::updateTemperatureDataSlot()
 {
 
     for (int i = 0; i < sensor_types.count(); ++i) {
-        int temperature = thermaldInterface.getSensorTemperature(sensor_types[i].index);
+        int temperature = m_thermaldInterface->getSensorTemperature(sensor_types[i].index);
             addNewTemperatureTemperatureSample(i, (double)temperature/1000.0);
         }
 
@@ -266,9 +243,9 @@ void MainWindow::updateTemperatureDataSlot()
 
     // Show any active cooling devices on the status bar
     QString str;
-    for (uint i = 0; i < thermaldInterface.getCoolingDeviceCount(); i++) {
-        int current = thermaldInterface.getCoolingDeviceCurrentState(i);
-        int min = thermaldInterface.getCoolingDeviceMinState(i);
+    for (uint i = 0; i < m_thermaldInterface->getCoolingDeviceCount(); i++) {
+        int current = m_thermaldInterface->getCoolingDeviceCurrentState(i);
+        int min = m_thermaldInterface->getCoolingDeviceMinState(i);
         if (current > min){
             if (str.isEmpty()){
                 str += "Cooling: ";
@@ -276,10 +253,10 @@ void MainWindow::updateTemperatureDataSlot()
                 str += ", ";
             }
             str += QString("%2%3 (%4/%5)")
-                    .arg(thermaldInterface.getCoolingDeviceName(i))
+                    .arg(m_thermaldInterface->getCoolingDeviceName(i))
                     .arg(i)
                     .arg(current)
-                    .arg(thermaldInterface.getCoolingDeviceMaxState(i));
+                    .arg(m_thermaldInterface->getCoolingDeviceMaxState(i));
         }
     }
     statusBar()->showMessage(str);
@@ -449,12 +426,12 @@ void MainWindow::setTripSetpoint(uint zone, uint trip, int temperature)
 {
     trips[zone][trip]->start->setCoords(0, temperature);
     trips[zone][trip]->end->setCoords(SAMPLE_STORE_SIZE - 1, temperature);
-    thermaldInterface.setTripTempForZone(zone, trip, temperature);
+    m_thermaldInterface->setTripTempForZone(zone, trip, temperature);
 }
 
 void MainWindow::setTripVisibility(uint zone, uint trip, bool visibility)
 {
-    thermaldInterface.setTripVisibility(zone, trip, visibility);
+    m_thermaldInterface->setTripVisibility(zone, trip, visibility);
     trips[zone][trip]->setVisible(visibility);
 }
 
@@ -515,14 +492,14 @@ void MainWindow::showAboutDialog()
 
 void MainWindow::configureTrips()
 {
-    tripsDialog *t = new tripsDialog(this, &thermaldInterface);
+    tripsDialog *t = new tripsDialog(this, m_thermaldInterface);
 
     QObject::connect(t, SIGNAL(setTripVis(uint, uint, bool)),
                      this, SLOT(setTripVisibility(uint, uint, bool)));
     QObject::connect(t, SIGNAL(changeTripSetpoint(uint, uint, int)),
                      this, SLOT(setTripSetpoint(uint, uint, int)));
-    for(uint i = 0; i < thermaldInterface.getZoneCount(); i++) {
-        t->addZone(thermaldInterface.getZone(i));
+    for(uint i = 0; i < m_thermaldInterface->getZoneCount(); i++) {
+        t->addZone(m_thermaldInterface->getZone(i));
     }
 
     t->show();

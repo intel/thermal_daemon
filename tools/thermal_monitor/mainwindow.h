@@ -34,7 +34,7 @@ class MainWindow : public QMainWindow
     Q_OBJECT
 
 public:
-    explicit MainWindow(QWidget *parent = 0);
+    explicit MainWindow(ThermaldInterface * thermaldInterface);
     ~MainWindow();
 
     void setupPlotWidget();
@@ -77,7 +77,7 @@ private:
     QVector<QVector<QCPItemLine *> > trips;
     QVector<sensorZoneInformationType>sensor_types;
 
-    ThermaldInterface thermaldInterface;
+    ThermaldInterface *m_thermaldInterface;
 
     bool logging_enabled;
     bool log_visible_only;
