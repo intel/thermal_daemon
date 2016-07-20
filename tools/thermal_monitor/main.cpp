@@ -26,32 +26,17 @@ int main(int argc, char *argv[])
     // Warn the user if not running as root
     uid_t id = getuid();
     if (id == ROOT_ID){
-        QMessageBox msgBox;
-        QString str;
-
-        str = QString("Running X11 applications as root is unsafe.\n"
-                      "Try invoking again without root privileges.\n"
-                      "If you're unable to connect to thermald, ensure that you are in the 'power' group.")
-                .arg(QCoreApplication::applicationName());
-        msgBox.setText(str);
-        msgBox.setStandardButtons(QMessageBox::Abort);
-        int ret = msgBox.exec();
-
-        switch (ret) {
-        case QMessageBox::Abort:
-            // Abort was clicked
-            return(1);
-            break;
-        default:
-            // should never be reached
-            qFatal("main: unexpected button result");
-            break;
-        }
+        QMessageBox::critical(0, "Running as root is not supported",
+                      "Running X11 applications as root is unsafe.\n"
+                      "Try invoking again without root privileges.");
+        return(1);
     }
 
     ThermaldInterface thermaldInterface;
     if (!thermaldInterface.initialize()) {
-        QMessageBox::critical(0, "Can't establish link with thermal daemon.", " Make sure that thermal daemon started with --dbus-enable option and that you're in the 'power' group.\n");
+        QMessageBox::critical(0, "Can't establish link with thermal daemon.",
+                              "Make sure that thermal daemon started with --dbus-enable option\n"
+                              "and that you're in the 'power' group.");
         return 1;
     }
 
