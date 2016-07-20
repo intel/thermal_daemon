@@ -43,7 +43,6 @@ MainWindow::MainWindow(QWidget *parent) :
 
     ret = thermaldInterface.initialize();
     if (ret < 0) {
-        sensor_visibility = NULL;
         window = NULL;
 
         QMessageBox msgBox;
@@ -111,7 +110,6 @@ MainWindow::~MainWindow()
     if (logging_enabled){
         logging_file.close();
     }
-    delete[] sensor_visibility;
 }
 
 void MainWindow::closeEvent(QCloseEvent *event)
@@ -173,6 +171,7 @@ void MainWindow::displayTemperature(QCustomPlot *customPlot)
             sensor_info.sensor_name = sensor_type;
             sensor_info.zone = zone;
             sensor_types.append(sensor_info);
+            sensor_visibility.append(true);
 
             currentTempsensorIndex++;
 
@@ -237,15 +236,12 @@ void MainWindow::displayTemperature(QCustomPlot *customPlot)
                 sensor_info.sensor_name = name;
                 sensor_info.zone = -1;
                 sensor_types.append(sensor_info);
+                sensor_visibility.append(true);
                 currentTempsensorIndex++;
             }
 
         }
     }
-
-
-    sensor_visibility = new bool[sensor_types.count()];
-
 
     connect(&tempUpdateTimer, SIGNAL(timeout()),
             this, SLOT(updateTemperatureDataSlot()));
@@ -487,25 +483,21 @@ void MainWindow::on_actionSet_Polling_Interval_triggered()
 
 void MainWindow::on_actionSensors_triggered()
 {
-    SensorsDialog *s = new SensorsDialog(this);
-
-    QObject::connect(s, SIGNAL(setGraphVisibility(uint, bool)),
-                     this, SLOT(changeGraphVisibilitySlot(uint, bool)));
+    SensorsDialog dialog(this);
 
     // set the checkbox names to match the temperature sensor names
-    for (int i = 0; i < MAX_NUMBER_SENSOR_VISIBILITY_CHECKBOXES; i++) {
-        sensorZoneInformationType sensor_info;
-
-        if (i < sensor_types.count()) {
-            sensor_info = sensor_types[i];
-            s->setupCheckbox(i, sensor_info.display_name, sensor_visibility[i]);
-        } else {
-            s->disableCheckbox(i);
-        }
+    for (int i = 0; i < sensor_visibility.count(); i++) {
+        dialog.addSensor(sensor_types[i].display_name, sensor_visibility[i]);
     }
 
-    // future project: create checkboxes via code, not .ui
-    s->show();
+    if (dialog.exec() == QDialog::Rejected) {
+        return;
+    }
+
+    sensor_visibility = dialog.getVisibilities();
+    for (int i=0; i<sensor_visibility.count(); i++) {
+        changeGraphVisibilitySlot(i, sensor_visibility[i]);
+    }
 }
 
 void MainWindow::on_actionLog_triggered()

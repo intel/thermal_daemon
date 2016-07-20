@@ -76,7 +76,7 @@ private:
     QVector<double> temperature_samples[MAX_TEMP_INPUT_COUNT];
     int current_sample_index[MAX_TEMP_INPUT_COUNT];
     uint temp_poll_interval;
-    bool *sensor_visibility;
+    QVector<bool> sensor_visibility;
    // QLabel *sensor_label;
     QVector<QVector<QCPItemLine *> > trips;
     QVector<sensorZoneInformationType>sensor_types;

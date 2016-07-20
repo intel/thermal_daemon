@@ -30,6 +30,5 @@ HEADERS  += mainwindow.h \
 
 FORMS    += mainwindow.ui \
     pollingdialog.ui \
-    sensorsdialog.ui \
     logdialog.ui \
     tripsdialog.ui
