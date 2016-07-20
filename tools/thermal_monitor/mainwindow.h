@@ -19,7 +19,6 @@
 #include <QVector>
 #include <QLabel>
 #include <string>
-#include <QVBoxLayout>
 #include "qcustomplot/qcustomplot.h"
 #include "thermaldinterface.h"
 
@@ -79,11 +78,9 @@ private:
     uint temp_poll_interval;
     bool *sensor_visibility;
    // QLabel *sensor_label;
-    QLabel *sensor_temp;
     QVector<QVector<QCPItemLine *> > trips;
     QVector<sensorZoneInformationType>sensor_types;
 
-    QVBoxLayout *layout;
     QWidget *window;
 
     ThermaldInterface thermaldInterface;

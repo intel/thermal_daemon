@@ -44,9 +44,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ret = thermaldInterface.initialize();
     if (ret < 0) {
         sensor_visibility = NULL;
-        sensor_temp = NULL;
         window = NULL;
-        layout = NULL;
 
         QMessageBox msgBox;
         QString str;
@@ -97,14 +95,15 @@ MainWindow::MainWindow(QWidget *parent) :
     for (int i = 0; i < SAMPLE_STORE_SIZE; ++i) {
         temp_samples[i] = i;
     }
-    displayTemperature(ui->customPlot);
 
     window = new QWidget;
-    layout = new QVBoxLayout;
 
-    layout->addWidget(ui->customPlot, 90); // 90% to this widget, 10% to tab widget
+    QVBoxLayout *layout = new QVBoxLayout;
     window->setLayout(layout);
+    layout->addWidget(ui->customPlot, 90); // 90% to this widget, 10% to tab widget
     setCentralWidget(window);
+
+    displayTemperature(ui->customPlot);
 }
 
 MainWindow::~MainWindow()
@@ -113,7 +112,6 @@ MainWindow::~MainWindow()
         logging_file.close();
     }
     delete[] sensor_visibility;
-    delete[] sensor_temp;
 }
 
 void MainWindow::closeEvent(QCloseEvent *event)
@@ -247,7 +245,7 @@ void MainWindow::displayTemperature(QCustomPlot *customPlot)
 
 
     sensor_visibility = new bool[sensor_types.count()];
-    sensor_temp = new QLabel[sensor_types.count()];
+
 
     connect(&tempUpdateTimer, SIGNAL(timeout()),
             this, SLOT(updateTemperatureDataSlot()));
@@ -259,7 +257,6 @@ void MainWindow::updateTemperatureDataSlot()
 
     for (int i = 0; i < sensor_types.count(); ++i) {
         int temperature = thermaldInterface.getSensorTemperature(sensor_types[i].index);
-            sensor_temp[i].setNum(temperature/1000);
             addNewTemperatureTemperatureSample(i, (double)temperature/1000.0);
         }
 
