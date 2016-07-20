@@ -52,7 +52,7 @@ MainWindow::MainWindow(QWidget *parent) :
         QString str;
 
         str = QString("Can't establish link with thermal daemon."
-                      " Make sure that thermal daemon started with --dbus-enable option.\n");
+                      " Make sure that thermal daemon started with --dbus-enable option and that you're in the 'power' group.\n");
         msgBox.setText(str);
         msgBox.setStandardButtons(QMessageBox::Abort);
         int ret = msgBox.exec();

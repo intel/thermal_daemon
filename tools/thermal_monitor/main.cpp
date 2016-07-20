@@ -25,12 +25,13 @@ int main(int argc, char *argv[])
 
     // Warn the user if not running as root
     uid_t id = getuid();
-    if (id != ROOT_ID){
+    if (id == ROOT_ID){
         QMessageBox msgBox;
         QString str;
 
-        str = QString("%1 requires root privilages to access the thermal daemon.  "
-                      "Try invoking again with root privileges.\n")
+        str = QString("Running X11 applications as root is unsafe.\n"
+                      "Try invoking again without root privileges.\n"
+                      "If you're unable to connect to thermald, ensure that you are in the 'power' group.")
                 .arg(QCoreApplication::applicationName());
         msgBox.setText(str);
         msgBox.setStandardButtons(QMessageBox::Abort);
