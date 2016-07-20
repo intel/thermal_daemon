@@ -23,6 +23,8 @@
 SensorsDialog::SensorsDialog(QWidget *parent) :
     QDialog(parent)
 {
+    setWindowTitle("Select visible sensors");
+
     QVBoxLayout *dialogLayout = new QVBoxLayout;
     setLayout(dialogLayout);
 
@@ -32,8 +34,8 @@ SensorsDialog::SensorsDialog(QWidget *parent) :
     m_checkboxLayout = new QVBoxLayout;
     mainLayout->addLayout(m_checkboxLayout);
 
-    QPushButton *checkAllButton = new QPushButton("Check all");
-    QPushButton *uncheckAllButton = new QPushButton("Uncheck all");
+    QPushButton *checkAllButton = new QPushButton("Show all");
+    QPushButton *uncheckAllButton = new QPushButton("Hide all");
     connect(checkAllButton, SIGNAL(clicked(bool)), this, SLOT(checkAll()));
     connect(uncheckAllButton, SIGNAL(clicked(bool)), this, SLOT(uncheckAll()));
 
