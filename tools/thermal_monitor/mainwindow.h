@@ -22,10 +22,6 @@
 #include "qcustomplot/qcustomplot.h"
 #include "thermaldinterface.h"
 
-namespace Ui {
-class MainWindow;
-}
-
 typedef struct {
     QString display_name;
     QString sensor_name;
@@ -41,7 +37,7 @@ public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
 
-    void displayTemperature(QCustomPlot *customPlot);
+    void setupPlotWidget();
     int addNewTemperatureTemperatureSample(int index, double temperature);
     bool getVisibleState(int index);
 
@@ -49,7 +45,6 @@ protected:
     virtual void closeEvent(QCloseEvent *event);
 
 public slots:
-    void currentChangedSlot(int index);
     void changePollIntervalSlot(uint new_val);
     void changeGraphVisibilitySlot(uint index, bool visible);
     void changeLogVariables(bool log_enabled, bool log_vis_only,
@@ -68,7 +63,8 @@ private slots:
     void configureTrips();
 
 private:
-    Ui::MainWindow *ui;
+    void setupMenus();
+
     QTimer tempUpdateTimer;
     QVector<QColor> colors;
     QVector<double> temp_samples;
@@ -81,8 +77,6 @@ private:
     QVector<QVector<QCPItemLine *> > trips;
     QVector<sensorZoneInformationType>sensor_types;
 
-    QWidget *window;
-
     ThermaldInterface thermaldInterface;
 
     bool logging_enabled;
@@ -90,8 +84,9 @@ private:
     QString log_filename;
     QFile logging_file;
     QTextStream outStreamLogging;
+    QCustomPlot *m_plotWidget;
 
-    void resoreSettings();
+    void loadSettings();
     void storeSettings();
 };
 

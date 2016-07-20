@@ -28,7 +28,7 @@ HEADERS  += mainwindow.h \
     logdialog.h \
     tripsdialog.h
 
-FORMS    += mainwindow.ui \
+FORMS    += \
     pollingdialog.ui \
     logdialog.ui \
     tripsdialog.ui

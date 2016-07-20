@@ -14,7 +14,6 @@
 #include <QMessageBox>
 #include <QDesktopWidget>
 #include "mainwindow.h"
-#include "ui_mainwindow.h"
 #include "pollingdialog.h"
 #include "sensorsdialog.h"
 #include "logdialog.h"
@@ -32,21 +31,15 @@
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
-    ui(new Ui::MainWindow),
     temp_samples(SAMPLE_STORE_SIZE),
     currentTempsensorIndex(0),
     temp_poll_interval(DEFAULT_TEMP_POLL_INTERVAL_MS),
     logging_enabled(false),
-    log_visible_only(false)
+    log_visible_only(false),
+    m_plotWidget(new QCustomPlot)
 {
-    setupMenus();
-
-    int ret;
-
-    ret = thermaldInterface.initialize();
+    int ret = thermaldInterface.initialize();
     if (ret < 0) {
-        window = NULL;
-
         QMessageBox msgBox;
         QString str;
 
@@ -66,7 +59,6 @@ MainWindow::MainWindow(QWidget *parent) :
             qFatal("main: unexpected button result");
             break;
         }
-        delete ui;
         return;
     }
 
@@ -90,21 +82,16 @@ MainWindow::MainWindow(QWidget *parent) :
     colors.append(QColor(255,69,0));
     colors.append(Qt::gray);
 
-    ui->setupUi(this);
-    resoreSettings();
+    loadSettings();
 
     for (int i = 0; i < SAMPLE_STORE_SIZE; ++i) {
         temp_samples[i] = i;
     }
 
-    window = new QWidget;
-
-    QVBoxLayout *layout = new QVBoxLayout;
-    window->setLayout(layout);
-    layout->addWidget(ui->customPlot, 90); // 90% to this widget, 10% to tab widget
-    setCentralWidget(window);
-
-    displayTemperature(ui->customPlot);
+    setupMenus();
+    setCentralWidget(m_plotWidget);
+    setupPlotWidget();
+    statusBar()->show();
 }
 
 void MainWindow::setupMenus()
@@ -134,18 +121,18 @@ void MainWindow::closeEvent(QCloseEvent *event)
 }
 
 
-void MainWindow::displayTemperature(QCustomPlot *customPlot)
+void MainWindow::setupPlotWidget()
 {
     QPen pen;
     int temp;
 
     // give the axes some labels:
-    customPlot->xAxis->setLabel("Samples");
-    customPlot->yAxis->setLabel("Temperature (°C)");
+    m_plotWidget->xAxis->setLabel("Samples");
+    m_plotWidget->yAxis->setLabel("Temperature (°C)");
     // set axes ranges, so we see all data:
-    customPlot->xAxis->setRange(0, SAMPLE_STORE_SIZE);
-    customPlot->yAxis->setRange(0, CUSTOMPLOT_YAXIS_RANGE);
-    customPlot->legend->setVisible(true);
+    m_plotWidget->xAxis->setRange(0, SAMPLE_STORE_SIZE);
+    m_plotWidget->yAxis->setRange(0, CUSTOMPLOT_YAXIS_RANGE);
+    m_plotWidget->legend->setVisible(true);
 
     pen.setWidth(1);
 
@@ -177,9 +164,9 @@ void MainWindow::displayTemperature(QCustomPlot *customPlot)
             sensor_name.append(":");
             sensor_name.append(sensor_type);
 
-            ui->customPlot->addGraph();
-            ui->customPlot->graph(currentTempsensorIndex)->setName(sensor_name);
-            ui->customPlot->graph(currentTempsensorIndex)->setPen(pen);
+            m_plotWidget->addGraph();
+            m_plotWidget->graph(currentTempsensorIndex)->setName(sensor_name);
+            m_plotWidget->graph(currentTempsensorIndex)->setPen(pen);
             current_sample_index[currentTempsensorIndex] = 0;
             sensor_info.index = thermaldInterface.getSensorIndex(sensor_type);
             sensor_info.display_name = sensor_name;
@@ -199,8 +186,8 @@ void MainWindow::displayTemperature(QCustomPlot *customPlot)
         int trip_count = thermaldInterface.getTripCountForZone(zone);
         if (trip_count > 0) {
             for (int trip = 0; trip < trip_count; trip++){
-                QCPItemLine *line = new QCPItemLine(customPlot);
-                customPlot->addItem(line);
+                QCPItemLine *line = new QCPItemLine(m_plotWidget);
+                m_plotWidget->addItem(line);
                 temp = thermaldInterface.getTripTempForZone(zone, trip);
                 line->start->setCoords(0, temp);
                 line->end->setCoords(SAMPLE_STORE_SIZE - 1, temp);
@@ -242,9 +229,9 @@ void MainWindow::displayTemperature(QCustomPlot *customPlot)
                 sensor_name.append("UKWN:");
                 sensor_name.append(name);
 
-                ui->customPlot->addGraph();
-                ui->customPlot->graph(currentTempsensorIndex)->setName(sensor_name);
-                ui->customPlot->graph(currentTempsensorIndex)->setPen(pen);
+                m_plotWidget->addGraph();
+                m_plotWidget->graph(currentTempsensorIndex)->setName(sensor_name);
+                m_plotWidget->graph(currentTempsensorIndex)->setPen(pen);
                 current_sample_index[currentTempsensorIndex] = 0;
                 sensor_info.index = thermaldInterface.getSensorIndex(name);
                 sensor_info.display_name = sensor_name;
@@ -275,7 +262,7 @@ void MainWindow::updateTemperatureDataSlot()
         outStreamLogging << endl;
     }
 
-    ui->customPlot->replot();
+    m_plotWidget->replot();
 
     // Show any active cooling devices on the status bar
     QString str;
@@ -295,7 +282,7 @@ void MainWindow::updateTemperatureDataSlot()
                     .arg(thermaldInterface.getCoolingDeviceMaxState(i));
         }
     }
-    ui->statusBar->showMessage(str);
+    statusBar()->showMessage(str);
 }
 
 int MainWindow::addNewTemperatureTemperatureSample(int index, double temperature)
@@ -311,17 +298,17 @@ int MainWindow::addNewTemperatureTemperatureSample(int index, double temperature
         temperature_samples[index].push_back(temperature);
         current_sample_index[index]++;
     }
-    ui->customPlot->graph(index)->setData(temp_samples, temperature_samples[index]);
+    m_plotWidget->graph(index)->setData(temp_samples, temperature_samples[index]);
 
     if (logging_enabled) {
-        if (ui->customPlot->graph(index)->visible() || !log_visible_only){
+        if (m_plotWidget->graph(index)->visible() || !log_visible_only){
             outStreamLogging << temperature << ", ";
         }
     }
     return 0;
 }
 
-void MainWindow::resoreSettings()
+void MainWindow::loadSettings()
 {
     QSettings settings;
 
@@ -403,7 +390,7 @@ void MainWindow::changePollIntervalSlot(uint new_val)
 
 void MainWindow::changeGraphVisibilitySlot(uint index, bool visible) {
     if (index < (uint) sensor_types.count()) {
-        ui->customPlot->graph(index)->setVisible(visible);
+        m_plotWidget->graph(index)->setVisible(visible);
         sensor_visibility[index] = visible;
 
         if (index < (uint)sensor_types.count()) {
@@ -440,8 +427,8 @@ void MainWindow::changeLogVariables(bool log_enabled, bool log_vis_only,
 
         // now output the temperature sensor names as a header
         for(int i = 0; i < sensor_types.count(); i++) {
-            if (!log_vis_only || ui->customPlot->graph(i)->visible()) {
-                outStreamLogging << ui->customPlot->graph(i)->name() << ", ";
+            if (!log_vis_only || m_plotWidget->graph(i)->visible()) {
+                outStreamLogging << m_plotWidget->graph(i)->name() << ", ";
             }
         }
         outStreamLogging << endl;
@@ -456,15 +443,6 @@ void MainWindow::changeLogVariables(bool log_enabled, bool log_vis_only,
     logging_enabled = log_enabled;
     log_visible_only = log_vis_only;
     log_filename = log_file_name;
-}
-
-void MainWindow::currentChangedSlot(int index)
-{
-    if (index) {
-        ui->customPlot->setVisible(false);
-    } else {
-        ui->customPlot->setVisible(true);
-    }
 }
 
 void MainWindow::setTripSetpoint(uint zone, uint trip, int temperature)
