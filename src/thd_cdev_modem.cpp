@@ -145,6 +145,7 @@ int cthd_cdev_modem::get_modem_property(DBusConnection* conn,
 	DBusMessage *reply;
 	DBusMessageIter array;
 	DBusMessageIter dict;
+	int rc = THD_ERROR;
 
 	dbus_error_init(&error);
 
@@ -156,7 +157,7 @@ int cthd_cdev_modem::get_modem_property(DBusConnection* conn,
 		thd_log_error("Error creating D-Bus message for GetProperties "
 				"under %s : %s\n", modem_path.c_str(),
 				error.message);
-		return THD_ERROR;
+		return rc;
 	}
 
 	reply = dbus_connection_send_with_reply_and_block(conn, msg, 10000,
@@ -166,7 +167,7 @@ int cthd_cdev_modem::get_modem_property(DBusConnection* conn,
 				modem_path.c_str(), error.message);
 		dbus_error_free(&error);
 		dbus_message_unref(msg);
-		return THD_ERROR;
+		return rc;
 	}
 
 	dbus_message_unref(msg);
@@ -176,7 +177,7 @@ int cthd_cdev_modem::get_modem_property(DBusConnection* conn,
 		thd_log_error("GetProperties return type not array under %s!\n",
 				modem_path.c_str());
 		dbus_message_unref(reply);
-		return THD_ERROR;
+		return rc;
 	}
 
 	dbus_message_iter_recurse(&array, &dict);
@@ -194,7 +195,7 @@ int cthd_cdev_modem::get_modem_property(DBusConnection* conn,
 			thd_log_error("GetProperties dict key type not string "
 					"under %s!\n", modem_path.c_str());
 			dbus_message_unref(reply);
-			return THD_ERROR;
+			return rc;
 		}
 
 		dbus_message_iter_get_basic(&key, &property_name);
@@ -214,7 +215,7 @@ int cthd_cdev_modem::get_modem_property(DBusConnection* conn,
 					"variant under %s!\n",
 					modem_path.c_str());
 			dbus_message_unref(reply);
-			return THD_ERROR;
+			return rc;
 		}
 
 		dbus_message_iter_recurse(&key, &var);
@@ -225,16 +226,17 @@ int cthd_cdev_modem::get_modem_property(DBusConnection* conn,
 					"boolean under %s!\n",
 					modem_path.c_str());
 			dbus_message_unref(reply);
-			return THD_ERROR;
+			return rc;
 		}
 
 		dbus_message_iter_get_basic(&var, value);
+		rc = THD_SUCCESS;
 		break;
 	}
 
 	dbus_message_unref(reply);
 
-	return THD_SUCCESS;
+	return rc;
 }
 
 int cthd_cdev_modem::update_online_state(DBusConnection* conn) {
