@@ -14,7 +14,6 @@
 #include <QMessageBox>
 #include <QDesktopWidget>
 #include "mainwindow.h"
-#include "ui_mainwindow.h"
 #include "pollingdialog.h"
 #include "sensorsdialog.h"
 #include "logdialog.h"
@@ -30,46 +29,15 @@
 #define CUSTOMPLOT_YAXIS_RANGE 120
 #define VERSION_NUMBER "1.1"
 
-MainWindow::MainWindow(QWidget *parent) :
-    QMainWindow(parent),
-    ui(new Ui::MainWindow),
+MainWindow::MainWindow(ThermaldInterface *thermaldInterface) : QMainWindow(),
     temp_samples(SAMPLE_STORE_SIZE),
     currentTempsensorIndex(0),
     temp_poll_interval(DEFAULT_TEMP_POLL_INTERVAL_MS),
+    m_thermaldInterface(thermaldInterface),
     logging_enabled(false),
-    log_visible_only(false)
+    log_visible_only(false),
+    m_plotWidget(new QCustomPlot)
 {
-    int ret;
-
-    ret = thermaldInterface.initialize();
-    if (ret < 0) {
-        sensor_visibility = NULL;
-        sensor_temp = NULL;
-        window = NULL;
-        layout = NULL;
-
-        QMessageBox msgBox;
-        QString str;
-
-        str = QString("Can't establish link with thermal daemon."
-                      " Make sure that thermal daemon started with --dbus-enable option.\n");
-        msgBox.setText(str);
-        msgBox.setStandardButtons(QMessageBox::Abort);
-        int ret = msgBox.exec();
-
-        switch (ret) {
-        case QMessageBox::Abort:
-            // Abort was clicked
-            abort();
-            break;
-        default:
-            // should never be reached
-            qFatal("main: unexpected button result");
-            break;
-        }
-        delete ui;
-        return;
-    }
 
     // Build up a color vector for holding a good variety
     colors.append(Qt::red);
@@ -91,20 +59,29 @@ MainWindow::MainWindow(QWidget *parent) :
     colors.append(QColor(255,69,0));
     colors.append(Qt::gray);
 
-    ui->setupUi(this);
-    resoreSettings();
+    loadSettings();
 
     for (int i = 0; i < SAMPLE_STORE_SIZE; ++i) {
         temp_samples[i] = i;
     }
-    displayTemperature(ui->customPlot);
 
-    window = new QWidget;
-    layout = new QVBoxLayout;
+    setupMenus();
+    setCentralWidget(m_plotWidget);
+    setupPlotWidget();
+    statusBar()->show();
+}
 
-    layout->addWidget(ui->customPlot, 90); // 90% to this widget, 10% to tab widget
-    window->setLayout(layout);
-    setCentralWidget(window);
+void MainWindow::setupMenus()
+{
+    QMenu *settingsMenu = menuBar()->addMenu("&Settings");
+    settingsMenu->addAction("Configure &logging", this, SLOT(configureLogging()));
+    settingsMenu->addAction("Configure &trips", this, SLOT(configureTrips()));
+    settingsMenu->addAction("Configure &polling interval", this, SLOT(configurePollingInterval()));
+    settingsMenu->addAction("Configure &sensors", this, SLOT(configureSensors()));
+    settingsMenu->addAction("&Clear settings and quit", this, SLOT(clearAndExit()));
+    settingsMenu->addAction("&Quit", this, SLOT(close()), QKeySequence::Quit);
+    QMenu *helpMenu = menuBar()->addMenu("&Help");
+    helpMenu->addAction("&About", this, SLOT(showAboutDialog()));
 }
 
 MainWindow::~MainWindow()
@@ -112,11 +89,6 @@ MainWindow::~MainWindow()
     if (logging_enabled){
         logging_file.close();
     }
-    delete[] sensor_visibility;
-    delete[] sensor_temp;
-    delete window;
-    delete layout;
-    delete ui;
 }
 
 void MainWindow::closeEvent(QCloseEvent *event)
@@ -126,31 +98,31 @@ void MainWindow::closeEvent(QCloseEvent *event)
 }
 
 
-void MainWindow::displayTemperature(QCustomPlot *customPlot)
+void MainWindow::setupPlotWidget()
 {
     QPen pen;
     int temp;
 
     // give the axes some labels:
-    customPlot->xAxis->setLabel("Samples");
-    customPlot->yAxis->setLabel("Temperature (°C)");
+    m_plotWidget->xAxis->setLabel("Samples");
+    m_plotWidget->yAxis->setLabel("Temperature (°C)");
     // set axes ranges, so we see all data:
-    customPlot->xAxis->setRange(0, SAMPLE_STORE_SIZE);
-    customPlot->yAxis->setRange(0, CUSTOMPLOT_YAXIS_RANGE);
-    customPlot->legend->setVisible(true);
+    m_plotWidget->xAxis->setRange(0, SAMPLE_STORE_SIZE);
+    m_plotWidget->yAxis->setRange(0, CUSTOMPLOT_YAXIS_RANGE);
+    m_plotWidget->legend->setVisible(true);
 
     pen.setWidth(1);
 
     currentTempsensorIndex = 0;
-    for (uint zone = 0; zone < thermaldInterface.getZoneCount(); zone++) {
+    for (uint zone = 0; zone < m_thermaldInterface->getZoneCount(); zone++) {
 
-        zoneInformationType *zone_info = thermaldInterface.getZone(zone);
+        zoneInformationType *zone_info = m_thermaldInterface->getZone(zone);
         if (!zone_info)
             continue;
 
         pen.setColor(colors[zone % colors.count()]);
 
-        int sensor_cnt_per_zone = thermaldInterface.getSensorCountForZone(zone);
+        int sensor_cnt_per_zone = m_thermaldInterface->getSensorCountForZone(zone);
         if (sensor_cnt_per_zone <= 0)
             break;
 
@@ -162,22 +134,23 @@ void MainWindow::displayTemperature(QCustomPlot *customPlot)
 
             sensorZoneInformationType sensor_info;
 
-            if (thermaldInterface.getSensorTypeForZone(zone, cnt, sensor_type) < 0)
+            if (m_thermaldInterface->getSensorTypeForZone(zone, cnt, sensor_type) < 0)
                 continue;
 
             sensor_name.append(zone_info->name);
             sensor_name.append(":");
             sensor_name.append(sensor_type);
 
-            ui->customPlot->addGraph();
-            ui->customPlot->graph(currentTempsensorIndex)->setName(sensor_name);
-            ui->customPlot->graph(currentTempsensorIndex)->setPen(pen);
+            m_plotWidget->addGraph();
+            m_plotWidget->graph(currentTempsensorIndex)->setName(sensor_name);
+            m_plotWidget->graph(currentTempsensorIndex)->setPen(pen);
             current_sample_index[currentTempsensorIndex] = 0;
-            sensor_info.index = thermaldInterface.getSensorIndex(sensor_type);
+            sensor_info.index = m_thermaldInterface->getSensorIndex(sensor_type);
             sensor_info.display_name = sensor_name;
             sensor_info.sensor_name = sensor_type;
             sensor_info.zone = zone;
             sensor_types.append(sensor_info);
+            sensor_visibility.append(true);
 
             currentTempsensorIndex++;
 
@@ -187,21 +160,21 @@ void MainWindow::displayTemperature(QCustomPlot *customPlot)
 
         // Draw a dashed horz line for each min valid trip temperature
         QVector<QCPItemLine *> these_trips;
-        int trip_count = thermaldInterface.getTripCountForZone(zone);
+        int trip_count = m_thermaldInterface->getTripCountForZone(zone);
         if (trip_count > 0) {
             for (int trip = 0; trip < trip_count; trip++){
-                QCPItemLine *line = new QCPItemLine(customPlot);
-                customPlot->addItem(line);
-                temp = thermaldInterface.getTripTempForZone(zone, trip);
+                QCPItemLine *line = new QCPItemLine(m_plotWidget);
+                m_plotWidget->addItem(line);
+                temp = m_thermaldInterface->getTripTempForZone(zone, trip);
                 line->start->setCoords(0, temp);
                 line->end->setCoords(SAMPLE_STORE_SIZE - 1, temp);
                 line->setPen(pen);
-                if (temp == thermaldInterface.getLowestValidTripTempForZone(zone)) {
+                if (temp == m_thermaldInterface->getLowestValidTripTempForZone(zone)) {
                     line->setVisible(true);
-                    thermaldInterface.setTripVisibility(zone, trip, true);
+                    m_thermaldInterface->setTripVisibility(zone, trip, true);
                 } else {
                     line->setVisible(false);
-                    thermaldInterface.setTripVisibility(zone, trip, false);
+                    m_thermaldInterface->setTripVisibility(zone, trip, false);
                 }
                 these_trips.append(line);
             }
@@ -210,12 +183,12 @@ void MainWindow::displayTemperature(QCustomPlot *customPlot)
     }
 
     // Now display sensors which are not part of any zone. Users can use this and assign to some zone
-    for (uint i = 0; i < thermaldInterface.getSensorCount(); ++i) {
+    for (uint i = 0; i < m_thermaldInterface->getSensorCount(); ++i) {
         sensorInformationType info;
         QString name;
         bool found = false;
 
-        name = thermaldInterface.getSensorName(i);
+        name = m_thermaldInterface->getSensorName(i);
         if (!name.isEmpty()){
             // search if this is already registered as part of a zone sensor
             for (int j = 0; j < sensor_types.count(); ++j) {
@@ -233,24 +206,21 @@ void MainWindow::displayTemperature(QCustomPlot *customPlot)
                 sensor_name.append("UKWN:");
                 sensor_name.append(name);
 
-                ui->customPlot->addGraph();
-                ui->customPlot->graph(currentTempsensorIndex)->setName(sensor_name);
-                ui->customPlot->graph(currentTempsensorIndex)->setPen(pen);
+                m_plotWidget->addGraph();
+                m_plotWidget->graph(currentTempsensorIndex)->setName(sensor_name);
+                m_plotWidget->graph(currentTempsensorIndex)->setPen(pen);
                 current_sample_index[currentTempsensorIndex] = 0;
-                sensor_info.index = thermaldInterface.getSensorIndex(name);
+                sensor_info.index = m_thermaldInterface->getSensorIndex(name);
                 sensor_info.display_name = sensor_name;
                 sensor_info.sensor_name = name;
                 sensor_info.zone = -1;
                 sensor_types.append(sensor_info);
+                sensor_visibility.append(true);
                 currentTempsensorIndex++;
             }
 
         }
     }
-
-
-    sensor_visibility = new bool[sensor_types.count()];
-    sensor_temp = new QLabel[sensor_types.count()];
 
     connect(&tempUpdateTimer, SIGNAL(timeout()),
             this, SLOT(updateTemperatureDataSlot()));
@@ -261,8 +231,7 @@ void MainWindow::updateTemperatureDataSlot()
 {
 
     for (int i = 0; i < sensor_types.count(); ++i) {
-        int temperature = thermaldInterface.getSensorTemperature(sensor_types[i].index);
-            sensor_temp[i].setNum(temperature/1000);
+        int temperature = m_thermaldInterface->getSensorTemperature(sensor_types[i].index);
             addNewTemperatureTemperatureSample(i, (double)temperature/1000.0);
         }
 
@@ -270,13 +239,13 @@ void MainWindow::updateTemperatureDataSlot()
         outStreamLogging << endl;
     }
 
-    ui->customPlot->replot();
+    m_plotWidget->replot();
 
     // Show any active cooling devices on the status bar
     QString str;
-    for (uint i = 0; i < thermaldInterface.getCoolingDeviceCount(); i++) {
-        int current = thermaldInterface.getCoolingDeviceCurrentState(i);
-        int min = thermaldInterface.getCoolingDeviceMinState(i);
+    for (uint i = 0; i < m_thermaldInterface->getCoolingDeviceCount(); i++) {
+        int current = m_thermaldInterface->getCoolingDeviceCurrentState(i);
+        int min = m_thermaldInterface->getCoolingDeviceMinState(i);
         if (current > min){
             if (str.isEmpty()){
                 str += "Cooling: ";
@@ -284,13 +253,13 @@ void MainWindow::updateTemperatureDataSlot()
                 str += ", ";
             }
             str += QString("%2%3 (%4/%5)")
-                    .arg(thermaldInterface.getCoolingDeviceName(i))
+                    .arg(m_thermaldInterface->getCoolingDeviceName(i))
                     .arg(i)
                     .arg(current)
-                    .arg(thermaldInterface.getCoolingDeviceMaxState(i));
+                    .arg(m_thermaldInterface->getCoolingDeviceMaxState(i));
         }
     }
-    ui->statusBar->showMessage(str);
+    statusBar()->showMessage(str);
 }
 
 int MainWindow::addNewTemperatureTemperatureSample(int index, double temperature)
@@ -306,17 +275,17 @@ int MainWindow::addNewTemperatureTemperatureSample(int index, double temperature
         temperature_samples[index].push_back(temperature);
         current_sample_index[index]++;
     }
-    ui->customPlot->graph(index)->setData(temp_samples, temperature_samples[index]);
+    m_plotWidget->graph(index)->setData(temp_samples, temperature_samples[index]);
 
     if (logging_enabled) {
-        if (ui->customPlot->graph(index)->visible() || !log_visible_only){
+        if (m_plotWidget->graph(index)->visible() || !log_visible_only){
             outStreamLogging << temperature << ", ";
         }
     }
     return 0;
 }
 
-void MainWindow::resoreSettings()
+void MainWindow::loadSettings()
 {
     QSettings settings;
 
@@ -398,7 +367,7 @@ void MainWindow::changePollIntervalSlot(uint new_val)
 
 void MainWindow::changeGraphVisibilitySlot(uint index, bool visible) {
     if (index < (uint) sensor_types.count()) {
-        ui->customPlot->graph(index)->setVisible(visible);
+        m_plotWidget->graph(index)->setVisible(visible);
         sensor_visibility[index] = visible;
 
         if (index < (uint)sensor_types.count()) {
@@ -435,8 +404,8 @@ void MainWindow::changeLogVariables(bool log_enabled, bool log_vis_only,
 
         // now output the temperature sensor names as a header
         for(int i = 0; i < sensor_types.count(); i++) {
-            if (!log_vis_only || ui->customPlot->graph(i)->visible()) {
-                outStreamLogging << ui->customPlot->graph(i)->name() << ", ";
+            if (!log_vis_only || m_plotWidget->graph(i)->visible()) {
+                outStreamLogging << m_plotWidget->graph(i)->name() << ", ";
             }
         }
         outStreamLogging << endl;
@@ -453,36 +422,27 @@ void MainWindow::changeLogVariables(bool log_enabled, bool log_vis_only,
     log_filename = log_file_name;
 }
 
-void MainWindow::currentChangedSlot(int index)
-{
-    if (index) {
-        ui->customPlot->setVisible(false);
-    } else {
-        ui->customPlot->setVisible(true);
-    }
-}
-
 void MainWindow::setTripSetpoint(uint zone, uint trip, int temperature)
 {
     trips[zone][trip]->start->setCoords(0, temperature);
     trips[zone][trip]->end->setCoords(SAMPLE_STORE_SIZE - 1, temperature);
-    thermaldInterface.setTripTempForZone(zone, trip, temperature);
+    m_thermaldInterface->setTripTempForZone(zone, trip, temperature);
 }
 
 void MainWindow::setTripVisibility(uint zone, uint trip, bool visibility)
 {
-    thermaldInterface.setTripVisibility(zone, trip, visibility);
+    m_thermaldInterface->setTripVisibility(zone, trip, visibility);
     trips[zone][trip]->setVisible(visibility);
 }
 
-void MainWindow::on_actionClear_triggered()
+void MainWindow::clearAndExit()
 {
     QSettings settings;
     settings.clear();
     QCoreApplication::quit();
 }
 
-void MainWindow::on_actionSet_Polling_Interval_triggered()
+void MainWindow::configurePollingInterval()
 {
     PollingDialog *p = new PollingDialog(this, temp_poll_interval);
 
@@ -491,30 +451,26 @@ void MainWindow::on_actionSet_Polling_Interval_triggered()
     p->show(); // non-modal
 }
 
-void MainWindow::on_actionSensors_triggered()
+void MainWindow::configureSensors()
 {
-    SensorsDialog *s = new SensorsDialog(this);
-
-    QObject::connect(s, SIGNAL(setGraphVisibility(uint, bool)),
-                     this, SLOT(changeGraphVisibilitySlot(uint, bool)));
+    SensorsDialog dialog(this);
 
     // set the checkbox names to match the temperature sensor names
-    for (int i = 0; i < MAX_NUMBER_SENSOR_VISIBILITY_CHECKBOXES; i++) {
-        sensorZoneInformationType sensor_info;
-
-        if (i < sensor_types.count()) {
-            sensor_info = sensor_types[i];
-            s->setupCheckbox(i, sensor_info.display_name, sensor_visibility[i]);
-        } else {
-            s->disableCheckbox(i);
-        }
+    for (int i = 0; i < sensor_visibility.count(); i++) {
+        dialog.addSensor(sensor_types[i].display_name, sensor_visibility[i]);
     }
 
-    // future project: create checkboxes via code, not .ui
-    s->show();
+    if (dialog.exec() == QDialog::Rejected) {
+        return;
+    }
+
+    sensor_visibility = dialog.getVisibilities();
+    for (int i=0; i<sensor_visibility.count(); i++) {
+        changeGraphVisibilitySlot(i, sensor_visibility[i]);
+    }
 }
 
-void MainWindow::on_actionLog_triggered()
+void MainWindow::configureLogging()
 {
     LogDialog *l = new LogDialog(this);
 
@@ -524,38 +480,26 @@ void MainWindow::on_actionLog_triggered()
     l->show();
 }
 
-void MainWindow::on_action_About_triggered()
+void MainWindow::showAboutDialog()
 {
-    QMessageBox msgBox;
     QString str;
-
-    str = QString("<p align='center'>Thermal Monitor<br><br>"
-                  "Version %1<br><br>"
-                  "GUI for Linux thermal daemon (thermald)<br><br>"
-                  "Copyright (c) 2015, Intel Corporation</p>")
+    str = QString("<h3>Thermal Monitor %1</h3>"
+                  "<p>GUI for Linux thermal daemon (thermald)</p>"
+                  "<p>Copyright (c) 2015, Intel Corporation</p>")
             .arg(QString(VERSION_NUMBER));
-    msgBox.setText(str);
-    msgBox.setStandardButtons(QMessageBox::Ok);
-    msgBox.setWindowTitle(QString("About Thermal Monitor"));
-    msgBox.exec();
+    QMessageBox::about(this, "About Thermal Monitor", str);
 }
 
-
-void MainWindow::on_actionE_xit_triggered()
+void MainWindow::configureTrips()
 {
-    close();
-}
-
-void MainWindow::on_action_Trips_triggered()
-{
-    tripsDialog *t = new tripsDialog(this, &thermaldInterface);
+    tripsDialog *t = new tripsDialog(this, m_thermaldInterface);
 
     QObject::connect(t, SIGNAL(setTripVis(uint, uint, bool)),
                      this, SLOT(setTripVisibility(uint, uint, bool)));
     QObject::connect(t, SIGNAL(changeTripSetpoint(uint, uint, int)),
                      this, SLOT(setTripSetpoint(uint, uint, int)));
-    for(uint i = 0; i < thermaldInterface.getZoneCount(); i++) {
-        t->addZone(thermaldInterface.getZone(i));
+    for(uint i = 0; i < m_thermaldInterface->getZoneCount(); i++) {
+        t->addZone(m_thermaldInterface->getZone(i));
     }
 
     t->show();

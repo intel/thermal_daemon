@@ -25,34 +25,26 @@ int main(int argc, char *argv[])
 
     // Warn the user if not running as root
     uid_t id = getuid();
-    if (id != ROOT_ID){
-        QMessageBox msgBox;
-        QString str;
+    if (id == ROOT_ID){
+        QMessageBox::critical(0, "Running as root is not supported",
+                      "Running X11 applications as root is unsafe.\n"
+                      "Try invoking again without root privileges.");
+        return(1);
+    }
 
-        str = QString("%1 requires root privilages to access the thermal daemon.  "
-                      "Try invoking again with root privileges.\n")
-                .arg(QCoreApplication::applicationName());
-        msgBox.setText(str);
-        msgBox.setStandardButtons(QMessageBox::Abort);
-        int ret = msgBox.exec();
-
-        switch (ret) {
-        case QMessageBox::Abort:
-            // Abort was clicked
-            return(1);
-            break;
-        default:
-            // should never be reached
-            qFatal("main: unexpected button result");
-            break;
-        }
+    ThermaldInterface thermaldInterface;
+    if (!thermaldInterface.initialize()) {
+        QMessageBox::critical(0, "Can't establish link with thermal daemon.",
+                              "Make sure that thermal daemon started with --dbus-enable option\n"
+                              "and that you're in the 'power' group.");
+        return 1;
     }
 
     QCoreApplication::setOrganizationDomain("intel.com");
     QCoreApplication::setOrganizationName("Intel");
     QCoreApplication::setApplicationName("ThermalMonitor");
 
-    MainWindow w;
+    MainWindow w(&thermaldInterface);
     w.show();
 
     return a.exec();
