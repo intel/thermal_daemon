@@ -34,8 +34,10 @@ int csys_fs::write(const std::string &path, const std::string &buf) {
 		return -errno;
 	}
 	int ret = ::write(fd, buf.c_str(), buf.size());
-	if (ret < 0)
+	if (ret < 0) {
+		ret = -errno;
 		thd_log_warn("sysfs write failed %s\n", path.c_str());
+	}
 	close(fd);
 
 	return ret;
@@ -163,7 +165,7 @@ int csys_fs::read(const std::string &path, std::string &buf) {
 		}
 		f.close();
 #ifndef ANDROID
-	} catch (const std::ifstream::failure& e) {
+	} catch (...) {
 		thd_log_warn("csys_fs::read exception %s\n", path.c_str());
 
 		ret = -EIO;

@@ -26,11 +26,8 @@ Open Qt Creator, click File->Open File or Project, browse the project files to o
 
 Running the project
 -------------------
-
-Note: you cannot run the project from within Qt Creator due to the root access necessary to interface with the thermal daemon (thermald).  Instead, locate the Qt build directory, which should be in ../build-ThermalMonitor-BUILD_TYPE, where BUILD_TYPE describes the build, such as Desktop_Qt_5_4_2_GCC_64bit-Debug.  Run the project as root from the build directory:
-
-sudo ./ThermalMonitor
-
+To communicate with thermald via dbus, the user has to be member of "power" group.
+So make sure that there is group called "power" in the system and add your user id to this group.
 
 Building the Thermal Monitor with make
 --------------------------------------

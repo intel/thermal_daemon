@@ -52,7 +52,7 @@ cthd_engine::cthd_engine() :
 				0), preference(0), status(true), thz_last_uevent_time(0), thz_last_temp_ind_time(
 				0), terminate(false), genuine_intel(0), has_invariant_tsc(0), has_aperf(
 				0), proc_list_matched(false), poll_interval_sec(0), poll_sensor_mask(
-				0), poll_fd_cnt(0), rt_kernel(false) {
+				0), poll_fd_cnt(0), rt_kernel(false), parser_init_done(false) {
 	thd_engine = pthread_t();
 	thd_attr = pthread_attr_t();
 
@@ -64,6 +64,9 @@ cthd_engine::cthd_engine() :
 
 cthd_engine::~cthd_engine() {
 	unsigned int i;
+
+	if (parser_init_done)
+		parser.parser_deinit();
 
 	for (i = 0; i < sensors.size(); ++i) {
 		delete sensors[i];
@@ -166,8 +169,18 @@ int cthd_engine::thd_engine_start(bool ignore_cpuid_check) {
 	if (ignore_cpuid_check) {
 		thd_log_debug("Ignore CPU ID check for MSRs \n");
 		proc_list_matched = true;
-	} else
+	} else {
 		check_cpu_id();
+
+		if (!proc_list_matched) {
+			if ((parser_init() == THD_SUCCESS) && parser.platform_matched()) {
+				thd_log_warn("Unsupported cpu model, using thermal-conf.xml only \n");
+			} else {
+				thd_log_warn("Unsupported cpu model, use thermal-conf.xml file or run with --ignore-cpuid-check \n");
+				return THD_FATAL_ERROR;
+			}
+		}
+	}
 
 	check_for_rt_kernel();
 
@@ -573,11 +586,18 @@ void cthd_engine::thd_engine_reload_zones() {
 }
 
 // Add any tested platform ids in this table
-static supported_ids_t id_table[] = { { 6, 0x2a }, // Sandybridge
-		{ 6, 0x2d }, // Sandybridge
+static supported_ids_t id_table[] = {
+		{ 6, 0x2a }, // Sandybridge
 		{ 6, 0x3a }, // IvyBridge
-		{ 6, 0x3c }, { 6, 0x3e }, { 6, 0x3f }, { 6, 0x45 }, // Haswell ULT */
-		{ 6, 0x46 }, // Haswell ULT */
+		{ 6, 0x3c }, // Haswell
+		{ 6, 0x45 }, // Haswell ULT
+		{ 6, 0x46 }, // Haswell ULT
+		{ 6, 0x3d }, // Broadwell
+		{ 6, 0x37 }, // Valleyview BYT
+		{ 6, 0x4c }, // Brasewell
+		{ 6, 0x4e }, // skylake
+		{ 6, 0x5e }, // skylake
+		{ 6, 0x5c }, // Broxton
 
 		{ 0, 0 } // Last Invalid entry
 };
@@ -1077,4 +1097,25 @@ int cthd_engine::user_add_cdev(std::string cdev_name, std::string cdev_path,
 	}
 
 	return THD_SUCCESS;
+}
+
+int cthd_engine::parser_init() {
+	if (parser_init_done)
+		return THD_SUCCESS;
+	if (parser.parser_init(get_config_file()) == THD_SUCCESS) {
+		if (parser.start_parse() == THD_SUCCESS) {
+			parser.dump_thermal_conf();
+			parser_init_done = true;
+			return THD_SUCCESS;
+		}
+	}
+
+	return THD_ERROR;
+}
+
+void cthd_engine::parser_deinit() {
+	if (parser_init_done) {
+		parser.parser_deinit();
+		parser_init_done = false;
+	}
 }

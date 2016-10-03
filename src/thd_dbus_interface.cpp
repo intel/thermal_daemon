@@ -533,6 +533,12 @@ gboolean thd_dbus_interface_add_cooling_device(PrefObject *obj,
 
 	thd_log_debug("thd_dbus_interface_add_cooling_device %s\n",
 			(char*) cdev_name);
+
+	// Using a device in /etc is a security issue
+	if ((strlen(path) >= strlen("/etc")) && !strncmp(path, "/etc",
+			strlen("/etc")))
+			return FALSE;
+
 	ret = thd_engine->user_add_cdev(cdev_name, path, min_state, max_state,
 			step);
 	if (ret == THD_SUCCESS)
@@ -545,6 +551,11 @@ gboolean thd_dbus_interface_update_cooling_device(PrefObject *obj,
 		gchar *cdev_name, gchar *path, gint min_state, gint max_state,
 		gint step, GError **error) {
 	g_assert(obj != NULL);
+
+	// Using a device in /etc is a security issue
+	if ((strlen(path) >= strlen("/etc")) && !strncmp(path, "/etc",
+			strlen("/etc")))
+			return FALSE;
 
 	return thd_dbus_interface_add_cooling_device(obj, cdev_name, path,
 			min_state, max_state, step, error);
