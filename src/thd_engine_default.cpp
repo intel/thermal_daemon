@@ -216,6 +216,62 @@ int cthd_engine_default::read_thermal_sensors() {
 	return THD_SUCCESS;
 }
 
+bool cthd_engine_default::add_int340x_processor_dev(void)
+{
+	/* Specialized processor thermal device names */
+	cthd_zone *processor_thermal = search_zone("B0D4");
+	if (!processor_thermal)
+		processor_thermal = search_zone("B0DB");
+	if (!processor_thermal)
+		processor_thermal = search_zone("TCPU");
+
+	if (processor_thermal) {
+		/* Check If there is a valid passive trip */
+		for (unsigned int i = 0; i < processor_thermal->get_trip_count(); ++i) {
+			cthd_trip_point *trip = processor_thermal->get_trip_at_index(i);
+			if (trip && trip->get_trip_type() == PASSIVE
+					&& trip->get_trip_temp()) {
+
+				thd_log_info("Processor thermal device is present \n");
+				thd_log_info("It will act as CPU thermal zone !! \n");
+				thd_log_info("Processor thermal device passive Trip is %d\n",
+						trip->get_trip_temp());
+
+				processor_thermal->set_zone_active();
+
+				cthd_cdev *cdev;
+
+				cdev = search_cdev("rapl_controller");
+				if (cdev) {
+					processor_thermal->bind_cooling_device(PASSIVE, 0, cdev,
+							cthd_trip_point::default_influence);
+				}
+				cdev = search_cdev("intel_pstate");
+				if (cdev) {
+					processor_thermal->bind_cooling_device(PASSIVE, 0, cdev,
+							cthd_trip_point::default_influence);
+				}
+
+				cdev = search_cdev("intel_powerclamp");
+				if (cdev) {
+					processor_thermal->bind_cooling_device(PASSIVE, 0, cdev,
+							cthd_trip_point::default_influence);
+				}
+
+				cdev = search_cdev("Processor");
+				if (cdev) {
+					processor_thermal->bind_cooling_device(PASSIVE, 0, cdev,
+							cthd_trip_point::default_influence);
+				}
+
+				return true;
+			}
+		}
+	}
+
+	return false;
+}
+
 int cthd_engine_default::read_thermal_zones() {
 	int index;
 	DIR *dir;
@@ -227,7 +283,9 @@ int cthd_engine_default::read_thermal_zones() {
 	thd_read_default_thermal_zones();
 	index = current_zone_index;
 
-	if (!search_zone("cpu")) {
+	bool valid_int340x = add_int340x_processor_dev();
+
+	if (!valid_int340x && !search_zone("cpu")) {
 		bool cpu_zone_created = false;
 		thd_log_info("zone cpu will be created \n");
 		// Default CPU temperature zone

@@ -31,6 +31,7 @@
 class cthd_engine_default: public cthd_engine {
 private:
 	int add_replace_cdev(cooling_dev_t *config);
+	bool add_int340x_processor_dev(void);
 
 	cthd_cpu_default_binding def_binding;
 
