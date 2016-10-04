@@ -95,12 +95,6 @@ int cthd_engine_default::read_thermal_sensors() {
 		sensor->set_async_capable(true);
 	}
 
-	sensor = search_sensor("acpitz");
-	if (sensor) {
-		// Force this to support async
-		sensor->set_async_capable(true);
-	}
-
 	// Default CPU temperature zone
 	// Find path to read DTS temperature
 	for (i = 0; i < 2; ++i) {
