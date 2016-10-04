@@ -26,10 +26,10 @@
 #define MAX_BACKLIGHT_DEV 4
 
 const std::string cthd_cdev_backlight::backlight_devices[MAX_BACKLIGHT_DEV] = {
-	            "/sys/class/backlight/intel_backlight",
-	            "/sys/class/backlight/acpi_video0",
-	            "/sys/class/leds/lcd-backlight",
-	            "/sys/class/backlight/lcd-backlight"
+	            "/sys/class/backlight/intel_backlight/",
+	            "/sys/class/backlight/acpi_video0/",
+	            "/sys/class/leds/lcd-backlight/",
+	            "/sys/class/backlight/lcd-backlight/"
 };
 
 cthd_cdev_backlight::cthd_cdev_backlight(unsigned int _index, int _cpu_index):
