@@ -134,8 +134,7 @@ bool ThermaldInterface::initialize()
                 zones[i].trips.append(new_trip);
                 // Figure out the lowest valid trip index
                 if (new_trip.trip_type == CRITICAL_TRIP ||
-                        new_trip.trip_type == PASSIVE_TRIP ||
-                        new_trip.trip_type == ACTIVE_TRIP){
+                        new_trip.trip_type == PASSIVE_TRIP){
                     if (j < lowest_valid_index){
                         lowest_valid_index = j;
                     }
