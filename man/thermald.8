@@ -53,6 +53,11 @@ it is added to a black list of unbinded sensors and not tried again.
 Optionally thermal daemon can act as an exclusive thermal controller by using thermal sysfs and acting as a user space governor.
 In this case kernel thermal core is not active and decision is taken by thermal daemon only.
 
+Dbus Interface: When started with dbus-enable option, dbus interface can be used to control thermal temperature at which cooling action takes place. This change is persistent. For example, to start CPU cooling at 80C, dbus-send command can be used:
+
+# dbus-send --system --dest=org.freedesktop.thermald /org/freedesktop/thermald org.freedesktop.thermald.SetUserPassiveTemperature string:cpu uint32:80000
+
+
 .SH OPTIONS
 .TP
 .B \-h, \-\-help
@@ -80,6 +85,12 @@ Enable Dbus.
 .B \-\-exclusive-control
 Act as exclusive thermal controller. This will use user-space
 governor for thermal sysfs and take over control.
+.TP
+.B \-\-ignore-cpuid-check
+Ignore cpuid check for supported CPU models.
+.TP
+.B \-\-config-file
+Specify thermal-conf.xml path and ignore default thermal-conf.xml.
 
 .SH SEE ALSO
 thermal-conf.xml(5)
