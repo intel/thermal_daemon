@@ -30,13 +30,13 @@ int csys_fs::write(const std::string &path, const std::string &buf) {
 	std::string p = base_path + path;
 	int fd = ::open(p.c_str(), O_WRONLY);
 	if (fd < 0) {
-		thd_log_warn("sysfs write failed %s\n", path.c_str());
+		thd_log_warn("sysfs write failed %s\n", p.c_str());
 		return -errno;
 	}
 	int ret = ::write(fd, buf.c_str(), buf.size());
 	if (ret < 0) {
 		ret = -errno;
-		thd_log_warn("sysfs write failed %s\n", path.c_str());
+		thd_log_warn("sysfs write failed %s\n", p.c_str());
 	}
 	close(fd);
 
@@ -48,17 +48,17 @@ long long data) {
 	std::string p = base_path + path;
 	int fd = ::open(p.c_str(), O_WRONLY);
 	if (fd < 0) {
-		thd_log_warn("sysfs write failed %s\n", path.c_str());
+		thd_log_warn("sysfs write failed %s\n", p.c_str());
 		return -errno;
 	}
 	if (::lseek(fd, position, SEEK_CUR) == -1) {
-		thd_log_warn("sysfs write failed %s\n", path.c_str());
+		thd_log_warn("sysfs write failed %s\n", p.c_str());
 		close(fd);
 		return -errno;
 	}
 	int ret = ::write(fd, &data, sizeof(data));
 	if (ret < 0)
-		thd_log_warn("sysfs write failed %s\n", path.c_str());
+		thd_log_warn("sysfs write failed %s\n", p.c_str());
 	close(fd);
 
 	return ret;
@@ -155,18 +155,18 @@ int csys_fs::read(const std::string &path, std::string &buf) {
 #endif
 		std::ifstream f(p.c_str(), std::fstream::in);
 		if (f.fail()) {
-			thd_log_warn("sysfs read failed %s\n", path.c_str());
+			thd_log_warn("sysfs read failed %s\n", p.c_str());
 			return -EINVAL;
 		}
 		f >> buf;
 		if (f.bad()) {
-			thd_log_warn("sysfs read failed %s\n", path.c_str());
+			thd_log_warn("sysfs read failed %s\n", p.c_str());
 			ret = -EIO;
 		}
 		f.close();
 #ifndef ANDROID
 	} catch (...) {
-		thd_log_warn("csys_fs::read exception %s\n", path.c_str());
+		thd_log_warn("csys_fs::read exception %s\n", p.c_str());
 
 		ret = -EIO;
 	}
