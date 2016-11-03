@@ -22,7 +22,7 @@ Requires(postun): systemd-units
 Thermal Daemon monitors and controls platform temperature.
 
 %prep
-%setup -qn %{pkgname}-%{version}
+%setup -qn %{pkgname}
 
 %build
 autoreconf -f -i
