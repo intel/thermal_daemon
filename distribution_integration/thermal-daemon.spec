@@ -1,6 +1,6 @@
 Name:           thermal-daemon
 Version:        master
-Release:        %{?dist}
+Release:        master%{?dist}
 Summary:        The "Linux Thermal Daemon" program from 01.org
 
 License:        GPLv2+
