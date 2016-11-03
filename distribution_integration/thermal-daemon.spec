@@ -1,4 +1,4 @@
-Name:           thermal-daemon
+Name:           thermal_daemon
 Version:        master
 Release:        latest%{?dist}
 Summary:        The "Linux Thermal Daemon" program from 01.org
