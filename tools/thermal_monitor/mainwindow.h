@@ -17,14 +17,10 @@
 
 #include <QMainWindow>
 #include <QVector>
+#include <QLabel>
 #include <string>
-#include <QVBoxLayout>
 #include "qcustomplot/qcustomplot.h"
 #include "thermaldinterface.h"
-
-namespace Ui {
-class MainWindow;
-}
 
 typedef struct {
     QString display_name;
@@ -38,10 +34,10 @@ class MainWindow : public QMainWindow
     Q_OBJECT
 
 public:
-    explicit MainWindow(QWidget *parent = 0);
+    explicit MainWindow(ThermaldInterface * thermaldInterface);
     ~MainWindow();
 
-    void displayTemperature(QCustomPlot *customPlot);
+    void setupPlotWidget();
     int addNewTemperatureTemperatureSample(int index, double temperature);
     bool getVisibleState(int index);
 
@@ -49,7 +45,6 @@ protected:
     virtual void closeEvent(QCloseEvent *event);
 
 public slots:
-    void currentChangedSlot(int index);
     void changePollIntervalSlot(uint new_val);
     void changeGraphVisibilitySlot(uint index, bool visible);
     void changeLogVariables(bool log_enabled, bool log_vis_only,
@@ -57,18 +52,19 @@ public slots:
     void setTripSetpoint(uint zone, uint trip, int temperature);
     void setTripVisibility(uint zone, uint trip, bool visibility);
 
-private slots:
     void updateTemperatureDataSlot();
-    void on_actionClear_triggered();
-    void on_actionSet_Polling_Interval_triggered();
-    void on_actionSensors_triggered();
-    void on_actionLog_triggered();
-    void on_action_About_triggered();
-    void on_actionE_xit_triggered();
-    void on_action_Trips_triggered();
+
+private slots:
+    void clearAndExit();
+    void configurePollingInterval();
+    void configureSensors();
+    void configureLogging();
+    void showAboutDialog();
+    void configureTrips();
 
 private:
-    Ui::MainWindow *ui;
+    void setupMenus();
+
     QTimer tempUpdateTimer;
     QVector<QColor> colors;
     QVector<double> temp_samples;
@@ -76,24 +72,21 @@ private:
     QVector<double> temperature_samples[MAX_TEMP_INPUT_COUNT];
     int current_sample_index[MAX_TEMP_INPUT_COUNT];
     uint temp_poll_interval;
-    bool *sensor_visibility;
+    QVector<bool> sensor_visibility;
    // QLabel *sensor_label;
-    QLabel *sensor_temp;
     QVector<QVector<QCPItemLine *> > trips;
     QVector<sensorZoneInformationType>sensor_types;
 
-    QVBoxLayout *layout;
-    QWidget *window;
-
-    ThermaldInterface thermaldInterface;
+    ThermaldInterface *m_thermaldInterface;
 
     bool logging_enabled;
     bool log_visible_only;
     QString log_filename;
     QFile logging_file;
     QTextStream outStreamLogging;
+    QCustomPlot *m_plotWidget;
 
-    void resoreSettings();
+    void loadSettings();
     void storeSettings();
 };
 

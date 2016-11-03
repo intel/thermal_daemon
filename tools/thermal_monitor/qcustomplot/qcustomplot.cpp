@@ -2833,10 +2833,13 @@ int QCPLayoutGrid::elementCount() const
 /* inherits documentation from base class */
 QCPLayoutElement *QCPLayoutGrid::elementAt(int index) const
 {
-  if (index >= 0 && index < elementCount())
-    return mElements.at(index / columnCount()).at(index % columnCount());
-  else
-    return 0;
+  if (index >= 0 && index < elementCount()) {
+    int count = columnCount();
+
+    if (count != 0)
+      return mElements.at(index / count).at(index % count);
+  }
+  return 0;
 }
 
 /* inherits documentation from base class */
@@ -2844,9 +2847,18 @@ QCPLayoutElement *QCPLayoutGrid::takeAt(int index)
 {
   if (QCPLayoutElement *el = elementAt(index))
   {
-    releaseElement(el);
-    mElements[index / columnCount()][index % columnCount()] = 0;
-    return el;
+    int count = columnCount();
+
+    if (count == 0)
+    {
+      qDebug() << Q_FUNC_INFO << "Attempt to divide by zero";
+      return 0;
+    } else
+    {
+      releaseElement(el);
+      mElements[index / count][index % count] = 0;
+      return el;
+    }
   } else
   {
     qDebug() << Q_FUNC_INFO << "Attempt to take invalid index:" << index;
@@ -5347,7 +5359,10 @@ double QCPAxis::coordToPixel(double value) const
         if (!mRangeReversed)
           return baseLog(value/mRange.lower)/baseLog(mRange.upper/mRange.lower)*mAxisRect->width()+mAxisRect->left();
         else
-          return baseLog(mRange.upper/value)/baseLog(mRange.upper/mRange.lower)*mAxisRect->width()+mAxisRect->left();
+          if (value == 0)
+            return 0;
+          else
+            return baseLog(mRange.upper/value)/baseLog(mRange.upper/mRange.lower)*mAxisRect->width()+mAxisRect->left();
       }
     }
   } else // orientation() == Qt::Vertical
@@ -5369,7 +5384,10 @@ double QCPAxis::coordToPixel(double value) const
         if (!mRangeReversed)
           return mAxisRect->bottom()-baseLog(value/mRange.lower)/baseLog(mRange.upper/mRange.lower)*mAxisRect->height();
         else
-          return mAxisRect->bottom()-baseLog(mRange.upper/value)/baseLog(mRange.upper/mRange.lower)*mAxisRect->height();
+          if (value == 0)
+            return 0;
+          else
+            return mAxisRect->bottom()-baseLog(mRange.upper/value)/baseLog(mRange.upper/mRange.lower)*mAxisRect->height();
       }
     }
   }

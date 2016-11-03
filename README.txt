@@ -73,6 +73,11 @@ Use "sudo stop thermald" to stop
 
 Releases
 
+1.5.4
+- Use Processor thermal device in lieu of CPU zone when present
+- Haswell/Skylake PCH sensor
+- Fix regression in LCD/Backlight path
+
 Release 1.5.3
 - PCH sensor support
 

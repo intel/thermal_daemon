@@ -265,10 +265,13 @@ int cthd_msr::set_clock_mod_duty_cycle(int state) {
 
 	for (int i = 0; i < cpu_count; ++i) {
 		ret = read_msr(i, MSR_IA32_THERM_CONTROL, &val);
+		if (ret < 0) {
+			thd_log_debug("set_clock_mod_duty_cycle current MSR read failed\n");
+			return THD_ERROR;
+		}
+
 		thd_log_debug("set_clock_mod_duty_cycle current %x\n",
 				(unsigned int) val);
-		if (ret < 0)
-			return THD_ERROR;
 
 		if (!state) {
 			val &= ~MSR_IA32_CLK_MOD_ENABLE;
@@ -298,9 +301,12 @@ int cthd_msr::get_clock_mod_duty_cycle() {
 
 	// Just get for cpu 0 and return
 	ret = read_msr(0, MSR_IA32_THERM_CONTROL, &val);
-	thd_log_debug("get_clock_mod_duty_cycle current %x\n", (unsigned int) val);
-	if (ret < 0)
+	if (ret < 0) {
+		thd_log_debug("get_clock_mod_duty_cycle current MSR read failed\n");
 		return THD_ERROR;
+	}
+
+	thd_log_debug("get_clock_mod_duty_cycle current %x\n", (unsigned int) val);
 
 	if (val & MSR_IA32_CLK_MOD_ENABLE) {
 		state = val & MSR_IA32_CLK_MOD_DUTY_CYCLE_MASK;
@@ -372,9 +378,12 @@ int cthd_msr::dec_freq_state_per_cpu(int cpu) {
 	int current_clock;
 
 	ret = read_msr(cpu, MSR_IA32_PERF_CTL, &val);
-	thd_log_debug("perf_ctl current %x\n", (unsigned int) val);
-	if (ret < 0)
+	if (ret < 0) {
+		thd_log_debug("perf_ctl current read MSR failed\n");
 		return THD_ERROR;
+	}
+
+	thd_log_debug("perf_ctl current %x\n", (unsigned int) val);
 
 	current_clock = (val >> 8) & 0xff;
 	current_clock--;
@@ -405,9 +414,12 @@ int cthd_msr::dec_freq_state() {
 
 	for (int i = 0; i < cpu_count; ++i) {
 		ret = read_msr(i, MSR_IA32_PERF_CTL, &val);
-		thd_log_debug("perf_ctl current %x\n", (unsigned int) val);
-		if (ret < 0)
+		if (ret < 0) {
+			thd_log_debug("perf_ctl current MSR read failed\n");
 			return THD_ERROR;
+		}
+
+		thd_log_debug("perf_ctl current %x\n", (unsigned int) val);
 
 		current_clock = (val >> 8) & 0xff;
 		current_clock--;

@@ -28,7 +28,7 @@ ThermaldInterface::~ThermaldInterface()
     delete iface;
 }
 
-int ThermaldInterface::initialize()
+bool ThermaldInterface::initialize()
 {
     /* Create the D-Bus interface
      * Get the temperature sensor count and information from each sensor
@@ -36,14 +36,14 @@ int ThermaldInterface::initialize()
      */
     if (!QDBusConnection::systemBus().isConnected()) {
         qCritical()  << "Cannot connect to the D-Bus session bus";
-        return -1;
+        return false;
     }
 
     iface = new QDBusInterface(SERVICE_NAME, "/org/freedesktop/thermald",
                                "org.freedesktop.thermald", QDBusConnection::systemBus());
     if (!iface->isValid()) {
         qCritical()  << "Cannot connect to interface" << SERVICE_NAME;
-        return -1;
+        return false;
     }
 
     // get temperature sensor count
@@ -56,11 +56,11 @@ int ThermaldInterface::initialize()
             qCritical() << "error: input sensor count of" << count
                         << "is larger than system maximum (" << MAX_TEMP_INPUT_COUNT
                         << ")";
-            return -1;
+            return false;
         }
     } else {
         qCritical() << "error from" << iface->interface() << "=" << count.error();
-        return -1;
+        return false;
     }
 
     // Read in all the the temperature sensor data from the thermal daemon
@@ -83,7 +83,7 @@ int ThermaldInterface::initialize()
         cooling_device_count = cdev_count;
     } else {
         qCritical() << "error from" << iface->interface() << "=" << cdev_count.error();
-        return -1;
+        return false;
     }
 
     // Read in all the the cooling device data from the thermal daemon
@@ -107,7 +107,7 @@ int ThermaldInterface::initialize()
         zone_count = z_count;
     } else {
         qCritical() << "error from" << iface->interface() << "=" << cdev_count.error();
-        return -1;
+        return false;
     }
 
     // Read in all the the zone data from the thermal daemon
@@ -134,8 +134,7 @@ int ThermaldInterface::initialize()
                 zones[i].trips.append(new_trip);
                 // Figure out the lowest valid trip index
                 if (new_trip.trip_type == CRITICAL_TRIP ||
-                        new_trip.trip_type == PASSIVE_TRIP ||
-                        new_trip.trip_type == ACTIVE_TRIP){
+                        new_trip.trip_type == PASSIVE_TRIP){
                     if (j < lowest_valid_index){
                         lowest_valid_index = j;
                     }
@@ -161,7 +160,7 @@ int ThermaldInterface::initialize()
          * use zones[i].trips.count()
          */
     }
-    return 0;
+    return true;
 }
 
 uint ThermaldInterface::getCoolingDeviceCount(){

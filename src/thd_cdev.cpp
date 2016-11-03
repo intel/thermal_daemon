@@ -106,9 +106,14 @@ int cthd_cdev::thd_cdev_exponential_controller(int set_point, int target_temp,
 	return THD_SUCCESS;
 }
 
-static bool sort_clamp_values(zone_trip_limits_t limit_1,
+static bool sort_clamp_values_asc(zone_trip_limits_t limit_1,
 		zone_trip_limits_t limit_2) {
 	return (limit_1.target_value < limit_2.target_value);
+}
+
+static bool sort_clamp_values_dec(zone_trip_limits_t limit_1,
+		zone_trip_limits_t limit_2) {
+	return (limit_1.target_value > limit_2.target_value);
 }
 
 /*
@@ -170,8 +175,13 @@ int cthd_cdev::thd_cdev_set_state(int set_point, int target_temp,
 				thd_log_debug("Added zone %d trip %d clamp %d\n", limit.zone,
 						limit.trip, limit.target_value);
 				zone_trip_limits.push_back(limit);
-				std::sort(zone_trip_limits.begin(), zone_trip_limits.end(),
-						sort_clamp_values);
+				if (min_state < max_state) {
+					std::sort(zone_trip_limits.begin(), zone_trip_limits.end(),
+						sort_clamp_values_asc);
+				} else {
+					std::sort(zone_trip_limits.begin(), zone_trip_limits.end(),
+						sort_clamp_values_dec);
+				}
 			}
 			set_curr_state_raw(target_value, zone_id);
 			curr_state = target_value;

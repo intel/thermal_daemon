@@ -26,21 +26,21 @@
 #define MAX_BACKLIGHT_DEV 4
 
 const std::string cthd_cdev_backlight::backlight_devices[MAX_BACKLIGHT_DEV] = {
-	            "/sys/class/backlight/intel_backlight",
-	            "/sys/class/backlight/acpi_video0",
-	            "/sys/class/leds/lcd-backlight",
-	            "/sys/class/backlight/lcd-backlight"
+	            "/sys/class/backlight/intel_backlight/",
+	            "/sys/class/backlight/acpi_video0/",
+	            "/sys/class/leds/lcd-backlight/",
+	            "/sys/class/backlight/lcd-backlight/"
 };
 
-cthd_cdev_backlight::cthd_cdev_backlight(unsigned int _index, int _cpu_index):
-		cthd_cdev(_index, backlight_devices[0]) {
-		int active_device = 0;
-		do {
-			cdev_sysfs.update_path(backlight_devices[active_device]);
-			if (update() == THD_SUCCESS)
-				break;
-			active_device++;
-		}while (active_device <  MAX_BACKLIGHT_DEV);
+cthd_cdev_backlight::cthd_cdev_backlight(unsigned int _index, int _cpu_index) :
+		cthd_cdev(_index, backlight_devices[0]), ref_backlight_state(0) {
+	int active_device = 0;
+	do {
+		cdev_sysfs.update_path(backlight_devices[active_device]);
+		if (update() == THD_SUCCESS)
+			break;
+		active_device++;
+	} while (active_device < MAX_BACKLIGHT_DEV);
 }
 
 int cthd_cdev_backlight::update() {
@@ -60,16 +60,66 @@ int cthd_cdev_backlight::update() {
 
 	set_inc_dec_value(max_state * (float) 10 / 100);
 
+	// Don't let backlight less than min_backlight_percent percent
+	min_back_light = max_state * min_backlight_percent /100;
+
 	return THD_SUCCESS;
 }
 
 void cthd_cdev_backlight::set_curr_state(int state, int arg) {
 	int ret;
+	int backlight_val;
 
-	ret = cdev_sysfs.write("brightness", max_state - state);
+	/*
+	 * When state > 0, then we need to reduce backlight. But we should start
+	 * from backlight which triggered thermal condition. That is here stored
+	 * in ref_backlight_state.
+	 * When the first state more than 0 is called, then this variable is
+	 * updated with the current backlight value. When the state == 0,
+	 * it is restored.
+	 */
+
+	if (state == 0) {
+		if (ref_backlight_state) {
+
+			thd_log_debug("LCD restore original %d\n", ref_backlight_state);
+			ret = cdev_sysfs.write("brightness", ref_backlight_state);
+			if (ret < 0) {
+				thd_log_warn("Failed to write brightness\n");
+				return;
+			}
+			ref_backlight_state = 0;
+		}
+		curr_state = state;
+		return;
+	}
+
+	if (ref_backlight_state == 0 && state == inc_dec_val) {
+		std::string temp_str;
+
+		// First time enter to throttle LCD after normal or state == 0
+		// Store the current backlight
+		ret = cdev_sysfs.read("brightness", temp_str);
+		if (ret < 0)
+			return;
+
+		std::istringstream(temp_str) >> ref_backlight_state;
+
+		thd_log_debug("LCD ref state is %d\n", ref_backlight_state);
+	}
+
+	backlight_val = ref_backlight_state - state;
+
+	if (backlight_val <= min_back_light) {
+		thd_log_debug("LCD reached min state\n");
+		backlight_val = min_back_light;
+	}
+
+	ret = cdev_sysfs.write("brightness", backlight_val);
 	if (ret < 0) {
 		thd_log_warn("Failed to write brightness\n");
 		return;
 	}
+
 	curr_state = state;
 }

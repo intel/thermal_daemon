@@ -63,7 +63,7 @@ public:
     ThermaldInterface();
     ~ThermaldInterface();
 
-    int initialize();
+    bool initialize();
 
     uint getCoolingDeviceCount();
     QString getCoolingDeviceName(uint index);

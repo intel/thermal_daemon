@@ -18,12 +18,6 @@
 #include <QCheckBox>
 #include <QDialog>
 
-#define MAX_NUMBER_SENSOR_VISIBILITY_CHECKBOXES 20
-
-namespace Ui {
-class SensorsDialog;
-}
-
 class SensorsDialog : public QDialog
 {
     Q_OBJECT
@@ -32,45 +26,18 @@ public:
     explicit SensorsDialog(QWidget *parent = 0);
     ~SensorsDialog();
 
-    void disableCheckbox(int index);
-    void setupCheckbox(int index, QString name, bool checked);
+    void addSensor(QString name, bool checked);
 
-signals:
-    void setGraphVisibility(uint, bool);
+    QVector<bool> getVisibilities();
 
 private slots:
-    void on_checkBox_toggled(bool checked);
-    void on_checkBox_2_toggled(bool checked);
-    void on_checkBox_3_toggled(bool checked);
-    void on_checkBox_4_toggled(bool checked);
-    void on_checkBox_5_toggled(bool checked);
-    void on_checkBox_6_toggled(bool checked);
-    void on_checkBox_7_toggled(bool checked);
-    void on_checkBox_8_toggled(bool checked);
-    void on_checkBox_9_toggled(bool checked);
-    void on_checkBox_10_toggled(bool checked);
-    void on_checkBox_11_toggled(bool checked);
-    void on_checkBox_12_toggled(bool checked);
-    void on_checkBox_13_toggled(bool checked);
-    void on_checkBox_14_toggled(bool checked);
-    void on_checkBox_15_toggled(bool checked);
-    void on_checkBox_16_toggled(bool checked);
-
-    void on_checkBox_17_toggled(bool checked);
-    void on_checkBox_18_toggled(bool checked);
-    void on_checkBox_19_toggled(bool checked);
-    void on_checkBox_20_toggled(bool checked);
-
-    void on_setAllButton_clicked();
-    void on_clearAllButton_clicked();
+    void uncheckAll();
+    void checkAll();
 
 
 private:
-    Ui::SensorsDialog *ui;
-    //QCheckBox *checkbox;
-    QVector<QCheckBox*> checkbox;
-
-    QCheckBox* getCheckboxPtr(int index);
+    QVector<QCheckBox*> m_checkboxes;
+    QLayout *m_checkboxLayout;
 };
 
 #endif // SENSORSDIALOG_H

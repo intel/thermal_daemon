@@ -758,6 +758,13 @@ cthd_zone* cthd_engine::search_zone(std::string name) {
 			continue;
 		if (zone->get_zone_type() == name)
 			return zone;
+		if (!name.compare(0, 4, "pch_")) {
+			if (!zone->get_zone_type().compare(0, 4, "pch_")) {
+				thd_log_info("Matching partial zone %s %s\n", name.c_str(),
+						zone->get_zone_type().c_str());
+				return zone;
+			}
+		}
 	}
 
 	return NULL;
@@ -786,6 +793,14 @@ cthd_sensor* cthd_engine::search_sensor(std::string name) {
 			continue;
 		if (sensor->get_sensor_type() == name)
 			return sensor;
+		if (!name.compare(0, 4, "pch_")) {
+			if (!sensor->get_sensor_type().compare(0, 4, "pch_")) {
+				thd_log_info("Matching partial %s %s\n", name.c_str(),
+						sensor->get_sensor_type().c_str());
+				return sensor;
+			}
+		}
+
 	}
 
 	return NULL;
