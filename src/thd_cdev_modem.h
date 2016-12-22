@@ -25,8 +25,7 @@
 #define THERMAL_MANAGEMENT_INTERFACE "org.ofono.sofia3gr.ThermalManagement"
 
 enum modem_throttling_state {
-	MODEM_THROTTLING_DISABLED = 0,
-	MODEM_THROTTLING_ENABLED,
+	MODEM_THROTTLING_DISABLED = 0, MODEM_THROTTLING_ENABLED,
 };
 
 class cthd_cdev_modem: public cthd_cdev {
@@ -47,21 +46,19 @@ public:
 	void set_curr_state(int state, int arg);
 	int get_max_state(void);
 	int get_modem_property(DBusConnection *conn, const char *interface,
-				const char *property, bool *value);
+			const char *property, bool *value);
 	int update_online_state(DBusConnection *conn);
 	int update_throttling_state(DBusConnection *conn);
 	int update(void);
+	void update_throttling_state(void);
+	int is_interface_up(DBusConnection *conn);
 
 	static DBusHandlerResult
-	ofono_signal_handler(DBusConnection *conn,
-				DBusMessage *msg,
-				void *user_data);
+	ofono_signal_handler(DBusConnection *conn, DBusMessage *msg,
+			void *user_data);
 
 	static int
-	parse_ofono_property_changed_signal(DBusMessage *msg,
-						const char *interface,
-						const char *signal,
-						const char *property,
-						dbus_bool_t *value);
+	parse_ofono_property_changed_signal(DBusMessage *msg, const char *interface,
+			const char *signal, const char *property, dbus_bool_t *value);
 };
 #endif /* THD_CDEV_MODEM_H_ */
