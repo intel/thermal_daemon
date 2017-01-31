@@ -1,14 +1,12 @@
-Name:           thermal-daemon
+Name:           thermald
 Version:        1.5
-Release:        3%{?dist}
+Release:        4%{?dist}
 Summary:        The "Linux Thermal Daemon" program from 01.org
 
 License:        GPLv2+
 URL:            https://github.com/01org/thermal_daemon
 %global         pkgname thermal_daemon
-%global         commit  0c4c71577849399d65cdb7d856cc813763f429b8
-%global         shortcommit %(c=%{commit}; echo ${c:0:7})
-Source0:        https://github.com/01org/thermal_daemon/archive/%{commit}/%{pkgname}-%{version}-%{shortcommit}.tar.gz
+Source0: 		https://github.com/01org/thermal_daemon/archive/v%{version}.tar.gz
 
 BuildRequires:    automake
 BuildRequires:    autoconf
@@ -24,7 +22,7 @@ Requires(postun): systemd-units
 Thermal Daemon monitors and controls platform temperature.
 
 %prep
-%setup -qn %{pkgname}-%{shortcommit}
+%setup -qn %{pkgname}-%{version}
 
 %build
 autoreconf -f -i
@@ -59,6 +57,8 @@ make %{?_smp_mflags}
 %exclude %{_sysconfdir}/init
 
 %changelog
+* Tue Oct 25 2016 Michael P. Moran <> 1.5-4
+- Updated spec file for version 1.5.4
 * Tue Mar 29 2016 Alexey Slaykovsky <alexey@slaykovsky.com> 1.5-3
 - Updated spec file for a Thermal Daemon 1.5.3 version
 * Fri Oct 17 2014 António Meireles <antonio.meireles@reformi.st> 1.3-3
