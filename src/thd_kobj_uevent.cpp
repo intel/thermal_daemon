@@ -50,13 +50,16 @@ void cthd_kobj_uevent::kobj_uevent_close() {
 }
 
 bool cthd_kobj_uevent::check_for_event() {
-	int i = 0;
-	int len;
+	ssize_t i = 0;
+	ssize_t len;
 	const char *dev_path = "DEVPATH=";
 	unsigned int dev_path_len = strlen(dev_path);
 	char buffer[max_buffer_size];
 
-	len = recv(fd, buffer, sizeof(buffer), MSG_DONTWAIT);
+	len = recv(fd, buffer, sizeof(buffer) - 1, MSG_DONTWAIT);
+	if (len <= 0)
+		return false;
+	buffer[len] = '\0';
 
 	while (i < len) {
 		if (strlen(buffer + i) > dev_path_len
