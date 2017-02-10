@@ -150,12 +150,14 @@ int cthd_zone_cpu::parse_cdev_order() {
 		if ((ret = parser.start_parse()) == THD_SUCCESS) {
 			ret = parser.get_order_list(order_list);
 			if (ret == THD_SUCCESS) {
+#ifdef DEF_MAX_TRIP
 				cthd_trip_point trip_pt_max(trip_point_cnt, MAX, set_point,
 						def_hystersis, index, DEFAULT_SENSOR_ID);
 				trip_pt_max.thd_trip_point_set_control_type(SEQUENTIAL);
 				load_cdev_xml(trip_pt_max, order_list);
 				trip_points.push_back(trip_pt_max);
 				trip_point_cnt++;
+#endif
 				cthd_trip_point trip_pt_passive(trip_point_cnt, PASSIVE,
 						max_temp, def_hystersis, index, DEFAULT_SENSOR_ID);
 				trip_pt_passive.thd_trip_point_set_control_type(SEQUENTIAL);
@@ -181,25 +183,31 @@ int cthd_zone_cpu::read_trip_points() {
 		thd_log_info("CDEVS order specified in thermal-cpu-cdev-order.xml\n");
 		return THD_SUCCESS;
 	}
+#ifdef DEF_MAX_TRIP
 	cthd_trip_point trip_pt_max(trip_point_cnt, MAX, set_point, def_hystersis,
 			index, DEFAULT_SENSOR_ID);
+	trip_pt_max.thd_trip_point_set_control_type(SEQUENTIAL);
 	trip_point_cnt++;
+#endif
 	cthd_trip_point trip_pt_passive(trip_point_cnt, PASSIVE, max_temp,
 			def_hystersis, index, DEFAULT_SENSOR_ID);
 	trip_pt_passive.thd_trip_point_set_control_type(SEQUENTIAL);
-	trip_pt_max.thd_trip_point_set_control_type(SEQUENTIAL);
 	i = 0;
 	while (def_cooling_devices[i]) {
 		cdev = thd_engine->search_cdev(def_cooling_devices[i]);
 		if (cdev) {
+#ifdef DEF_MAX_TRIP
 			trip_pt_max.thd_trip_point_add_cdev(*cdev,
 					cthd_trip_point::default_influence);
+#endif
 			trip_pt_passive.thd_trip_point_add_cdev(*cdev,
 					cthd_trip_point::default_influence);
 		}
 		++i;
 	}
+#ifdef DEF_MAX_TRIP
 	trip_points.push_back(trip_pt_max);
+#endif
 	trip_points.push_back(trip_pt_passive);
 	trip_point_cnt++;
 
