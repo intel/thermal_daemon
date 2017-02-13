@@ -125,7 +125,6 @@ public:
 	int get_sensor_id() {
 		return sensor_id;
 	}
-
 	unsigned int get_cdev_count() {
 		return cdevs.size();
 	}

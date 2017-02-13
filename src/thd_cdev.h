@@ -49,8 +49,6 @@ protected:
 	int max_state;
 	int min_state;
 	int curr_state;
-	unsigned long zone_mask;
-	unsigned long trip_mask;
 	int curr_pow;
 	int base_pow_state;
 	int inc_dec_val;
@@ -81,7 +79,7 @@ public:
 	static const int default_debounce_interval = 3; // In seconds
 	cthd_cdev(unsigned int _index, std::string control_path) :
 			index(_index), cdev_sysfs(control_path.c_str()), trip_point(0), max_state(
-					0), min_state(0), curr_state(0), zone_mask(0), trip_mask(0), curr_pow(
+					0), min_state(0), curr_state(0), curr_pow(
 					0), base_pow_state(0), inc_dec_val(1), auto_down_adjust(
 					false), read_back(true), debounce_interval(
 					default_debounce_interval), last_action_time(0), trend_increase(
@@ -92,9 +90,9 @@ public:
 	}
 	virtual int thd_cdev_set_state(int set_point, int target_temp,
 			int temperature, int state, int zone_id, int trip_id,
-			int target_value);
+				       int target_value, bool force);
 
-	virtual int thd_cdev_set_min_state(int zone_id);
+	virtual int thd_cdev_set_min_state(int zone_id, int trip_id);
 
 	virtual void thd_cdev_set_min_state_param(int arg) {
 		min_state = arg;

@@ -155,7 +155,7 @@ bool cthd_trip_point::thd_trip_point_check(int id, unsigned int read_temp,
 				continue;
 			}
 			ret = cdev->thd_cdev_set_state(temp, temp, read_temp, 1, zone_id,
-					index, cdevs[i].target_state);
+						       index, cdevs[i].target_state, false);
 			if (control_type == SEQUENTIAL && ret == THD_SUCCESS) {
 				// Only one cdev activation
 				break;
@@ -175,7 +175,8 @@ bool cthd_trip_point::thd_trip_point_check(int id, unsigned int read_temp,
 				continue;
 			}
 			cdev->thd_cdev_set_state(temp, temp, read_temp, 0, zone_id, index,
-					TRIP_PT_INVALID_TARGET_STATE);
+					cdevs[i].target_state, false);
+
 			if (control_type == SEQUENTIAL) {
 				// Only one cdev activation
 				break;
@@ -224,6 +225,6 @@ void cthd_trip_point::thd_trip_cdev_state_reset() {
 			// No scope of control with this cdev
 			continue;
 		}
-		cdev->thd_cdev_set_min_state(zone_id);
+		cdev->thd_cdev_set_min_state(zone_id, index);
 	}
 }
