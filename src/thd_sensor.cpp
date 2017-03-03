@@ -95,6 +95,9 @@ int cthd_sensor::set_threshold(int index, int temp) {
 	std::stringstream thres;
 	int status = 0;
 
+	if (thd_engine->get_poll_interval())
+		return THD_SUCCESS;
+
 	if (!async_capable) {
 		return THD_ERROR;
 	}

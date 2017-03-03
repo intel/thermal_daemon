@@ -204,6 +204,9 @@ public:
 	bool processor_id_match() {
 		return proc_list_matched;
 	}
+	int get_poll_interval() {
+		return poll_interval_sec;
+	}
 	void set_poll_interval(int val) {
 		poll_interval_sec = val;
 	}
