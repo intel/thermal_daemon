@@ -34,8 +34,7 @@ protected:
 	csys_fs dts_sysfs;
 	int critical_temp;
 	int max_temp;
-	int set_point;
-	int prev_set_point;
+	int psv_temp;
 	int trip_point_cnt;
 	unsigned int sensor_mask;
 	int phy_package_id;

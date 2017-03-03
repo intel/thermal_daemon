@@ -42,9 +42,8 @@ const char *def_cooling_devices[] = { "rapl_controller", "intel_pstate",
 
 cthd_zone_cpu::cthd_zone_cpu(int index, std::string path, int package_id) :
 		cthd_zone(index, path, SENSORS_CORELATED), dts_sysfs(path.c_str()), critical_temp(
-				0), max_temp(0), set_point(0), prev_set_point(0), trip_point_cnt(
-				0), sensor_mask(0), phy_package_id(package_id), pkg_thres_th_zone(
-				-1), pkg_temp_poll_enable(false) {
+				0), max_temp(0), psv_temp(0), trip_point_cnt(0), sensor_mask(0), phy_package_id(
+				package_id), pkg_thres_th_zone(-1), pkg_temp_poll_enable(false) {
 
 	type_str = "cpu";
 	thd_log_debug("zone dts syfs: %s, package id %d \n", path.c_str(),
@@ -87,40 +86,33 @@ int cthd_zone_cpu::init() {
 			if (max_temp == 0 || temp < max_temp)
 				max_temp = temp;
 			found = true;
-		} else if (dts_sysfs.exists(temp_crit_str.str())) {
-			thd_log_info(
-					"DTS: MAX target temp not found, using (crit - offset) \n");
-			// Set which index is present
-			sensor_mask = sensor_mask | (1 << i);
-
-			std::string temp_str;
-			dts_sysfs.read(temp_crit_str.str(), temp_str);
-			std::istringstream(temp_str) >> temp;
-			// Adjust offset from critical (target temperature for cooling)
-			temp = temp - def_offset_from_critical;
-			if (max_temp == 0 || temp < max_temp)
-				max_temp = temp;
-			found = true;
 		}
 	}
 	if (!found) {
 		thd_log_error("DTS temperature path not found \n");
 		return THD_ERROR;
 	}
-	thd_log_info("Core temp DTS :critical %d, max %d\n", critical_temp,
-			max_temp);
+
 	if (critical_temp == 0)
 		critical_temp = def_critical_temp;
+
 	if (max_temp == 0) {
-		max_temp = def_critical_temp - def_offset_from_critical;
+		max_temp = critical_temp - def_offset_from_critical;
 		thd_log_info("Force max temp to %d\n", max_temp);
-	} else if ((critical_temp - max_temp) < def_offset_from_critical) {
+	}
+
+	if ((critical_temp - max_temp) < def_offset_from_critical) {
 		max_temp = critical_temp - def_offset_from_critical;
 		thd_log_info("Buggy max temp: to close to critical %d\n", max_temp);
 	}
 
-	thd_model.set_max_temperature(max_temp + ((critical_temp - max_temp) / 2));
-	prev_set_point = set_point = thd_model.get_set_point();
+	// max_temperature is where the Fan would have been activated fully
+	// psv_temp is set more that that so that in case if Fan is not able to
+	// control temperature, the passive temperature will be acted on
+	psv_temp = max_temp + ((critical_temp - max_temp) / 2);
+
+	thd_log_info("Core temp DTS :critical %d, max %d, psv %d\n", critical_temp,
+			max_temp, psv_temp);
 
 	return THD_SUCCESS;
 }
@@ -150,16 +142,8 @@ int cthd_zone_cpu::parse_cdev_order() {
 		if ((ret = parser.start_parse()) == THD_SUCCESS) {
 			ret = parser.get_order_list(order_list);
 			if (ret == THD_SUCCESS) {
-#ifdef DEF_MAX_TRIP
-				cthd_trip_point trip_pt_max(trip_point_cnt, MAX, set_point,
-						def_hystersis, index, DEFAULT_SENSOR_ID);
-				trip_pt_max.thd_trip_point_set_control_type(SEQUENTIAL);
-				load_cdev_xml(trip_pt_max, order_list);
-				trip_points.push_back(trip_pt_max);
-				trip_point_cnt++;
-#endif
 				cthd_trip_point trip_pt_passive(trip_point_cnt, PASSIVE,
-						max_temp, def_hystersis, index, DEFAULT_SENSOR_ID);
+						psv_temp, def_hystersis, index, DEFAULT_SENSOR_ID);
 				trip_pt_passive.thd_trip_point_set_control_type(SEQUENTIAL);
 				load_cdev_xml(trip_pt_passive, order_list);
 				trip_points.push_back(trip_pt_passive);
@@ -183,37 +167,23 @@ int cthd_zone_cpu::read_trip_points() {
 		thd_log_info("CDEVS order specified in thermal-cpu-cdev-order.xml\n");
 		return THD_SUCCESS;
 	}
-#ifdef DEF_MAX_TRIP
-	cthd_trip_point trip_pt_max(trip_point_cnt, MAX, set_point, def_hystersis,
-			index, DEFAULT_SENSOR_ID);
-	trip_pt_max.thd_trip_point_set_control_type(SEQUENTIAL);
-	trip_point_cnt++;
-#endif
-	cthd_trip_point trip_pt_passive(trip_point_cnt, PASSIVE, max_temp,
+	cthd_trip_point trip_pt_passive(trip_point_cnt, PASSIVE, psv_temp,
 			def_hystersis, index, DEFAULT_SENSOR_ID);
 	trip_pt_passive.thd_trip_point_set_control_type(SEQUENTIAL);
 	i = 0;
 	while (def_cooling_devices[i]) {
 		cdev = thd_engine->search_cdev(def_cooling_devices[i]);
 		if (cdev) {
-#ifdef DEF_MAX_TRIP
-			trip_pt_max.thd_trip_point_add_cdev(*cdev,
-					cthd_trip_point::default_influence);
-#endif
 			trip_pt_passive.thd_trip_point_add_cdev(*cdev,
 					cthd_trip_point::default_influence);
 		}
 		++i;
 	}
-#ifdef DEF_MAX_TRIP
-	trip_points.push_back(trip_pt_max);
-#endif
 	trip_points.push_back(trip_pt_passive);
 	trip_point_cnt++;
 
 	// Add active trip point at the end
-	// This is required for setting up async trip point
-	cthd_trip_point trip_pt_active(trip_point_cnt, ACTIVE, set_point,
+	cthd_trip_point trip_pt_active(trip_point_cnt, ACTIVE, max_temp,
 			def_hystersis, index, DEFAULT_SENSOR_ID);
 	trip_pt_active.thd_trip_point_set_control_type(SEQUENTIAL);
 
