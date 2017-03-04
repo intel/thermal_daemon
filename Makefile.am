@@ -70,8 +70,6 @@ thermald_SOURCES = \
 		src/thd_cdev_cpufreq.cpp \
 		src/thd_cdev_rapl.cpp \
 		src/thd_cdev_intel_pstate_driver.cpp \
-		src/thd_msr.cpp \
-		src/thd_rapl_interface.cpp \
 		src/thd_rapl_power_meter.cpp \
 		src/thd_trt_art_reader.cpp \
 		src/thd_cdev_rapl_dram.cpp \
