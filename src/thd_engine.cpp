@@ -593,12 +593,14 @@ static supported_ids_t id_table[] = {
 		{ 6, 0x45 }, // Haswell ULT
 		{ 6, 0x46 }, // Haswell ULT
 		{ 6, 0x3d }, // Broadwell
+		{ 6, 0x47 }, // Broadwell-GT3E
 		{ 6, 0x37 }, // Valleyview BYT
 		{ 6, 0x4c }, // Brasewell
 		{ 6, 0x4e }, // skylake
 		{ 6, 0x5e }, // skylake
 		{ 6, 0x5c }, // Broxton
-
+		{ 6, 0x8e }, // kabylake
+		{ 6, 0x9e }, // kabylake
 		{ 0, 0 } // Last Invalid entry
 };
 
