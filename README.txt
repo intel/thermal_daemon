@@ -73,6 +73,12 @@ Use "sudo stop thermald" to stop
 
 Releases
 
+Release 1.6
+- Add Kabylake and missing Broadwell CPU model
+- Removed deprecated modules
+- Added passive trip between critical and max, to allow fan to take control first
+- Fixed clash when multiple zones and trips controlling same cdev
+
 1.5.4
 - Use Processor thermal device in lieu of CPU zone when present
 - Haswell/Skylake PCH sensor
