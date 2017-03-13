@@ -199,7 +199,7 @@ int cthd_cdev::thd_cdev_set_state(int set_point, int target_temp,
 			}
 		}
 	} else {
-		thd_log_debug("zone_trip_limits.size() %lu\n", zone_trip_limits.size());
+		thd_log_debug("zone_trip_limits.size() %zu\n", (size_t)zone_trip_limits.size());
 		if (zone_trip_limits.size() > 0) {
 			int length = zone_trip_limits.size();
 			int _target_value = TRIP_PT_INVALID_TARGET_STATE;
