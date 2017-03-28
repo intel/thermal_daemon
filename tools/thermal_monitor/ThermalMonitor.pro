@@ -8,6 +8,9 @@ QT       += core gui dbus
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets printsupport
 
+# Do not print qDebug() messages in release builds
+CONFIG(release): DEFINES += QT_NO_DEBUG_OUTPUT
+
 TARGET = ThermalMonitor
 TEMPLATE = app
 

@@ -164,7 +164,6 @@ void MainWindow::setupPlotWidget()
         if (trip_count > 0) {
             for (int trip = 0; trip < trip_count; trip++){
                 QCPItemLine *line = new QCPItemLine(m_plotWidget);
-                m_plotWidget->addItem(line);
                 temp = m_thermaldInterface->getTripTempForZone(zone, trip);
                 line->start->setCoords(0, temp);
                 line->end->setCoords(SAMPLE_STORE_SIZE - 1, temp);
