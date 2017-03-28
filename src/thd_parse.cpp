@@ -462,6 +462,8 @@ int cthd_parse::parse_new_platform_info(xmlNode * a_node, xmlDoc *doc,
 	xmlNode *cur_node = NULL;
 	char *tmp_value;
 
+	info_ptr->default_prefernce = PREF_ENERGY_CONSERVE;
+
 	for (cur_node = a_node; cur_node; cur_node = cur_node->next) {
 		if (cur_node->type == XML_ELEMENT_NODE) {
 			DEBUG_PARSER_PRINT("node type: Element, name: %s value: %s\n", cur_node->name, xmlNodeListGetString(doc, cur_node->xmlChildrenNode, 1));
