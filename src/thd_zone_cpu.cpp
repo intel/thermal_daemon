@@ -51,7 +51,6 @@ cthd_zone_cpu::cthd_zone_cpu(int index, std::string path, int package_id) :
 }
 
 int cthd_zone_cpu::init() {
-	critical_temp = 0;
 	int temp = 0;
 	bool found = false;
 
