@@ -467,7 +467,7 @@ int cthd_parse::parse_new_platform_info(xmlNode * a_node, xmlDoc *doc,
 	xmlNode *cur_node = NULL;
 	char *tmp_value;
 
-	info_ptr->default_prefernce = PREF_ENERGY_CONSERVE;
+	info_ptr->default_preference = PREF_ENERGY_CONSERVE;
 
 	for (cur_node = a_node; cur_node; cur_node = cur_node->next) {
 		if (cur_node->type == XML_ELEMENT_NODE) {
@@ -488,9 +488,9 @@ int cthd_parse::parse_new_platform_info(xmlNode * a_node, xmlDoc *doc,
 					"Preference")) {
 				char *pref_val = char_trim(tmp_value);
 				if (pref_val && !strcasecmp(pref_val, "PERFORMANCE"))
-					info_ptr->default_prefernce = PREF_PERFORMANCE;
+					info_ptr->default_preference = PREF_PERFORMANCE;
 				else
-					info_ptr->default_prefernce = PREF_ENERGY_CONSERVE;
+					info_ptr->default_preference = PREF_ENERGY_CONSERVE;
 			} else if (!strcasecmp((const char*) cur_node->name,
 					"ThermalZones")) {
 				parse_thermal_zones(cur_node->children, doc, info_ptr);
@@ -592,7 +592,7 @@ void cthd_parse::dump_thermal_conf() {
 		thd_log_info(" *** Index %u ***\n", i);
 		thd_log_info("Name: %s\n", thermal_info_list[i].name.c_str());
 		thd_log_info("UUID: %s\n", thermal_info_list[i].uuid.c_str());
-		thd_log_info("type: %d\n", thermal_info_list[i].default_prefernce);
+		thd_log_info("type: %d\n", thermal_info_list[i].default_preference);
 
 		for (unsigned int j = 0; j < thermal_info_list[i].sensors.size(); ++j) {
 			thd_log_info("\tSensor %u \n", j);
@@ -807,7 +807,7 @@ int cthd_parse::set_default_preference() {
 	cthd_preference thd_pref;
 	int ret;
 
-	if (thermal_info_list[matched_thermal_info_index].default_prefernce
+	if (thermal_info_list[matched_thermal_info_index].default_preference
 			== PREF_PERFORMANCE)
 		ret = thd_pref.set_preference("PERFORMANCE");
 	else
