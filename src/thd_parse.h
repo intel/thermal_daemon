@@ -115,7 +115,7 @@ typedef struct {
 	std::string name;
 	std::string uuid;
 	std::string product_name;
-	int default_prefernce;
+	int default_preference;
 	std::vector<thermal_sensor_t> sensors;
 	std::vector<thermal_zone_t> zones;
 	std::vector<cooling_dev_t> cooling_devs;

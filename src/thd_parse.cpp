@@ -112,20 +112,21 @@ int cthd_parse::parse_new_trip_cdev(xmlNode * a_node, xmlDoc *doc,
 			DEBUG_PARSER_PRINT("node type: Element, name: %s value: %s\n", cur_node->name, xmlNodeListGetString(doc, cur_node->xmlChildrenNode, 1));
 			tmp_value = (char *) xmlNodeListGetString(doc,
 					cur_node->xmlChildrenNode, 1);
-			if (!strcasecmp((const char*) cur_node->name, "type")) {
-				trip_cdev->type.assign((const char*) tmp_value);
-				string_trim(trip_cdev->type);
-			} else if (!strcasecmp((const char*) cur_node->name, "influence")) {
-				trip_cdev->influence = atoi(tmp_value);
-			} else if (!strcasecmp((const char*) cur_node->name,
-					"SamplingPeriod")) {
-				trip_cdev->sampling_period = atoi(tmp_value);
-			} else if (!strcasecmp((const char*) cur_node->name,
-					"TargetState")) {
-				trip_cdev->target_state = atoi(tmp_value);
-			}
-			if (tmp_value)
+			if (tmp_value) {
+				if (!strcasecmp((const char*) cur_node->name, "type")) {
+					trip_cdev->type.assign((const char*) tmp_value);
+					string_trim(trip_cdev->type);
+				} else if (!strcasecmp((const char*) cur_node->name, "influence")) {
+					trip_cdev->influence = atoi(tmp_value);
+				} else if (!strcasecmp((const char*) cur_node->name,
+						"SamplingPeriod")) {
+					trip_cdev->sampling_period = atoi(tmp_value);
+				} else if (!strcasecmp((const char*) cur_node->name,
+						"TargetState")) {
+					trip_cdev->target_state = atoi(tmp_value);
+				}
 				xmlFree(tmp_value);
+			}
 		}
 	}
 
@@ -223,15 +224,16 @@ int cthd_parse::parse_pid_values(xmlNode * a_node, xmlDoc *doc,
 			DEBUG_PARSER_PRINT("node type: Element, name: %s value: %s\n", cur_node->name, xmlNodeListGetString(doc, cur_node->xmlChildrenNode, 1));
 			tmp_value = (char*) xmlNodeListGetString(doc,
 					cur_node->xmlChildrenNode, 1);
-			if (!strcasecmp((const char*) cur_node->name, "Kp")) {
-				pid_ptr->Kp = atof(tmp_value);
-			} else if (!strcasecmp((const char*) cur_node->name, "Kd")) {
-				pid_ptr->Kd = atof(tmp_value);
-			} else if (!strcasecmp((const char*) cur_node->name, "Ki")) {
-				pid_ptr->Ki = atof(tmp_value);
-			}
-			if (tmp_value)
+			if (tmp_value) {
+				if (!strcasecmp((const char*) cur_node->name, "Kp")) {
+					pid_ptr->Kp = atof(tmp_value);
+				} else if (!strcasecmp((const char*) cur_node->name, "Kd")) {
+					pid_ptr->Kd = atof(tmp_value);
+				} else if (!strcasecmp((const char*) cur_node->name, "Ki")) {
+					pid_ptr->Ki = atof(tmp_value);
+				}
 				xmlFree(tmp_value);
+			}
 		}
 	}
 
@@ -281,47 +283,48 @@ int cthd_parse::parse_new_cooling_dev(xmlNode * a_node, xmlDoc *doc,
 			DEBUG_PARSER_PRINT("node type: Element, name: %s value: %s\n", cur_node->name, xmlNodeListGetString(doc, cur_node->xmlChildrenNode, 1));
 			tmp_value = (char*) xmlNodeListGetString(doc,
 					cur_node->xmlChildrenNode, 1);
-			if (!strcasecmp((const char *) cur_node->name, "Index")) {
-				cdev->index = atoi(tmp_value);
-			} else if (!strcasecmp((const char *) cur_node->name, "Type")) {
-				cdev->type_string.assign((const char*) tmp_value);
-				string_trim(cdev->type_string);
-			} else if (!strcasecmp((const char *) cur_node->name, "Path")) {
-				cdev->mask |= CDEV_DEF_BIT_PATH;
-				cdev->path_str.assign((const char*) tmp_value);
-				string_trim(cdev->path_str);
-			} else if (!strcasecmp((const char *) cur_node->name, "MinState")) {
-				cdev->mask |= CDEV_DEF_BIT_MIN_STATE;
-				cdev->min_state = atoi(tmp_value);
-			} else if (!strcasecmp((const char *) cur_node->name, "MaxState")) {
-				cdev->mask |= CDEV_DEF_BIT_MAX_STATE;
-				cdev->max_state = atoi(tmp_value);
-			} else if (!strcasecmp((const char *) cur_node->name,
-					"IncDecStep")) {
-				cdev->mask |= CDEV_DEF_BIT_STEP;
-				cdev->inc_dec_step = atoi(tmp_value);
-			} else if (!strcasecmp((const char *) cur_node->name, "ReadBack")) {
-				cdev->mask |= CDEV_DEF_BIT_READ_BACK;
-				cdev->read_back = atoi(tmp_value);
-			} else if (!strcasecmp((const char *) cur_node->name,
-					"DebouncePeriod")) {
-				cdev->mask |= CDEV_DEF_BIT_DEBOUNCE_VAL;
-				cdev->debounce_interval = atoi(tmp_value);
-			} else if (!strcasecmp((const char*) cur_node->name,
-					"PidControl")) {
-				cdev->mask |= CDEV_DEF_BIT_PID_PARAMS;
-				cdev->pid_enable = true;
-				parse_pid_values(cur_node->children, doc, &cdev->pid);
-			} else if (!strcasecmp((const char *) cur_node->name,
-					"AutoOffMode")) {
-				cdev->mask |= CDEV_DEF_BIT_AUTO_DOWN;
-				if (atoi(tmp_value))
-					cdev->auto_down_control = true;
-				else
-					cdev->auto_down_control = false;
-			}
-			if (tmp_value)
+			if (tmp_value) {
+				if (!strcasecmp((const char *) cur_node->name, "Index")) {
+					cdev->index = atoi(tmp_value);
+				} else if (!strcasecmp((const char *) cur_node->name, "Type")) {
+					cdev->type_string.assign((const char*) tmp_value);
+					string_trim(cdev->type_string);
+				} else if (!strcasecmp((const char *) cur_node->name, "Path")) {
+					cdev->mask |= CDEV_DEF_BIT_PATH;
+					cdev->path_str.assign((const char*) tmp_value);
+					string_trim(cdev->path_str);
+				} else if (!strcasecmp((const char *) cur_node->name, "MinState")) {
+					cdev->mask |= CDEV_DEF_BIT_MIN_STATE;
+					cdev->min_state = atoi(tmp_value);
+				} else if (!strcasecmp((const char *) cur_node->name, "MaxState")) {
+					cdev->mask |= CDEV_DEF_BIT_MAX_STATE;
+					cdev->max_state = atoi(tmp_value);
+				} else if (!strcasecmp((const char *) cur_node->name,
+						"IncDecStep")) {
+					cdev->mask |= CDEV_DEF_BIT_STEP;
+					cdev->inc_dec_step = atoi(tmp_value);
+				} else if (!strcasecmp((const char *) cur_node->name, "ReadBack")) {
+					cdev->mask |= CDEV_DEF_BIT_READ_BACK;
+					cdev->read_back = atoi(tmp_value);
+				} else if (!strcasecmp((const char *) cur_node->name,
+						"DebouncePeriod")) {
+					cdev->mask |= CDEV_DEF_BIT_DEBOUNCE_VAL;
+					cdev->debounce_interval = atoi(tmp_value);
+				} else if (!strcasecmp((const char*) cur_node->name,
+						"PidControl")) {
+					cdev->mask |= CDEV_DEF_BIT_PID_PARAMS;
+					cdev->pid_enable = true;
+					parse_pid_values(cur_node->children, doc, &cdev->pid);
+				} else if (!strcasecmp((const char *) cur_node->name,
+						"AutoOffMode")) {
+					cdev->mask |= CDEV_DEF_BIT_AUTO_DOWN;
+					if (atoi(tmp_value))
+						cdev->auto_down_control = true;
+					else
+						cdev->auto_down_control = false;
+				}
 				xmlFree(tmp_value);
+			}
 		}
 	}
 
@@ -381,17 +384,18 @@ int cthd_parse::parse_new_sensor_link(xmlNode * a_node, xmlDoc *doc,
 			DEBUG_PARSER_PRINT("node type: Element, name: %s value: %s\n", cur_node->name, xmlNodeListGetString(doc, cur_node->xmlChildrenNode, 1));
 			tmp_value = (char*) xmlNodeListGetString(doc,
 					cur_node->xmlChildrenNode, 1);
-			if (!strcasecmp((const char*) cur_node->name, "SensorType")) {
-				info_ptr->name.assign(tmp_value);
-				string_trim(info_ptr->name);
-			} else if (!strcasecmp((const char*) cur_node->name,
-					"Multiplier")) {
-				info_ptr->multiplier = atof(tmp_value);
-			} else if (!strcasecmp((const char*) cur_node->name, "Offset")) {
-				info_ptr->offset = atof(tmp_value);
-			}
-			if (tmp_value)
+			if (tmp_value) {
+				if (!strcasecmp((const char*) cur_node->name, "SensorType")) {
+					info_ptr->name.assign(tmp_value);
+					string_trim(info_ptr->name);
+				} else if (!strcasecmp((const char*) cur_node->name,
+						"Multiplier")) {
+					info_ptr->multiplier = atof(tmp_value);
+				} else if (!strcasecmp((const char*) cur_node->name, "Offset")) {
+					info_ptr->offset = atof(tmp_value);
+				}
 				xmlFree(tmp_value);
+			}
 		}
 	}
 
@@ -408,26 +412,27 @@ int cthd_parse::parse_new_sensor(xmlNode * a_node, xmlDoc *doc,
 			DEBUG_PARSER_PRINT("node type: Element, name: %s value: %s\n", cur_node->name, xmlNodeListGetString(doc, cur_node->xmlChildrenNode, 1));
 			tmp_value = (char*) xmlNodeListGetString(doc,
 					cur_node->xmlChildrenNode, 1);
-			if (!strcasecmp((const char*) cur_node->name, "Type")) {
-				info_ptr->name.assign(tmp_value);
-				string_trim(info_ptr->name);
-			} else if (!strcasecmp((const char*) cur_node->name, "Path")) {
-				info_ptr->mask |= SENSOR_DEF_BIT_PATH;
-				info_ptr->path.assign(tmp_value);
-				string_trim(info_ptr->path);
-			} else if (!strcasecmp((const char*) cur_node->name,
-					"AsyncCapable")) {
-				info_ptr->async_capable = atoi(tmp_value);
-				info_ptr->mask |= SENSOR_DEF_BIT_ASYNC_CAPABLE;
-			} else if (!strcasecmp((const char*) cur_node->name, "Virtual")) {
-				info_ptr->virtual_sensor = atoi(tmp_value);
-			} else if (!strcasecmp((const char*) cur_node->name,
-					"SensorLink")) {
-				parse_new_sensor_link(cur_node->children, doc,
-						&info_ptr->sensor_link);
-			}
-			if (tmp_value)
+			if (tmp_value) {
+				if (!strcasecmp((const char*) cur_node->name, "Type")) {
+					info_ptr->name.assign(tmp_value);
+					string_trim(info_ptr->name);
+				} else if (!strcasecmp((const char*) cur_node->name, "Path")) {
+					info_ptr->mask |= SENSOR_DEF_BIT_PATH;
+					info_ptr->path.assign(tmp_value);
+					string_trim(info_ptr->path);
+				} else if (!strcasecmp((const char*) cur_node->name,
+						"AsyncCapable")) {
+					info_ptr->async_capable = atoi(tmp_value);
+					info_ptr->mask |= SENSOR_DEF_BIT_ASYNC_CAPABLE;
+				} else if (!strcasecmp((const char*) cur_node->name, "Virtual")) {
+					info_ptr->virtual_sensor = atoi(tmp_value);
+				} else if (!strcasecmp((const char*) cur_node->name,
+						"SensorLink")) {
+					parse_new_sensor_link(cur_node->children, doc,
+							&info_ptr->sensor_link);
+				}
 				xmlFree(tmp_value);
+			}
 		}
 	}
 
@@ -462,7 +467,7 @@ int cthd_parse::parse_new_platform_info(xmlNode * a_node, xmlDoc *doc,
 	xmlNode *cur_node = NULL;
 	char *tmp_value;
 
-	info_ptr->default_prefernce = PREF_ENERGY_CONSERVE;
+	info_ptr->default_preference = PREF_ENERGY_CONSERVE;
 
 	for (cur_node = a_node; cur_node; cur_node = cur_node->next) {
 		if (cur_node->type == XML_ELEMENT_NODE) {
@@ -483,9 +488,9 @@ int cthd_parse::parse_new_platform_info(xmlNode * a_node, xmlDoc *doc,
 					"Preference")) {
 				char *pref_val = char_trim(tmp_value);
 				if (pref_val && !strcasecmp(pref_val, "PERFORMANCE"))
-					info_ptr->default_prefernce = PREF_PERFORMANCE;
+					info_ptr->default_preference = PREF_PERFORMANCE;
 				else
-					info_ptr->default_prefernce = PREF_ENERGY_CONSERVE;
+					info_ptr->default_preference = PREF_ENERGY_CONSERVE;
 			} else if (!strcasecmp((const char*) cur_node->name,
 					"ThermalZones")) {
 				parse_thermal_zones(cur_node->children, doc, info_ptr);
@@ -587,7 +592,7 @@ void cthd_parse::dump_thermal_conf() {
 		thd_log_info(" *** Index %u ***\n", i);
 		thd_log_info("Name: %s\n", thermal_info_list[i].name.c_str());
 		thd_log_info("UUID: %s\n", thermal_info_list[i].uuid.c_str());
-		thd_log_info("type: %d\n", thermal_info_list[i].default_prefernce);
+		thd_log_info("type: %d\n", thermal_info_list[i].default_preference);
 
 		for (unsigned int j = 0; j < thermal_info_list[i].sensors.size(); ++j) {
 			thd_log_info("\tSensor %u \n", j);
@@ -802,7 +807,7 @@ int cthd_parse::set_default_preference() {
 	cthd_preference thd_pref;
 	int ret;
 
-	if (thermal_info_list[matched_thermal_info_index].default_prefernce
+	if (thermal_info_list[matched_thermal_info_index].default_preference
 			== PREF_PERFORMANCE)
 		ret = thd_pref.set_preference("PERFORMANCE");
 	else
