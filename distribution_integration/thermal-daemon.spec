@@ -1,12 +1,12 @@
 Name:           thermald
-Version:        1.5
-Release:        4%{?dist}
+Version:        1.6
+Release:        1%{?dist}
 Summary:        The "Linux Thermal Daemon" program from 01.org
 
 License:        GPLv2+
 URL:            https://github.com/01org/thermal_daemon
 %global         pkgname thermal_daemon
-Source0: 		https://github.com/01org/thermal_daemon/archive/v%{version}.tar.gz
+Source0:        https://github.com/01org/thermal_daemon/archive/v%{version}.tar.gz
 
 BuildRequires:    automake
 BuildRequires:    autoconf
@@ -57,6 +57,8 @@ make %{?_smp_mflags}
 %exclude %{_sysconfdir}/init
 
 %changelog
+* Mon Apr 03 2017 James Ye <jye836@gmail.com> 1.6-1
+- Updated to thermal daemon 1.6
 * Tue Oct 25 2016 Michael P. Moran <> 1.5-4
 - Updated spec file for version 1.5.4
 * Tue Mar 29 2016 Alexey Slaykovsky <alexey@slaykovsky.com> 1.5-3
