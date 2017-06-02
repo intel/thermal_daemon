@@ -11,8 +11,6 @@ AM_CXXFLAGS = ${DBUS_CFLAGS}\
 		-DTDRUNDIR=\"$(tdrundir)\" \
 		-DTDCONFDIR=\"$(tdconfdir)\" \
 		-I src \
-		-fpermissive \
-		-fopenmp \
 		-Wreorder \
 		-Wsign-compare \
 		-Wreturn-type \
