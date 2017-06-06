@@ -36,7 +36,10 @@
 #include "thd_cdev_rapl_dram.h"
 #include "thd_sensor_virtual.h"
 #include "thd_cdev_backlight.h"
+
+#ifdef GLIB_SUPPORT
 #include "thd_cdev_modem.h"
+#endif
 
 // Default CPU cooling devices, which are not part of thermal sysfs
 // Since non trivial initialization is not supported, we init all fields even if they are not needed
@@ -502,7 +505,8 @@ int cthd_engine_default::add_replace_cdev(cooling_dev_t *config) {
 	}
 	if (!cdev_present) {
 		// create new
-		if (config->type_string.compare("intel_modem") == 0)
+		if (config->type_string.compare("intel_modem") == 0) {
+#ifdef GLIB_SUPPORT
 			/*
 			 * Add Modem as cdev
 			 * intel_modem is a modem identifier across all intel platforms.
@@ -510,7 +514,8 @@ int cthd_engine_default::add_replace_cdev(cooling_dev_t *config) {
 			 * are to be taken care in the cdev implementation.
 			 */
 			cdev = new cthd_cdev_modem(current_cdev_index, config->path_str);
-		else
+#endif
+		} else
 			cdev = new cthd_gen_sysfs_cdev(current_cdev_index, config->path_str);
 		if (!cdev)
 			return THD_ERROR;

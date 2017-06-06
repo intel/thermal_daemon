@@ -129,14 +129,14 @@ public:
 		return cdevs.size();
 	}
 
+#ifndef ANDROID
 	trip_pt_cdev_t &get_cdev_at_index(unsigned int index) {
 		if (index < cdevs.size())
 			return cdevs[index];
-#ifndef ANDROID
 		else
 			throw std::invalid_argument("index");
-#endif
 	}
+#endif
 
 	void trip_cdev_add(trip_pt_cdev_t trip_cdev) {
 		int index;
