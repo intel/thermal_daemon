@@ -11,7 +11,6 @@ LOCAL_SRC_FILES := \
 		src/thd_sys_fs.cpp \
 		src/thd_trip_point.cpp \
 		src/thd_zone.cpp \
-		src/thd_zone_surface.cpp \
 		src/thd_zone_cpu.cpp \
 		src/thd_zone_therm_sys_fs.cpp \
 		src/thd_zone_dynamic.cpp \
