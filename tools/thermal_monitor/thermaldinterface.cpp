@@ -453,6 +453,7 @@ int ThermaldInterface::getZoneInformation(uint index, zoneInformationType &info)
         info.name = result.arguments().at(0).toString();
         info.sensor_count = result.arguments().at(1).toInt();
         info.trip_count = result.arguments().at(2).toInt();
+        info.lowest_valid_index = 0;
         return 0;
     } else {
         qCritical() << "error from" << iface->interface() <<  result.errorMessage();
