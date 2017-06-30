@@ -166,7 +166,11 @@ public:
 				index, _type_str.c_str(), temp, hyst, zone_id, sensor_id,
 				(unsigned long) cdevs.size());
 		for (unsigned int i = 0; i < cdevs.size(); ++i) {
-			thd_log_info("cdev[%u] %s\n", i,
+			if (cdevs[i].target_state != TRIP_PT_INVALID_TARGET_STATE)
+				thd_log_info("cdev[%u] %s target_state:%d\n", i,
+					cdevs[i].cdev->get_cdev_type().c_str(), cdevs[i].target_state);
+			else
+				thd_log_info("cdev[%u] %s target_state:not defined\n", i,
 					cdevs[i].cdev->get_cdev_type().c_str());
 		}
 	}
