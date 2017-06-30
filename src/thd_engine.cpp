@@ -786,6 +786,8 @@ cthd_cdev* cthd_engine::search_cdev(std::string name) {
 			continue;
 		if (cdev->get_cdev_type() == name)
 			return cdev;
+		if (cdev->get_cdev_alias() == name)
+			return cdev;
 	}
 
 	return NULL;

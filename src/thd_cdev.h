@@ -56,6 +56,7 @@ protected:
 	bool read_back;
 
 	std::string type_str;
+	std::string alias_str;
 	int debounce_interval;
 	time_t last_action_time;
 	bool trend_increase;
@@ -195,11 +196,17 @@ public:
 	std::string get_cdev_type() {
 		return type_str;
 	}
+	std::string get_cdev_alias() {
+		return alias_str;
+	}
 	std::string get_base_path() {
 		return cdev_sysfs.get_base_path();
 	}
 	void set_cdev_type(std::string _type_str) {
 		type_str = _type_str;
+	}
+	void set_cdev_alias(std::string _alias_str) {
+		alias_str = _alias_str;
 	}
 	void set_pid_param(double kp, double ki, double kd) {
 		pid_ctrl.kp = kp;

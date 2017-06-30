@@ -581,6 +581,7 @@ int cthd_engine_default::read_cooling_devices() {
 	cthd_sysfs_cdev_rapl *rapl_dev = new cthd_sysfs_cdev_rapl(
 			current_cdev_index, 0);
 	rapl_dev->set_cdev_type("rapl_controller");
+	rapl_dev->set_cdev_alias("B0D4");
 	if (rapl_dev->update() == THD_SUCCESS) {
 		cdevs.push_back(rapl_dev);
 		++current_cdev_index;
