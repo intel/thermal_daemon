@@ -199,10 +199,6 @@ gboolean thd_dbus_interface_terminate(PrefObject *obj, GError **error) {
 gboolean thd_dbus_interface_reinit(PrefObject *obj, GError **error) {
 	bool exclusive_control = false;
 
-	thd_engine->thd_engine_terminate();
-	sleep(1);
-	delete thd_engine;
-	sleep(2);
 	if (thd_engine->get_control_mode() == EXCLUSIVE)
 		exclusive_control = true;
 
@@ -210,6 +206,12 @@ gboolean thd_dbus_interface_reinit(PrefObject *obj, GError **error) {
 	const char *conf_file = NULL;
 	if (!config_file.empty())
 		conf_file = config_file.c_str();
+
+	thd_engine->thd_engine_terminate();
+	sleep(1);
+	delete thd_engine;
+	sleep(2);
+
 
 	if (thd_engine_create_default_engine(true, exclusive_control,
 			conf_file) != THD_SUCCESS) {
