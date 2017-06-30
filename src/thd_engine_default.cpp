@@ -481,9 +481,11 @@ int cthd_engine_default::read_thermal_zones() {
 #ifdef AUTO_DETECT_RELATIONSHIP
 	def_binding.do_default_binding(cdevs);
 #endif
+	thd_log_info("\n\n ZONE DUMP BEGIN\n");
 	for (unsigned int i = 0; i < zones.size(); ++i) {
 		zones[i]->zone_dump();
 	}
+	thd_log_info("\n\n ZONE DUMP END\n");
 
 	return THD_SUCCESS;
 }

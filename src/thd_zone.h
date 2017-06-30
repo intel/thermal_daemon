@@ -175,6 +175,10 @@ public:
 	}
 
 	void zone_dump() {
+		if (!zone_active)
+			return;
+
+		thd_log_info("\n");
 		thd_log_info("Zone %d: %s, Active:%d Bind:%d Sensor_cnt:%lu\n", index,
 				type_str.c_str(), zone_active, zone_cdev_binded_status,
 				(unsigned long) sensors.size());
@@ -186,6 +190,7 @@ public:
 		for (unsigned int i = 0; i < trip_points.size(); ++i) {
 			trip_points[i].trip_dump();
 		}
+		thd_log_info("\n");
 
 	}
 
