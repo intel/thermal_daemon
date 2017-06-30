@@ -66,8 +66,17 @@ Build
 (It will give error for systemd configuration, but ignore)
 cp data/thermald.conf /etc/init/
 3.
-Use "sudo start thermald" to start
-Use "sudo stop thermald" to stop
+If using upstart
+	Use "sudo start thermald" to start
+	Use "sudo stop thermald" to stop
+
+If using systemd, use
+- start service
+	sudo systemctl start thermald.service
+- Get status
+	sudo systemctl status thermald.service
+- Stop service
+	sudo systemctl stop thermald.service
 
 -------------------------------------------
 
