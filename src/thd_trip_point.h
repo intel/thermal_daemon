@@ -172,7 +172,9 @@ public:
 	}
 };
 
+#ifdef USE_TRIP_SORT
 static bool trip_sort(cthd_trip_point trip1, cthd_trip_point trip2) {
 	return (trip1.get_trip_temp() < trip2.get_trip_temp());
 }
+#endif
 #endif

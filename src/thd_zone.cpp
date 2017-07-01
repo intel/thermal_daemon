@@ -31,6 +31,8 @@
  * if required.
  */
 
+#define USE_TRIP_SORT
+
 #include "thd_zone.h"
 #include "thd_engine.h"
 
