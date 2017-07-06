@@ -106,7 +106,7 @@ int csys_fs::read(const std::string &path, unsigned int position, char *buf,
 	return ret;
 }
 
-int csys_fs::read(const std::string &path, unsigned int *ptr_val) {
+int csys_fs::read(const std::string &path, int *ptr_val) {
 	std::string p = base_path + path;
 	char str[16];
 	int ret;
