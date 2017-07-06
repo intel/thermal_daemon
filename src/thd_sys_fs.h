@@ -57,7 +57,7 @@ public:
 	/* read data from base path (dir) + provided path */
 	int read(const std::string &path, char *buf, int len);
 	int read(const std::string &path, std::string &buf);
-	int read(const std::string &path, unsigned int *ptr_val);
+	int read(const std::string &path, int *ptr_val);
 	int read(const std::string &path, unsigned long *ptr_val);
 	int read(const std::string &path, unsigned int position, char *buf,
 			int len);
