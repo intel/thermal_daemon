@@ -43,7 +43,8 @@ typedef enum {
 	SEQUENTIAL  // one after other once the previous cdev reaches its max state
 } trip_control_type_t;
 
-#define TRIP_PT_INVALID_TARGET_STATE	0xffffff
+#define TRIP_PT_INVALID_TARGET_STATE	INT_MAX
+
 typedef struct {
 	cthd_cdev *cdev;
 	int influence;
