@@ -64,6 +64,7 @@ public:
 	virtual int get_max_state();
 	virtual int update();
 	virtual void set_curr_state_raw(int state, int arg);
+	int map_target_state(int target_valid, int target_state);
 };
 
 #endif /* THD_CDEV_RAPL_H_ */

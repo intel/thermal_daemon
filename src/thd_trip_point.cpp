@@ -147,16 +147,21 @@ bool cthd_trip_point::thd_trip_point_check(int id, unsigned int read_temp,
 			 * or equal than the current state of the cdev, then also skip.
 			 */
 			if (cdev->in_max_state()
-					|| (cdevs[i].target_state != TRIP_PT_INVALID_TARGET_STATE
-							&& cdev->cmp_current_state(cdevs[i].target_state)
-									<= 0)) {
-				thd_log_debug("Need to switch to next cdev \n");
+					|| (cdevs[i].target_state_valid
+							&& cdev->cmp_current_state(
+									cdev->map_target_state(
+											cdevs[i].target_state_valid,
+											cdevs[i].target_state)) <= 0)) {
+				thd_log_debug("Need to switch to next cdev target %d \n",
+						cdev->map_target_state(cdevs[i].target_state_valid,
+								cdevs[i].target_state));
 				// No scope of control with this cdev
 				continue;
 			}
 			ret = cdev->thd_cdev_set_state(temp, temp, read_temp, 1, zone_id,
-					index, cdevs[i].target_state_valid, cdevs[i].target_state,
-					false);
+					index, cdevs[i].target_state_valid,
+					cdev->map_target_state(cdevs[i].target_state_valid,
+							cdevs[i].target_state), false);
 			if (control_type == SEQUENTIAL && ret == THD_SUCCESS) {
 				// Only one cdev activation
 				break;
@@ -176,7 +181,9 @@ bool cthd_trip_point::thd_trip_point_check(int id, unsigned int read_temp,
 				continue;
 			}
 			cdev->thd_cdev_set_state(temp, temp, read_temp, 0, zone_id, index,
-					cdevs[i].target_state_valid, cdevs[i].target_state, false);
+					cdevs[i].target_state_valid,
+					cdev->map_target_state(cdevs[i].target_state_valid,
+							cdevs[i].target_state), false);
 
 			if (control_type == SEQUENTIAL) {
 				// Only one cdev activation

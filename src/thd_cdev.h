@@ -155,6 +155,9 @@ public:
 	virtual void set_down_adjust_control(bool value) {
 		auto_down_adjust = value;
 	}
+	virtual int map_target_state(int target_valid, int target_state) {
+		return target_state;
+	}
 	void set_debounce_interval(int interval) {
 		debounce_interval = interval;
 	}

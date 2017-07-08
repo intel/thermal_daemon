@@ -68,6 +68,16 @@ void cthd_sysfs_cdev_rapl::set_curr_state(int state, int arg) {
 	}
 }
 
+int cthd_sysfs_cdev_rapl::map_target_state(int target_valid, int target_state) {
+	if (!target_valid)
+		return target_state;
+
+	if (target_state > phy_max)
+		return 0;
+
+	return phy_max - target_state;
+}
+
 void cthd_sysfs_cdev_rapl::set_curr_state_raw(int state, int arg) {
 	std::stringstream state_str;
 	std::stringstream tc_state_dev;

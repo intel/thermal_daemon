@@ -154,8 +154,10 @@ int cthd_cdev::thd_cdev_set_state(int set_point, int target_temp,
 	int ret;
 
 	time(&tm);
-	thd_log_debug(">>thd_cdev_set_state index:%d state:%d :%d:%d:%d force:%d\n",
-			index, state, zone_id, trip_id, target_value, force);
+	thd_log_debug(
+			">>thd_cdev_set_state index:%d state:%d :%d:%d:%d:%d force:%d\n",
+			index, state, zone_id, trip_id, target_state_valid, target_value,
+			force);
 	if (!force && last_state == state
 			&& (tm - last_action_time) <= debounce_interval) {
 		thd_log_debug(
@@ -209,7 +211,7 @@ int cthd_cdev::thd_cdev_set_state(int set_point, int target_temp,
 
 			// Just remove the current zone requesting to turn off
 			for (i = 0; i < length; ++i) {
-				thd_log_info("match zone %d trip %d clamp %d\n",
+				thd_log_info("match zone %d trip %d clamp_valid %d clamp %d\n",
 						zone_trip_limits[i].zone, zone_trip_limits[i].trip,
 						zone_trip_limits[i].target_state_valid,
 						zone_trip_limits[i].target_value);
