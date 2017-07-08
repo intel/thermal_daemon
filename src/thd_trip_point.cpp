@@ -155,7 +155,8 @@ bool cthd_trip_point::thd_trip_point_check(int id, unsigned int read_temp,
 				continue;
 			}
 			ret = cdev->thd_cdev_set_state(temp, temp, read_temp, 1, zone_id,
-						       index, cdevs[i].target_state, false);
+					index, cdevs[i].target_state_valid, cdevs[i].target_state,
+					false);
 			if (control_type == SEQUENTIAL && ret == THD_SUCCESS) {
 				// Only one cdev activation
 				break;
@@ -175,7 +176,7 @@ bool cthd_trip_point::thd_trip_point_check(int id, unsigned int read_temp,
 				continue;
 			}
 			cdev->thd_cdev_set_state(temp, temp, read_temp, 0, zone_id, index,
-					cdevs[i].target_state, false);
+					cdevs[i].target_state_valid, cdevs[i].target_state, false);
 
 			if (control_type == SEQUENTIAL) {
 				// Only one cdev activation
@@ -188,12 +189,13 @@ bool cthd_trip_point::thd_trip_point_check(int id, unsigned int read_temp,
 }
 
 void cthd_trip_point::thd_trip_point_add_cdev(cthd_cdev &cdev, int influence,
-		int sampling_period, int target_state) {
+		int sampling_period, int target_state_valid, int target_state) {
 	trip_pt_cdev_t thd_cdev;
 	thd_cdev.cdev = &cdev;
 	thd_cdev.influence = influence;
 	thd_cdev.sampling_priod = sampling_period;
 	thd_cdev.last_op_time = 0;
+	thd_cdev.target_state_valid = target_state_valid;
 	thd_cdev.target_state = target_state;
 	trip_cdev_add(thd_cdev);
 }

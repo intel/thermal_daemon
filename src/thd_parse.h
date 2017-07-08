@@ -71,6 +71,7 @@ typedef struct {
 	std::string type;
 	int influence;
 	int sampling_period;
+	int target_state_valid;
 	int target_state;
 } trip_cdev_t;
 

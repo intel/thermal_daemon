@@ -268,7 +268,7 @@ void cthd_zone::zone_reset() {
 
 int cthd_zone::bind_cooling_device(trip_point_type_t type,
 		unsigned int trip_temp, cthd_cdev *cdev, int influence,
-		int sampling_period, int target_state) {
+		int sampling_period, int target_state_valid, int target_state) {
 	int i, count;
 	bool added = false;
 
@@ -280,7 +280,7 @@ int cthd_zone::bind_cooling_device(trip_point_type_t type,
 				&& (trip_point.get_trip_temp() > 0)
 				&& (trip_temp == 0 || trip_point.get_trip_temp() == trip_temp)) {
 			trip_point.thd_trip_point_add_cdev(*cdev, influence,
-					sampling_period, target_state);
+					sampling_period, target_state_valid, target_state);
 			added = true;
 			zone_cdev_set_binded();
 			break;
