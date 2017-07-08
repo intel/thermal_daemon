@@ -126,6 +126,10 @@ public:
 	virtual void set_curr_state(int state, int arg) {
 	}
 	virtual void set_curr_state_raw(int state, int arg) {
+		if (state > max_state)
+			state = max_state;
+		if (state < min_state)
+			state = min_state;
 		set_curr_state(state, arg);
 	}
 	virtual int get_curr_state() {
