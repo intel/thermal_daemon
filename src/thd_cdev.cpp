@@ -147,8 +147,8 @@ static bool sort_clamp_values_dec(zone_trip_limits_t limit_1,
  */
 
 int cthd_cdev::thd_cdev_set_state(int set_point, int target_temp,
-		int temperature, int state, int zone_id, int trip_id, int target_value,
-		bool force) {
+		int temperature, int state, int zone_id, int trip_id,
+		int target_state_valid, int target_value, bool force) {
 
 	time_t tm;
 	int ret;
@@ -183,12 +183,14 @@ int cthd_cdev::thd_cdev_set_state(int set_point, int target_temp,
 
 			limit.zone = zone_id;
 			limit.trip = trip_id;
+			limit.target_state_valid = target_state_valid;
 			limit.target_value = target_value;
-			thd_log_info("Added zone %d trip %d clamp %d\n", limit.zone,
-					limit.trip, limit.target_value);
+			thd_log_info("Added zone %d trip %d clamp_valid %d clamp %d\n",
+					limit.zone, limit.trip, limit.target_state_valid,
+					limit.target_value);
 			zone_trip_limits.push_back(limit);
 
-			if (target_value != TRIP_PT_INVALID_TARGET_STATE) {
+			if (target_state_valid) {
 				if (min_state < max_state) {
 					std::sort(zone_trip_limits.begin(), zone_trip_limits.end(),
 							sort_clamp_values_asc);
@@ -202,19 +204,22 @@ int cthd_cdev::thd_cdev_set_state(int set_point, int target_temp,
 		thd_log_debug("zone_trip_limits.size() %zu\n", (size_t)zone_trip_limits.size());
 		if (zone_trip_limits.size() > 0) {
 			int length = zone_trip_limits.size();
-			int _target_value = TRIP_PT_INVALID_TARGET_STATE;
+			int _target_state_valid = 0;
 			int i;
 
 			// Just remove the current zone requesting to turn off
 			for (i = 0; i < length; ++i) {
 				thd_log_info("match zone %d trip %d clamp %d\n",
 						zone_trip_limits[i].zone, zone_trip_limits[i].trip,
+						zone_trip_limits[i].target_state_valid,
 						zone_trip_limits[i].target_value);
 
 				if (zone_trip_limits[i].zone == zone_id
 						&& zone_trip_limits[i].trip == trip_id
+						&& target_state_valid
+								== zone_trip_limits[i].target_state_valid
 						&& target_value == zone_trip_limits[i].target_value) {
-					_target_value = zone_trip_limits[i].target_value;
+					_target_state_valid = zone_trip_limits[i].target_state_valid;
 					zone_trip_limits.erase(zone_trip_limits.begin() + i);
 					thd_log_info("Erased  [%d: %d %d\n", zone_id, trip_id,
 							target_value);
@@ -241,11 +246,11 @@ int cthd_cdev::thd_cdev_set_state(int set_point, int target_temp,
 			} else {
 				// If the deleted entry has a target then on deactivation
 				// set the state to min_state
-				if (_target_value != TRIP_PT_INVALID_TARGET_STATE)
+				if (_target_state_valid)
 					target_value = get_min_state();
 			}
 		} else {
-			target_value = TRIP_PT_INVALID_TARGET_STATE;
+			target_state_valid = 0;
 		}
 	}
 
@@ -256,7 +261,7 @@ int cthd_cdev::thd_cdev_set_state(int set_point, int target_temp,
 		control_begin();
 	}
 
-	if (target_value != TRIP_PT_INVALID_TARGET_STATE) {
+	if (target_state_valid) {
 		set_curr_state_raw(target_value, zone_id);
 		curr_state = target_value;
 		ret = THD_SUCCESS;
@@ -288,7 +293,7 @@ int cthd_cdev::thd_cdev_set_state(int set_point, int target_temp,
 
 int cthd_cdev::thd_cdev_set_min_state(int zone_id, int trip_id) {
 	trend_increase = false;
-	thd_cdev_set_state(0, 0, 0, 0, zone_id, trip_id, min_state, true);
+	thd_cdev_set_state(0, 0, 0, 0, zone_id, trip_id, 1, min_state, true);
 
 	return THD_SUCCESS;
 }
