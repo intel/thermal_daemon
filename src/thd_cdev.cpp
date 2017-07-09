@@ -154,11 +154,11 @@ int cthd_cdev::thd_cdev_set_state(int set_point, int target_temp,
 	int ret;
 
 	time(&tm);
-	thd_log_debug(
+	thd_log_info(
 			">>thd_cdev_set_state index:%d state:%d :%d:%d:%d:%d force:%d\n",
 			index, state, zone_id, trip_id, target_state_valid, target_value,
 			force);
-	if (!force && last_state == state
+	if (!force && last_state == state && state
 			&& (tm - last_action_time) <= debounce_interval) {
 		thd_log_debug(
 				"Ignore: delay < debounce interval : %d, %d, %d, %d, %d\n",
@@ -208,6 +208,7 @@ int cthd_cdev::thd_cdev_set_state(int set_point, int target_temp,
 			int length = zone_trip_limits.size();
 			int _target_state_valid = 0;
 			int i;
+			int erased = 0;
 
 			// Just remove the current zone requesting to turn off
 			for (i = 0; i < length; ++i) {
@@ -225,6 +226,7 @@ int cthd_cdev::thd_cdev_set_state(int set_point, int target_temp,
 					zone_trip_limits.erase(zone_trip_limits.begin() + i);
 					thd_log_info("Erased  [%d: %d %d\n", zone_id, trip_id,
 							target_value);
+					erased = 1;
 					break;
 				}
 			}
@@ -234,12 +236,14 @@ int cthd_cdev::thd_cdev_set_state(int set_point, int target_temp,
 
 				limit = zone_trip_limits[zone_trip_limits.size() - 1];
 				target_value = limit.target_value;
+				target_state_valid = limit.target_state_valid;
 				zone_id = limit.zone;
 				trip_id = limit.trip;
-				if (target_value == TRIP_PT_INVALID_TARGET_STATE) {
+				if (!erased)
+				{
 					thd_log_info(
-							"Currently active limit by [%d: %d %d]: ignore\n",
-							zone_id, trip_id, target_value);
+							"Currently active limit by [%d: %d %d %d]: ignore\n",
+							zone_id, trip_id, target_state_valid, target_value);
 					return THD_SUCCESS;
 				}
 
