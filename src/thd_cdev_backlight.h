@@ -37,6 +37,7 @@ public:
 	cthd_cdev_backlight(unsigned int _index, int _cpu_index);
 	void set_curr_state(int state, int arg);
 	int update();
+	int map_target_state(int target_valid, int target_state);
 };
 
 #endif /* SRC_THD_CDEV_BACKLIGHT_H_ */

@@ -48,6 +48,7 @@ public:
 	void set_curr_state(int state, int arg);
 	int get_max_state();
 	int update();
+	int map_target_state(int target_valid, int target_state);
 };
 
 #endif /* THD_CDEV_INTEL_PSATATE_DRIVER_H_ */
