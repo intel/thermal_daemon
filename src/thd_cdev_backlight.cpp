@@ -66,6 +66,16 @@ int cthd_cdev_backlight::update() {
 	return THD_SUCCESS;
 }
 
+int cthd_cdev_backlight::map_target_state(int target_valid, int target_state) {
+	if (!target_valid)
+		return target_state;
+
+	if (target_state > max_state)
+		return 0;
+
+	return max_state - target_state;
+}
+
 void cthd_cdev_backlight::set_curr_state(int state, int arg) {
 	int ret;
 	int backlight_val;
