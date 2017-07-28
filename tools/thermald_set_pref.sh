@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 echo "****thermald preference****"
 echo "0 : DEFAULT"

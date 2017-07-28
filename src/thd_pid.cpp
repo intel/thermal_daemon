@@ -44,7 +44,7 @@ int cthd_pid::pid_output(unsigned int curr_temp) {
 
 	int error = curr_temp - target_temp;
 	thd_log_debug("pid_output error %d %g:%g\n", error, kp, kp * error);
-	err_sum += (error * timeChange);
+	err_sum += 0.5 * (error + last_err) * timeChange;
 	if (timeChange)
 		d_err = (error - last_err) / timeChange;
 	else

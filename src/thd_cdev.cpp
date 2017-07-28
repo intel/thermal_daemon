@@ -277,7 +277,6 @@ int cthd_cdev::thd_cdev_set_state(int set_point, int target_temp,
 	} else if (pid_enable) {
 		pid_ctrl.set_target_temp(target_temp);
 		ret = pid_ctrl.pid_output(temperature);
-		ret += get_curr_state();
 		if (ret > get_max_state())
 			ret = get_max_state();
 		if (ret < get_min_state())
