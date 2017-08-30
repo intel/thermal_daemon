@@ -447,7 +447,7 @@ void cthd_engine::poll_enable_disable(bool status, message_capsul_t *msg) {
 int cthd_engine::proc_message(message_capsul_t *msg) {
 	int ret = 0;
 
-	thd_log_debug("Receieved message %d\n", msg->msg_id);
+	thd_log_debug("Received message %d\n", msg->msg_id);
 	switch (msg->msg_id) {
 	case WAKEUP:
 		break;
