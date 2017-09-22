@@ -182,7 +182,8 @@ int main(int argc, char *argv[]) {
 			NULL }, { "ignore-cpuid-check", 0, 0, G_OPTION_ARG_NONE,
 			&ignore_cpuid_check, N_("Ignore CPU ID check."), NULL }, {
 			"config-file", 0, 0, G_OPTION_ARG_STRING, &conf_file, N_(
-					"configuration file"), NULL }, { NULL } };
+					"configuration file"), NULL }, { NULL, 0, 0,
+			G_OPTION_ARG_NONE, NULL, NULL, NULL } };
 
 	if (!g_module_supported()) {
 		fprintf(stderr, "GModules are not supported on your platform!\n");
