@@ -14,8 +14,10 @@ AM_CXXFLAGS = ${DBUS_CFLAGS}\
 		-Wreorder \
 		-Wsign-compare \
 		-Wreturn-type \
-		-Wunused-but-set-variable\
-		-Wformat
+		-Wunused-but-set-variable \
+		-Wformat \
+		-Wall \
+		-Werror
 
 EXTRA_DIST=Makefile.glib \
 	thermald.pc.in

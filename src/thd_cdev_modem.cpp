@@ -173,7 +173,7 @@ int cthd_cdev_modem::get_modem_property(DBusConnection* conn,
 		DBusMessageIter key, var;
 
 		char *property_name;
-		dbus_bool_t enabled;
+		// dbus_bool_t enabled;
 
 		dbus_message_iter_recurse(&dict, &key);
 
