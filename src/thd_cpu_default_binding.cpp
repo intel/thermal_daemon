@@ -248,7 +248,7 @@ void cthd_cpu_default_binding::do_default_binding(
 
 	if (!cdev_rapl && !cdev_powerclamp) {
 		thd_log_info(
-				"cthd_cpu_default_binding::do_default_binding: No relavent cpu cdevs\n");
+				"cthd_cpu_default_binding::do_default_binding: No relevant cpu cdevs\n");
 		return;
 	}
 
