@@ -48,6 +48,9 @@
 
 // poll mode
 int thd_poll_interval = 4; //in seconds
+
+bool thd_ignore_default_control = false;
+
 static int pid_file_handle;
 
 // Stop daemon

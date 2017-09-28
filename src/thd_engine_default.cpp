@@ -215,6 +215,9 @@ int cthd_engine_default::read_thermal_sensors() {
 
 bool cthd_engine_default::add_int340x_processor_dev(void)
 {
+	if (thd_ignore_default_control)
+		return false;
+
 	/* Specialized processor thermal device names */
 	cthd_zone *processor_thermal = search_zone("B0D4");
 	if (!processor_thermal)
@@ -282,7 +285,7 @@ int cthd_engine_default::read_thermal_zones() {
 
 	bool valid_int340x = add_int340x_processor_dev();
 
-	if (!valid_int340x && !search_zone("cpu")) {
+	if (!thd_ignore_default_control && !valid_int340x && !search_zone("cpu")) {
 		bool cpu_zone_created = false;
 		thd_log_info("zone cpu will be created \n");
 		// Default CPU temperature zone
