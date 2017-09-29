@@ -370,3 +370,73 @@ Example 3: In this example Lenovo Thinkpad X220 and fan speed is controlled. Her
 .TP
 </ThermalConfiguration>
 .TP
+Example 4: The following example shows how PID can be used. Here once temperature exceeds 80C, compensation is calculated using PID using 80C as set point of PID. The compensation depends on error from the set point. Here the default built in processor cooling device is used with min state as 0 and max state as 10.
+.TP
+<?xml version="1.0"?>
+.TP
+<ThermalConfiguration>
+.TP
+<Platform>
+.TP
+<Name>Use PID param </Name>
+.TP
+<ProductName>*</ProductName>
+.TP
+<Preference>QUIET</Preference>
+.TP
+<ThermalZones>
+.TP
+                <ThermalZone>
+.TP
+                                <Type>x86_pkg_temp</Type>
+.TP
+                                <TripPoints>
+.TP
+                                                <TripPoint>
+.TP
+                                                                <SensorType>x86_pkg_temp</SensorType>
+.TP
+                                                                <Temperature>80000</Temperature>
+.TP
+                                                                <type>passive</type>
+.TP
+                                                                <ControlType>SEQUENTIAL</ControlType>
+.TP
+                                                                <CoolingDevice>
+.TP
+									<type>Processor</type>
+.TP
+                                                                </CoolingDevice>
+.TP
+                                                </TripPoint>
+.TP
+                                </TripPoints>
+.TP
+                </ThermalZone>
+.TP
+</ThermalZones>
+.TP
+ <CoolingDevices>
+.TP
+               <CoolingDevice>
+.TP
+                                <Type>Processor</Type>
+.TP
+                                <PidControl>
+.TP
+                                              <kp>0.0002</kp>
+.TP
+                                              <kd>0</kd>
+.TP
+                                              <ki>0</ki>
+.TP
+                                </PidControl>
+.TP
+              </CoolingDevice>
+.TP
+</CoolingDevices>
+.TP
+</Platform>
+.TP
+</ThermalConfiguration>
+.TP
