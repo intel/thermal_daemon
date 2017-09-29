@@ -44,3 +44,12 @@ void cthd_gen_sysfs_cdev::set_curr_state(int state, int arg) {
 	cdev_sysfs.write("", state_str.str());
 	curr_state = state;
 }
+
+void cthd_gen_sysfs_cdev::set_curr_state_raw(int state, int arg) {
+
+	std::stringstream state_str;
+	state_str << state;
+	thd_log_debug("set cdev state index %d state %d\n", index, state);
+	cdev_sysfs.write("", state_str.str());
+	curr_state = state;
+}
