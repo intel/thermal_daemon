@@ -277,13 +277,22 @@ int cthd_cdev::thd_cdev_set_state(int set_point, int target_temp,
 	} else if (pid_enable) {
 		pid_ctrl.set_target_temp(target_temp);
 		ret = pid_ctrl.pid_output(temperature);
-		ret += get_curr_state();
-		if (ret > get_max_state())
-			ret = get_max_state();
-		if (ret < get_min_state())
-			ret = get_min_state();
+		ret += get_min_state();
+
+		if (get_min_state() < get_max_state()) {
+			if (ret > get_max_state())
+				ret = get_max_state();
+			if (ret < get_min_state())
+				ret = get_min_state();
+		} else {
+			if (ret < get_max_state())
+				ret = get_max_state();
+			if (ret > get_min_state())
+				ret = get_min_state();
+		}
+
 		set_curr_state_raw(ret, zone_id);
-		thd_log_debug("Set : %d, %d, %d, %d, %d\n", set_point, temperature,
+		thd_log_info("Set : %d, %d, %d, %d, %d\n", set_point, temperature,
 				index, get_curr_state(), max_state);
 		ret = THD_SUCCESS;
 	} else {
