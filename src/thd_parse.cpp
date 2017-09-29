@@ -324,6 +324,10 @@ int cthd_parse::parse_new_cooling_dev(xmlNode * a_node, xmlDoc *doc,
 						cdev->auto_down_control = true;
 					else
 						cdev->auto_down_control = false;
+				} else if (!strcasecmp((const char *) cur_node->name,
+						"WritePrefix")){
+					cdev->mask |= CDEV_DEF_BIT_WRITE_PREFIX;
+					cdev->write_prefix.assign((const char*) tmp_value);
 				}
 				xmlFree(tmp_value);
 			}

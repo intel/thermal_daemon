@@ -154,7 +154,7 @@ The configuration file format conforms to XML specifications. A set of tags defi
 .TP
 						<TargetState> 6 </TargetState>
 .TP
-					</CoolingDevice>
+						</CoolingDevice>
 .TP
 				</TripPoint>
 .TP
@@ -194,6 +194,8 @@ The configuration file format conforms to XML specifications. A set of tags defi
 .TP
 			</PidControl>
 .TP
+			<!-- Write some prefix attached to state value, like below the prefix is "level ". It will preserve spaces as entered when writing to sysfs -->
+			<WritePrefix>level </WritePrefix>
 		</CoolingDevice>
 .TP
 	</CoolingDevices>
@@ -437,6 +439,165 @@ Example 4: The following example shows how PID can be used. Here once temperatur
 </CoolingDevices>
 .TP
 </Platform>
+.TP
+</ThermalConfiguration>
+.TP
+.TP
+Example 5: The following example shows how to control Fan when the sysfs expects some string prefix. For example instead of just write a number to fan control sysfs, the interface requires "level " in front of the speed index value.
+.TP
+<?xml version="1.0"?>
+.TP
+<ThermalConfiguration>
+.TP
+	<Platform>
+.TP
+		<Name>Use Fan control first then CPU throttle </Name>
+.TP
+		<ProductName>*</ProductName>
+.TP
+		<Preference>QUIET</Preference>
+.TP
+		<ThermalZones>
+.TP
+                       <ThermalZone>
+.TP
+                                       <Type>x86_pkg_temp</Type>
+.TP
+                                       <TripPoints>
+.TP
+                                                       <TripPoint>
+.TP
+                                                                       <SensorType>x86_pkg_temp</SensorType>
+.TP
+                                                                       <Temperature>80000</Temperature>
+.TP
+									<type>passive</type>
+.TP
+                                                                       <ControlType>SEQUENTIAL</ControlType>
+.TP
+                                                                       <CoolingDevice>
+.TP
+                                                    <type>_fan_</type>
+.TP
+                                                                       </CoolingDevice>
+.TP
+                                                       </TripPoint>
+.TP
+                                       </TripPoints>
+.TP
+                       </ThermalZone>
+.TP
+                </ThermalZones>
+.TP
+                <CoolingDevices>
+.TP
+                      <CoolingDevice>
+.TP
+                                       <Type>_fan_</Type>
+.TP
+					<Path>/proc/acpi/ibm/fan</Path>
+.TP
+					<WritePrefix>level </WritePrefix>
+.TP
+					<MinState>0</MinState>
+.TP
+					<MaxState>5</MaxState>
+.TP
+					<DebouncePeriod>10</DebouncePeriod>
+.TP
+                     </CoolingDevice>
+.TP
+                </CoolingDevices>
+.TP
+       </Platform>
+.TP
+</ThermalConfiguration>
+.TP
+Example 6: Similar to example 5, but write different speeds at different temperatures.
+.TP
+<?xml version="1.0"?>
+.TP
+<ThermalConfiguration>
+.TP
+	<Platform>
+.TP
+		<Name>Use Fan control first then CPU throttle </Name>
+.TP
+		<ProductName>*</ProductName>
+.TP
+		<Preference>QUIET</Preference>
+.TP
+		<ThermalZones>
+.TP
+                       <ThermalZone>
+.TP
+                                       <Type>x86_pkg_temp</Type>
+.TP
+                                       <TripPoints>
+.TP
+                                                       <TripPoint>
+.TP
+                                                                       <SensorType>x86_pkg_temp</SensorType>
+.TP
+                                                                       <Temperature>80000</Temperature>
+.TP
+									<type>passive</type>
+.TP
+                                                                       <CoolingDevice>
+.TP
+                                                    <type>_fan_</type>
+.TP
+                                                                       <TargetState>1</TargetState>
+.TP
+                                                                       </CoolingDevice>
+.TP
+                                                       </TripPoint>
+.TP
+                                                       <TripPoint>
+.TP
+                                                                       <SensorType>x86_pkg_temp</SensorType>
+.TP
+                                                                       <Temperature>85000</Temperature>
+.TP
+									<type>passive</type>
+.TP
+                                                                       <CoolingDevice>
+.TP
+                                                    <type>_fan_</type>
+.TP
+                                                                       <TargetState>2</TargetState>
+.TP
+                                                                       </CoolingDevice>
+.TP
+                                                       </TripPoint>
+.TP
+                                       </TripPoints>
+.TP
+                       </ThermalZone>
+.TP
+                </ThermalZones>
+.TP
+                <CoolingDevices>
+.TP
+                      <CoolingDevice>
+.TP
+                                       <Type>_fan_</Type>
+.TP
+					<Path>/proc/acpi/ibm/fan</Path>
+.TP
+					<WritePrefix>level </WritePrefix>
+.TP
+					<MinState>0</MinState>
+.TP
+					<MaxState>5</MaxState>
+.TP
+					<DebouncePeriod>10</DebouncePeriod>
+.TP
+                     </CoolingDevice>
+.TP
+               </CoolingDevices>
+.TP
+       </Platform>
 .TP
 </ThermalConfiguration>
 .TP

@@ -65,6 +65,7 @@ protected:
 	cthd_pid pid_ctrl;
 	int last_state;
 	std::vector<zone_trip_limits_t> zone_trip_limits;
+	std::string write_prefix;
 
 private:
 	unsigned int int_2_pow(int pow) {
@@ -85,7 +86,7 @@ public:
 					0), base_pow_state(0), inc_dec_val(1), auto_down_adjust(
 					false), read_back(true), debounce_interval(
 					default_debounce_interval), last_action_time(0), trend_increase(
-					false), pid_enable(false), pid_ctrl(), last_state(0) {
+					false), pid_enable(false), pid_ctrl(), last_state(0), write_prefix("") {
 	}
 
 	virtual ~cthd_cdev() {
@@ -225,6 +226,10 @@ public:
 	void enable_pid() {
 		thd_log_info("PID control enabled %d\n", index);
 		pid_enable = true;
+	}
+
+	void thd_cdev_set_write_prefix(std::string prefix) {
+		write_prefix = prefix;
 	}
 
 	void cdev_dump() {

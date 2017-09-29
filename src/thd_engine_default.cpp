@@ -56,13 +56,15 @@
  .pid = {0.0, 0.0, 0.0}},
  };
  */
-static cooling_dev_t cpu_def_cooling_devices[] = { { true, CDEV_DEF_BIT_UNIT_VAL
-		| CDEV_DEF_BIT_READ_BACK | CDEV_DEF_BIT_MIN_STATE | CDEV_DEF_BIT_STEP,
-		0, ABSOULUTE_VALUE, 0, 0, 5, false, false, "intel_powerclamp", "", 4,
-		false, { 0.0, 0.0, 0.0 } }, { true, CDEV_DEF_BIT_UNIT_VAL
-		| CDEV_DEF_BIT_READ_BACK | CDEV_DEF_BIT_MIN_STATE | CDEV_DEF_BIT_STEP,
-		0, ABSOULUTE_VALUE, 0, 100, 5, false, false, "LCD", "", 4, false, { 0.0,
-				0.0, 0.0 } } };
+static cooling_dev_t cpu_def_cooling_devices[] = {
+		{ true, CDEV_DEF_BIT_UNIT_VAL
+				| CDEV_DEF_BIT_READ_BACK | CDEV_DEF_BIT_MIN_STATE | CDEV_DEF_BIT_STEP,
+				0, ABSOULUTE_VALUE, 0, 0, 5, false, false, "intel_powerclamp", "", 4,
+				false, { 0.0, 0.0, 0.0 },"" },
+		{ true, CDEV_DEF_BIT_UNIT_VAL
+				| CDEV_DEF_BIT_READ_BACK | CDEV_DEF_BIT_MIN_STATE | CDEV_DEF_BIT_STEP,
+				0, ABSOULUTE_VALUE, 0, 100, 5, false, false, "LCD", "", 4, false, { 0.0,
+				0.0, 0.0 },"" } };
 
 cthd_engine_default::~cthd_engine_default() {
 }
@@ -572,6 +574,9 @@ int cthd_engine_default::add_replace_cdev(cooling_dev_t *config) {
 		cdev->enable_pid();
 		cdev->set_pid_param(config->pid.Kp, config->pid.Ki, config->pid.Kd);
 	}
+
+	if (config->mask & CDEV_DEF_BIT_WRITE_PREFIX)
+		cdev->thd_cdev_set_write_prefix(config->write_prefix);
 
 	return THD_SUCCESS;
 
