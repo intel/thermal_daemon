@@ -154,7 +154,7 @@ public:
 
 	int bind_cooling_device(trip_point_type_t type, unsigned int trip_temp,
 			cthd_cdev *cdev, int influence, int sampling_period = 0,
-			int target_state = TRIP_PT_INVALID_TARGET_STATE);
+			int target_state_valid = 0, int target_state = 0);
 
 	int get_sensor_count() {
 		return sensors.size();
@@ -175,6 +175,10 @@ public:
 	}
 
 	void zone_dump() {
+		if (!zone_active)
+			return;
+
+		thd_log_info("\n");
 		thd_log_info("Zone %d: %s, Active:%d Bind:%d Sensor_cnt:%lu\n", index,
 				type_str.c_str(), zone_active, zone_cdev_binded_status,
 				(unsigned long) sensors.size());
@@ -186,6 +190,7 @@ public:
 		for (unsigned int i = 0; i < trip_points.size(); ++i) {
 			trip_points[i].trip_dump();
 		}
+		thd_log_info("\n");
 
 	}
 

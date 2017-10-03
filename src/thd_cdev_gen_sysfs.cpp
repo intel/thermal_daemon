@@ -39,8 +39,17 @@ int cthd_gen_sysfs_cdev::update() {
 void cthd_gen_sysfs_cdev::set_curr_state(int state, int arg) {
 
 	std::stringstream state_str;
+
+	if (write_prefix.length())
+		state_str << write_prefix;
+
 	state_str << state;
-	thd_log_debug("set cdev state index %d state %d\n", index, state);
+	thd_log_debug("set cdev state index %d state %d %s\n", index, state,
+			state_str.str().c_str());
 	cdev_sysfs.write("", state_str.str());
 	curr_state = state;
+}
+
+void cthd_gen_sysfs_cdev::set_curr_state_raw(int state, int arg) {
+	set_curr_state(state, arg);
 }

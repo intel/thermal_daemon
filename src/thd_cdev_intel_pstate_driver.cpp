@@ -84,6 +84,16 @@ int cthd_intel_p_state_cdev::get_max_state() {
 	return max_state;
 }
 
+int cthd_intel_p_state_cdev::map_target_state(int target_valid, int target_state) {
+	if (!target_valid)
+		return target_state;
+
+	if (target_state > 100)
+		return 0;
+
+	return (100 - target_state) / unit_value;
+}
+
 int cthd_intel_p_state_cdev::update() {
 	std::stringstream tc_state_dev;
 

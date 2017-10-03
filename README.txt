@@ -29,7 +29,7 @@ Install
 Build
 
 	./autogen.sh
-	 ./configure prefix=/usr
+	 ./configure prefix=/
 	make
 	sudo make install
 

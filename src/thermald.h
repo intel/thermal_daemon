@@ -98,5 +98,6 @@ class cthd_engine;
 class cthd_engine_therm_sysfs;
 extern cthd_engine *thd_engine;
 extern int thd_poll_interval;
+extern bool thd_ignore_default_control;
 
 #endif

@@ -34,6 +34,7 @@ public:
 			cthd_cdev(_index, control_path) {
 	}
 	virtual void set_curr_state(int state, int arg);
+	virtual void set_curr_state_raw(int state, int arg);
 	virtual int update();
 };
 

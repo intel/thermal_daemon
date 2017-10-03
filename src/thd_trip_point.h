@@ -43,12 +43,14 @@ typedef enum {
 	SEQUENTIAL  // one after other once the previous cdev reaches its max state
 } trip_control_type_t;
 
-#define TRIP_PT_INVALID_TARGET_STATE	0xffffff
+#define TRIP_PT_INVALID_TARGET_STATE	INT_MAX
+
 typedef struct {
 	cthd_cdev *cdev;
 	int influence;
 	int sampling_priod;
 	time_t last_op_time;
+	int target_state_valid;
 	int target_state;
 } trip_pt_cdev_t;
 
@@ -90,8 +92,9 @@ public:
 			bool *reset);
 
 	void thd_trip_point_add_cdev(cthd_cdev &cdev, int influence,
-			int sampling_period = 0, int target_state =
-					TRIP_PT_INVALID_TARGET_STATE);
+			int sampling_period = 0, int target_state_valid = 0,
+			int target_state =
+			TRIP_PT_INVALID_TARGET_STATE);
 
 	void thd_trip_cdev_state_reset();
 	int thd_trip_point_value() {
@@ -166,8 +169,13 @@ public:
 				index, _type_str.c_str(), temp, hyst, zone_id, sensor_id,
 				(unsigned long) cdevs.size());
 		for (unsigned int i = 0; i < cdevs.size(); ++i) {
-			thd_log_info("cdev[%u] %s\n", i,
-					cdevs[i].cdev->get_cdev_type().c_str());
+			if (cdevs[i].target_state_valid)
+				thd_log_info("cdev[%u] %s target_state:%d\n", i,
+						cdevs[i].cdev->get_cdev_type().c_str(),
+						cdevs[i].target_state);
+			else
+				thd_log_info("cdev[%u] %s target_state:not defined\n", i,
+						cdevs[i].cdev->get_cdev_type().c_str());
 		}
 	}
 };

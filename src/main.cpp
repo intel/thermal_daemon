@@ -69,6 +69,8 @@ static gboolean dbus_enable;
 // poll mode
 int thd_poll_interval = 4; //in seconds
 
+bool thd_ignore_default_control = false;
+
 // check cpuid
 static gboolean ignore_cpuid_check = false;
 
@@ -154,6 +156,7 @@ int main(int argc, char *argv[]) {
 	gboolean log_debug = FALSE;
 	gboolean no_daemon = FALSE;
 	gboolean test_mode = FALSE;
+	gboolean ignore_default_control = FALSE;
 	gchar *conf_file = NULL;
 	gint poll_interval = -1;
 	gboolean success;
@@ -162,28 +165,34 @@ int main(int argc, char *argv[]) {
 	thd_daemonize = TRUE;
 	dbus_enable = FALSE;
 
-	GOptionEntry options[] = { { "version", 0, 0, G_OPTION_ARG_NONE,
-			&show_version, N_("Print thermald version and exit"), NULL }, {
-			"no-daemon", 0, 0, G_OPTION_ARG_NONE, &no_daemon, N_(
-					"Don't become a daemon: Default is daemon mode"), NULL }, {
-			"loglevel=info", 0, 0, G_OPTION_ARG_NONE, &log_info, N_(
-					"log severity: info level and up"), NULL }, {
-			"loglevel=debug", 0, 0, G_OPTION_ARG_NONE, &log_debug, N_(
-					"log severity: debug level and up: Max logging"), NULL }, {
-			"test-mode", 0, 0, G_OPTION_ARG_NONE, &test_mode, N_(
-					"Test Mode only: Allow non root user"), NULL }, {
-			"poll-interval", 0, 0, G_OPTION_ARG_INT, &poll_interval,
-			N_("Poll interval in seconds: Poll for zone temperature changes. "
-					"If want to disable polling set to zero."), NULL }, {
-			"dbus-enable", 0, 0, G_OPTION_ARG_NONE, &dbus_enable, N_(
+	GOptionEntry options[] = {
+			{ "version", 0, 0, G_OPTION_ARG_NONE,
+					&show_version, N_("Print thermald version and exit"), NULL },
+			{ "no-daemon", 0, 0, G_OPTION_ARG_NONE, &no_daemon, N_(
+					"Don't become a daemon: Default is daemon mode"), NULL },
+			{ "loglevel=info", 0, 0, G_OPTION_ARG_NONE, &log_info, N_(
+					"log severity: info level and up"), NULL },
+			{ "loglevel=debug", 0, 0, G_OPTION_ARG_NONE, &log_debug, N_(
+					"log severity: debug level and up: Max logging"), NULL },
+			{ "test-mode", 0, 0, G_OPTION_ARG_NONE, &test_mode, N_(
+					"Test Mode only: Allow non root user"), NULL },
+			{ "poll-interval", 0, 0, G_OPTION_ARG_INT, &poll_interval,
+					N_("Poll interval in seconds: Poll for zone temperature changes. "
+						"If want to disable polling set to zero."), NULL },
+			{ "dbus-enable", 0, 0, G_OPTION_ARG_NONE, &dbus_enable, N_(
 					"Enable Dbus."), NULL }, { "exclusive-control", 0, 0,
-			G_OPTION_ARG_NONE, &exclusive_control, N_(
-					"Take over thermal control from kernel thermal driver."),
-			NULL }, { "ignore-cpuid-check", 0, 0, G_OPTION_ARG_NONE,
-			&ignore_cpuid_check, N_("Ignore CPU ID check."), NULL }, {
-			"config-file", 0, 0, G_OPTION_ARG_STRING, &conf_file, N_(
-					"configuration file"), NULL }, { NULL, 0, 0,
-			G_OPTION_ARG_NONE, NULL, NULL, NULL } };
+							G_OPTION_ARG_NONE, &exclusive_control, N_(
+							"Take over thermal control from kernel thermal driver."),
+								NULL },
+			{ "ignore-cpuid-check", 0, 0, G_OPTION_ARG_NONE,
+					&ignore_cpuid_check, N_("Ignore CPU ID check."), NULL },
+			{ "config-file", 0, 0, G_OPTION_ARG_STRING, &conf_file, N_(
+					"configuration file"), NULL },
+			{ "ignore-default-control", 0, 0, G_OPTION_ARG_NONE, &ignore_default_control, N_(
+							"Ignore default CPU temperature control."
+							"Strictly follow thermal-conf.xml"), NULL },
+			{ NULL, 0, 0,
+					G_OPTION_ARG_NONE, NULL, NULL, NULL } };
 
 	if (!g_module_supported()) {
 		fprintf(stderr, "GModules are not supported on your platform!\n");
@@ -244,6 +253,8 @@ int main(int argc, char *argv[]) {
 		fprintf(stdout, "Polling enabled: %d\n", poll_interval);
 		thd_poll_interval = poll_interval;
 	}
+
+	thd_ignore_default_control = ignore_default_control;
 
 	openlog("thermald", LOG_PID, LOG_USER | LOG_DAEMON | LOG_SYSLOG);
 	// Don't care return val

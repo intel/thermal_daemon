@@ -30,14 +30,14 @@
 
 class cthd_sysfs_cdev_rapl: public cthd_cdev {
 protected:
-	unsigned long phy_max;
+	int phy_max;
 	int package_id;
 	int constraint_index;
 	bool dynamic_phy_max_enable;
-	unsigned int pl0_max_pwr;
-	unsigned int pl0_min_pwr;
-	unsigned int pl0_min_window;
-	unsigned int pl0_step_pwr;
+	int pl0_max_pwr;
+	int pl0_min_pwr;
+	int pl0_min_window;
+	int pl0_step_pwr;
 	bool bios_locked;
 
 	virtual bool calculate_phy_max();
@@ -46,7 +46,8 @@ protected:
 public:
 	static const int rapl_no_time_windows = 6;
 	static const long def_rapl_time_window = 1000000; // micro seconds
-	static const unsigned int rapl_min_default_step = 500000; //0.5W
+	static const int rapl_min_default_step = 500000; //0.5W
+	static const int rapl_max_sane_phy_max = 100000000; // Some sane very high value in uW
 
 	static const int rapl_low_limit_percent = 25;
 	static const int rapl_power_dec_percent = 5;
@@ -63,6 +64,7 @@ public:
 	virtual int get_max_state();
 	virtual int update();
 	virtual void set_curr_state_raw(int state, int arg);
+	int map_target_state(int target_valid, int target_state);
 };
 
 #endif /* THD_CDEV_RAPL_H_ */

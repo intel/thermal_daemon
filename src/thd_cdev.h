@@ -35,6 +35,7 @@
 typedef struct {
 	int zone;
 	int trip;
+	int target_state_valid;
 	int target_value;
 } zone_trip_limits_t;
 
@@ -56,6 +57,7 @@ protected:
 	bool read_back;
 
 	std::string type_str;
+	std::string alias_str;
 	int debounce_interval;
 	time_t last_action_time;
 	bool trend_increase;
@@ -63,6 +65,7 @@ protected:
 	cthd_pid pid_ctrl;
 	int last_state;
 	std::vector<zone_trip_limits_t> zone_trip_limits;
+	std::string write_prefix;
 
 private:
 	unsigned int int_2_pow(int pow) {
@@ -83,14 +86,14 @@ public:
 					0), base_pow_state(0), inc_dec_val(1), auto_down_adjust(
 					false), read_back(true), debounce_interval(
 					default_debounce_interval), last_action_time(0), trend_increase(
-					false), pid_enable(false), pid_ctrl(), last_state(0) {
+					false), pid_enable(false), pid_ctrl(), last_state(0), write_prefix("") {
 	}
 
 	virtual ~cthd_cdev() {
 	}
 	virtual int thd_cdev_set_state(int set_point, int target_temp,
 			int temperature, int state, int zone_id, int trip_id,
-				       int target_value, bool force);
+				       int target_state_valid, int target_value, bool force);
 
 	virtual int thd_cdev_set_min_state(int zone_id, int trip_id);
 
@@ -125,6 +128,10 @@ public:
 	virtual void set_curr_state(int state, int arg) {
 	}
 	virtual void set_curr_state_raw(int state, int arg) {
+		if (state > max_state)
+			state = max_state;
+		if (state < min_state)
+			state = min_state;
 		set_curr_state(state, arg);
 	}
 	virtual int get_curr_state() {
@@ -148,6 +155,9 @@ public:
 	}
 	virtual void set_down_adjust_control(bool value) {
 		auto_down_adjust = value;
+	}
+	virtual int map_target_state(int target_valid, int target_state) {
+		return target_state;
 	}
 	void set_debounce_interval(int interval) {
 		debounce_interval = interval;
@@ -195,11 +205,17 @@ public:
 	std::string get_cdev_type() {
 		return type_str;
 	}
+	std::string get_cdev_alias() {
+		return alias_str;
+	}
 	std::string get_base_path() {
 		return cdev_sysfs.get_base_path();
 	}
 	void set_cdev_type(std::string _type_str) {
 		type_str = _type_str;
+	}
+	void set_cdev_alias(std::string _alias_str) {
+		alias_str = _alias_str;
 	}
 	void set_pid_param(double kp, double ki, double kd) {
 		pid_ctrl.kp = kp;
@@ -210,6 +226,10 @@ public:
 	void enable_pid() {
 		thd_log_info("PID control enabled %d\n", index);
 		pid_enable = true;
+	}
+
+	void thd_cdev_set_write_prefix(std::string prefix) {
+		write_prefix = prefix;
 	}
 
 	void cdev_dump() {
