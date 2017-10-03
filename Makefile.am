@@ -23,7 +23,6 @@ AM_CXXFLAGS = ${DBUS_CFLAGS}\
 		-Wmissing-field-initializers\
 		-Wtype-limits\
 		-Wuninitialized\
-		-Wshift-negative-value\
 		-Werror
 
 EXTRA_DIST=Makefile.glib \
