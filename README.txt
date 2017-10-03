@@ -82,6 +82,17 @@ If using systemd, use
 
 Releases
 
+Release 1.7
+- Add GeminiLake
+- Add dptfxtract tool, which converts DPTF tables to thermald tables using best effort
+- Changes to accommodate dptfxtract tool conversions
+- Better facility to configure fan controls
+- PID control optimization
+- Fix powerlimit write errors because of bad FW settings of power limits
+- More restrictive compile options and warnings as errors
+- Improve logging
+- Android build fixes
+
 Release 1.6
 - Add Kabylake and missing Broadwell CPU model
 - Removed deprecated modules
