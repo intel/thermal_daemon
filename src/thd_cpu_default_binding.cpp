@@ -43,7 +43,6 @@ class cthd_gating_cdev: public cthd_cdev {
 private:
 	class cthd_cpu_default_binding *def_bind_ref;
 	cpu_zone_binding_t *bind_zone;
-	int id;
 	bool start;
 
 public:
@@ -51,7 +50,7 @@ public:
 	cthd_gating_cdev(int _id, cthd_cpu_default_binding *_def_bind_ref,
 			cpu_zone_binding_t *_bind_zone, bool _start) :
 			cthd_cdev(_id, ""), def_bind_ref(_def_bind_ref), bind_zone(
-					_bind_zone), id(_id), start(_start) {
+					_bind_zone), start(_start) {
 	}
 	void set_curr_state(int state, int arg);
 	int get_max_state();

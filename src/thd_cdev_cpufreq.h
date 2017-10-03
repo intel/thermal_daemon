@@ -36,7 +36,6 @@ private:
 	int cpu_end_index;
 	std::vector<int> cpufreqs;
 	int pstate_active_freq_index;
-	int turbo_state;
 	std::string last_governor;
 	int cpu_index;
 
@@ -45,7 +44,7 @@ private:
 public:
 	cthd_cdev_cpufreq(unsigned int _index, int _cpu_index) :
 			cthd_cdev(_index, "/sys/devices/system/cpu/"), cpu_start_index(0), cpu_end_index(
-					0), pstate_active_freq_index(0), turbo_state(0), last_governor(
+					0), pstate_active_freq_index(0), last_governor(
 					""), cpu_index(_cpu_index) {
 	}
 

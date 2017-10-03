@@ -27,8 +27,7 @@
 
 cthd_zone_generic::cthd_zone_generic(int index, int _config_index,
 		std::string type) :
-		cthd_zone(index, ""), trip_point_cnt(0), config_index(_config_index), zone(
-		NULL) {
+		cthd_zone(index, ""), config_index(_config_index) {
 	type_str = type;
 
 }

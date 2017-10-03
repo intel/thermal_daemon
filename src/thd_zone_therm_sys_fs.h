@@ -30,7 +30,6 @@
 class cthd_sysfs_zone: public cthd_zone {
 private:
 	int trip_point_cnt;
-	cthd_zone *zone;
 	std::vector<int> initial_trip_values;
 
 public:

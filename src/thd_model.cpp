@@ -41,7 +41,7 @@
 cthd_model::cthd_model(std::string _zone_type, bool use_pid) :
 		zone_type(_zone_type), trend_increase_start(0), max_temp(
 				def_max_temperature), set_point(def_max_temperature), hot_zone(
-				0), last_temp(0), trend_decrease_start(0), max_temp_reached(0), current_angle(
+				0), last_temp(0), max_temp_reached(0), current_angle(
 				0), set_point_reached(false), delay_cnt(0), max_temp_seen(
 				false), updated_set_point(false), use_pid_param(use_pid), set_point_delay_start(
 				0), user_forced_set_point_change(false) {

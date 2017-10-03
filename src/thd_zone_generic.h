@@ -29,9 +29,7 @@
 
 class cthd_zone_generic: public cthd_zone {
 private:
-	int trip_point_cnt;
 	int config_index;
-	cthd_zone *zone;
 	std::vector<cthd_sensor *> sensor_list;
 
 public:

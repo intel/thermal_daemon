@@ -49,7 +49,6 @@ private:
 	int hot_zone;
 	int last_temp;
 
-	time_t trend_decrease_start;
 	time_t max_temp_reached;
 
 	int current_angle;

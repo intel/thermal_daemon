@@ -31,7 +31,6 @@ class cthd_intel_p_state_cdev: public cthd_cdev {
 private:
 	float unit_value;
 	int min_compensation;
-	int max_offset;
 
 	bool turbo_status;
 	void set_turbo_disable_status(bool enable);
@@ -42,7 +41,7 @@ public:
 	static const int turbo_disable_percent = 70;
 	cthd_intel_p_state_cdev(unsigned int _index) :
 			cthd_cdev(_index, "/sys/devices/system/cpu/intel_pstate/"), unit_value(
-					1), min_compensation(0), max_offset(0), turbo_status(false) {
+					1), min_compensation(0), turbo_status(false) {
 	}
 	;
 	void set_curr_state(int state, int arg);
