@@ -82,6 +82,10 @@ If using systemd, use
 
 Releases
 
+Release 1.7.1
+- Removed dptfxtract binary as there is an issue
+in packaging this with GPL source for distributions
+
 Release 1.7
 - Add GeminiLake
 - Add dptfxtract tool, which converts DPTF tables to thermald tables using best effort
