@@ -109,8 +109,7 @@ bool cthd_trip_point::thd_trip_point_check(int id, unsigned int read_temp,
 			thd_log_debug("Trip point applicable >  %d:%d \n", index, temp);
 			on = 1;
 			trip_on = true;
-		} else if ((trip_on && (read_temp + hyst) < temp)
-				|| (!trip_on && read_temp < temp)) {
+		} else if (trip_on && (read_temp + hyst) < temp) {
 			thd_log_debug("Trip point applicable <  %d:%d \n", index, temp);
 			off = 1;
 			trip_on = false;
