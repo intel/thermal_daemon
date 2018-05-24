@@ -42,6 +42,7 @@
 #include "thd_zone_therm_sys_fs.h"
 #include "thd_zone_dynamic.h"
 #include "thd_cdev_gen_sysfs.h"
+#include "thd_int3400.h"
 
 static void *cthd_engine_thread(void *arg);
 
@@ -501,8 +502,12 @@ void cthd_engine::takeover_thermal_control() {
 	DIR *dir;
 	struct dirent *entry;
 	const std::string base_path = "/sys/class/thermal/";
+	cthd_INT3400 int3400;
 
 	thd_log_info("Taking over thermal control \n");
+
+	int3400.set_default_uuid();
+
 	if ((dir = opendir(base_path.c_str())) != NULL) {
 		while ((entry = readdir(dir)) != NULL) {
 			if (!strncmp(entry->d_name, "thermal_zone",

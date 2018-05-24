@@ -36,6 +36,7 @@
 #include "thd_cdev_rapl_dram.h"
 #include "thd_sensor_virtual.h"
 #include "thd_cdev_backlight.h"
+#include "thd_int3400.h"
 
 #ifdef GLIB_SUPPORT
 #include "thd_cdev_modem.h"
@@ -221,7 +222,13 @@ bool cthd_engine_default::add_int340x_processor_dev(void)
 		return false;
 
 	/* Specialized processor thermal device names */
-	cthd_zone *processor_thermal = search_zone("B0D4");
+	cthd_zone *processor_thermal = NULL;
+	cthd_INT3400 int3400;
+
+	if (int3400.match_supported_uuid() == THD_SUCCESS) {
+		processor_thermal = search_zone("B0D4");
+	}
+
 	if (!processor_thermal)
 		processor_thermal = search_zone("B0DB");
 	if (!processor_thermal)

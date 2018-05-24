@@ -27,6 +27,7 @@
 
 #include "thd_trt_art_reader.h"
 #include "acpi_thermal_rel_ioct.h"
+#include "thd_int3400.h"
 
 using namespace std;
 
@@ -147,6 +148,7 @@ int cthd_acpi_rel::generate_conf(std::string file_name) {
 	string prefix;
 	int art_status;
 	int ret = 0;
+	cthd_INT3400 int3400;
 
 	std::ifstream conf_file_check(file_name.c_str());
 	if (conf_file_check.is_open()) {
@@ -163,6 +165,12 @@ int cthd_acpi_rel::generate_conf(std::string file_name) {
 		PRINT_ERROR("TRT/ART read failed\n");
 		return -1;
 	}
+
+	if (int3400.match_supported_uuid() != THD_SUCCESS) {
+		thd_log_info("Passive 1 UUID is not present, hence ignore _TRT, as it may have junk!!");
+		return -1;
+	}
+
 	conf_file.open(file_name.c_str());
 	if (!conf_file.is_open()) {
 		PRINT_ERROR("failed to open output file [%s]\n", file_name.c_str());

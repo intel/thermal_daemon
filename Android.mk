@@ -32,7 +32,8 @@ LOCAL_SRC_FILES := \
 		src/thd_trt_art_reader.cpp \
 		src/thd_cdev_rapl_dram.cpp \
 		src/thd_cpu_default_binding.cpp \
-		src/thd_cdev_backlight.cpp
+		src/thd_cdev_backlight.cpp \
+		src/thd_int3400.cpp
 
 LOCAL_C_INCLUDES += external/libxml2/include
 
