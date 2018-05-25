@@ -127,6 +127,7 @@ class cthd_parse {
 private:
 	std::string filename;
 	std::string filename_auto;
+	std::string filename_auto_conf;
 	std::vector<thermal_info_t> thermal_info_list;
 	int matched_thermal_info_index;
 	xmlDoc *doc;

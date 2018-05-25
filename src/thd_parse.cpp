@@ -68,6 +68,7 @@ cthd_parse::cthd_parse() :
 	filename = name_conf + "/" + "thermal-conf.xml";
 #endif
 	filename_auto = name_run + "/" + "thermal-conf.xml.auto";
+	filename_auto_conf = name_conf + "/" + "thermal-conf.xml.auto";
 }
 
 int cthd_parse::parser_init(std::string config_file) {
@@ -81,7 +82,12 @@ int cthd_parse::parser_init(std::string config_file) {
 			thd_log_warn("Using generated %s\n", filename_auto.c_str());
 			xml_config_file = filename_auto.c_str();
 		} else {
-			xml_config_file = filename.c_str();
+			std::ifstream conf_auto(filename_auto_conf);
+
+			if (conf_auto.is_open())
+				xml_config_file = filename_auto_conf.c_str();
+			else
+				xml_config_file = filename.c_str();
 		}
 	} else {
 		xml_config_file = config_file.c_str();
