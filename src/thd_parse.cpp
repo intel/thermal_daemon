@@ -82,7 +82,7 @@ int cthd_parse::parser_init(std::string config_file) {
 			thd_log_warn("Using generated %s\n", filename_auto.c_str());
 			xml_config_file = filename_auto.c_str();
 		} else {
-			std::ifstream conf_auto(filename_auto_conf);
+			std::ifstream conf_auto(filename_auto_conf.c_str());
 
 			if (conf_auto.is_open())
 				xml_config_file = filename_auto_conf.c_str();
