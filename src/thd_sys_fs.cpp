@@ -113,14 +113,14 @@ int csys_fs::read(const std::string &path, int *ptr_val) {
 
 	int fd = ::open(p.c_str(), O_RDONLY);
 	if (fd < 0) {
-		thd_log_warn("sysfs read failed %s\n", path.c_str());
+		thd_log_warn("sysfs open failed %s\n", path.c_str());
 		return -errno;
 	}
 	ret = ::read(fd, str, sizeof(str));
 	if (ret > 0)
 		*ptr_val = atoi(str);
 	else
-		thd_log_warn("sysfs read failed %s\n", path.c_str());
+		thd_log_info("sysfs read failed %s\n", path.c_str());
 	close(fd);
 
 	return ret;
