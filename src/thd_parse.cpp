@@ -77,17 +77,18 @@ int cthd_parse::parser_init(std::string config_file) {
 	int ret;
 
 	if (config_file.empty()) {
-		ret = rel.generate_conf(filename_auto);
-		if (!ret) {
-			thd_log_warn("Using generated %s\n", filename_auto.c_str());
-			xml_config_file = filename_auto.c_str();
+		std::ifstream conf_auto(filename_auto_conf.c_str());
+		if (conf_auto.is_open()) {
+			thd_log_warn("Using generated %s \n", filename_auto_conf.c_str());
+			xml_config_file = filename_auto_conf.c_str();
 		} else {
-			std::ifstream conf_auto(filename_auto_conf.c_str());
-
-			if (conf_auto.is_open())
-				xml_config_file = filename_auto_conf.c_str();
-			else
+			ret = rel.generate_conf(filename_auto);
+			if (!ret) {
+				thd_log_warn("Using generated %s\n", filename_auto.c_str());
+				xml_config_file = filename_auto.c_str();
+			} else {
 				xml_config_file = filename.c_str();
+			}
 		}
 	} else {
 		xml_config_file = config_file.c_str();
