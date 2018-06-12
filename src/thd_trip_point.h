@@ -52,6 +52,8 @@ typedef struct {
 	time_t last_op_time;
 	int target_state_valid;
 	int target_state;
+	pid_param_t pid_param;
+	cthd_pid pid;
 } trip_pt_cdev_t;
 
 #define DEFAULT_SENSOR_ID	0xFFFF
@@ -94,7 +96,7 @@ public:
 	void thd_trip_point_add_cdev(cthd_cdev &cdev, int influence,
 			int sampling_period = 0, int target_state_valid = 0,
 			int target_state =
-			TRIP_PT_INVALID_TARGET_STATE);
+			TRIP_PT_INVALID_TARGET_STATE, pid_param_t *pid_param = NULL);
 
 	void thd_trip_cdev_state_reset();
 	int thd_trip_point_value() {
@@ -165,17 +167,22 @@ public:
 		else
 			_type_str = "invalid";
 		thd_log_info(
-				"index %d: type:%s temp:%u hyst:%u zone id:%d sensor id:%d cdev size:%lu\n",
+				"index %d: type:%s temp:%u hyst:%u zone id:%d sensor id:%d control_type:%d cdev size:%lu\n",
 				index, _type_str.c_str(), temp, hyst, zone_id, sensor_id,
-				(unsigned long) cdevs.size());
+				control_type, (unsigned long) cdevs.size());
 		for (unsigned int i = 0; i < cdevs.size(); ++i) {
+			thd_log_info("cdev[%u] %s, Sampling period: %d\n", i,
+					cdevs[i].cdev->get_cdev_type().c_str(),
+					cdevs[i].sampling_priod);
 			if (cdevs[i].target_state_valid)
-				thd_log_info("cdev[%u] %s target_state:%d\n", i,
-						cdevs[i].cdev->get_cdev_type().c_str(),
-						cdevs[i].target_state);
+				thd_log_info("\t target_state:%d\n", cdevs[i].target_state);
 			else
-				thd_log_info("cdev[%u] %s target_state:not defined\n", i,
-						cdevs[i].cdev->get_cdev_type().c_str());
+				thd_log_info("\t target_state:not defined\n");
+
+			if (cdevs[i].pid_param.valid)
+				thd_log_info("\t pid: kp=%g ki=%g kd=%g\n",
+						cdevs[i].pid_param.kp, cdevs[i].pid_param.ki,
+						cdevs[i].pid_param.kd);
 		}
 	}
 };

@@ -1,5 +1,5 @@
 /*
- * thd_trip_point.cpp: thermal zone class implentation
+ * thd_trip_point.cpp: thermal zone class implementation
  *
  * Copyright (C) 2012 Intel Corporation. All rights reserved.
  *
@@ -167,7 +167,8 @@ bool cthd_trip_point::thd_trip_point_check(int id, unsigned int read_temp,
 			ret = cdev->thd_cdev_set_state(temp, temp, read_temp, 1, zone_id,
 					index, cdevs[i].target_state_valid,
 					cdev->map_target_state(cdevs[i].target_state_valid,
-							cdevs[i].target_state), false);
+							cdevs[i].target_state), &cdevs[i].pid_param,
+					cdevs[i].pid, false);
 			if (control_type == SEQUENTIAL && ret == THD_SUCCESS) {
 				// Only one cdev activation
 				break;
@@ -189,7 +190,8 @@ bool cthd_trip_point::thd_trip_point_check(int id, unsigned int read_temp,
 			cdev->thd_cdev_set_state(temp, temp, read_temp, 0, zone_id, index,
 					cdevs[i].target_state_valid,
 					cdev->map_target_state(cdevs[i].target_state_valid,
-							cdevs[i].target_state), false);
+							cdevs[i].target_state), &cdevs[i].pid_param,
+					cdevs[i].pid, false);
 
 			if (control_type == SEQUENTIAL) {
 				// Only one cdev activation
@@ -202,7 +204,8 @@ bool cthd_trip_point::thd_trip_point_check(int id, unsigned int read_temp,
 }
 
 void cthd_trip_point::thd_trip_point_add_cdev(cthd_cdev &cdev, int influence,
-		int sampling_period, int target_state_valid, int target_state) {
+		int sampling_period, int target_state_valid, int target_state,
+		pid_param_t *pid_param) {
 	trip_pt_cdev_t thd_cdev;
 	thd_cdev.cdev = &cdev;
 	thd_cdev.influence = influence;
@@ -210,6 +213,14 @@ void cthd_trip_point::thd_trip_point_add_cdev(cthd_cdev &cdev, int influence,
 	thd_cdev.last_op_time = 0;
 	thd_cdev.target_state_valid = target_state_valid;
 	thd_cdev.target_state = target_state;
+	if (pid_param && pid_param->valid) {
+		thd_log_info("pid valid %f:%f:%f\n", pid_param->kp, pid_param->ki,
+				pid_param->kd);
+		memcpy(&thd_cdev.pid_param, pid_param, sizeof(pid_param_t));
+		thd_cdev.pid.set_pid_param(pid_param->kp, pid_param->ki, pid_param->kd);
+	} else {
+		memset(&thd_cdev.pid_param, 0, sizeof(pid_param_t));
+	}
 	trip_cdev_add(thd_cdev);
 }
 

@@ -25,6 +25,14 @@
 #include "thermald.h"
 #include <time.h>
 
+typedef struct
+{
+	int valid;
+	double kp;
+	double ki;
+	double kd;
+}pid_param_t;
+
 class cthd_pid {
 
 private:
@@ -35,6 +43,12 @@ private:
 public:
 	cthd_pid();
 	double kp, ki, kd;
+	void set_pid_param(double _kp, double _ki, double _kd)
+	{
+		kp = _kp;
+		ki = _ki;
+		kd = _kd;
+	}
 	int pid_output(unsigned int curr_temp);
 	void set_target_temp(unsigned int temp) {
 		target_temp = temp;

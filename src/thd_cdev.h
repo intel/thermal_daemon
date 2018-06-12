@@ -93,7 +93,8 @@ public:
 	}
 	virtual int thd_cdev_set_state(int set_point, int target_temp,
 			int temperature, int state, int zone_id, int trip_id,
-				       int target_state_valid, int target_value, bool force);
+			int target_state_valid, int target_value,
+			pid_param_t *pid_param, cthd_pid& pid, bool force);
 
 	virtual int thd_cdev_set_min_state(int zone_id, int trip_id);
 
