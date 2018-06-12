@@ -165,6 +165,9 @@ int cthd_parse::parse_new_trip_point(xmlNode * a_node, xmlDoc *doc,
 					cur_node->xmlChildrenNode, 1);
 			if (!strcasecmp((const char*) cur_node->name, "Temperature")) {
 				trip_pt->temperature = atoi(tmp_value);
+			} else if (!strcasecmp((const char*) cur_node->name,
+					"Power")) {
+				trip_pt->temperature = atoi(tmp_value);
 			} else if (!strcasecmp((const char*) cur_node->name, "Hyst")) {
 				trip_pt->hyst = atoi(tmp_value);
 			} else if (!strcasecmp((const char*) cur_node->name,
@@ -647,7 +650,7 @@ void cthd_parse::dump_thermal_conf() {
 			for (unsigned int k = 0;
 					k < thermal_info_list[i].zones[j].trip_pts.size(); ++k) {
 				thd_log_info("\t\t Trip Point %u \n", k);
-				thd_log_info("\t\t  temp %d \n",
+				thd_log_info("\t\t  temp/power %d \n",
 						thermal_info_list[i].zones[j].trip_pts[k].temperature);
 				thd_log_info("\t\t  trip type %d \n",
 						thermal_info_list[i].zones[j].trip_pts[k].trip_pt_type);
