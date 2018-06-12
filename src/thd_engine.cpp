@@ -238,6 +238,12 @@ int cthd_engine::thd_engine_start(bool ignore_cpuid_check) {
 
 	if (parser.platform_matched()) {
 		parser.set_default_preference();
+		int poll_secs = parser.get_polling_interval();
+		if (poll_secs) {
+			thd_log_info("Poll interval is defined in XML config %d seconds\n", poll_secs);
+			poll_interval_sec = poll_secs;
+			poll_timeout_msec = poll_secs * 1000;
+		}
 	}
 
 	// Check if polling is disabled and sensors don't support

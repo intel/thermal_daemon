@@ -119,6 +119,7 @@ typedef struct {
 	std::string uuid;
 	std::string product_name;
 	int default_preference;
+	int polling_interval;
 	std::vector<thermal_sensor_t> sensors;
 	std::vector<thermal_zone_t> zones;
 	std::vector<cooling_dev_t> cooling_devs;
@@ -172,6 +173,7 @@ public:
 	int start_parse();
 	void dump_thermal_conf();
 	bool platform_matched();
+	int get_polling_interval();
 	int zone_count() {
 		return thermal_info_list[matched_thermal_info_index].zones.size();
 	}

@@ -522,6 +522,9 @@ int cthd_parse::parse_new_platform_info(xmlNode * a_node, xmlDoc *doc,
 			} else if (!strcasecmp((const char*) cur_node->name,
 					"CoolingDevices")) {
 				parse_cooling_devs(cur_node->children, doc, info_ptr);
+			} else if (!strcasecmp((const char*) cur_node->name,
+				"PollingInterval")) {
+				info_ptr->polling_interval = atoi(tmp_value);
 			}
 			if (tmp_value)
 				xmlFree(tmp_value);
@@ -545,6 +548,7 @@ int cthd_parse::parse_new_platform(xmlNode * a_node, xmlDoc *doc,
 			if (!strcasecmp((const char*) cur_node->name, "Platform")) {
 				info.cooling_devs.clear();
 				info.zones.clear();
+				info.polling_interval = 0;
 				parse_new_platform_info(cur_node->children, doc, &info);
 				thermal_info_list.push_back(info);
 			}
@@ -615,6 +619,7 @@ void cthd_parse::dump_thermal_conf() {
 		thd_log_info("Name: %s\n", thermal_info_list[i].name.c_str());
 		thd_log_info("UUID: %s\n", thermal_info_list[i].uuid.c_str());
 		thd_log_info("type: %d\n", thermal_info_list[i].default_preference);
+		thd_log_info("Polling Interval: %d seconds\n", thermal_info_list[i].polling_interval);
 
 		for (unsigned int j = 0; j < thermal_info_list[i].sensors.size(); ++j) {
 			thd_log_info("\tSensor %u \n", j);
@@ -699,6 +704,10 @@ void cthd_parse::dump_thermal_conf() {
 
 		}
 	}
+}
+
+int cthd_parse::get_polling_interval() {
+	return thermal_info_list[matched_thermal_info_index].polling_interval;
 }
 
 bool cthd_parse::platform_matched() {
