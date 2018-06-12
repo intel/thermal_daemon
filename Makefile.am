@@ -84,7 +84,8 @@ thermald_SOURCES = \
 		src/thd_cdev_modem.cpp \
 		src/thd_int3400.cpp \
 		src/thd_cdev_kbl_amdgpu.cpp \
-		src/thd_sensor_kbl_amdgpu_power.cpp
+		src/thd_sensor_kbl_amdgpu_power.cpp \
+		src/thd_sensor_kbl_amdgpu_thermal.cpp
 
 man5_MANS = man/thermal-conf.xml.5
 man8_MANS = man/thermald.8
