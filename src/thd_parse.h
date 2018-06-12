@@ -74,6 +74,7 @@ typedef struct {
 	int sampling_period;
 	int target_state_valid;
 	int target_state;
+	pid_param_t pid_param;
 } trip_cdev_t;
 
 typedef struct {
