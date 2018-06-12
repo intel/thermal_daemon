@@ -145,7 +145,11 @@ public:
 	virtual int get_max_state() {
 		return max_state;
 	}
-	;
+
+	virtual int get_phy_max_state() {
+		return max_state;
+	}
+
 	virtual int update() {
 		return 0;
 	}

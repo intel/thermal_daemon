@@ -65,6 +65,10 @@ public:
 	virtual int update();
 	virtual void set_curr_state_raw(int state, int arg);
 	void thd_cdev_set_min_state_param(int arg);
+	int get_phy_max_state() {
+		return phy_max;
+	}
+
 };
 
 #endif /* THD_CDEV_RAPL_H_ */
