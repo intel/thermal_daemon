@@ -44,6 +44,8 @@ protected:
 
 private:
 	std::vector<int> thresholds;
+	int scale;
+
 	void enable_uevent();
 
 public:
@@ -74,6 +76,9 @@ public:
 	}
 	bool check_async_capable() {
 		return async_capable;
+	}
+	void set_scale(int _scale) {
+		scale = _scale;
 	}
 	virtual void sensor_dump() {
 		thd_log_info("sensor index:%d %s %s Async:%d \n", index,

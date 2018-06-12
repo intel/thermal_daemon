@@ -28,7 +28,8 @@
 cthd_sensor::cthd_sensor(int _index, std::string control_path,
 		std::string _type_str, int _type) :
 		index(_index), type(_type), sensor_sysfs(control_path.c_str()), sensor_active(
-				false), type_str(_type_str), async_capable(false), virtual_sensor(false), thresholds(0) {
+				false), type_str(_type_str), async_capable(false), virtual_sensor(
+				false), thresholds(0), scale(1) {
 
 }
 
@@ -52,8 +53,8 @@ int cthd_sensor::sensor_update() {
 		if (sensor_sysfs.exists("")) {
 			return THD_SUCCESS;
 		} else {
-			thd_log_warn("sensor id %d: No temp sysfs for reading raw temp\n",
-					index);
+			thd_log_warn("sensor id %d %s: No temp sysfs for reading raw temp\n",
+					index, sensor_sysfs.get_base_path());
 			return THD_ERROR;
 		}
 	}
@@ -74,7 +75,7 @@ unsigned int cthd_sensor::read_temperature() {
 	if (temp < 0)
 		temp = 0;
 	thd_log_debug("Sensor %s :temp %u \n", type_str.c_str(), temp);
-	return (unsigned int)temp;
+	return (unsigned int)temp / scale;
 }
 
 void cthd_sensor::enable_uevent() {
