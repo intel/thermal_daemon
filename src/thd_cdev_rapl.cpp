@@ -40,9 +40,9 @@ void cthd_sysfs_cdev_rapl::set_curr_state(int state, int arg) {
 		return;
 
 	if (state < inc_dec_val) {
-		curr_state = 0;
+		curr_state = min_state;
 		cdev_sysfs.write("enabled", "0");
-		new_state = phy_max;
+		new_state = min_state;
 	} else {
 		if (dynamic_phy_max_enable) {
 			if (!calculate_phy_max()) {
@@ -50,7 +50,7 @@ void cthd_sysfs_cdev_rapl::set_curr_state(int state, int arg) {
 				return;
 			}
 		}
-		new_state = phy_max - state;
+		new_state = state;
 		curr_state = state;
 		cdev_sysfs.write("enabled", "1");
 	}
@@ -68,50 +68,8 @@ void cthd_sysfs_cdev_rapl::set_curr_state(int state, int arg) {
 	}
 }
 
-int cthd_sysfs_cdev_rapl::map_target_state(int target_valid, int target_state) {
-	if (!target_valid)
-		return target_state;
-
-	if (target_state > phy_max)
-		return 0;
-
-	return phy_max - target_state;
-}
-
 void cthd_sysfs_cdev_rapl::set_curr_state_raw(int state, int arg) {
-	std::stringstream state_str;
-	std::stringstream tc_state_dev;
-	int new_state, ret;
-
-	if (bios_locked)
-		return;
-
-	if (state <= min_state)
-		new_state = phy_max;
-	else {
-		if (dynamic_phy_max_enable) {
-			if (!calculate_phy_max()) {
-				curr_state = state;
-				return;
-			}
-		}
-		new_state = phy_max - state;
-	}
-	curr_state = state;
-	state_str << new_state;
-
-	tc_state_dev << "constraint_" << constraint_index << "_power_limit_uw";
-	ret = cdev_sysfs.write(tc_state_dev.str(), state_str.str());
-	if (ret < 0) {
-		curr_state = (state == 0) ? 0 : max_state;
-		if (ret == -ENODATA) {
-			thd_log_info("powercap RAPL is BIOS locked, cannot update\n");
-			bios_locked = true;
-		}
-	}
-
-	thd_log_debug("set cdev state raw index %d state %d wr:%d\n", index, state,
-			new_state);
+	set_curr_state(state, arg);
 }
 
 bool cthd_sysfs_cdev_rapl::calculate_phy_max() {
@@ -125,9 +83,9 @@ bool cthd_sysfs_cdev_rapl::calculate_phy_max() {
 		if (phy_max < curr_max_phy) {
 			phy_max = curr_max_phy;
 			set_inc_dec_value(phy_max * (float) rapl_power_dec_percent / 100);
-			max_state = phy_max;
-			max_state -= (float) max_state * rapl_low_limit_percent / 100;
-			thd_log_debug("PHY_MAX %d, step %d, max_state %d\n", phy_max,
+			min_state = phy_max;
+			max_state -= (float) min_state * rapl_low_limit_percent / 100;
+			thd_log_debug("PHY_MAX %d, step %d, min_state %d\n", phy_max,
 					inc_dec_val, max_state);
 		}
 	}
@@ -174,8 +132,10 @@ int cthd_sysfs_cdev_rapl::update() {
 
 	if (ppcc) {
 		phy_max = pl0_max_pwr;
-		set_inc_dec_value(pl0_step_pwr);
-		max_state = pl0_max_pwr - pl0_min_pwr;
+		set_inc_dec_value(-pl0_step_pwr);
+		min_state = pl0_max_pwr;
+		max_state = pl0_min_pwr;
+
 	} else {
 		temp_str.str(std::string());
 		temp_str << "constraint_" << _index << "_max_power_uw";
@@ -191,8 +151,8 @@ int cthd_sysfs_cdev_rapl::update() {
 			thd_log_info("Calculate dynamically phy_max \n");
 			phy_max = 0;
 			thd_engine->rapl_power_meter.rapl_start_measure_power();
-			max_state = rapl_min_default_step;
-			set_inc_dec_value(rapl_min_default_step);
+			min_state = 0;
+			set_inc_dec_value(-rapl_min_default_step);
 			dynamic_phy_max_enable = true;
 			return THD_SUCCESS;
 		}
@@ -217,9 +177,10 @@ int cthd_sysfs_cdev_rapl::update() {
 		}
 		thd_log_info("powercap RAPL max power limit range %d \n", phy_max);
 
-		set_inc_dec_value(phy_max * (float) rapl_power_dec_percent / 100);
-		max_state = phy_max;
-		max_state -= (float) max_state * rapl_low_limit_percent / 100;
+		set_inc_dec_value(-phy_max * (float) rapl_power_dec_percent / 100);
+		min_state = phy_max;
+		max_state = min_state
+				- (float) min_state * rapl_low_limit_percent / 100;
 	}
 	std::stringstream time_window;
 	temp_str.str(std::string());
@@ -246,7 +207,8 @@ int cthd_sysfs_cdev_rapl::update() {
 
 	thd_log_debug("RAPL max limit %d increment: %d\n", max_state, inc_dec_val);
 	constraint_index = _index;
-	set_pid_param(1000, 100, 10);
+	set_pid_param(-1000, 100, 10);
+	curr_state = min_state;
 
 	return THD_SUCCESS;
 }
@@ -292,4 +254,8 @@ bool cthd_sysfs_cdev_rapl::read_ppcc_power_limits() {
 	}
 
 	return false;
+}
+
+void cthd_sysfs_cdev_rapl::thd_cdev_set_min_state_param(int arg) {
+	min_state = curr_state = arg;
 }

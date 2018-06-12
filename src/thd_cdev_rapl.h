@@ -49,7 +49,7 @@ public:
 	static const int rapl_min_default_step = 500000; //0.5W
 	static const int rapl_max_sane_phy_max = 100000000; // Some sane very high value in uW
 
-	static const int rapl_low_limit_percent = 25;
+	static const int rapl_low_limit_percent = 75;
 	static const int rapl_power_dec_percent = 5;
 
 	cthd_sysfs_cdev_rapl(unsigned int _index, int package) :
@@ -64,7 +64,7 @@ public:
 	virtual int get_max_state();
 	virtual int update();
 	virtual void set_curr_state_raw(int state, int arg);
-	int map_target_state(int target_valid, int target_state);
+	void thd_cdev_set_min_state_param(int arg);
 };
 
 #endif /* THD_CDEV_RAPL_H_ */
