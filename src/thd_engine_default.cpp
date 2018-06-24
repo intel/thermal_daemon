@@ -397,6 +397,11 @@ int cthd_engine_default::read_thermal_zones() {
 								trip_pt_config.temperature, trip_pt_config.hyst,
 								zone->get_zone_index(), sensor->get_index(),
 								trip_pt_config.control_type);
+
+						if (trip_pt_config.dependency.dependency) {
+							trip_pt.set_dependency(trip_pt_config.dependency.cdev, trip_pt_config.dependency.state);
+						}
+
 						// bind cdev
 						for (unsigned int j = 0;
 								j < trip_pt_config.cdev_trips.size(); ++j) {

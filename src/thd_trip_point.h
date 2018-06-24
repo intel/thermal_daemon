@@ -35,7 +35,7 @@
 #include <stdexcept>
 
 typedef enum {
-	CRITICAL, MAX, PASSIVE, ACTIVE, POLLING, INVALID_TRIP_TYPE
+	CRITICAL, HOT, MAX, PASSIVE, ACTIVE, POLLING, INVALID_TRIP_TYPE
 } trip_point_type_t;
 
 typedef enum {
@@ -44,6 +44,10 @@ typedef enum {
 } trip_control_type_t;
 
 #define TRIP_PT_INVALID_TARGET_STATE	INT_MAX
+
+typedef enum {
+	EQUAL, GREATER, LESSER, LESSER_OR_EQUAL, GREATER_OR_EQUAL
+} trip_point_cdev_depend_rel_t;
 
 typedef struct {
 	cthd_cdev *cdev;
@@ -62,6 +66,7 @@ static bool trip_cdev_sort(trip_pt_cdev_t cdev1, trip_pt_cdev_t cdev2) {
 	return (cdev1.influence > cdev2.influence);
 }
 
+
 class cthd_trip_point {
 private:
 	int index;
@@ -74,6 +79,10 @@ private:
 	int sensor_id;
 	bool trip_on;
 	bool poll_on;
+
+	cthd_cdev *depend_cdev;
+	int depend_cdev_state;
+	trip_point_cdev_depend_rel_t depend_cdev_state_rel;
 
 	bool check_duplicate(cthd_cdev *cdev, int *index) {
 		for (unsigned int i = 0; i < cdevs.size(); ++i) {
@@ -134,6 +143,8 @@ public:
 		return cdevs.size();
 	}
 
+	void set_dependency(std::string cdev, std::string state_str);
+
 #ifndef ANDROID
 	trip_pt_cdev_t &get_cdev_at_index(unsigned int index) {
 		if (index < cdevs.size())
@@ -170,6 +181,13 @@ public:
 				"index %d: type:%s temp:%u hyst:%u zone id:%d sensor id:%d control_type:%d cdev size:%lu\n",
 				index, _type_str.c_str(), temp, hyst, zone_id, sensor_id,
 				control_type, (unsigned long) cdevs.size());
+
+		if (depend_cdev) {
+			thd_log_info("Depends on cdev %s:%d:%d\n",
+					depend_cdev->get_cdev_type().c_str(), depend_cdev_state_rel,
+					depend_cdev_state);
+		}
+
 		for (unsigned int i = 0; i < cdevs.size(); ++i) {
 			thd_log_info("cdev[%u] %s, Sampling period: %d\n", i,
 					cdevs[i].cdev->get_cdev_type().c_str(),
@@ -188,6 +206,9 @@ public:
 };
 
 static inline bool trip_sort(cthd_trip_point trip1, cthd_trip_point trip2) {
+	if (trip1.get_trip_type() != trip2.get_trip_type())
+		return false;
+
 	return (trip1.get_trip_temp() < trip2.get_trip_temp());
 }
 #endif

@@ -32,9 +32,56 @@ int _temp, unsigned int _hyst, int _zone_id, int _sensor_id,
 		trip_control_type_t _control_type) :
 		index(_index), type(_type), temp(_temp), hyst(_hyst), control_type(
 				_control_type), zone_id(_zone_id), sensor_id(_sensor_id), trip_on(
-				false), poll_on(false) {
+				false), poll_on(false), depend_cdev(NULL), depend_cdev_state(0), depend_cdev_state_rel(
+				EQUAL) {
 	thd_log_debug("Add trip pt %d:%d:0x%x:%d:%d\n", type, zone_id, sensor_id,
 			temp, hyst);
+}
+
+void cthd_trip_point::set_dependency(std::string cdev, std::string state_str)
+{
+	cthd_cdev *cdev_ptr;
+
+	cdev_ptr = thd_engine->search_cdev(cdev);
+	if (cdev_ptr) {
+		int match;
+		int state_index = 0;
+
+		depend_cdev = cdev_ptr;
+
+		match = state_str.compare(0, 2, "==");
+		if (!match) {
+			depend_cdev_state_rel = EQUAL;
+			state_index = 2;
+		}
+
+		match = state_str.compare(0, 1, ">");
+		if (!match) {
+			depend_cdev_state_rel = GREATER;
+			state_index = 1;
+		}
+
+		match = state_str.compare(0, 1, "<");
+		if (!match) {
+			state_index = 1;
+			depend_cdev_state_rel = LESSER;
+		}
+
+		match = state_str.compare(0, 2, "<=");
+		if (!match) {
+			depend_cdev_state_rel = LESSER_OR_EQUAL;
+			state_index = 2;
+		}
+
+		match = state_str.compare(0, 2, ">=");
+		if (!match) {
+			depend_cdev_state_rel = GREATER_OR_EQUAL;
+			state_index = 2;
+		}
+
+		depend_cdev_state = atoi(state_str.substr(state_index).c_str());
+
+	}
 }
 
 bool cthd_trip_point::thd_trip_point_check(int id, unsigned int read_temp,
@@ -44,6 +91,43 @@ bool cthd_trip_point::thd_trip_point_check(int id, unsigned int read_temp,
 	bool apply = false;
 
 	*reset = false;
+
+	if (depend_cdev && read_temp >= temp) {
+		int _state = depend_cdev->get_curr_state();
+		int valid = 0;
+
+		switch (depend_cdev_state_rel) {
+		case EQUAL:
+			if (_state == depend_cdev_state)
+				valid = 1;
+			break;
+		case GREATER:
+			if (_state > depend_cdev_state)
+				valid = 1;
+			break;
+		case LESSER:
+			if (_state < depend_cdev_state)
+				valid = 1;
+			break;
+		case LESSER_OR_EQUAL:
+			if (_state <= depend_cdev_state)
+				valid = 1;
+			break;
+		case GREATER_OR_EQUAL:
+			if (_state >= depend_cdev_state)
+				valid = 1;
+			break;
+		default:
+			break;
+		}
+
+		if (!valid) {
+			thd_log_info("constraint failed %s:%d:%d:%d \n",
+					depend_cdev->get_cdev_type().c_str(), _state, depend_cdev_state_rel,
+					depend_cdev_state);
+			return false;
+		}
+	}
 
 	if (sensor_id != DEFAULT_SENSOR_ID && sensor_id != id)
 		return false;
