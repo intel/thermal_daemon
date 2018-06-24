@@ -141,6 +141,15 @@ bool cthd_trip_point::thd_trip_point_check(int id, unsigned int read_temp,
 			thd_log_warn("critical temp reached \n");
 			sync();
 			reboot(RB_POWER_OFF);
+			return true;
+		}
+	}
+	if (type == HOT) {
+		if (read_temp >= temp) {
+			thd_log_warn("Hot temp reached \n");
+			csys_fs power("/sys/power/");
+			power.write("state", "mem");
+			return true;
 		}
 	}
 

@@ -175,6 +175,8 @@ public:
 			_type_str = "active";
 		else if (type == POLLING)
 			_type_str = "polling";
+		else if (type == HOT)
+			_type_str = "hot";
 		else
 			_type_str = "invalid";
 		thd_log_info(

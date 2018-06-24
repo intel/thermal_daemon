@@ -221,6 +221,8 @@ int cthd_parse::parse_new_trip_point(xmlNode * a_node, xmlDoc *doc,
 					trip_pt->trip_pt_type = PASSIVE;
 				else if (type_val && !strcasecmp(type_val, "critical"))
 					trip_pt->trip_pt_type = CRITICAL;
+				else if (type_val && !strcasecmp(type_val, "hot"))
+					trip_pt->trip_pt_type = HOT;
 				else if (type_val && !strcasecmp(type_val, "max"))
 					trip_pt->trip_pt_type = MAX;
 			} else if (!strcasecmp((const char*) cur_node->name,
