@@ -69,6 +69,12 @@ typedef struct {
 } thermal_sensor_t;
 
 typedef struct {
+	int dependency;
+	std::string cdev;
+	std::string state;
+}trip_cdev_depend_t;
+
+typedef struct {
 	std::string type;
 	int influence;
 	int sampling_period;
@@ -84,6 +90,7 @@ typedef struct {
 	trip_control_type_t control_type;
 	int influence;
 	std::string sensor_type;
+	trip_cdev_depend_t dependency;
 	std::vector<trip_cdev_t> cdev_trips;
 } trip_point_t;
 
@@ -137,6 +144,7 @@ private:
 
 	int parse(xmlNode * a_node, xmlDoc *doc);
 	int parse_pid_values(xmlNode * a_node, xmlDoc *doc, pid_control_t *pid_ptr);
+	int parse_dependency_values(xmlNode * a_node, xmlDoc *doc, trip_cdev_depend_t *dependency);
 	int parse_new_trip_cdev(xmlNode * a_node, xmlDoc *doc,
 			trip_cdev_t *trip_cdev);
 

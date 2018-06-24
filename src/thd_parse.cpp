@@ -109,6 +109,35 @@ int cthd_parse::parser_init(std::string config_file) {
 	return THD_SUCCESS;
 }
 
+int cthd_parse::parse_dependency_values(xmlNode * a_node, xmlDoc *doc,
+		trip_cdev_depend_t *dependency) {
+	xmlNode *cur_node = NULL;
+	char *tmp_value;
+
+	for (cur_node = a_node; cur_node; cur_node = cur_node->next) {
+		if (cur_node->type == XML_ELEMENT_NODE) {
+			DEBUG_PARSER_PRINT("node type: Element, name: %s value: %s\n",
+					cur_node->name,
+					xmlNodeListGetString(doc, cur_node->xmlChildrenNode, 1));
+			tmp_value = (char*) xmlNodeListGetString(doc,
+					cur_node->xmlChildrenNode, 1);
+			if (tmp_value) {
+				if (!strcasecmp((const char*) cur_node->name,
+						"CoolingDeviceType")) {
+					dependency->cdev.assign(char_trim(tmp_value));
+				} else if (!strcasecmp((const char*) cur_node->name,
+						"CoolingDeviceState")) {
+					dependency->state.assign(char_trim(tmp_value));
+				}
+				dependency->dependency = 1;
+				xmlFree(tmp_value);
+			}
+		}
+	}
+
+	return THD_SUCCESS;
+}
+
 int cthd_parse::parse_new_trip_cdev(xmlNode * a_node, xmlDoc *doc,
 		trip_cdev_t *trip_cdev) {
 	xmlNode *cur_node = NULL;
@@ -201,7 +230,11 @@ int cthd_parse::parse_new_trip_point(xmlNode * a_node, xmlDoc *doc,
 					trip_pt->control_type = SEQUENTIAL;
 				else
 					trip_pt->control_type = PARALLEL;
+			} else if (!strcasecmp((const char*) cur_node->name, "DependsOn")) {
+				parse_dependency_values(cur_node->children, doc,
+						&trip_pt->dependency);
 			}
+
 			if (tmp_value)
 				xmlFree(tmp_value);
 		}
@@ -225,6 +258,7 @@ int cthd_parse::parse_trip_points(xmlNode * a_node, xmlDoc *doc,
 				trip_pt.control_type = PARALLEL;
 				trip_pt.influence = 100;
 				trip_pt.sensor_type.clear();
+				trip_pt.dependency.dependency = 0;
 				if (parse_new_trip_point(cur_node->children, doc,
 						&trip_pt) == THD_SUCCESS)
 					info_ptr->trip_pts.push_back(trip_pt);
@@ -658,6 +692,10 @@ void cthd_parse::dump_thermal_conf() {
 						thermal_info_list[i].zones[j].trip_pts[k].hyst);
 				thd_log_info("\t\t  sensor type %s \n",
 						thermal_info_list[i].zones[j].trip_pts[k].sensor_type.c_str());
+				if (thermal_info_list[i].zones[j].trip_pts[k].dependency.dependency)
+					thd_log_info("\t\t  Dependency on %s:%s \n",
+							thermal_info_list[i].zones[j].trip_pts[k].dependency.cdev.c_str(),
+							thermal_info_list[i].zones[j].trip_pts[k].dependency.state.c_str());
 
 				for (unsigned int l = 0;
 						l
