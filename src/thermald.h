@@ -50,8 +50,8 @@
 #define thd_log_fatal	ALOGE
 #define thd_log_error	ALOGE
 #define thd_log_warn	ALOGW
-#define thd_log_info	ALOGD
-#define thd_log_debug 	ALOGV
+#define thd_log_info	ALOGI
+#define thd_log_debug 	ALOGD
 
 #else
 

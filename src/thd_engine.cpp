@@ -602,6 +602,7 @@ void cthd_engine::thd_engine_reload_zones() {
 }
 
 // Add any tested platform ids in this table
+#ifndef ANDROID
 static supported_ids_t id_table[] = {
 		{ 6, 0x2a }, // Sandybridge
 		{ 6, 0x3a }, // IvyBridge
@@ -621,6 +622,7 @@ static supported_ids_t id_table[] = {
 		{ 6, 0x66 }, // Cannonlake
 		{ 0, 0 } // Last Invalid entry
 };
+#endif
 
 int cthd_engine::check_cpu_id() {
 #ifndef ANDROID

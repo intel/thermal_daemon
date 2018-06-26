@@ -28,7 +28,7 @@
 #include "thd_zone.h"
 
 class cthd_zone_kbl_g_mcp: public cthd_zone {
-private:
+protected:
 	cthd_sensor *sensor;
 	csys_fs dts_sysfs;
 public:
