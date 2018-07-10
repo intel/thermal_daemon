@@ -23,6 +23,8 @@
  */
 
 #include <unistd.h>
+#include <string.h>
+#include <errno.h>
 #include <sys/reboot.h>
 #include "thd_trip_point.h"
 #include "thd_engine.h"
@@ -137,10 +139,22 @@ bool cthd_trip_point::thd_trip_point_check(int id, unsigned int read_temp,
 	}
 
 	if (type == CRITICAL) {
+		int ret = -1;
+
 		if (read_temp >= temp) {
 			thd_log_warn("critical temp reached \n");
 			sync();
+#ifdef ANDROID
+			ret = property_set("sys.powerctl", "shutdown,thermal");
+#else
 			reboot(RB_POWER_OFF);
+#endif
+			if (ret != 0)
+				thd_log_warn("power off failed ret=%d err=%s\n",
+					     ret, strerror(errno));
+			else
+				thd_log_warn("power off initiated\n");
+
 			return true;
 		}
 	}
