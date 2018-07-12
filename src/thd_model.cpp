@@ -109,8 +109,14 @@ unsigned int cthd_model::update_set_point(unsigned int curr_temp) {
 		/*Compute PID Output*/
 		output = kp * error + ki * err_sum + kd * d_err;
 		_setpoint = max_temp - (unsigned int) output;
+
+#if defined __x86_64__ && defined __ILP32__
+		thd_log_info("update_pid %lld %lld %d %g %d\n", now, last_time, error,
+				output, _setpoint);
+#else
 		thd_log_info("update_pid %ld %ld %d %g %d\n", now, last_time, error,
 				output, _setpoint);
+#endif
 		if ((_setpoint < 0) || (abs(set_point - _setpoint) > max_compensation))
 			set_point -= max_compensation;
 		else
@@ -134,10 +140,18 @@ void cthd_model::add_sample(int temperature) {
 	updated_set_point = false;
 	if (trend_increase_start == 0 && temperature > hot_zone) {
 		trend_increase_start = tm;
+#if defined __x86_64__ && defined __ILP32__
+		thd_log_debug("Trend increase start %lld\n", trend_increase_start);
+#else
 		thd_log_debug("Trend increase start %ld\n", trend_increase_start);
+#endif
 	} else if (trend_increase_start && temperature < hot_zone) {
 		int _set_point;
+#if defined __x86_64__ && defined __ILP32__
+		thd_log_debug("Trend increase stopped %lld\n", trend_increase_start);
+#else
 		thd_log_debug("Trend increase stopped %ld\n", trend_increase_start);
+#endif
 		trend_increase_start = 0;
 		_set_point = read_set_point(); // Restore set point to a calculated max
 		if (_set_point > set_point) {
