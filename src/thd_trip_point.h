@@ -43,7 +43,7 @@ typedef enum {
 	SEQUENTIAL  // one after other once the previous cdev reaches its max state
 } trip_control_type_t;
 
-#define TRIP_PT_INVALID_TARGET_STATE	INT_MAX
+#define TRIP_PT_INVALID_TARGET_STATE	INT32_MAX
 
 typedef enum {
 	EQUAL, GREATER, LESSER, LESSER_OR_EQUAL, GREATER_OR_EQUAL

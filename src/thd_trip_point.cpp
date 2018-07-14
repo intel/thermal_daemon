@@ -274,6 +274,10 @@ bool cthd_trip_point::thd_trip_point_check(int id, unsigned int read_temp,
 				// No scope of control with this cdev
 				continue;
 			}
+
+			if (cdevs[i].target_state == TRIP_PT_INVALID_TARGET_STATE)
+				cdevs[i].target_state = cdev->get_min_state();
+
 			ret = cdev->thd_cdev_set_state(temp, temp, read_temp, 1, zone_id,
 					index, cdevs[i].target_state_valid,
 					cdev->map_target_state(cdevs[i].target_state_valid,
@@ -297,6 +301,10 @@ bool cthd_trip_point::thd_trip_point_check(int id, unsigned int read_temp,
 				// No scope of control with this cdev
 				continue;
 			}
+
+			if (cdevs[i].target_state == TRIP_PT_INVALID_TARGET_STATE)
+				cdevs[i].target_state = cdev->get_min_state();
+
 			cdev->thd_cdev_set_state(temp, temp, read_temp, 0, zone_id, index,
 					cdevs[i].target_state_valid,
 					cdev->map_target_state(cdevs[i].target_state_valid,
