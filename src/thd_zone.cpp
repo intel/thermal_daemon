@@ -127,6 +127,83 @@ int cthd_zone::read_user_set_psv_temp() {
 	return temp;
 }
 
+void cthd_zone::sort_and_update_poll_trip() {
+	thd_log_debug("sort_and_update_poll_trip: trip_points_size =%lu\n",
+			trip_points.size());
+	if (trip_points.size()) {
+		unsigned int polling_trip = 0;
+		unsigned int max_trip_temp = 0;
+
+		std::sort(trip_points.begin(), trip_points.end(), trip_sort);
+		thd_log_info("Sorted trip dump zone index:%d type:%s:\n", index,
+				type_str.c_str());
+		for (unsigned int i = 0; i < trip_points.size(); ++i) {
+			trip_points[i].trip_dump();
+		}
+
+		// Set the lowest trip point as the threshold for sensor async mode
+		// Use that the lowest point, after that we poll
+		if (trip_points.size())
+			polling_trip = trip_points[0].get_trip_temp();
+
+		int poll_trip_present = 0;
+		int poll_trip_index = 0;
+		for (unsigned int i = 0; i < trip_points.size(); ++i) {
+			if (trip_points[i].get_trip_type() == POLLING) {
+				thd_log_debug("polling trip already present\n");
+				poll_trip_present = 1;
+				poll_trip_index = i;
+			}
+			if (polling_trip > trip_points[i].get_trip_temp())
+				polling_trip = trip_points[i].get_trip_temp();
+			if (trip_points[i].get_trip_type() == MAX)
+				max_trip_temp = trip_points[i].get_trip_temp();
+			thd_log_info("trip type: %d temp: %d \n",
+					trip_points[i].get_trip_type(),
+					trip_points[i].get_trip_temp());
+		}
+
+		if (polling_trip > def_async_trip_offset)
+			polling_trip -= def_async_trip_offset;
+
+		for (unsigned int i = 0; i < sensors.size(); ++i) {
+			cthd_sensor *sensor;
+			sensor = sensors[i];
+			if (max_trip_temp) {
+				unsigned int _polling_trip;
+				// We have to guarantee MAX, so we better
+				// wake up before, so that by the time
+				// we are notified, temp > max temp
+				thd_model.set_max_temperature(max_trip_temp);
+				_polling_trip = thd_model.get_hot_zone_trigger_point();
+				if (polling_trip) {
+					if (_polling_trip < polling_trip) {
+						if ((polling_trip - _polling_trip)
+								< def_async_trip_offset)
+							polling_trip = _polling_trip
+									- def_async_trip_offset;
+						else
+							polling_trip = _polling_trip;
+					}
+				} else
+					polling_trip = _polling_trip;
+			}
+
+			sensor->set_threshold(0, polling_trip);
+			// If the poll trip is already present then simply update
+			// the trip, instead of creating a new one.
+			if (poll_trip_present) {
+				trip_points[poll_trip_index].update_trip_temp(polling_trip);
+			} else {
+				cthd_trip_point trip_pt_polling(trip_points.size(), POLLING,
+						polling_trip, 0, index, sensor->get_index());
+				trip_pt_polling.thd_trip_point_set_control_type(PARALLEL);
+				trip_points.push_back(trip_pt_polling);
+			}
+		}
+	}
+}
+
 int cthd_zone::zone_update() {
 	int ret;
 
@@ -154,66 +231,7 @@ int cthd_zone::zone_update() {
 		// Don't bail out as they may be attached by thermal relation tables
 	}
 
-	if (trip_points.size()) {
-		unsigned int polling_trip = 0;
-		unsigned int max_trip_temp = 0;
-
-		std::sort(trip_points.begin(), trip_points.end(), trip_sort);
-		thd_log_info("Sorted trip dump zone index:%d type:%s:\n", index,
-				type_str.c_str());
-		for (unsigned int i = 0; i < trip_points.size(); ++i) {
-			trip_points[i].trip_dump();
-		}
-
-		// Set the lowest trip point as the threshold for sensor async mode
-		// Use that the lowest point, after that we poll
-		if (trip_points.size())
-			polling_trip = trip_points[0].get_trip_temp();
-		for (unsigned int i = 0; i < trip_points.size(); ++i) {
-			if (polling_trip > trip_points[i].get_trip_temp())
-				polling_trip = trip_points[i].get_trip_temp();
-			if (trip_points[i].get_trip_type() == MAX)
-				max_trip_temp = trip_points[i].get_trip_temp();
-			thd_log_info("trip type: %d temp: %d \n",
-					trip_points[i].get_trip_type(),
-					trip_points[i].get_trip_temp());
-		}
-
-		if (polling_trip > def_async_trip_offset)
-			polling_trip -= def_async_trip_offset;
-
-		for (unsigned int i = 0; i < sensors.size(); ++i) {
-			cthd_sensor *sensor;
-			sensor = sensors[i];
-			if (sensor->check_async_capable()) {
-				if (max_trip_temp) {
-					unsigned int _polling_trip;
-					// We have to guarantee MAX, so we better
-					// wake up before, so that by the time
-					// we are notified, temp > max temp
-					thd_model.set_max_temperature(max_trip_temp);
-					_polling_trip = thd_model.get_hot_zone_trigger_point();
-					if (polling_trip) {
-						if (_polling_trip < polling_trip) {
-							if ((polling_trip - _polling_trip)
-									< def_async_trip_offset)
-								polling_trip = _polling_trip
-										- def_async_trip_offset;
-							else
-								polling_trip = _polling_trip;
-						}
-					} else
-						polling_trip = _polling_trip;
-				}
-
-				sensor->set_threshold(0, polling_trip);
-				cthd_trip_point trip_pt_polling(trip_points.size(), POLLING,
-						polling_trip, 0, index, sensor->get_index());
-				trip_pt_polling.thd_trip_point_set_control_type(PARALLEL);
-				trip_points.push_back(trip_pt_polling);
-			}
-		}
-	}
+	sort_and_update_poll_trip();
 
 	for (unsigned int i = 0; i < trip_points.size(); ++i) {
 		cthd_trip_point &trip_point = trip_points[i];
@@ -355,6 +373,8 @@ void cthd_zone::add_trip(cthd_trip_point &trip) {
 	}
 	if (add)
 		trip_points.push_back(trip);
+
+	sort_and_update_poll_trip();
 }
 
 void cthd_zone::update_trip_temp(cthd_trip_point &trip) {
@@ -371,4 +391,5 @@ void cthd_zone::update_trip_temp(cthd_trip_point &trip) {
 			break;
 		}
 	}
+	sort_and_update_poll_trip();
 }
