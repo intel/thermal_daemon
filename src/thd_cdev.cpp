@@ -220,9 +220,9 @@ int cthd_cdev::thd_cdev_set_state(int set_point, int target_temp,
 
 				if (zone_trip_limits[i].zone == zone_id
 						&& zone_trip_limits[i].trip == trip_id
-						&& target_state_valid
-								== zone_trip_limits[i].target_state_valid
-						&& target_value == zone_trip_limits[i].target_value) {
+						&& (force || target_state_valid
+								== zone_trip_limits[i].target_state_valid)
+						&& (force || target_value == zone_trip_limits[i].target_value)) {
 					_target_state_valid = zone_trip_limits[i].target_state_valid;
 					zone_trip_limits.erase(zone_trip_limits.begin() + i);
 					thd_log_info("Erased  [%d: %d %d\n", zone_id, trip_id,
@@ -256,8 +256,6 @@ int cthd_cdev::thd_cdev_set_state(int set_point, int target_temp,
 				if (_target_state_valid)
 					target_value = get_min_state();
 			}
-		} else {
-			target_state_valid = 0;
 		}
 	}
 
