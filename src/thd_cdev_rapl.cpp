@@ -36,8 +36,14 @@ void cthd_sysfs_cdev_rapl::set_curr_state(int state, int arg) {
 	std::stringstream state_str;
 	int new_state, ret;
 
-	if (bios_locked)
+	if (bios_locked) {
+		if (state <= inc_dec_val)
+			curr_state = min_state;
+		else
+			curr_state = max_state;
+
 		return;
+	}
 
 	if (state < inc_dec_val) {
 		curr_state = min_state;
