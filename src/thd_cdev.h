@@ -79,7 +79,7 @@ private:
 			int temperature, int state, int arg);
 
 public:
-	static const int default_debounce_interval = 3; // In seconds
+	static const int default_debounce_interval = 2; // In seconds
 	cthd_cdev(unsigned int _index, std::string control_path) :
 			index(_index), cdev_sysfs(control_path.c_str()), trip_point(0), max_state(
 					0), min_state(0), curr_state(0), curr_pow(
