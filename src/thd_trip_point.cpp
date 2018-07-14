@@ -169,19 +169,22 @@ bool cthd_trip_point::thd_trip_point_check(int id, unsigned int read_temp,
 
 	if (type == POLLING && sensor_id != DEFAULT_SENSOR_ID) {
 		cthd_sensor *sensor = thd_engine->get_sensor(sensor_id);
-		if (sensor && sensor->check_async_capable()) {
+		if (sensor) {
 			if (!poll_on && read_temp >= temp) {
 				thd_log_debug("polling trip reached, on \n");
 				sensor->sensor_poll_trip(true);
 				poll_on = true;
-				sensor->set_threshold(0, temp);
+				sensor->sensor_fast_poll(true);
+				if (sensor->check_async_capable())
+					sensor->set_threshold(0, temp);
 			} else if (poll_on && read_temp < temp) {
-				thd_log_debug("polling trip reached, off \n");
 				sensor->sensor_poll_trip(false);
-				thd_log_info("Dropped below poll threshold \n");
+				thd_log_debug("Dropped below poll threshold \n");
 				*reset = true;
 				poll_on = false;
-				sensor->set_threshold(0, temp);
+				sensor->sensor_fast_poll(false);
+				if (sensor->check_async_capable())
+					sensor->set_threshold(0, temp);
 			}
 		}
 		return true;

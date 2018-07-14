@@ -50,6 +50,8 @@ typedef enum {
 	RELOAD_ZONES,
 	POLL_ENABLE,
 	POLL_DISABLE,
+	FAST_POLL_ENABLE,
+	FAST_POLL_DISABLE,
 } message_name_t;
 
 // This defines whether the thermal control is entirey done by
@@ -100,6 +102,8 @@ private:
 	int poll_interval_sec;
 	cthd_preference thd_pref;
 	unsigned int poll_sensor_mask;
+	unsigned int fast_poll_sensor_mask;
+	int saved_poll_interval;
 	std::string config_file;
 
 	pthread_t thd_engine;
@@ -153,6 +157,7 @@ public:
 			const char *user_set_point);
 
 	void poll_enable_disable(bool status, message_capsul_t *msg);
+	void fast_poll_enable_disable(bool status, message_capsul_t *msg);
 
 	cthd_cdev *thd_get_cdev_at_index(int index);
 
@@ -162,6 +167,9 @@ public:
 	void giveup_thermal_control();
 	void thd_engine_poll_enable(int sensor_id);
 	void thd_engine_poll_disable(int sensor_id);
+
+	void thd_engine_fast_poll_enable(int sensor_id);
+	void thd_engine_fast_poll_disable(int sensor_id);
 
 	void thd_read_default_thermal_sensors();
 	void thd_read_default_thermal_zones();

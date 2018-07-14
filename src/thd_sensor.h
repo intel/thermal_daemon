@@ -88,6 +88,8 @@ public:
 	// at critical monitoring point. Sensors can be forced to go to poll mode at that temp
 	void sensor_poll_trip(bool status);
 
+	void sensor_fast_poll(bool status);
+
 	bool is_virtual() {
 		return virtual_sensor;
 	}
