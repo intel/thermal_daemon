@@ -69,6 +69,7 @@ public:
 
 	bool exists(const std::string &path);
 	bool exists();
+	int create();
 	mode_t get_mode(const std::string &path);
 
 	void update_path(std::string path) {

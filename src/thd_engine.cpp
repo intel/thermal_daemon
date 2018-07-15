@@ -53,7 +53,8 @@ cthd_engine::cthd_engine() :
 				0), preference(0), status(true), thz_last_uevent_time(0), thz_last_temp_ind_time(
 				0), terminate(false), genuine_intel(0), has_invariant_tsc(0), has_aperf(
 				0), proc_list_matched(false), poll_interval_sec(0), poll_sensor_mask(
-				0), poll_fd_cnt(0), rt_kernel(false), parser_init_done(false) {
+				0), fast_poll_sensor_mask(0), saved_poll_interval(0), poll_fd_cnt(
+				0), rt_kernel(false), parser_init_done(false) {
 	thd_engine = pthread_t();
 	thd_attr = pthread_attr_t();
 
@@ -94,8 +95,6 @@ void cthd_engine::thd_engine_thread() {
 		if (terminate)
 			break;
 
-		rapl_power_meter.rapl_measure_power();
-
 		n = poll(poll_fds, poll_fd_cnt, poll_timeout_msec);
 		thd_log_debug("poll exit %d polls_fd event %d %d\n", n,
 				poll_fds[0].revents, poll_fds[1].revents);
@@ -104,6 +103,7 @@ void cthd_engine::thd_engine_thread() {
 			continue;
 		}
 		time(&tm);
+		rapl_power_meter.rapl_measure_power();
 
 		if (n == 0 || (tm - thz_last_temp_ind_time) >= poll_timeout_sec) {
 			if (!status) {
@@ -238,6 +238,12 @@ int cthd_engine::thd_engine_start(bool ignore_cpuid_check) {
 
 	if (parser.platform_matched()) {
 		parser.set_default_preference();
+		int poll_secs = parser.get_polling_interval();
+		if (poll_secs) {
+			thd_log_info("Poll interval is defined in XML config %d seconds\n", poll_secs);
+			poll_interval_sec = poll_secs;
+			poll_timeout_msec = poll_secs * 1000;
+		}
 	}
 
 	// Check if polling is disabled and sensors don't support
@@ -445,6 +451,25 @@ void cthd_engine::poll_enable_disable(bool status, message_capsul_t *msg) {
 	}
 }
 
+void cthd_engine::fast_poll_enable_disable(bool status, message_capsul_t *msg) {
+	unsigned int *sensor_id = (unsigned int*) msg->msg;
+
+	if (status) {
+		fast_poll_sensor_mask |= (1 << (*sensor_id));
+		saved_poll_interval = poll_timeout_msec;
+		poll_timeout_msec = 1000;
+		thd_log_debug("thd_engine fast polling enabled via %u \n", *sensor_id);
+	} else {
+		fast_poll_sensor_mask &= ~(1 << (*sensor_id));
+		if (!fast_poll_sensor_mask) {
+			if (saved_poll_interval)
+				poll_timeout_msec = saved_poll_interval;
+			thd_log_debug("thd_engine polling last disabled via %u \n",
+					*sensor_id);
+		}
+	}
+}
+
 int cthd_engine::proc_message(message_capsul_t *msg) {
 	int ret = 0;
 
@@ -480,6 +505,12 @@ int cthd_engine::proc_message(message_capsul_t *msg) {
 		if (!poll_interval_sec) {
 			poll_enable_disable(false, msg);
 		}
+		break;
+	case FAST_POLL_ENABLE:
+		fast_poll_enable_disable(true, msg);
+		break;
+	case FAST_POLL_DISABLE:
+		fast_poll_enable_disable(false, msg);
 		break;
 	default:
 		break;
@@ -579,6 +610,16 @@ void cthd_engine::thd_engine_poll_disable(int sensor_id) {
 			(unsigned char*) &sensor_id);
 }
 
+void cthd_engine::thd_engine_fast_poll_enable(int sensor_id) {
+	send_message(FAST_POLL_ENABLE, (int) sizeof(sensor_id),
+			(unsigned char*) &sensor_id);
+}
+
+void cthd_engine::thd_engine_fast_poll_disable(int sensor_id) {
+	send_message(FAST_POLL_DISABLE, (int) sizeof(sensor_id),
+			(unsigned char*) &sensor_id);
+}
+
 void cthd_engine::thd_engine_reload_zones() {
 	thd_log_warn(" Reloading zones\n");
 	for (unsigned int i = 0; i < zones.size(); ++i) {
@@ -596,6 +637,7 @@ void cthd_engine::thd_engine_reload_zones() {
 }
 
 // Add any tested platform ids in this table
+#ifndef ANDROID
 static supported_ids_t id_table[] = {
 		{ 6, 0x2a }, // Sandybridge
 		{ 6, 0x3a }, // IvyBridge
@@ -615,6 +657,7 @@ static supported_ids_t id_table[] = {
 		{ 6, 0x66 }, // Cannonlake
 		{ 0, 0 } // Last Invalid entry
 };
+#endif
 
 int cthd_engine::check_cpu_id() {
 #ifndef ANDROID

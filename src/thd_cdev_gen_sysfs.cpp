@@ -30,8 +30,14 @@ int cthd_gen_sysfs_cdev::update() {
 		cdev_sysfs.read("", state_str);
 		std::istringstream(state_str) >> curr_state;
 		min_state = max_state = curr_state;
-	} else
-		return THD_ERROR;
+	} else {
+		int ret = cdev_sysfs.create();
+
+		if (ret < 0)
+			return THD_ERROR;
+
+		ret = cdev_sysfs.write("", 0);
+	}
 
 	return THD_SUCCESS;
 }

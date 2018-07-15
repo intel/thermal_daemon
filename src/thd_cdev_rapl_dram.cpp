@@ -77,8 +77,9 @@ bool cthd_sysfs_cdev_rapl_dram::calculate_phy_max() {
 		if (phy_max < curr_max_phy) {
 			phy_max = curr_max_phy;
 			set_inc_dec_value(phy_max * (float) rapl_power_dec_percent / 100);
-			max_state = phy_max;
-			max_state -= (float) max_state * rapl_low_limit_percent / 100;
+			min_state = phy_max;
+			max_state = min_state
+					- (float) min_state * rapl_low_limit_percent / 100;
 			thd_log_info("DRAM PHY_MAX %d, step %d, max_state %d\n", phy_max,
 					inc_dec_val, max_state);
 		}

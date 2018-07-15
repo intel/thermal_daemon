@@ -39,6 +39,8 @@ protected:
 	int pl0_min_window;
 	int pl0_step_pwr;
 	bool bios_locked;
+	bool constrained;
+	int power_on_constraint_0_pwr;
 
 	virtual bool calculate_phy_max();
 	virtual bool read_ppcc_power_limits();
@@ -49,7 +51,7 @@ public:
 	static const int rapl_min_default_step = 500000; //0.5W
 	static const int rapl_max_sane_phy_max = 100000000; // Some sane very high value in uW
 
-	static const int rapl_low_limit_percent = 25;
+	static const int rapl_low_limit_percent = 50;
 	static const int rapl_power_dec_percent = 5;
 
 	cthd_sysfs_cdev_rapl(unsigned int _index, int package) :
@@ -57,14 +59,18 @@ public:
 					"/sys/devices/virtual/powercap/intel-rapl/intel-rapl:0/"), phy_max(
 					0), package_id(package), constraint_index(0), dynamic_phy_max_enable(
 					false), pl0_max_pwr(0), pl0_min_pwr(0), pl0_min_window(0), pl0_step_pwr(
-					0), bios_locked(false) {
+					0), bios_locked(false), constrained(false), power_on_constraint_0_pwr(0) {
 	}
 	virtual void set_curr_state(int state, int arg);
 	virtual int get_curr_state();
 	virtual int get_max_state();
 	virtual int update();
 	virtual void set_curr_state_raw(int state, int arg);
-	int map_target_state(int target_valid, int target_state);
+	void thd_cdev_set_min_state_param(int arg);
+	int get_phy_max_state() {
+		return phy_max;
+	}
+
 };
 
 #endif /* THD_CDEV_RAPL_H_ */

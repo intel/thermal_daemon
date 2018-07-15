@@ -1,5 +1,5 @@
 /*
- * thd_trip_point.cpp: thermal zone class implentation
+ * thd_trip_point.cpp: thermal zone class implementation
  *
  * Copyright (C) 2012 Intel Corporation. All rights reserved.
  *
@@ -23,6 +23,8 @@
  */
 
 #include <unistd.h>
+#include <string.h>
+#include <errno.h>
 #include <sys/reboot.h>
 #include "thd_trip_point.h"
 #include "thd_engine.h"
@@ -32,9 +34,56 @@ int _temp, unsigned int _hyst, int _zone_id, int _sensor_id,
 		trip_control_type_t _control_type) :
 		index(_index), type(_type), temp(_temp), hyst(_hyst), control_type(
 				_control_type), zone_id(_zone_id), sensor_id(_sensor_id), trip_on(
-				false), poll_on(false) {
+				false), poll_on(false), depend_cdev(NULL), depend_cdev_state(0), depend_cdev_state_rel(
+				EQUAL) {
 	thd_log_debug("Add trip pt %d:%d:0x%x:%d:%d\n", type, zone_id, sensor_id,
 			temp, hyst);
+}
+
+void cthd_trip_point::set_dependency(std::string cdev, std::string state_str)
+{
+	cthd_cdev *cdev_ptr;
+
+	cdev_ptr = thd_engine->search_cdev(cdev);
+	if (cdev_ptr) {
+		int match;
+		int state_index = 0;
+
+		depend_cdev = cdev_ptr;
+
+		match = state_str.compare(0, 2, "==");
+		if (!match) {
+			depend_cdev_state_rel = EQUAL;
+			state_index = 2;
+		}
+
+		match = state_str.compare(0, 1, ">");
+		if (!match) {
+			depend_cdev_state_rel = GREATER;
+			state_index = 1;
+		}
+
+		match = state_str.compare(0, 1, "<");
+		if (!match) {
+			state_index = 1;
+			depend_cdev_state_rel = LESSER;
+		}
+
+		match = state_str.compare(0, 2, "<=");
+		if (!match) {
+			depend_cdev_state_rel = LESSER_OR_EQUAL;
+			state_index = 2;
+		}
+
+		match = state_str.compare(0, 2, ">=");
+		if (!match) {
+			depend_cdev_state_rel = GREATER_OR_EQUAL;
+			state_index = 2;
+		}
+
+		depend_cdev_state = atoi(state_str.substr(state_index).c_str());
+
+	}
 }
 
 bool cthd_trip_point::thd_trip_point_check(int id, unsigned int read_temp,
@@ -45,6 +94,43 @@ bool cthd_trip_point::thd_trip_point_check(int id, unsigned int read_temp,
 
 	*reset = false;
 
+	if (depend_cdev && read_temp >= temp) {
+		int _state = depend_cdev->get_curr_state();
+		int valid = 0;
+
+		switch (depend_cdev_state_rel) {
+		case EQUAL:
+			if (_state == depend_cdev_state)
+				valid = 1;
+			break;
+		case GREATER:
+			if (_state > depend_cdev_state)
+				valid = 1;
+			break;
+		case LESSER:
+			if (_state < depend_cdev_state)
+				valid = 1;
+			break;
+		case LESSER_OR_EQUAL:
+			if (_state <= depend_cdev_state)
+				valid = 1;
+			break;
+		case GREATER_OR_EQUAL:
+			if (_state >= depend_cdev_state)
+				valid = 1;
+			break;
+		default:
+			break;
+		}
+
+		if (!valid) {
+			thd_log_info("constraint failed %s:%d:%d:%d \n",
+					depend_cdev->get_cdev_type().c_str(), _state, depend_cdev_state_rel,
+					depend_cdev_state);
+			return false;
+		}
+	}
+
 	if (sensor_id != DEFAULT_SENSOR_ID && sensor_id != id)
 		return false;
 
@@ -53,28 +139,52 @@ bool cthd_trip_point::thd_trip_point_check(int id, unsigned int read_temp,
 	}
 
 	if (type == CRITICAL) {
+		int ret = -1;
+
 		if (read_temp >= temp) {
 			thd_log_warn("critical temp reached \n");
 			sync();
+#ifdef ANDROID
+			ret = property_set("sys.powerctl", "shutdown,thermal");
+#else
 			reboot(RB_POWER_OFF);
+#endif
+			if (ret != 0)
+				thd_log_warn("power off failed ret=%d err=%s\n",
+					     ret, strerror(errno));
+			else
+				thd_log_warn("power off initiated\n");
+
+			return true;
+		}
+	}
+	if (type == HOT) {
+		if (read_temp >= temp) {
+			thd_log_warn("Hot temp reached \n");
+			csys_fs power("/sys/power/");
+			power.write("state", "mem");
+			return true;
 		}
 	}
 
 	if (type == POLLING && sensor_id != DEFAULT_SENSOR_ID) {
 		cthd_sensor *sensor = thd_engine->get_sensor(sensor_id);
-		if (sensor && sensor->check_async_capable()) {
+		if (sensor) {
 			if (!poll_on && read_temp >= temp) {
 				thd_log_debug("polling trip reached, on \n");
 				sensor->sensor_poll_trip(true);
 				poll_on = true;
-				sensor->set_threshold(0, temp);
+				sensor->sensor_fast_poll(true);
+				if (sensor->check_async_capable())
+					sensor->set_threshold(0, temp);
 			} else if (poll_on && read_temp < temp) {
-				thd_log_debug("polling trip reached, off \n");
 				sensor->sensor_poll_trip(false);
-				thd_log_info("Dropped below poll threshold \n");
+				thd_log_debug("Dropped below poll threshold \n");
 				*reset = true;
 				poll_on = false;
-				sensor->set_threshold(0, temp);
+				sensor->sensor_fast_poll(false);
+				if (sensor->check_async_capable())
+					sensor->set_threshold(0, temp);
 			}
 		}
 		return true;
@@ -164,10 +274,15 @@ bool cthd_trip_point::thd_trip_point_check(int id, unsigned int read_temp,
 				// No scope of control with this cdev
 				continue;
 			}
+
+			if (cdevs[i].target_state == TRIP_PT_INVALID_TARGET_STATE)
+				cdevs[i].target_state = cdev->get_min_state();
+
 			ret = cdev->thd_cdev_set_state(temp, temp, read_temp, 1, zone_id,
 					index, cdevs[i].target_state_valid,
 					cdev->map_target_state(cdevs[i].target_state_valid,
-							cdevs[i].target_state), false);
+							cdevs[i].target_state), &cdevs[i].pid_param,
+					cdevs[i].pid, false);
 			if (control_type == SEQUENTIAL && ret == THD_SUCCESS) {
 				// Only one cdev activation
 				break;
@@ -186,10 +301,15 @@ bool cthd_trip_point::thd_trip_point_check(int id, unsigned int read_temp,
 				// No scope of control with this cdev
 				continue;
 			}
+
+			if (cdevs[i].target_state == TRIP_PT_INVALID_TARGET_STATE)
+				cdevs[i].target_state = cdev->get_min_state();
+
 			cdev->thd_cdev_set_state(temp, temp, read_temp, 0, zone_id, index,
 					cdevs[i].target_state_valid,
 					cdev->map_target_state(cdevs[i].target_state_valid,
-							cdevs[i].target_state), false);
+							cdevs[i].target_state), &cdevs[i].pid_param,
+					cdevs[i].pid, false);
 
 			if (control_type == SEQUENTIAL) {
 				// Only one cdev activation
@@ -202,7 +322,8 @@ bool cthd_trip_point::thd_trip_point_check(int id, unsigned int read_temp,
 }
 
 void cthd_trip_point::thd_trip_point_add_cdev(cthd_cdev &cdev, int influence,
-		int sampling_period, int target_state_valid, int target_state) {
+		int sampling_period, int target_state_valid, int target_state,
+		pid_param_t *pid_param) {
 	trip_pt_cdev_t thd_cdev;
 	thd_cdev.cdev = &cdev;
 	thd_cdev.influence = influence;
@@ -210,6 +331,14 @@ void cthd_trip_point::thd_trip_point_add_cdev(cthd_cdev &cdev, int influence,
 	thd_cdev.last_op_time = 0;
 	thd_cdev.target_state_valid = target_state_valid;
 	thd_cdev.target_state = target_state;
+	if (pid_param && pid_param->valid) {
+		thd_log_info("pid valid %f:%f:%f\n", pid_param->kp, pid_param->ki,
+				pid_param->kd);
+		memcpy(&thd_cdev.pid_param, pid_param, sizeof(pid_param_t));
+		thd_cdev.pid.set_pid_param(pid_param->kp, pid_param->ki, pid_param->kd);
+	} else {
+		memset(&thd_cdev.pid_param, 0, sizeof(pid_param_t));
+	}
 	trip_cdev_add(thd_cdev);
 }
 

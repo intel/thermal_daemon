@@ -1,7 +1,7 @@
 /*
- * thd_pid.h: pid interface
+ * thd_zone_kbl_amdgpu.h: thermal zone for KBL-G amdgpu
  *
- * Copyright (C) 2013 Intel Corporation. All rights reserved.
+ * Copyright (C) 2018 Intel Corporation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License version
@@ -22,38 +22,20 @@
  *
  */
 
-#include "thermald.h"
-#include <time.h>
+#ifndef THD_ZONE_KBL_AMD_GPU_H
+#define THD_ZONE_KBL_AMD_GPU_H
 
-typedef struct
-{
-	int valid;
-	double kp;
-	double ki;
-	double kd;
-}pid_param_t;
+#include "thd_zone.h"
 
-class cthd_pid {
-
-private:
-	double err_sum, last_err;
-	time_t last_time;
-	unsigned int target_temp;
-
+class cthd_zone_kbl_amdgpu: public cthd_zone {
+protected:
+	cthd_sensor *sensor;
+	csys_fs dts_sysfs;
 public:
-	cthd_pid();
-	double kp, ki, kd;
-	void set_pid_param(double _kp, double _ki, double _kd)
-	{
-		kp = _kp;
-		ki = _ki;
-		kd = _kd;
-	}
-	int pid_output(unsigned int curr_temp);
-	void set_target_temp(unsigned int temp) {
-		target_temp = temp;
-	}
-	void reset() {
-		err_sum = last_err = last_time = 0;
-	}
+	cthd_zone_kbl_amdgpu(int index);
+	int read_trip_points();
+	int zone_bind_sensors();
+	int read_cdev_trip_points();
 };
+
+#endif

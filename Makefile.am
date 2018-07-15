@@ -82,7 +82,13 @@ thermald_SOURCES = \
 		src/thd_cpu_default_binding.cpp \
 		src/thd_cdev_backlight.cpp \
 		src/thd_cdev_modem.cpp \
-		src/thd_int3400.cpp
+		src/thd_int3400.cpp \
+		src/thd_cdev_kbl_amdgpu.cpp \
+		src/thd_sensor_kbl_amdgpu_power.cpp \
+		src/thd_sensor_kbl_amdgpu_thermal.cpp \
+		src/thd_zone_kbl_g_mcp.cpp \
+		src/thd_sensor_kbl_g_mcp.cpp \
+		src/thd_zone_kbl_amdgpu.cpp
 
 man5_MANS = man/thermal-conf.xml.5
 man8_MANS = man/thermald.8

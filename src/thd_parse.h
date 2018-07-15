@@ -69,11 +69,18 @@ typedef struct {
 } thermal_sensor_t;
 
 typedef struct {
+	int dependency;
+	std::string cdev;
+	std::string state;
+}trip_cdev_depend_t;
+
+typedef struct {
 	std::string type;
 	int influence;
 	int sampling_period;
 	int target_state_valid;
 	int target_state;
+	pid_param_t pid_param;
 } trip_cdev_t;
 
 typedef struct {
@@ -83,6 +90,7 @@ typedef struct {
 	trip_control_type_t control_type;
 	int influence;
 	std::string sensor_type;
+	trip_cdev_depend_t dependency;
 	std::vector<trip_cdev_t> cdev_trips;
 } trip_point_t;
 
@@ -118,6 +126,7 @@ typedef struct {
 	std::string uuid;
 	std::string product_name;
 	int default_preference;
+	int polling_interval;
 	std::vector<thermal_sensor_t> sensors;
 	std::vector<thermal_zone_t> zones;
 	std::vector<cooling_dev_t> cooling_devs;
@@ -135,6 +144,7 @@ private:
 
 	int parse(xmlNode * a_node, xmlDoc *doc);
 	int parse_pid_values(xmlNode * a_node, xmlDoc *doc, pid_control_t *pid_ptr);
+	int parse_dependency_values(xmlNode * a_node, xmlDoc *doc, trip_cdev_depend_t *dependency);
 	int parse_new_trip_cdev(xmlNode * a_node, xmlDoc *doc,
 			trip_cdev_t *trip_cdev);
 
@@ -171,6 +181,7 @@ public:
 	int start_parse();
 	void dump_thermal_conf();
 	bool platform_matched();
+	int get_polling_interval();
 	int zone_count() {
 		return thermal_info_list[matched_thermal_info_index].zones.size();
 	}

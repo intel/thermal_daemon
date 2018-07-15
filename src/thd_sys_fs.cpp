@@ -180,6 +180,17 @@ bool csys_fs::exists(const std::string &path) {
 	return (bool) (stat((base_path + path).c_str(), &s) == 0);
 }
 
+int csys_fs::create() {
+
+	int fd = ::open(base_path.c_str(), O_CREAT | O_WRONLY | O_TRUNC, S_IRWXU);
+	if (fd < 0) {
+		thd_log_warn("sysfs open failed %s\n", base_path.c_str());
+		return -errno;
+	}
+
+	return 0;
+}
+
 bool csys_fs::exists() {
 	return csys_fs::exists("");
 }

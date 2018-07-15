@@ -21,12 +21,15 @@
 #define SERVICE_NAME            "org.freedesktop.thermald"
 #define MAX_TEMP_INPUT_COUNT 64
 
-#define CRITICAL_TRIP 0
-#define MAX_TRIP 1
-#define PASSIVE_TRIP 2
-#define ACTIVE_TRIP 3
-#define POLLING_TRIP 4
-#define INVALID_TRIP 5
+enum {
+	CRITICAL_TRIP,
+	HOT_TRIP,
+	MAX_TRIP,
+	PASSIVE_TRIP,
+	ACTIVE_TRIP,
+	POLLING_TRIP,
+	INVALID_TRIP
+};
 
 typedef struct {
     QString name;

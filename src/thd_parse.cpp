@@ -109,6 +109,35 @@ int cthd_parse::parser_init(std::string config_file) {
 	return THD_SUCCESS;
 }
 
+int cthd_parse::parse_dependency_values(xmlNode * a_node, xmlDoc *doc,
+		trip_cdev_depend_t *dependency) {
+	xmlNode *cur_node = NULL;
+	char *tmp_value;
+
+	for (cur_node = a_node; cur_node; cur_node = cur_node->next) {
+		if (cur_node->type == XML_ELEMENT_NODE) {
+			DEBUG_PARSER_PRINT("node type: Element, name: %s value: %s\n",
+					cur_node->name,
+					xmlNodeListGetString(doc, cur_node->xmlChildrenNode, 1));
+			tmp_value = (char*) xmlNodeListGetString(doc,
+					cur_node->xmlChildrenNode, 1);
+			if (tmp_value) {
+				if (!strcasecmp((const char*) cur_node->name,
+						"CoolingDeviceType")) {
+					dependency->cdev.assign(char_trim(tmp_value));
+				} else if (!strcasecmp((const char*) cur_node->name,
+						"CoolingDeviceState")) {
+					dependency->state.assign(char_trim(tmp_value));
+				}
+				dependency->dependency = 1;
+				xmlFree(tmp_value);
+			}
+		}
+	}
+
+	return THD_SUCCESS;
+}
+
 int cthd_parse::parse_new_trip_cdev(xmlNode * a_node, xmlDoc *doc,
 		trip_cdev_t *trip_cdev) {
 	xmlNode *cur_node = NULL;
@@ -132,6 +161,14 @@ int cthd_parse::parse_new_trip_cdev(xmlNode * a_node, xmlDoc *doc,
 						"TargetState")) {
 					trip_cdev->target_state = atoi(tmp_value);
 					trip_cdev->target_state_valid = 1;
+				} else if(!strcasecmp((const char*) cur_node->name,
+						"PidControl")) {
+					pid_control_t pid_params;
+					parse_pid_values(cur_node->children, doc, &pid_params);
+					trip_cdev->pid_param.kp = pid_params.Kp;
+					trip_cdev->pid_param.ki = pid_params.Ki;
+					trip_cdev->pid_param.kd = pid_params.Kd;
+					trip_cdev->pid_param.valid = 1;
 				}
 				xmlFree(tmp_value);
 			}
@@ -157,6 +194,9 @@ int cthd_parse::parse_new_trip_point(xmlNode * a_node, xmlDoc *doc,
 					cur_node->xmlChildrenNode, 1);
 			if (!strcasecmp((const char*) cur_node->name, "Temperature")) {
 				trip_pt->temperature = atoi(tmp_value);
+			} else if (!strcasecmp((const char*) cur_node->name,
+					"Power")) {
+				trip_pt->temperature = atoi(tmp_value);
 			} else if (!strcasecmp((const char*) cur_node->name, "Hyst")) {
 				trip_pt->hyst = atoi(tmp_value);
 			} else if (!strcasecmp((const char*) cur_node->name,
@@ -166,6 +206,7 @@ int cthd_parse::parse_new_trip_point(xmlNode * a_node, xmlDoc *doc,
 				trip_cdev.target_state_valid = 0;
 				trip_cdev.target_state = 0;
 				trip_cdev.type.clear();
+				memset(&trip_cdev.pid_param, 0, sizeof(pid_param_t));
 				parse_new_trip_cdev(cur_node->children, doc, &trip_cdev);
 				trip_pt->cdev_trips.push_back(trip_cdev);
 			} else if (!strcasecmp((const char*) cur_node->name,
@@ -180,6 +221,8 @@ int cthd_parse::parse_new_trip_point(xmlNode * a_node, xmlDoc *doc,
 					trip_pt->trip_pt_type = PASSIVE;
 				else if (type_val && !strcasecmp(type_val, "critical"))
 					trip_pt->trip_pt_type = CRITICAL;
+				else if (type_val && !strcasecmp(type_val, "hot"))
+					trip_pt->trip_pt_type = HOT;
 				else if (type_val && !strcasecmp(type_val, "max"))
 					trip_pt->trip_pt_type = MAX;
 			} else if (!strcasecmp((const char*) cur_node->name,
@@ -189,7 +232,11 @@ int cthd_parse::parse_new_trip_point(xmlNode * a_node, xmlDoc *doc,
 					trip_pt->control_type = SEQUENTIAL;
 				else
 					trip_pt->control_type = PARALLEL;
+			} else if (!strcasecmp((const char*) cur_node->name, "DependsOn")) {
+				parse_dependency_values(cur_node->children, doc,
+						&trip_pt->dependency);
 			}
+
 			if (tmp_value)
 				xmlFree(tmp_value);
 		}
@@ -213,6 +260,7 @@ int cthd_parse::parse_trip_points(xmlNode * a_node, xmlDoc *doc,
 				trip_pt.control_type = PARALLEL;
 				trip_pt.influence = 100;
 				trip_pt.sensor_type.clear();
+				trip_pt.dependency.dependency = 0;
 				if (parse_new_trip_point(cur_node->children, doc,
 						&trip_pt) == THD_SUCCESS)
 					info_ptr->trip_pts.push_back(trip_pt);
@@ -513,6 +561,9 @@ int cthd_parse::parse_new_platform_info(xmlNode * a_node, xmlDoc *doc,
 			} else if (!strcasecmp((const char*) cur_node->name,
 					"CoolingDevices")) {
 				parse_cooling_devs(cur_node->children, doc, info_ptr);
+			} else if (!strcasecmp((const char*) cur_node->name,
+				"PollingInterval")) {
+				info_ptr->polling_interval = atoi(tmp_value);
 			}
 			if (tmp_value)
 				xmlFree(tmp_value);
@@ -536,6 +587,7 @@ int cthd_parse::parse_new_platform(xmlNode * a_node, xmlDoc *doc,
 			if (!strcasecmp((const char*) cur_node->name, "Platform")) {
 				info.cooling_devs.clear();
 				info.zones.clear();
+				info.polling_interval = 0;
 				parse_new_platform_info(cur_node->children, doc, &info);
 				thermal_info_list.push_back(info);
 			}
@@ -606,6 +658,7 @@ void cthd_parse::dump_thermal_conf() {
 		thd_log_info("Name: %s\n", thermal_info_list[i].name.c_str());
 		thd_log_info("UUID: %s\n", thermal_info_list[i].uuid.c_str());
 		thd_log_info("type: %d\n", thermal_info_list[i].default_preference);
+		thd_log_info("Polling Interval: %d seconds\n", thermal_info_list[i].polling_interval);
 
 		for (unsigned int j = 0; j < thermal_info_list[i].sensors.size(); ++j) {
 			thd_log_info("\tSensor %u \n", j);
@@ -633,7 +686,7 @@ void cthd_parse::dump_thermal_conf() {
 			for (unsigned int k = 0;
 					k < thermal_info_list[i].zones[j].trip_pts.size(); ++k) {
 				thd_log_info("\t\t Trip Point %u \n", k);
-				thd_log_info("\t\t  temp %d \n",
+				thd_log_info("\t\t  temp/power %d \n",
 						thermal_info_list[i].zones[j].trip_pts[k].temperature);
 				thd_log_info("\t\t  trip type %d \n",
 						thermal_info_list[i].zones[j].trip_pts[k].trip_pt_type);
@@ -641,6 +694,10 @@ void cthd_parse::dump_thermal_conf() {
 						thermal_info_list[i].zones[j].trip_pts[k].hyst);
 				thd_log_info("\t\t  sensor type %s \n",
 						thermal_info_list[i].zones[j].trip_pts[k].sensor_type.c_str());
+				if (thermal_info_list[i].zones[j].trip_pts[k].dependency.dependency)
+					thd_log_info("\t\t  Dependency on %s:%s \n",
+							thermal_info_list[i].zones[j].trip_pts[k].dependency.cdev.c_str(),
+							thermal_info_list[i].zones[j].trip_pts[k].dependency.state.c_str());
 
 				for (unsigned int l = 0;
 						l
@@ -656,7 +713,11 @@ void cthd_parse::dump_thermal_conf() {
 					if (thermal_info_list[i].zones[j].trip_pts[k].cdev_trips[l].target_state_valid)
 						thd_log_info("\t\t\t  TargetState %d \n",
 								thermal_info_list[i].zones[j].trip_pts[k].cdev_trips[l].target_state);
-
+					if (thermal_info_list[i].zones[j].trip_pts[k].cdev_trips[l].pid_param.valid)
+						thd_log_info("\t\t\t  PID values %f:%f:%f \n",
+								thermal_info_list[i].zones[j].trip_pts[k].cdev_trips[l].pid_param.kp,
+								thermal_info_list[i].zones[j].trip_pts[k].cdev_trips[l].pid_param.ki,
+								thermal_info_list[i].zones[j].trip_pts[k].cdev_trips[l].pid_param.kd);
 				}
 			}
 		}
@@ -686,6 +747,10 @@ void cthd_parse::dump_thermal_conf() {
 
 		}
 	}
+}
+
+int cthd_parse::get_polling_interval() {
+	return thermal_info_list[matched_thermal_info_index].polling_interval;
 }
 
 bool cthd_parse::platform_matched() {

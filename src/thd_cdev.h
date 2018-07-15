@@ -79,7 +79,7 @@ private:
 			int temperature, int state, int arg);
 
 public:
-	static const int default_debounce_interval = 3; // In seconds
+	static const int default_debounce_interval = 2; // In seconds
 	cthd_cdev(unsigned int _index, std::string control_path) :
 			index(_index), cdev_sysfs(control_path.c_str()), trip_point(0), max_state(
 					0), min_state(0), curr_state(0), curr_pow(
@@ -93,7 +93,8 @@ public:
 	}
 	virtual int thd_cdev_set_state(int set_point, int target_temp,
 			int temperature, int state, int zone_id, int trip_id,
-				       int target_state_valid, int target_value, bool force);
+			int target_state_valid, int target_value,
+			pid_param_t *pid_param, cthd_pid& pid, bool force);
 
 	virtual int thd_cdev_set_min_state(int zone_id, int trip_id);
 
@@ -145,7 +146,11 @@ public:
 	virtual int get_max_state() {
 		return max_state;
 	}
-	;
+
+	virtual int get_phy_max_state() {
+		return max_state;
+	}
+
 	virtual int update() {
 		return 0;
 	}

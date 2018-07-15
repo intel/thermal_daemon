@@ -68,7 +68,7 @@ protected:
 	void thermal_zone_temp_change(int id, unsigned int temp, int pref);
 
 private:
-
+	void sort_and_update_poll_trip();
 public:
 	static const unsigned int def_async_trip_offset = 5000;
 	cthd_zone(int _index, std::string control_path, sensor_relate_t rel =

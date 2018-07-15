@@ -1,7 +1,7 @@
 /*
- * thd_pid.h: pid interface
+ * thd_sensor_kbl_amdgpu_power.h: Power Sensor for KBL-G amdgpu
  *
- * Copyright (C) 2013 Intel Corporation. All rights reserved.
+ * Copyright (C) 2018 Intel Corporation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License version
@@ -22,38 +22,16 @@
  *
  */
 
-#include "thermald.h"
-#include <time.h>
+#ifndef THD_SENSOR_KBL_G_MCP_H
+#define THD_SENSOR_KBL_G_MCP_H
 
-typedef struct
-{
-	int valid;
-	double kp;
-	double ki;
-	double kd;
-}pid_param_t;
+#include "thd_sensor.h"
 
-class cthd_pid {
-
+class cthd_sensor_kbl_g_mcp: public cthd_sensor {
 private:
-	double err_sum, last_err;
-	time_t last_time;
-	unsigned int target_temp;
-
 public:
-	cthd_pid();
-	double kp, ki, kd;
-	void set_pid_param(double _kp, double _ki, double _kd)
-	{
-		kp = _kp;
-		ki = _ki;
-		kd = _kd;
-	}
-	int pid_output(unsigned int curr_temp);
-	void set_target_temp(unsigned int temp) {
-		target_temp = temp;
-	}
-	void reset() {
-		err_sum = last_err = last_time = 0;
-	}
+	cthd_sensor_kbl_g_mcp(int index);
+	unsigned int read_temperature();
 };
+
+#endif

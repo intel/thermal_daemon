@@ -35,7 +35,7 @@
 #include <stdexcept>
 
 typedef enum {
-	CRITICAL, MAX, PASSIVE, ACTIVE, POLLING, INVALID_TRIP_TYPE
+	CRITICAL, HOT, MAX, PASSIVE, ACTIVE, POLLING, INVALID_TRIP_TYPE
 } trip_point_type_t;
 
 typedef enum {
@@ -43,7 +43,11 @@ typedef enum {
 	SEQUENTIAL  // one after other once the previous cdev reaches its max state
 } trip_control_type_t;
 
-#define TRIP_PT_INVALID_TARGET_STATE	INT_MAX
+#define TRIP_PT_INVALID_TARGET_STATE	INT32_MAX
+
+typedef enum {
+	EQUAL, GREATER, LESSER, LESSER_OR_EQUAL, GREATER_OR_EQUAL
+} trip_point_cdev_depend_rel_t;
 
 typedef struct {
 	cthd_cdev *cdev;
@@ -52,6 +56,8 @@ typedef struct {
 	time_t last_op_time;
 	int target_state_valid;
 	int target_state;
+	pid_param_t pid_param;
+	cthd_pid pid;
 } trip_pt_cdev_t;
 
 #define DEFAULT_SENSOR_ID	0xFFFF
@@ -59,6 +65,7 @@ typedef struct {
 static bool trip_cdev_sort(trip_pt_cdev_t cdev1, trip_pt_cdev_t cdev2) {
 	return (cdev1.influence > cdev2.influence);
 }
+
 
 class cthd_trip_point {
 private:
@@ -72,6 +79,10 @@ private:
 	int sensor_id;
 	bool trip_on;
 	bool poll_on;
+
+	cthd_cdev *depend_cdev;
+	int depend_cdev_state;
+	trip_point_cdev_depend_rel_t depend_cdev_state_rel;
 
 	bool check_duplicate(cthd_cdev *cdev, int *index) {
 		for (unsigned int i = 0; i < cdevs.size(); ++i) {
@@ -94,7 +105,7 @@ public:
 	void thd_trip_point_add_cdev(cthd_cdev &cdev, int influence,
 			int sampling_period = 0, int target_state_valid = 0,
 			int target_state =
-			TRIP_PT_INVALID_TARGET_STATE);
+			TRIP_PT_INVALID_TARGET_STATE, pid_param_t *pid_param = NULL);
 
 	void thd_trip_cdev_state_reset();
 	int thd_trip_point_value() {
@@ -132,6 +143,8 @@ public:
 		return cdevs.size();
 	}
 
+	void set_dependency(std::string cdev, std::string state_str);
+
 #ifndef ANDROID
 	trip_pt_cdev_t &get_cdev_at_index(unsigned int index) {
 		if (index < cdevs.size())
@@ -162,25 +175,42 @@ public:
 			_type_str = "active";
 		else if (type == POLLING)
 			_type_str = "polling";
+		else if (type == HOT)
+			_type_str = "hot";
 		else
 			_type_str = "invalid";
 		thd_log_info(
-				"index %d: type:%s temp:%u hyst:%u zone id:%d sensor id:%d cdev size:%lu\n",
+				"index %d: type:%s temp:%u hyst:%u zone id:%d sensor id:%d control_type:%d cdev size:%lu\n",
 				index, _type_str.c_str(), temp, hyst, zone_id, sensor_id,
-				(unsigned long) cdevs.size());
+				control_type, (unsigned long) cdevs.size());
+
+		if (depend_cdev) {
+			thd_log_info("Depends on cdev %s:%d:%d\n",
+					depend_cdev->get_cdev_type().c_str(), depend_cdev_state_rel,
+					depend_cdev_state);
+		}
+
 		for (unsigned int i = 0; i < cdevs.size(); ++i) {
+			thd_log_info("cdev[%u] %s, Sampling period: %d\n", i,
+					cdevs[i].cdev->get_cdev_type().c_str(),
+					cdevs[i].sampling_priod);
 			if (cdevs[i].target_state_valid)
-				thd_log_info("cdev[%u] %s target_state:%d\n", i,
-						cdevs[i].cdev->get_cdev_type().c_str(),
-						cdevs[i].target_state);
+				thd_log_info("\t target_state:%d\n", cdevs[i].target_state);
 			else
-				thd_log_info("cdev[%u] %s target_state:not defined\n", i,
-						cdevs[i].cdev->get_cdev_type().c_str());
+				thd_log_info("\t target_state:not defined\n");
+
+			if (cdevs[i].pid_param.valid)
+				thd_log_info("\t pid: kp=%g ki=%g kd=%g\n",
+						cdevs[i].pid_param.kp, cdevs[i].pid_param.ki,
+						cdevs[i].pid_param.kd);
 		}
 	}
 };
 
 static inline bool trip_sort(cthd_trip_point trip1, cthd_trip_point trip2) {
+	if (trip1.get_trip_type() != trip2.get_trip_type())
+		return false;
+
 	return (trip1.get_trip_temp() < trip2.get_trip_temp());
 }
 #endif

@@ -44,6 +44,8 @@ protected:
 
 private:
 	std::vector<int> thresholds;
+	int scale;
+
 	void enable_uevent();
 
 public:
@@ -75,6 +77,9 @@ public:
 	bool check_async_capable() {
 		return async_capable;
 	}
+	void set_scale(int _scale) {
+		scale = _scale;
+	}
 	virtual void sensor_dump() {
 		thd_log_info("sensor index:%d %s %s Async:%d \n", index,
 				type_str.c_str(), sensor_sysfs.get_base_path(), async_capable);
@@ -82,6 +87,8 @@ public:
 	// Even if sensors are capable of async, it is possible that it is not reliable enough
 	// at critical monitoring point. Sensors can be forced to go to poll mode at that temp
 	void sensor_poll_trip(bool status);
+
+	void sensor_fast_poll(bool status);
 
 	bool is_virtual() {
 		return virtual_sensor;
