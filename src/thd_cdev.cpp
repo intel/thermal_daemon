@@ -42,6 +42,8 @@
 int cthd_cdev::thd_cdev_exponential_controller(int set_point, int target_temp,
 		int temperature, int state, int zone_id) {
 
+	int control = state;
+
 	curr_state = get_curr_state();
 	if ((min_state < max_state && curr_state < min_state)
 			|| (min_state > max_state && curr_state > min_state))
@@ -75,7 +77,7 @@ int cthd_cdev::thd_cdev_exponential_controller(int set_point, int target_temp,
 					|| (min_state > max_state && state < max_state))
 				state = max_state;
 			thd_log_debug("op->device:%s %d\n", type_str.c_str(), state);
-			set_curr_state(state, zone_id);
+			set_curr_state(state, control);
 		}
 	} else {
 		curr_pow = 0;
@@ -88,11 +90,11 @@ int cthd_cdev::thd_cdev_exponential_controller(int set_point, int target_temp,
 					|| (min_state > max_state && state > min_state))
 				state = min_state;
 			thd_log_debug("op->device:%s %d\n", type_str.c_str(), state);
-			set_curr_state(state, zone_id);
+			set_curr_state(state, control);
 		} else {
 			thd_log_debug("op->device: force min %s %d\n", type_str.c_str(),
 					min_state);
-			set_curr_state(min_state, zone_id);
+			set_curr_state(min_state, control);
 		}
 	}
 
@@ -156,9 +158,10 @@ int cthd_cdev::thd_cdev_set_state(int set_point, int target_temp,
 
 	time(&tm);
 	thd_log_info(
-			">>thd_cdev_set_state index:%d state:%d :%d:%d:%d:%d force:%d\n",
+			">>thd_cdev_set_state index:%d state:%d :zone:%d trip_id:%d target_state_valid:%d target_value :%d force:%d\n",
 			index, state, zone_id, trip_id, target_state_valid, target_value,
 			force);
+
 	if (!force && last_state == state && state
 			&& (tm - last_action_time) <= debounce_interval) {
 		thd_log_debug(
@@ -166,7 +169,6 @@ int cthd_cdev::thd_cdev_set_state(int set_point, int target_temp,
 				set_point, temperature, index, get_curr_state(), max_state);
 		return THD_SUCCESS;
 	}
-
 	last_state = state;
 
 	if (state) {
@@ -267,7 +269,7 @@ int cthd_cdev::thd_cdev_set_state(int set_point, int target_temp,
 	}
 
 	if (target_state_valid) {
-		set_curr_state_raw(target_value, zone_id);
+		set_curr_state_raw(target_value, state);
 		curr_state = target_value;
 		ret = THD_SUCCESS;
 		thd_log_info("Set : %d, %d, %d, %d, %d\n", set_point, temperature,
@@ -289,7 +291,7 @@ int cthd_cdev::thd_cdev_set_state(int set_point, int target_temp,
 			if (ret > get_min_state())
 				ret = get_min_state();
 		}
-		set_curr_state_raw(ret, zone_id);
+		set_curr_state_raw(ret, state);
 		thd_log_info("Set pid : %d, %d, %d, %d, %d\n", set_point, temperature,
 				index, get_curr_state(), max_state);
 		ret = THD_SUCCESS;
@@ -315,7 +317,7 @@ int cthd_cdev::thd_cdev_set_state(int set_point, int target_temp,
 				ret = get_min_state();
 		}
 
-		set_curr_state_raw(ret, zone_id);
+		set_curr_state_raw(ret, state);
 		thd_log_info("Set : %d, %d, %d, %d, %d\n", set_point, temperature,
 				index, get_curr_state(), max_state);
 		ret = THD_SUCCESS;

@@ -29,7 +29,7 @@
  * rapl_power_dec_percent, from the max state.
  *
  */
-void cthd_sysfs_cdev_rapl::set_curr_state(int state, int arg) {
+void cthd_sysfs_cdev_rapl::set_curr_state(int state, int control) {
 
 	std::stringstream tc_state_dev;
 
@@ -45,20 +45,22 @@ void cthd_sysfs_cdev_rapl::set_curr_state(int state, int arg) {
 		return;
 	}
 
-	if (state < inc_dec_val) {
+	if (control == 0 || state >= min_state) {
+		if (power_on_constraint_0_pwr)
+			new_state = power_on_constraint_0_pwr;
+		else
+			new_state = min_state;
+
 		curr_state = min_state;
 		cdev_sysfs.write("enabled", "0");
-		new_state = min_state;
+		constrained = false;
 	} else {
-		if (dynamic_phy_max_enable) {
-			if (!calculate_phy_max()) {
-				curr_state = state;
-				return;
-			}
+		if (!dynamic_phy_max_enable) {
+			curr_state = state;
 		}
 		new_state = state;
-		curr_state = state;
 		cdev_sysfs.write("enabled", "1");
+		constrained = true;
 	}
 	state_str << new_state;
 	thd_log_debug("set cdev state index %d state %d wr:%d\n", index, state,
@@ -100,6 +102,13 @@ bool cthd_sysfs_cdev_rapl::calculate_phy_max() {
 }
 
 int cthd_sysfs_cdev_rapl::get_curr_state() {
+	if (dynamic_phy_max_enable) {
+		if (constrained)
+			return thd_engine->rapl_power_meter.rapl_action_get_power(
+					PACKAGE);
+		else
+			return min_state;
+	}
 	return curr_state;
 }
 
@@ -155,11 +164,26 @@ int cthd_sysfs_cdev_rapl::update() {
 			thd_log_info("%s:powercap RAPL invalid max power limit range \n",
 					domain_name.c_str());
 			thd_log_info("Calculate dynamically phy_max \n");
-			phy_max = 0;
+
+			power_on_constraint_0_pwr = phy_max;
+
+			phy_max = max_state = 0;
+			curr_state = min_state = rapl_max_sane_phy_max;
 			thd_engine->rapl_power_meter.rapl_start_measure_power();
-			min_state = 0;
 			set_inc_dec_value(-rapl_min_default_step);
 			dynamic_phy_max_enable = true;
+
+			std::stringstream time_window;
+			temp_str.str(std::string());
+			temp_str << "constraint_" << _index << "_time_window_us";
+			if (!cdev_sysfs.exists(temp_str.str())) {
+				thd_log_info("powercap RAPL no time_window_us %s \n",
+						temp_str.str().c_str());
+				return THD_ERROR;
+			}
+			time_window << def_rapl_time_window;
+			cdev_sysfs.write(temp_str.str(), time_window.str());
+
 			return THD_SUCCESS;
 		}
 

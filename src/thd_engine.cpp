@@ -95,8 +95,6 @@ void cthd_engine::thd_engine_thread() {
 		if (terminate)
 			break;
 
-		rapl_power_meter.rapl_measure_power();
-
 		n = poll(poll_fds, poll_fd_cnt, poll_timeout_msec);
 		thd_log_debug("poll exit %d polls_fd event %d %d\n", n,
 				poll_fds[0].revents, poll_fds[1].revents);
@@ -105,6 +103,7 @@ void cthd_engine::thd_engine_thread() {
 			continue;
 		}
 		time(&tm);
+		rapl_power_meter.rapl_measure_power();
 
 		if (n == 0 || (tm - thz_last_temp_ind_time) >= poll_timeout_sec) {
 			if (!status) {
