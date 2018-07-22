@@ -149,7 +149,7 @@ static bool sort_clamp_values_dec(zone_trip_limits_t limit_1,
  */
 
 int cthd_cdev::thd_cdev_set_state(int set_point, int target_temp,
-		int temperature, int state, int zone_id, int trip_id,
+		int temperature, int hard_target, int state, int zone_id, int trip_id,
 		int target_state_valid, int target_value,
 		pid_param_t *pid_param, cthd_pid& pid, bool force) {
 
@@ -158,9 +158,9 @@ int cthd_cdev::thd_cdev_set_state(int set_point, int target_temp,
 
 	time(&tm);
 	thd_log_info(
-			">>thd_cdev_set_state index:%d state:%d :zone:%d trip_id:%d target_state_valid:%d target_value :%d force:%d\n",
-			index, state, zone_id, trip_id, target_state_valid, target_value,
-			force);
+			">>thd_cdev_set_state temperature %d:%d index:%d state:%d :zone:%d trip_id:%d target_state_valid:%d target_value :%d force:%d\n",
+			target_temp, temperature, index, state, zone_id, trip_id,
+			target_state_valid, target_value, force);
 
 	if (!force && last_state == state && state
 			&& (tm - last_action_time) <= debounce_interval) {
@@ -274,6 +274,12 @@ int cthd_cdev::thd_cdev_set_state(int set_point, int target_temp,
 		ret = THD_SUCCESS;
 		thd_log_info("Set : %d, %d, %d, %d, %d\n", set_point, temperature,
 				index, get_curr_state(), max_state);
+	} else if (hard_target) {
+		ret = get_max_state();
+		set_curr_state_raw(ret, state);
+		thd_log_info("Set max : %d, %d, %d, %d, %d\n", set_point, temperature,
+				index, get_curr_state(), max_state);
+		ret = THD_SUCCESS;
 
 	} else if (pid_param && pid_param->valid) {
 		// Handle PID param unique to a trip
@@ -335,7 +341,8 @@ int cthd_cdev::thd_cdev_set_state(int set_point, int target_temp,
 int cthd_cdev::thd_cdev_set_min_state(int zone_id, int trip_id) {
 	trend_increase = false;
 	cthd_pid unused;
-	thd_cdev_set_state(0, 0, 0, 0, zone_id, trip_id, 1, min_state, NULL, unused, true);
+	thd_cdev_set_state(0, 0, 0, 0, 0, zone_id, trip_id, 1, min_state, NULL,
+			unused, true);
 
 	return THD_SUCCESS;
 }
