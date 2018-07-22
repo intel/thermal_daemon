@@ -32,7 +32,6 @@
 #include "thd_cdev_cpufreq.h"
 #include "thd_cdev_rapl.h"
 #include "thd_cdev_intel_pstate_driver.h"
-#include "thd_zone_surface.h"
 #include "thd_cdev_rapl_dram.h"
 #include "thd_sensor_virtual.h"
 #include "thd_cdev_backlight.h"
@@ -473,25 +472,6 @@ int cthd_engine_default::read_thermal_zones() {
 		}
 	}
 	current_zone_index = index;
-
-#ifdef ACTIVATE_SURFACE
-//	Enable when skin sensors are standardized
-	cthd_zone *surface;
-	surface = search_zone("Surface");
-
-	if (!surface || (surface && !surface->zone_active_status())) {
-		cthd_zone_surface *zone = new cthd_zone_surface(index);
-		if (zone->zone_update() == THD_SUCCESS) {
-			zones.push_back(zone);
-			++index;
-			zone->set_zone_active();
-		} else
-		delete zone;
-	} else {
-		thd_log_info("TSKN sensor was activated by config \n");
-	}
-	current_zone_index = index;
-#endif
 
 	if (!zones.size()) {
 		thd_log_info("No Thermal Zones found \n");
