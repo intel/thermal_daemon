@@ -26,12 +26,6 @@ int cthd_zone_dynamic::read_trip_points() {
 	cthd_trip_point trip_pt(0, trip_type, trip_temp, 0, index,
 			sensor->get_index());
 
-	if (trip_type == MAX) {
-		thd_model.set_max_temperature(trip_temp);
-		if (thd_model.get_set_point()) {
-			trip_pt.update_trip_temp(thd_model.get_set_point());
-		}
-	}
 	trip_points.push_back(trip_pt);
 
 	cthd_cdev *cdev = thd_engine->search_cdev(cdev_name);

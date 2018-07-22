@@ -33,7 +33,6 @@
 #include "thd_cdev.h"
 #include "thd_trip_point.h"
 #include "thd_sensor.h"
-#include "thd_model.h"
 
 typedef struct {
 	int zone;
@@ -62,7 +61,6 @@ protected:
 	std::string type_str;
 	std::vector<cthd_sensor *> sensors;
 	sensor_relate_t sensor_rel;
-	cthd_model thd_model;
 
 	virtual int zone_bind_sensors() = 0;
 	void thermal_zone_temp_change(int id, unsigned int temp, int pref);
