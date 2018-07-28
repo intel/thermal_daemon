@@ -60,13 +60,6 @@ int cthd_zone_generic::read_trip_points() {
 			trip_pt.set_dependency(trip_pt_config.dependency.cdev, trip_pt_config.dependency.state);
 		}
 
-		if (trip_pt_config.trip_pt_type == MAX) {
-			thd_model.set_max_temperature(trip_pt_config.temperature);
-			if (thd_model.get_set_point()) {
-				trip_pt.update_trip_temp(thd_model.get_set_point());
-			}
-		}
-
 		// bind cdev
 		for (unsigned int j = 0; j < trip_pt_config.cdev_trips.size(); ++j) {
 			cthd_cdev *cdev = thd_engine->search_cdev(

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-CONF_FILE="/usr/local/var/run/thermald/thermal-conf.xml.auto"
+CONF_FILE="/var/run/thermald/thermal-conf.xml.auto"
 
 #Test 1: Simple association: one zone to one cooling device
 # check if cdev state reach max when temp >= 40C and when

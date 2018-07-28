@@ -165,7 +165,20 @@ int cthd_sysfs_cdev_rapl::update() {
 					domain_name.c_str());
 			thd_log_info("Calculate dynamically phy_max \n");
 
-			power_on_constraint_0_pwr = phy_max;
+			std::stringstream temp_power_str;
+			temp_power_str.str(std::string());
+			temp_power_str << "constraint_" << _index << "_power_limit_uw";
+			if (!cdev_sysfs.exists(temp_power_str.str())) {
+				thd_log_info("powercap RAPL no  power limit uw %s \n",
+					temp_str.str().c_str());
+				return THD_ERROR;
+			}
+
+			if (cdev_sysfs.read(temp_power_str.str(), &power_on_constraint_0_pwr) <= 0) {
+				thd_log_info("powercap RAPL invalid max power limit range \n");
+			}
+
+			thd_log_debug("power_on_constraint_0_pwr %d\n", power_on_constraint_0_pwr);
 
 			phy_max = max_state = 0;
 			curr_state = min_state = rapl_max_sane_phy_max;

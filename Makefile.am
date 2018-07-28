@@ -59,12 +59,10 @@ thermald_SOURCES = \
 		src/thd_sys_fs.cpp \
 		src/thd_trip_point.cpp \
 		src/thd_zone.cpp \
-		src/thd_zone_surface.cpp \
 		src/thd_zone_cpu.cpp \
 		src/thd_zone_therm_sys_fs.cpp \
 		src/thd_zone_dynamic.cpp \
 		src/thd_preference.cpp \
-		src/thd_model.cpp \
 		src/thd_parse.cpp \
 		src/thd_sensor.cpp \
 		src/thd_sensor_virtual.cpp \
