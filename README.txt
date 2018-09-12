@@ -78,6 +78,17 @@ If using systemd, use
 
 Releases
 
+Release 1.8
+- Support of KBL-G with discrete GPU
+- Fast removal of any cooling action which was applied once
+temperature is normal
+- Android support
+- Add Hot trip point, which when reached just calls "suspend"
+- Adding new tag "DependsOn" which enable/disable trip based on some other trip
+- Polling interval can be configured via thermal xml config
+- Per trip PID control
+- Simplify RAPL cooling device
+
 Release 1.7.2
 - Workwround for platform with invalid thermal table
 - Error printing for RAPL constraint sysfs read on failure
