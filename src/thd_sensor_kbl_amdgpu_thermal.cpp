@@ -49,5 +49,6 @@ cthd_sensor_kbl_amdgpu_thermal::cthd_sensor_kbl_amdgpu_thermal(int index) :
 				ifs.close();
 			}
 		}
+		closedir(dir);
 	}
 }

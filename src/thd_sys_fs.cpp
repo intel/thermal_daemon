@@ -187,7 +187,7 @@ int csys_fs::create() {
 		thd_log_warn("sysfs open failed %s\n", base_path.c_str());
 		return -errno;
 	}
-
+	close(fd);
 	return 0;
 }
 

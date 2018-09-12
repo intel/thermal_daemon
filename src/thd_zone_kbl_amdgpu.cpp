@@ -52,7 +52,7 @@ int cthd_zone_kbl_amdgpu::read_trip_points() {
 
 	struct dirent *entry;
 	const std::string base_path = "/sys/class/hwmon/";
-	int crit_temp;
+	int crit_temp = 0;
 
 	thd_log_info("cthd_zone_kbl_amdgpu::read_trip_points \n");
 
@@ -84,7 +84,11 @@ int cthd_zone_kbl_amdgpu::read_trip_points() {
 				ifs.close();
 			}
 		}
+		closedir(dir);
 	}
+
+	if (!crit_temp)
+		return THD_ERROR;
 
 	cdev = thd_engine->search_cdev("amdgpu");
 	if (!cdev) {

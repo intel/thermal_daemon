@@ -51,5 +51,6 @@ cthd_sensor_kbl_amdgpu_power::cthd_sensor_kbl_amdgpu_power(int index) :
 				ifs.close();
 			}
 		}
+		closedir(dir);
 	}
 }

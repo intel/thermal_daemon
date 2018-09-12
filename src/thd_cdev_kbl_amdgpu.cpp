@@ -48,6 +48,7 @@ cthd_cdev_kgl_amdgpu::cthd_cdev_kgl_amdgpu(unsigned int _index, int _cpu_index) 
 				ifs.close();
 			}
 		}
+		closedir(dir);
 	}
 }
 

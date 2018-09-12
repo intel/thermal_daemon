@@ -52,6 +52,7 @@ cthd_sensor_kbl_g_mcp::cthd_sensor_kbl_g_mcp(int index) :
 				ifs.close();
 			}
 		}
+		closedir(dir);
 	}
 }
 
@@ -60,11 +61,13 @@ unsigned int cthd_sensor_kbl_g_mcp::read_temperature()
 	csys_fs sysfs;
 	std::string buffer;
 	int gpu_power;
+	int ret;
 
 	thd_engine->rapl_power_meter.rapl_start_measure_power();
 
-	sensor_sysfs.read("", buffer);
-	std::istringstream(buffer) >> gpu_power;
+	ret = sensor_sysfs.read("", &gpu_power);
+	if (ret <= 0)
+		gpu_power = 0;
 
 	unsigned int pkg_power = thd_engine->rapl_power_meter.rapl_action_get_power(
 					PACKAGE);
