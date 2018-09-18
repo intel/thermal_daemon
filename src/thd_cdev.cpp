@@ -258,6 +258,8 @@ int cthd_cdev::thd_cdev_set_state(int set_point, int target_temp,
 				if (_target_state_valid)
 					target_value = get_min_state();
 			}
+		} else {
+			target_state_valid = 0;
 		}
 	}
 
