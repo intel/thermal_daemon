@@ -103,7 +103,7 @@ int cthd_zone::read_user_set_psv_temp() {
 }
 
 void cthd_zone::sort_and_update_poll_trip() {
-	thd_log_debug("sort_and_update_poll_trip: trip_points_size =%lu\n",
+	thd_log_debug("sort_and_update_poll_trip: trip_points_size =%zu\n",
 			trip_points.size());
 	if (trip_points.size()) {
 		unsigned int polling_trip = 0;
