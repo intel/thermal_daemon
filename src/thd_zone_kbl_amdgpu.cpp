@@ -71,12 +71,13 @@ int cthd_zone_kbl_amdgpu::read_trip_points() {
 
 						if (!hwmon_sysfs.exists("temp1_crit")) {
 							thd_log_info("path failed %s\n", path.c_str());
-
+							closedir(dir);
 							return THD_ERROR;
 						}
 						int ret = hwmon_sysfs.read("temp1_crit", &crit_temp);
 						if (ret < 0) {
 							thd_log_info("crit temp failed\n");
+							closedir(dir);
 							return THD_ERROR;
 						}
 					}
