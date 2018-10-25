@@ -63,6 +63,7 @@ public:
 	}
 	virtual void set_curr_state(int state, int arg);
 	virtual int get_curr_state();
+	virtual int get_curr_state(bool read_again);
 	virtual int get_max_state();
 	virtual int update();
 	virtual void set_curr_state_raw(int state, int arg);

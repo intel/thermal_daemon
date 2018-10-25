@@ -112,6 +112,11 @@ int cthd_sysfs_cdev_rapl::get_curr_state() {
 	return curr_state;
 }
 
+int cthd_sysfs_cdev_rapl::get_curr_state(bool read_again) {
+	thd_engine->rapl_power_meter.rapl_start_measure_power();
+	return thd_engine->rapl_power_meter.rapl_action_get_power(PACKAGE);
+}
+
 int cthd_sysfs_cdev_rapl::get_max_state() {
 
 	return max_state;
