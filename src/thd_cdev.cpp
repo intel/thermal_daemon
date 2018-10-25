@@ -287,7 +287,7 @@ int cthd_cdev::thd_cdev_set_state(int set_point, int target_temp,
 		// Handle PID param unique to a trip
 		pid.set_target_temp(target_temp);
 		ret = pid.pid_output(temperature);
-		ret += get_min_state();
+		ret += get_curr_state(true);
 		if (get_min_state() < get_max_state()) {
 			if (ret > get_max_state())
 				ret = get_max_state();
