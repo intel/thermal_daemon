@@ -42,6 +42,8 @@
 #include "thd_zone_kbl_amdgpu.h"
 #include "thd_sensor_kbl_g_mcp.h"
 #include "thd_zone_kbl_g_mcp.h"
+#include "thd_cdev_kbl_amdgpu.h"
+#include "thd_zone_kbl_g_mcp.h"
 
 #ifdef GLIB_SUPPORT
 #include "thd_cdev_modem.h"
@@ -380,6 +382,17 @@ int cthd_engine_default::read_thermal_zones() {
 					"Thermal DTS or hwmon: No Zones present Need to configure manually\n");
 		}
 	}
+
+
+	cthd_zone_kbl_g_mcp *mcp = new cthd_zone_kbl_g_mcp(index);
+	if (mcp->zone_update() == THD_SUCCESS) {
+		mcp->set_zone_active();
+		zones.push_back(mcp);
+		++index;
+	} else {
+		delete mcp;
+	}
+
 	current_zone_index = index;
 
 	// Add from XML thermal zone
@@ -442,7 +455,8 @@ int cthd_engine_default::read_thermal_zones() {
 										trip_pt_config.cdev_trips[j].influence,
 										trip_pt_config.cdev_trips[j].sampling_period,
 										trip_pt_config.cdev_trips[j].target_state_valid,
-										trip_pt_config.cdev_trips[j].target_state);
+										trip_pt_config.cdev_trips[j].target_state,
+										&trip_pt_config.cdev_trips[j].pid_param);
 								zone->zone_cdev_set_binded();
 								activate = true;
 							}
@@ -677,6 +691,18 @@ int cthd_engine_default::read_cooling_devices() {
 			++current_cdev_index;
 		} else
 			delete backlight_dev;
+	}
+
+	cthd_cdev *cdev_amdgpu = search_cdev("amdgpu");
+	if (!cdev_amdgpu) {
+		cthd_cdev_kgl_amdgpu *cdev_amdgpu = new cthd_cdev_kgl_amdgpu(
+				current_cdev_index, 0);
+		cdev_amdgpu->set_cdev_type("amdgpu");
+		if (cdev_amdgpu->update() == THD_SUCCESS) {
+			cdevs.push_back(cdev_amdgpu);
+			++current_cdev_index;
+		} else
+			delete cdev_amdgpu;
 	}
 
 	// Dump all cooling devices
