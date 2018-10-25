@@ -27,7 +27,7 @@
 #include "thd_cdev_kbl_amdgpu.h"
 
 cthd_cdev_kgl_amdgpu::cthd_cdev_kgl_amdgpu(unsigned int _index, int _cpu_index) :
-		cthd_cdev(_index, "") {
+		cthd_cdev(_index, ""),activated(0) {
 	DIR *dir;
 	struct dirent *entry;
 	const std::string base_path = "/sys/class/hwmon/";
@@ -52,12 +52,18 @@ cthd_cdev_kgl_amdgpu::cthd_cdev_kgl_amdgpu(unsigned int _index, int _cpu_index) 
 	}
 }
 
-int cthd_cdev_kgl_amdgpu::get_curr_state()
-{
+int cthd_cdev_kgl_amdgpu::get_curr_state() {
+	if (activated)
+		return get_curr_state(true);
+	else
+		return min_state;
+}
+
+int cthd_cdev_kgl_amdgpu::get_curr_state(bool read_again) {
 	int ret;
 	int state;
 
-	ret = cdev_sysfs.read("power1_cap", &state);
+	ret = cdev_sysfs.read("power1_average", &state);
 	if (ret < 0) {
 		return min_state;
 	}
@@ -72,10 +78,17 @@ int cthd_cdev_kgl_amdgpu::get_curr_state()
 void cthd_cdev_kgl_amdgpu::set_curr_state(int state, int arg) {
 	int new_state = state;
 
+	if (!arg) {
+		activated = 0;
+		thd_log_info("ignore \n");
+		new_state = min_state;
+	} else
+		activated = 1;
+
 	// When power1_cap = 0 is written to sysfs it changes to max powercap value
 	// So this is a workaround
 	if (state == 0)
-		new_state = 1000000;
+		new_state = min_state;
 
 	if (cdev_sysfs.write("power1_cap", new_state) > 0)
 		curr_state = state;

@@ -29,11 +29,13 @@
 
 class cthd_cdev_kgl_amdgpu: public cthd_cdev {
 private:
+	int activated;
 public:
 	cthd_cdev_kgl_amdgpu(unsigned int _index, int _cpu_index);
 	void set_curr_state(int state, int arg);
 	void set_curr_state_raw(int state, int arg);
 	int get_curr_state();
+	int get_curr_state(bool read_again);
 	int update();
 	int map_target_state(int target_valid, int target_state);
 	int get_phy_max_state();
