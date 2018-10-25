@@ -139,6 +139,10 @@ public:
 		return curr_state;
 	}
 
+	virtual int get_curr_state(bool read_again) {
+		return curr_state;
+	}
+
 	virtual int get_min_state() {
 		return min_state;
 	}
