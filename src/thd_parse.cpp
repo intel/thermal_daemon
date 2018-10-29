@@ -185,6 +185,7 @@ int cthd_parse::parse_new_trip_point(xmlNode * a_node, xmlDoc *doc,
 
 	trip_cdev_t trip_cdev;
 	trip_pt->temperature = 0;
+	trip_pt->hyst = 0;
 	trip_pt->trip_pt_type = ACTIVE;
 
 	for (cur_node = a_node; cur_node; cur_node = cur_node->next) {
@@ -192,53 +193,53 @@ int cthd_parse::parse_new_trip_point(xmlNode * a_node, xmlDoc *doc,
 			DEBUG_PARSER_PRINT("node type: Element, name: %s value: %s\n", cur_node->name, xmlNodeListGetString(doc, cur_node->xmlChildrenNode, 1));
 			tmp_value = (char *) xmlNodeListGetString(doc,
 					cur_node->xmlChildrenNode, 1);
-			if (!strcasecmp((const char*) cur_node->name, "Temperature")) {
-				trip_pt->temperature = atoi(tmp_value);
-			} else if (!strcasecmp((const char*) cur_node->name,
-					"Power")) {
-				trip_pt->temperature = atoi(tmp_value);
-			} else if (!strcasecmp((const char*) cur_node->name, "Hyst")) {
-				trip_pt->hyst = atoi(tmp_value);
-			} else if (!strcasecmp((const char*) cur_node->name,
-					"CoolingDevice")) {
-				trip_cdev.influence = 0;
-				trip_cdev.sampling_period = 0;
-				trip_cdev.target_state_valid = 0;
-				trip_cdev.target_state = 0;
-				trip_cdev.type.clear();
-				memset(&trip_cdev.pid_param, 0, sizeof(pid_param_t));
-				parse_new_trip_cdev(cur_node->children, doc, &trip_cdev);
-				trip_pt->cdev_trips.push_back(trip_cdev);
-			} else if (!strcasecmp((const char*) cur_node->name,
-					"SensorType")) {
-				trip_pt->sensor_type.assign(tmp_value);
-				string_trim(trip_pt->sensor_type);
-			} else if (!strcasecmp((const char*) cur_node->name, "type")) {
-				char *type_val = char_trim(tmp_value);
-				if (type_val && !strcasecmp(type_val, "active"))
-					trip_pt->trip_pt_type = ACTIVE;
-				else if (type_val && !strcasecmp(type_val, "passive"))
-					trip_pt->trip_pt_type = PASSIVE;
-				else if (type_val && !strcasecmp(type_val, "critical"))
-					trip_pt->trip_pt_type = CRITICAL;
-				else if (type_val && !strcasecmp(type_val, "hot"))
-					trip_pt->trip_pt_type = HOT;
-				else if (type_val && !strcasecmp(type_val, "max"))
-					trip_pt->trip_pt_type = MAX;
-			} else if (!strcasecmp((const char*) cur_node->name,
-					"ControlType")) {
-				char *ctrl_val = char_trim(tmp_value);
-				if (ctrl_val && !strcasecmp(ctrl_val, "SEQUENTIAL"))
-					trip_pt->control_type = SEQUENTIAL;
-				else
-					trip_pt->control_type = PARALLEL;
-			} else if (!strcasecmp((const char*) cur_node->name, "DependsOn")) {
-				parse_dependency_values(cur_node->children, doc,
-						&trip_pt->dependency);
-			}
-
-			if (tmp_value)
+			if (tmp_value) {
+				if (!strcasecmp((const char*) cur_node->name, "Temperature")) {
+					trip_pt->temperature = atoi(tmp_value);
+				} else if (!strcasecmp((const char*) cur_node->name,
+							"Power")) {
+					trip_pt->temperature = atoi(tmp_value);
+				} else if (!strcasecmp((const char*) cur_node->name, "Hyst")) {
+					trip_pt->hyst = atoi(tmp_value);
+				} else if (!strcasecmp((const char*) cur_node->name,
+							"CoolingDevice")) {
+					trip_cdev.influence = 0;
+					trip_cdev.sampling_period = 0;
+					trip_cdev.target_state_valid = 0;
+					trip_cdev.target_state = 0;
+					trip_cdev.type.clear();
+					memset(&trip_cdev.pid_param, 0, sizeof(pid_param_t));
+					parse_new_trip_cdev(cur_node->children, doc, &trip_cdev);
+					trip_pt->cdev_trips.push_back(trip_cdev);
+				} else if (!strcasecmp((const char*) cur_node->name,
+							"SensorType")) {
+					trip_pt->sensor_type.assign(tmp_value);
+					string_trim(trip_pt->sensor_type);
+				} else if (!strcasecmp((const char*) cur_node->name, "type")) {
+					char *type_val = char_trim(tmp_value);
+					if (type_val && !strcasecmp(type_val, "active"))
+						trip_pt->trip_pt_type = ACTIVE;
+					else if (type_val && !strcasecmp(type_val, "passive"))
+						trip_pt->trip_pt_type = PASSIVE;
+					else if (type_val && !strcasecmp(type_val, "critical"))
+						trip_pt->trip_pt_type = CRITICAL;
+					else if (type_val && !strcasecmp(type_val, "hot"))
+						trip_pt->trip_pt_type = HOT;
+					else if (type_val && !strcasecmp(type_val, "max"))
+						trip_pt->trip_pt_type = MAX;
+				} else if (!strcasecmp((const char*) cur_node->name,
+							"ControlType")) {
+					char *ctrl_val = char_trim(tmp_value);
+					if (ctrl_val && !strcasecmp(ctrl_val, "SEQUENTIAL"))
+						trip_pt->control_type = SEQUENTIAL;
+					else
+						trip_pt->control_type = PARALLEL;
+				} else if (!strcasecmp((const char*) cur_node->name, "DependsOn")) {
+					parse_dependency_values(cur_node->children, doc,
+							&trip_pt->dependency);
+				}
 				xmlFree(tmp_value);
+			}
 		}
 	}
 
@@ -529,44 +530,46 @@ int cthd_parse::parse_new_platform_info(xmlNode * a_node, xmlDoc *doc,
 	char *tmp_value;
 
 	info_ptr->default_preference = PREF_ENERGY_CONSERVE;
+	info_ptr->polling_interval = 0;
 
 	for (cur_node = a_node; cur_node; cur_node = cur_node->next) {
 		if (cur_node->type == XML_ELEMENT_NODE) {
 			DEBUG_PARSER_PRINT("node type: Element, name: %s value: %s\n", cur_node->name, xmlNodeListGetString(doc, cur_node->xmlChildrenNode, 1));
 			tmp_value = (char*) xmlNodeListGetString(doc,
 					cur_node->xmlChildrenNode, 1);
-			if (!strcasecmp((const char*) cur_node->name, "uuid")) {
-				info_ptr->uuid.assign((const char*) tmp_value);
-				string_trim(info_ptr->uuid);
-			} else if (!strcasecmp((const char*) cur_node->name,
-					"ProductName")) {
-				info_ptr->product_name.assign((const char*) tmp_value);
-				string_trim(info_ptr->product_name);
-			} else if (!strcasecmp((const char*) cur_node->name, "Name")) {
-				info_ptr->name.assign((const char*) tmp_value);
-				string_trim(info_ptr->name);
-			} else if (!strcasecmp((const char*) cur_node->name,
-					"Preference")) {
-				char *pref_val = char_trim(tmp_value);
-				if (pref_val && !strcasecmp(pref_val, "PERFORMANCE"))
-					info_ptr->default_preference = PREF_PERFORMANCE;
-				else
-					info_ptr->default_preference = PREF_ENERGY_CONSERVE;
-			} else if (!strcasecmp((const char*) cur_node->name,
-					"ThermalZones")) {
-				parse_thermal_zones(cur_node->children, doc, info_ptr);
-			} else if (!strcasecmp((const char*) cur_node->name,
-					"ThermalSensors")) {
-				parse_thermal_sensors(cur_node->children, doc, info_ptr);
-			} else if (!strcasecmp((const char*) cur_node->name,
-					"CoolingDevices")) {
-				parse_cooling_devs(cur_node->children, doc, info_ptr);
-			} else if (!strcasecmp((const char*) cur_node->name,
-				"PollingInterval")) {
-				info_ptr->polling_interval = atoi(tmp_value);
-			}
-			if (tmp_value)
+			if (tmp_value) {
+				if (!strcasecmp((const char*) cur_node->name, "uuid")) {
+					info_ptr->uuid.assign((const char*) tmp_value);
+					string_trim(info_ptr->uuid);
+				} else if (!strcasecmp((const char*) cur_node->name,
+							"ProductName")) {
+					info_ptr->product_name.assign((const char*) tmp_value);
+					string_trim(info_ptr->product_name);
+				} else if (!strcasecmp((const char*) cur_node->name, "Name")) {
+					info_ptr->name.assign((const char*) tmp_value);
+					string_trim(info_ptr->name);
+				} else if (!strcasecmp((const char*) cur_node->name,
+							"Preference")) {
+					char *pref_val = char_trim(tmp_value);
+					if (pref_val && !strcasecmp(pref_val, "PERFORMANCE"))
+						info_ptr->default_preference = PREF_PERFORMANCE;
+					else
+						info_ptr->default_preference = PREF_ENERGY_CONSERVE;
+				} else if (!strcasecmp((const char*) cur_node->name,
+							"ThermalZones")) {
+					parse_thermal_zones(cur_node->children, doc, info_ptr);
+				} else if (!strcasecmp((const char*) cur_node->name,
+							"ThermalSensors")) {
+					parse_thermal_sensors(cur_node->children, doc, info_ptr);
+				} else if (!strcasecmp((const char*) cur_node->name,
+							"CoolingDevices")) {
+					parse_cooling_devs(cur_node->children, doc, info_ptr);
+				} else if (!strcasecmp((const char*) cur_node->name,
+							"PollingInterval")) {
+					info_ptr->polling_interval = atoi(tmp_value);
+				}
 				xmlFree(tmp_value);
+			}
 		}
 	}
 
