@@ -254,6 +254,10 @@ void cthd_cpu_default_binding::do_default_binding(
 	for (unsigned int i = 0; i < thd_engine->get_zone_count(); ++i) {
 		cthd_zone *zone = thd_engine->get_zone(i);
 
+		if (!zone) {
+			continue;
+		}
+
 		if (blacklist_match(zone->get_zone_type())) {
 			continue;
 		}

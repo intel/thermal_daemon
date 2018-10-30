@@ -192,6 +192,11 @@ int cthd_parse::parse_new_trip_point(xmlNode * a_node, xmlDoc *doc,
 			DEBUG_PARSER_PRINT("node type: Element, name: %s value: %s\n", cur_node->name, xmlNodeListGetString(doc, cur_node->xmlChildrenNode, 1));
 			tmp_value = (char *) xmlNodeListGetString(doc,
 					cur_node->xmlChildrenNode, 1);
+
+			if (!tmp_value) {
+				continue;
+			}
+
 			if (!strcasecmp((const char*) cur_node->name, "Temperature")) {
 				trip_pt->temperature = atoi(tmp_value);
 			} else if (!strcasecmp((const char*) cur_node->name,
@@ -236,9 +241,7 @@ int cthd_parse::parse_new_trip_point(xmlNode * a_node, xmlDoc *doc,
 				parse_dependency_values(cur_node->children, doc,
 						&trip_pt->dependency);
 			}
-
-			if (tmp_value)
-				xmlFree(tmp_value);
+			xmlFree(tmp_value);
 		}
 	}
 
@@ -535,6 +538,11 @@ int cthd_parse::parse_new_platform_info(xmlNode * a_node, xmlDoc *doc,
 			DEBUG_PARSER_PRINT("node type: Element, name: %s value: %s\n", cur_node->name, xmlNodeListGetString(doc, cur_node->xmlChildrenNode, 1));
 			tmp_value = (char*) xmlNodeListGetString(doc,
 					cur_node->xmlChildrenNode, 1);
+
+			if (!tmp_value) {
+				continue;
+			}
+
 			if (!strcasecmp((const char*) cur_node->name, "uuid")) {
 				info_ptr->uuid.assign((const char*) tmp_value);
 				string_trim(info_ptr->uuid);
@@ -565,8 +573,7 @@ int cthd_parse::parse_new_platform_info(xmlNode * a_node, xmlDoc *doc,
 				"PollingInterval")) {
 				info_ptr->polling_interval = atoi(tmp_value);
 			}
-			if (tmp_value)
-				xmlFree(tmp_value);
+			xmlFree(tmp_value);
 		}
 	}
 
