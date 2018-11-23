@@ -241,8 +241,8 @@ int main(int argc, char *argv[]) {
 	}
 	mkdir(TDCONFDIR, 0755); // Don't care return value as directory
 	if (!no_daemon) {
-		daemonize((char *) "/data/misc/thermal-daemon",
-				(char *) "/data/misc/thermal-daemon/thermald.pid");
+		daemonize((char *) "/data/vendor/thermal-daemon",
+				(char *) "/data/vendor/thermal-daemon/thermald.pid");
 	} else
 		signal(SIGINT, signal_handler);
 
