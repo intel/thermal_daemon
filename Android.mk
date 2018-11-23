@@ -44,7 +44,7 @@ LOCAL_C_INCLUDES += external/libxml2/include
 
 LOCAL_PROPRIETARY_MODULE := true
 LOCAL_CFLAGS := \
-		-DTDRUNDIR='"/data/misc/thermal-daemon"'\
+		-DTDRUNDIR='"/data/vendor/thermal-daemon"'\
 		-DTDCONFDIR='"/system/vendor/etc/thermal-daemon"'\
 		-Wno-unused-parameter\
 		-Wall\
