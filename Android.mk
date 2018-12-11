@@ -51,7 +51,7 @@ LOCAL_CFLAGS := \
 		-Werror
 
 LOCAL_STATIC_LIBRARIES := libxml2
-LOCAL_SHARED_LIBRARIES := liblog libcutils libdl libc++ libicuuc libutils
+LOCAL_SHARED_LIBRARIES := liblog libcutils libdl libc++ libutils
 LOCAL_PRELINK_MODULE := false
 LOCAL_MODULE := thermal-daemon
 include $(BUILD_EXECUTABLE)
