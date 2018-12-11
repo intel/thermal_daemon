@@ -44,7 +44,7 @@
 #undef LOG_TAG
 #define LOG_TAG "THERMALD"
 #include <utils/Log.h>
-#include <cutils/log.h>
+#include <log/log.h>
 #include <cutils/properties.h>
 
 #define thd_log_fatal	ALOGE
