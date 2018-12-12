@@ -51,7 +51,11 @@ LOCAL_CFLAGS := \
 		-Werror
 
 LOCAL_STATIC_LIBRARIES := libxml2
+ifeq ($(BOARD_VNDK_VERSION),current)
 LOCAL_SHARED_LIBRARIES := liblog libcutils libdl libc++ libutils
+else
+LOCAL_SHARED_LIBRARIES := liblog libcutils libdl libc++ libicuuc libutils
+endif
 LOCAL_PRELINK_MODULE := false
 LOCAL_MODULE := thermal-daemon
 include $(BUILD_EXECUTABLE)
