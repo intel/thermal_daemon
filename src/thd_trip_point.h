@@ -29,6 +29,10 @@
 #include "thd_sys_fs.h"
 #include "thd_preference.h"
 #include "thd_cdev.h"
+
+#define __STDC_LIMIT_MACROS
+#include <stdint.h>
+
 #include <time.h>
 #include <vector>
 #include <algorithm>    // std::sort
