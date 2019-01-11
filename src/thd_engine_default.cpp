@@ -254,8 +254,9 @@ bool cthd_engine_default::add_int340x_processor_dev(void)
 		return false;
 
 	/* Specialized processor thermal device names */
-	cthd_zone *processor_thermal = NULL;
+	cthd_zone *processor_thermal = NULL, *acpi_thermal = NULL;
 	cthd_INT3400 int3400;
+	unsigned int passive, new_passive = 0, critical = 0;
 
 	if (int3400.match_supported_uuid() == THD_SUCCESS) {
 		processor_thermal = search_zone("B0D4");
@@ -271,7 +272,25 @@ bool cthd_engine_default::add_int340x_processor_dev(void)
 		for (unsigned int i = 0; i < processor_thermal->get_trip_count(); ++i) {
 			cthd_trip_point *trip = processor_thermal->get_trip_at_index(i);
 			if (trip && trip->get_trip_type() == PASSIVE
-					&& trip->get_trip_temp()) {
+					&& (passive = trip->get_trip_temp())) {
+
+				/* Need to honor ACPI _CRT, otherwise the system could be shut down by Linux kernel */
+				acpi_thermal = search_zone("acpitz");
+				if (acpi_thermal) {
+					for (unsigned int i = 0; i < acpi_thermal->get_trip_count(); ++i) {
+						cthd_trip_point *crit = acpi_thermal->get_trip_at_index(i);
+						if (crit && crit->get_trip_type() == CRITICAL) {
+							critical = crit->get_trip_temp();
+							break;
+						}
+					}
+				}
+
+				if (critical && passive + 5 * 1000 >= critical) {
+					new_passive = critical - 15 * 1000;
+					if (new_passive < critical)
+						trip->thd_trip_update_set_point(new_passive);
+				}
 
 				thd_log_info("Processor thermal device is present \n");
 				thd_log_info("It will act as CPU thermal zone !! \n");
