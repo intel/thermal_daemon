@@ -338,6 +338,7 @@ int cthd_parse::parse_new_cooling_dev(xmlNode * a_node, xmlDoc *doc,
 	cdev->status = 0;
 	cdev->pid_enable = false;
 	cdev->unit_val = ABSOULUTE_VALUE;
+	cdev->debounce_interval = 0;
 	for (cur_node = a_node; cur_node; cur_node = cur_node->next) {
 		if (cur_node->type == XML_ELEMENT_NODE) {
 			DEBUG_PARSER_PRINT("node type: Element, name: %s value: %s\n", cur_node->name, xmlNodeListGetString(doc, cur_node->xmlChildrenNode, 1));
