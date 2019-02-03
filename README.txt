@@ -250,7 +250,7 @@ on slope and angular increments to dynamically adjust set point
 
 
 Version 0.2
-- Define XML interface to set configuration data. Refere to thermal-conf.xml. This allows to overide buggy Bios thermal comfiguration and also allows to extend the capability.
+- Define XML interface to set configuration data. Refere to thermal-conf.xml. This allows to override buggy Bios thermal comfiguration and also allows to extend the capability.
 - Use platform DMI UUID to index into configuration data. If there is no UUID match, falls back to thermal sysfs
 - Terminate interface
 - Takes over control from kernel thermal processing

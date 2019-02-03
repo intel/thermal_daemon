@@ -20,7 +20,8 @@
  *
  * Author Name <Srinivas.Pandruvada@linux.intel.com>
  *
- * This interface allows to overide per zone read data from sysfs for buggy BIOS.
+ * This interface allows to override per zone read data from sysfs for
+ * buggy BIOS.
  */
 
 #ifndef THD_ZONE_DTS_H
