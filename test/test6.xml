@@ -3,7 +3,7 @@
 This test configuration tests how target state can be set. Here we also
 test if multiple target state for multiple trips to the same cooling
 device. Here two trips have target state the last trip doesn't have
-any target state and will go upto max. Make sure that system behaves
+any target state and will go up to max. Make sure that system behaves
 any temperature chage"
 - 40 to 50 to 60
 - Directly to 60
