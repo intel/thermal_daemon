@@ -50,12 +50,20 @@
 #define thd_log_fatal	ALOGE
 #define thd_log_error	ALOGE
 #define thd_log_warn	ALOGW
+#if LOG_DEBUG_INFO == 1
 #define thd_log_info	ALOGI
 #define thd_log_debug 	ALOGD
+#else
+#define thd_log_info(...)
+#define thd_log_debug(...)
+#endif
 
 #else
 
 #include "config.h"
+
+// Keeping the logging flag enabled for non-android cases
+#define LOG_DEBUG_INFO	1
 
 #define LOCKF_SUPPORT
 #ifdef GLIB_SUPPORT
