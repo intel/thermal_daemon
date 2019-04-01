@@ -5,7 +5,7 @@ Description=Thermal Daemon Service
 Type=dbus
 SuccessExitStatus=1
 BusName=org.freedesktop.thermald
-ExecStart=@sbindir@/thermald --no-daemon --dbus-enable
+ExecStart=@sbindir@/thermald --no-daemon --dbus-enable --ignore-cpuid-check
 
 [Install]
 WantedBy=multi-user.target
