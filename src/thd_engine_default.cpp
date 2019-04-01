@@ -131,7 +131,7 @@ int cthd_engine_default::read_thermal_sensors() {
 								name_path.c_str());
 						continue;
 					}
-					if (name != "coretemp")
+					if (name != "coretemp" && name != "k10temp")
 						continue;
 
 					int cnt = 0;
@@ -374,12 +374,13 @@ int cthd_engine_default::read_thermal_zones() {
 						}
 						thd_log_info("%s->%s\n", name_path.c_str(),
 								name.c_str());
-						if (name != "coretemp")
+						if (name != "coretemp" && name != "k10temp")
 							continue;
 
 						cthd_zone_cpu *zone = new cthd_zone_cpu(index,
 								base_path[i] + entry->d_name + "/",
-								atoi(entry->d_name + strlen("coretemp.")));
+								atoi(entry->d_name +
+									strlen(name == "coretemp" ? "coretemp." : "k10temp")));
 						if (zone->zone_update() == THD_SUCCESS) {
 							zone->set_zone_active();
 							zones.push_back(zone);
