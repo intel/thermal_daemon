@@ -43,12 +43,17 @@ LOCAL_SRC_FILES := \
 LOCAL_C_INCLUDES += external/libxml2/include
 
 LOCAL_PROPRIETARY_MODULE := true
+
 LOCAL_CFLAGS := \
-		-DTDRUNDIR='"/data/vendor/thermal-daemon"'\
-		-DTDCONFDIR='"/system/vendor/etc/thermal-daemon"'\
-		-Wno-unused-parameter\
-		-Wall\
-		-Werror
+		-DTDRUNDIR='"/data/vendor/thermal-daemon"' \
+		-DTDCONFDIR='"/system/vendor/etc/thermal-daemon"' \
+		-Wno-unused-parameter \
+		-Wall \
+		-Werror \
+
+ifneq (,$(filter userdebug eng, $(TARGET_BUILD_VARIANT)))
+  LOCAL_CFLAGS += -DLOG_DEBUG_INFO=1
+endif
 
 LOCAL_STATIC_LIBRARIES := libxml2
 ifeq ($(BOARD_VNDK_VERSION),current)
