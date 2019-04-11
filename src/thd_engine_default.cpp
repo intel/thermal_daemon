@@ -44,6 +44,7 @@
 #include "thd_zone_kbl_g_mcp.h"
 #include "thd_cdev_kbl_amdgpu.h"
 #include "thd_zone_kbl_g_mcp.h"
+#include "thd_cdev_kbl_g_power.h"
 
 #ifdef GLIB_SUPPORT
 #include "thd_cdev_modem.h"
@@ -412,6 +413,15 @@ int cthd_engine_default::read_thermal_zones() {
 		delete mcp;
 	}
 
+	cthd_zone_kbl_amdgpu *amd_gpu = new cthd_zone_kbl_amdgpu(index);
+	if (amd_gpu->zone_update() == THD_SUCCESS) {
+		amd_gpu->set_zone_active();
+		zones.push_back(amd_gpu);
+		++index;
+	} else {
+		delete amd_gpu;
+	}
+
 	current_zone_index = index;
 
 	// Add from XML thermal zone
@@ -722,6 +732,18 @@ int cthd_engine_default::read_cooling_devices() {
 			++current_cdev_index;
 		} else
 			delete cdev_amdgpu;
+	}
+
+	cthd_cdev *cdev_kbl_g_mcp = search_cdev("kbl-g-mcp");
+	if (!cdev_kbl_g_mcp) {
+		cthd_cdev_kbl_g_power *cdev_kbl_g_mcp = new cthd_cdev_kbl_g_power(
+				current_cdev_index, 0);
+		cdev_kbl_g_mcp->set_cdev_type("kbl-g-mcp");
+		if (cdev_kbl_g_mcp->update() == THD_SUCCESS) {
+			cdevs.push_back(cdev_kbl_g_mcp);
+			++current_cdev_index;
+		} else
+			delete cdev_kbl_g_mcp;
 	}
 
 	// Dump all cooling devices

@@ -72,7 +72,7 @@ unsigned int cthd_sensor_kbl_g_mcp::read_temperature()
 	unsigned int pkg_power = thd_engine->rapl_power_meter.rapl_action_get_power(
 					PACKAGE);
 	thd_log_info("Sensor %s :temp %u %u total %u \n", type_str.c_str(),
-			gpu_power, pkg_power, gpu_power + pkg_power);
+			gpu_power/1000000, pkg_power/1000000, (gpu_power + pkg_power)/1000000);
 
 	return (unsigned int)(gpu_power + pkg_power);
 }

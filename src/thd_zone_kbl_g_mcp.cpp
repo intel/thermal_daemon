@@ -50,7 +50,6 @@ int cthd_zone_kbl_g_mcp::read_trip_points() {
 	cthd_cdev *cdev_gpu, *cdev_cpu;
 
 	thd_log_info("cthd_zone_kbl_g_mcp::read_trip_points \n");
-
 	cdev_gpu = thd_engine->search_cdev("amdgpu");
 	if (!cdev_gpu) {
 		thd_log_info("amdgpu failed\n");
@@ -72,26 +71,21 @@ int cthd_zone_kbl_g_mcp::read_trip_points() {
 	thd_log_info("gpu %d cpu %d\n", gpu_max_power, cpu_max_power);
 	int total_power = gpu_max_power + cpu_max_power;
 
-	cthd_trip_point trip_pt_passive(0, PASSIVE, total_power ,
-					0, index, DEFAULT_SENSOR_ID, PARALLEL);
+	cthd_trip_point trip_pt_passive(0, PASSIVE, total_power, 0, index,
+			DEFAULT_SENSOR_ID, PARALLEL);
 
-	pid_param_t pid_param;
-	pid_param.valid = 1;
-	pid_param.kp = -0.4f;
-	pid_param.ki = 0.0f;
-	pid_param.kd = 0.0f;
-	thd_log_info("==pid valid %f:%f:%f\n", pid_param.kp, pid_param.ki, pid_param.kd);
-	trip_pt_passive.thd_trip_point_add_cdev(*cdev_gpu,
+	cthd_cdev *cdev_mcp;
+
+	cdev_mcp = thd_engine->search_cdev("kbl-g-mcp");
+	if (!cdev_mcp) {
+		thd_log_info("kbl-g-mcp failed\n");
+
+		return THD_ERROR;
+	}
+
+	trip_pt_passive.thd_trip_point_add_cdev(*cdev_mcp,
 			cthd_trip_point::default_influence, thd_engine->get_poll_interval(),
-			0, 0, &pid_param);
-
-	pid_param.kp = -0.6f;
-	pid_param.ki = 0.0f;
-	pid_param.kd = 0.0f;
-
-	trip_pt_passive.thd_trip_point_add_cdev(*cdev_cpu,
-			cthd_trip_point::default_influence, thd_engine->get_poll_interval(),
-			0, 0, &pid_param);
+			0, 0, 0);
 
 	trip_points.push_back(trip_pt_passive);
 
