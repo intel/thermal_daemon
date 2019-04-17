@@ -96,12 +96,13 @@ static bool sort_weight_values_dec(power_domain_t pd1, power_domain_t pd2) {
 }
 
 int power_balancer::add_new_power_domain(std::string name, double weight,
-		double max_power, double min_power) {
+		double max_power, double min_power, double perf) {
 	power_domain_t pd;
 
 	pd.id = next_id++;
 	pd.name = name;
 	pd.weight = weight;
+	pd.perf = perf;
 	pd.max_power = max_power;
 	pd.min_power = min_power;
 	pd.steady_state_power = 0;
@@ -167,7 +168,7 @@ void power_balancer::power_balance() {
 
 	DEBUG_PRINTF("new power cap target %g\n", target + pid_out);
 	for (i = 0; i < power_domains.size(); ++i) {
-		double share = (target + pid_out) * power_domains[i].weight;
+		double share = (target + pid_out) * power_domains[i].weight * power_domains[i].perf;
 
 		DEBUG_PRINTF("domain:%lu last_sample:%g current_share %g\n", i,
 				power_domains[i].last_sample, share);
@@ -226,11 +227,11 @@ double power_balancer::get_power(int id) {
 			double pwr = power_domains[i].capped_power;
 			DEBUG_PRINTF("i:%lu pwr %g [%g:%g]\n", i, pwr,
 					power_domains[i].last_sample,
-					target * power_domains[i].weight);
+					target * power_domains[i].weight * power_domains[i].perf);
 
 			if (power_domains[i].last_sample
-					<= target * power_domains[i].weight) {
-				pwr = target * power_domains[i].weight;
+					<= pwr) {
+				pwr = power_domains[i].last_sample;
 			}
 			return pwr;
 		}
@@ -253,19 +254,21 @@ void sample_usage()
 
 	pwr_balancer.add_new_sample(0, 40.0);
 	pwr_balancer.add_new_sample(1, 30.0);
+	pwr_balancer.add_new_sample(2, 20.0);
+	pwr_balancer.power_balance();
+	printf("id 0: power:%g\n", pwr_balancer.get_power(0));
+	printf("id 1: power:%g\n", pwr_balancer.get_power(1));
+	printf("id 2: power:%g\n", pwr_balancer.get_power(2));
+
+
+	pwr_balancer.add_new_sample(0, 40.0);
+	pwr_balancer.add_new_sample(1, 30.0);
 	pwr_balancer.add_new_sample(2, 10.0);
 	pwr_balancer.power_balance();
 	printf("id 0: power:%g\n", pwr_balancer.get_power(0));
 	printf("id 1: power:%g\n", pwr_balancer.get_power(1));
 	printf("id 2: power:%g\n", pwr_balancer.get_power(2));
 
-	pwr_balancer.add_new_sample(0, 40.0);
-	pwr_balancer.add_new_sample(1, 30.0);
-	pwr_balancer.add_new_sample(2, 20.0);
-	pwr_balancer.power_balance();
-	printf("id 0: power:%g\n", pwr_balancer.get_power(0));
-	printf("id 1: power:%g\n", pwr_balancer.get_power(1));
-	printf("id 2: power:%g\n", pwr_balancer.get_power(2));
 
 	pwr_balancer.add_new_sample(0, 40.0);
 	pwr_balancer.add_new_sample(1, 30.0);

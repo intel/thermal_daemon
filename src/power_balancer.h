@@ -32,6 +32,7 @@ typedef struct power_domain {
 	int id;
 	std::string name;
 	double weight;
+	double perf;
 	double steady_state_power;
 	double capped_power;
 	double max_power;
@@ -67,7 +68,7 @@ public:
 	void set_pid_target(double _target);
 	void reset();
 	int add_new_power_domain(std::string name, double weight, double max_power,
-			double min_power);
+			double min_power, double perf = 1.0);
 	void remove_power_domain(int id);
 
 	void set_power_target(double _target);
