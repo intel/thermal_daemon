@@ -656,6 +656,18 @@ int cthd_engine_default::read_cooling_devices() {
 	} else {
 		delete rapl_dev;
 	}
+
+	// Add RAPL mmio cooling device
+	cthd_sysfs_cdev_rapl *rapl_mmio_dev = new cthd_sysfs_cdev_rapl(
+			current_cdev_index, 0, "/sys/devices/virtual/powercap/intel-rapl-mmio/intel-rapl-mmio:0/");
+	rapl_mmio_dev->set_cdev_type("rapl_controller_mmio");
+	if (rapl_mmio_dev->update() == THD_SUCCESS) {
+		cdevs.push_back(rapl_mmio_dev);
+		++current_cdev_index;
+	} else {
+		delete rapl_mmio_dev;
+	}
+
 	// Add Intel P state driver as cdev
 	cthd_intel_p_state_cdev *pstate_dev = new cthd_intel_p_state_cdev(
 			current_cdev_index);
