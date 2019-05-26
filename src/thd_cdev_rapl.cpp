@@ -151,12 +151,37 @@ int cthd_sysfs_cdev_rapl::update() {
 		ppcc = read_ppcc_power_limits();
 
 	if (ppcc) {
+		int current_pl1;
+
 		phy_max = pl0_max_pwr;
 		set_inc_dec_value(-pl0_step_pwr);
 		min_state = pl0_max_pwr;
 		max_state = pl0_min_pwr;
 
+		std::stringstream temp_power_str;
+		temp_power_str.str(std::string());
+
+		temp_power_str << "constraint_0" << "_power_limit_uw";
+		if (!cdev_sysfs.exists(temp_power_str.str())) {
+			thd_log_debug("powercap RAPL no  power limit uw %s \n",
+					temp_str.str().c_str());
+			return THD_ERROR;
+		}
+
+		if (cdev_sysfs.read(temp_power_str.str(), &current_pl1) > 0) {
+			if (pl0_max_pwr > current_pl1) {
+				thd_log_info(
+						"pkg_power: powercap ppcc RAPL max power limit is more than the current PL1, current:%d max:%d \n",
+						current_pl1, pl0_max_pwr);
+
+				if (cdev_sysfs.write(temp_power_str.str(), pl0_max_pwr) <= 0)
+					thd_log_info(
+							"pkg_power: powercap ppcc RAPL max power limit failed to write %d \n",
+							pl0_max_pwr);
+			}
+		}
 	} else {
+
 		temp_str.str(std::string());
 		temp_str << "constraint_" << _index << "_max_power_uw";
 		if (!cdev_sysfs.exists(temp_str.str())) {
@@ -175,15 +200,17 @@ int cthd_sysfs_cdev_rapl::update() {
 			temp_power_str << "constraint_" << _index << "_power_limit_uw";
 			if (!cdev_sysfs.exists(temp_power_str.str())) {
 				thd_log_info("powercap RAPL no  power limit uw %s \n",
-					temp_str.str().c_str());
+						temp_str.str().c_str());
 				return THD_ERROR;
 			}
 
-			if (cdev_sysfs.read(temp_power_str.str(), &power_on_constraint_0_pwr) <= 0) {
+			if (cdev_sysfs.read(temp_power_str.str(),
+					&power_on_constraint_0_pwr) <= 0) {
 				thd_log_info("powercap RAPL invalid max power limit range \n");
 			}
 
-			thd_log_debug("power_on_constraint_0_pwr %d\n", power_on_constraint_0_pwr);
+			thd_log_debug("power_on_constraint_0_pwr %d\n",
+					power_on_constraint_0_pwr);
 
 			phy_max = max_state = 0;
 			curr_state = min_state = rapl_max_sane_phy_max;
@@ -263,6 +290,17 @@ int cthd_sysfs_cdev_rapl::update() {
 
 bool cthd_sysfs_cdev_rapl::read_ppcc_power_limits() {
 	csys_fs sys_fs;
+	ppcc_t *ppcc;
+
+	ppcc = thd_engine->parser.get_ppcc_param();
+	if (ppcc) {
+		thd_log_info("Reading PPCC from the thermal-conf.xml\n");
+		pl0_max_pwr = ppcc->power_limit_max * 1000;
+		pl0_min_pwr = ppcc->power_limit_min * 1000;
+		pl0_min_window = ppcc->time_wind_min * 1000;
+		pl0_step_pwr = ppcc->step_size * 1000;
+		return true;
+	}
 
 	if (sys_fs.exists("/sys/bus/pci/devices/0000:00:04.0/power_limits/"))
 		sys_fs.update_path("/sys/bus/pci/devices/0000:00:04.0/power_limits/");
