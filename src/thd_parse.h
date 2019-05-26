@@ -122,11 +122,21 @@ typedef struct {
 } cooling_dev_t;
 
 typedef struct {
+	int valid;
+	int power_limit_min;
+	int power_limit_max;
+	int time_wind_min;
+	int time_wind_max;
+	int step_size;
+} ppcc_t;
+
+typedef struct {
 	std::string name;
 	std::string uuid;
 	std::string product_name;
 	int default_preference;
 	int polling_interval;
+	ppcc_t ppcc;
 	std::vector<thermal_sensor_t> sensors;
 	std::vector<thermal_zone_t> zones;
 	std::vector<cooling_dev_t> cooling_devs;
@@ -171,6 +181,8 @@ private:
 			thermal_zone_t *info_ptr);
 	int parse_new_platform(xmlNode * a_node, xmlDoc *doc, thermal_info_t *info);
 
+	int parse_ppcc(xmlNode * a_node, xmlDoc *doc, ppcc_t *ppcc);
+
 	void string_trim(std::string &str);
 	char *char_trim(char *trim);
 
@@ -182,6 +194,7 @@ public:
 	void dump_thermal_conf();
 	bool platform_matched();
 	int get_polling_interval();
+	ppcc_t *get_ppcc_param();
 	int zone_count() {
 		return thermal_info_list[matched_thermal_info_index].zones.size();
 	}
