@@ -530,6 +530,19 @@ int cthd_engine_default::read_thermal_zones() {
 					zones.push_back(zone);
 					++index;
 					zone->set_zone_active();
+					for (unsigned int k = 0; k < zone_config->trip_pts.size();
+							++k) {
+						trip_point_t &trip_pt_config = zone_config->trip_pts[k];
+						cthd_sensor *sensor = search_sensor(
+								trip_pt_config.sensor_type);
+						if (sensor && sensor->get_sensor_type() == "B0D4") {
+							thd_log_info(
+									"B0D4 is defined in thermal-config so deactivating default cpu\n");
+							cthd_zone *cpu_zone = search_zone("cpu");
+							if (cpu_zone)
+								cpu_zone->set_zone_inactive();
+						}
+					}
 				} else
 					delete zone;
 			}
