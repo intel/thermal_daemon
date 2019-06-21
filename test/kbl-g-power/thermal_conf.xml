@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+
+       <ThermalConfiguration>
+
+               <Platform>
+
+                       <Name>Overide CPU default passive</Name>
+
+                       <ProductName>*</ProductName>
+
+                       <Preference>QUIET</Preference>
+
+                       <ThermalZones>
+
+                               <ThermalZone>
+
+                                       <Type>kbl-g-mcp</Type>
+                                       <TripPoints>
+                                                       <TripPoint>
+                                                               <Power>100000000</Power>
+                                                               <type>passive</type>
+								<Hyst>5000000</Hyst>
+                                                       </TripPoint>
+
+                                       </TripPoints>
+
+                               </ThermalZone>
+
+                       </ThermalZones>
+
+               </Platform>
+
+</ThermalConfiguration>
+
+
