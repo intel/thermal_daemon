@@ -89,6 +89,10 @@ int cthd_zone_kbl_g_mcp::read_trip_points() {
 
 	trip_points.push_back(trip_pt_passive);
 
+	cthd_trip_point trip_pt_polling(1, POLLING, 1, 0, index,
+			DEFAULT_SENSOR_ID, PARALLEL);
+	trip_points.push_back(trip_pt_polling);
+
 	thd_log_info("cthd_zone_kbl_g_mcp::read_trip_points  OK\n");
 
 	return THD_SUCCESS;

@@ -60,23 +60,25 @@ int cthd_cdev_kbl_g_power::thd_cdev_set_state(int set_point, int target_temp,
 
 	time(&tm);
 	thd_log_info(
-			">>cthd_cdev_kbl_g_power temperature %d:%d index:%d state:%d :zone:%d trip_id:%d target_state_valid:%d target_value :%d force:%d\n",
+			">>cthd_cdev_kbl_g_power temperature %d:%d index:%d state:%d :zone:%d trip_id:%d target_state_valid:%d target_value :%d force:%d set_point:%d\n",
 			target_temp, temperature, index, state, zone_id, trip_id,
-			target_state_valid, target_value, force);
+			target_state_valid, target_value, force, set_point);
 
 	thd_log_info("%s %d %d %d %d\n", __func__, state, 0,
 			cdev_gpu->get_curr_state(0), cdev_cpu->get_curr_state(0));
 
-	pb.set_pid_target(set_point);
-
-	if (!state) {
+	if (state) {
+		pb.set_pid_target(set_point);
+		pb.add_new_sample(0, cdev_gpu->get_curr_state(0));
+		pb.add_new_sample(1, cdev_cpu->get_curr_state(0));
+		pb.power_balance();
+		gpu_power = pb.get_power(0);
+		cpu_power = pb.get_power(1);
+	} else {
 		pb.reset();
+		gpu_power = cdev_gpu->get_min_state();
+		cpu_power = cdev_cpu->get_min_state();
 	}
-	pb.add_new_sample(0, cdev_gpu->get_curr_state(0));
-	pb.add_new_sample(1, cdev_cpu->get_curr_state(0));
-	pb.power_balance();
-	gpu_power = pb.get_power(0);
-	cpu_power = pb.get_power(1);
 
 	thd_log_info("%s id:0 %d \n", __func__, gpu_power);
 	thd_log_info("%s id:1: %d \n", __func__, cpu_power);
@@ -92,14 +94,14 @@ int cthd_cdev_kbl_g_power::thd_cdev_set_state(int set_point, int target_temp,
 			1);
 
 	cdev_gpu->thd_cdev_set_state(set_point, target_temp, temperature,
-			hard_target, 1, zone_id, trip_id, 1, gpu_power, pid_param, pid, 0);
+			hard_target, state, zone_id, trip_id, 1, gpu_power, pid_param, pid, 0);
 
 	cdev_cpu->thd_cdev_set_state(set_point, target_temp, temperature,
 			hard_target, state, zone_id, trip_id, 1, cpu_power, pid_param, pid,
 			1);
 
 	cdev_cpu->thd_cdev_set_state(set_point, target_temp, temperature,
-			hard_target, 1, zone_id, trip_id, 1, cpu_power, pid_param, pid, 0);
+			hard_target, state, zone_id, trip_id, 1, cpu_power, pid_param, pid, 0);
 
 	curr_state = state;
 
