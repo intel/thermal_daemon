@@ -60,7 +60,7 @@ Building on Ubuntu
 Build
 
 	./autogen.sh
-	 ./configure prefix=/usr
+	 ./configure prefix=/
 	make
 	sudo make install
 (It will give error for systemd configuration, but ignore)
