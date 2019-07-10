@@ -80,27 +80,6 @@ void cthd_sysfs_cdev_rapl::set_curr_state_raw(int state, int arg) {
 	set_curr_state(state, arg);
 }
 
-bool cthd_sysfs_cdev_rapl::calculate_phy_max() {
-	if (dynamic_phy_max_enable) {
-		int curr_max_phy;
-		curr_max_phy = thd_engine->rapl_power_meter.rapl_action_get_power(
-				PACKAGE);
-		thd_log_debug("curr_phy_max = %u \n", curr_max_phy);
-		if (curr_max_phy < rapl_min_default_step)
-			return false;
-		if (phy_max < curr_max_phy) {
-			phy_max = curr_max_phy;
-			set_inc_dec_value(phy_max * (float) rapl_power_dec_percent / 100);
-			min_state = phy_max;
-			max_state -= (float) min_state * rapl_low_limit_percent / 100;
-			thd_log_debug("PHY_MAX %d, step %d, min_state %d\n", phy_max,
-					inc_dec_val, max_state);
-		}
-	}
-
-	return true;
-}
-
 int cthd_sysfs_cdev_rapl::get_curr_state() {
 	if (dynamic_phy_max_enable) {
 		if (constrained)

@@ -42,7 +42,6 @@ protected:
 	bool constrained;
 	int power_on_constraint_0_pwr;
 
-	virtual bool calculate_phy_max();
 	virtual bool read_ppcc_power_limits();
 
 public:
