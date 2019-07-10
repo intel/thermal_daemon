@@ -30,7 +30,7 @@
 #include <vector>
 
 typedef enum {
-	PACKAGE = 0x01, DRAM = 0x02, CORE = 0x04, UNCORE = 0x08
+	INVALID = 0, PACKAGE = 0x01, DRAM = 0x02, CORE = 0x04, UNCORE = 0x08
 } domain_type;
 
 typedef struct {
