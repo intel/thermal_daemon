@@ -69,6 +69,8 @@ private:
 	void sort_and_update_poll_trip();
 public:
 	static const unsigned int def_async_trip_offset = 5000;
+	static const unsigned int def_async_trip_offset_pct = 10;
+
 	cthd_zone(int _index, std::string control_path, sensor_relate_t rel =
 			SENSOR_INDEPENDENT);
 	virtual ~cthd_zone();

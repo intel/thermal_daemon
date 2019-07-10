@@ -115,8 +115,6 @@ void cthd_zone::sort_and_update_poll_trip() {
 			trip_points[i].trip_dump();
 		}
 
-		// Set the lowest trip point as the threshold for sensor async mode
-		// Use that the lowest point, after that we poll
 		if (trip_points.size())
 			polling_trip = trip_points[0].get_trip_temp();
 
@@ -128,15 +126,23 @@ void cthd_zone::sort_and_update_poll_trip() {
 				poll_trip_present = 1;
 				poll_trip_index = i;
 			}
-			if (polling_trip > trip_points[i].get_trip_temp())
+			if (trip_points[i].get_trip_type() == PASSIVE && polling_trip > trip_points[i].get_trip_temp())
 				polling_trip = trip_points[i].get_trip_temp();
 			thd_log_info("trip type: %d temp: %d \n",
 					trip_points[i].get_trip_type(),
 					trip_points[i].get_trip_temp());
 		}
 
-		if (polling_trip > def_async_trip_offset)
-			polling_trip -= def_async_trip_offset;
+		if (!polling_trip)
+			return;
+
+		unsigned int poll_offset = polling_trip * def_async_trip_offset_pct
+				/ 100;
+
+		if (poll_offset < def_async_trip_offset)
+			poll_offset = def_async_trip_offset;
+
+		polling_trip -= poll_offset;
 
 		for (unsigned int i = 0; i < sensors.size(); ++i) {
 			cthd_sensor *sensor;
