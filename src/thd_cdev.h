@@ -66,6 +66,8 @@ protected:
 	int last_state;
 	std::vector<zone_trip_limits_t> zone_trip_limits;
 	std::string write_prefix;
+	int inc_val;
+	int dec_val;
 
 private:
 	unsigned int int_2_pow(int pow) {
@@ -82,11 +84,11 @@ public:
 	static const int default_debounce_interval = 2; // In seconds
 	cthd_cdev(unsigned int _index, std::string control_path) :
 			index(_index), cdev_sysfs(control_path.c_str()), trip_point(0), max_state(
-					0), min_state(0), curr_state(0), curr_pow(
-					0), base_pow_state(0), inc_dec_val(1), auto_down_adjust(
-					false), read_back(true), debounce_interval(
-					default_debounce_interval), last_action_time(0), trend_increase(
-					false), pid_enable(false), pid_ctrl(), last_state(0), write_prefix("") {
+					0), min_state(0), curr_state(0), curr_pow(0), base_pow_state(
+					0), inc_dec_val(1), auto_down_adjust(false), read_back(
+					true), debounce_interval(default_debounce_interval), last_action_time(
+					0), trend_increase(false), pid_enable(false), pid_ctrl(), last_state(
+					0), write_prefix(""), inc_val(0), dec_val(0) {
 	}
 
 	virtual ~cthd_cdev() {
@@ -162,6 +164,15 @@ public:
 	virtual void set_inc_dec_value(int value) {
 		inc_dec_val = value;
 	}
+
+	virtual void set_inc_value(int value) {
+		inc_val = value;
+	}
+
+	virtual void set_dec_value(int value) {
+		dec_val = value;
+	}
+
 	virtual void set_down_adjust_control(bool value) {
 		auto_down_adjust = value;
 	}
