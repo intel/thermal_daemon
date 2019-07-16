@@ -53,12 +53,21 @@ void cthd_sysfs_cdev_rapl::set_curr_state(int state, int control) {
 
 		curr_state = min_state;
 		cdev_sysfs.write("enabled", "0");
+
+		time_window_attr << "constraint_" << constraint_index
+				<< "_time_window_us";
+		cdev_sysfs.write(time_window_attr.str(),
+				power_on_constraint_0_time_window);
 		constrained = false;
 	} else {
 		if (!dynamic_phy_max_enable) {
 			curr_state = state;
 		}
 		new_state = state;
+
+		time_window_attr << "constraint_" << constraint_index
+				<< "_time_window_us";
+		cdev_sysfs.write(time_window_attr.str(), def_rapl_time_window);
 		cdev_sysfs.write("enabled", "1");
 		constrained = true;
 	}
@@ -205,8 +214,12 @@ int cthd_sysfs_cdev_rapl::update() {
 						temp_str.str().c_str());
 				return THD_ERROR;
 			}
-			time_window << def_rapl_time_window;
-			cdev_sysfs.write(temp_str.str(), time_window.str());
+
+			if (cdev_sysfs.read(temp_str.str(), &power_on_constraint_0_time_window)
+					<= 0) {
+				thd_log_info("powercap RAPL invalid time window \n");
+				return THD_ERROR;
+			}
 
 			return THD_SUCCESS;
 		}
@@ -244,11 +257,12 @@ int cthd_sysfs_cdev_rapl::update() {
 				temp_str.str().c_str());
 		return THD_ERROR;
 	}
-	if (pl0_min_window)
-		time_window << pl0_min_window;
-	else
-		time_window << def_rapl_time_window;
-	cdev_sysfs.write(temp_str.str(), time_window.str());
+
+	if (cdev_sysfs.read(temp_str.str(), &power_on_constraint_0_time_window)
+			<= 0) {
+		thd_log_info("powercap RAPL invalid time window \n");
+		return THD_ERROR;
+	}
 
 	std::stringstream enable;
 	temp_str.str(std::string());

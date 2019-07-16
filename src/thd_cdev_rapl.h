@@ -41,6 +41,7 @@ protected:
 	bool bios_locked;
 	bool constrained;
 	int power_on_constraint_0_pwr;
+	int power_on_constraint_0_time_window;
 
 	virtual bool read_ppcc_power_limits();
 
