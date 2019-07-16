@@ -265,16 +265,23 @@ int cthd_cdev::thd_cdev_set_state(int set_point, int target_temp,
 					return THD_SUCCESS;
 				}
 
-			} else if (force) {
-				thd_log_info("forced to min_state \n");
-			} else {
+			} else if (_target_state_valid){
 				// If the deleted entry has a target then on deactivation
 				// set the state to min_state
-				if (_target_state_valid)
-					target_value = get_min_state();
+				target_value = get_min_state();
+			} else if (force) {
+				thd_log_info("forced to min_state \n");
+				target_state_valid = 1;
+				target_value = get_min_state();
 			}
 		} else {
-			target_state_valid = 0;
+			if (force) {
+				thd_log_info("forced to min_state \n");
+				target_state_valid = 1;
+				target_value = get_min_state();
+			} else {
+				target_state_valid = 0;
+			}
 		}
 	}
 
