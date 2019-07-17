@@ -34,7 +34,7 @@ void cthd_sysfs_cdev_rapl::set_curr_state(int state, int control) {
 	std::stringstream tc_state_dev;
 
 	std::stringstream state_str;
-	int new_state, ret;
+	int new_state = state, ret;
 
 	if (bios_locked) {
 		if (state <= inc_dec_val)
@@ -45,7 +45,15 @@ void cthd_sysfs_cdev_rapl::set_curr_state(int state, int control) {
 		return;
 	}
 
-	if (control == 0 || state >= min_state) {
+	if (state < max_state)
+		new_state = max_state;
+
+	if (!control && state <= max_state)
+		new_state = min_state;
+
+	if (new_state >= min_state) {
+		std::stringstream time_window_attr;
+
 		if (power_on_constraint_0_pwr)
 			new_state = power_on_constraint_0_pwr;
 		else
@@ -59,23 +67,22 @@ void cthd_sysfs_cdev_rapl::set_curr_state(int state, int control) {
 		cdev_sysfs.write(time_window_attr.str(),
 				power_on_constraint_0_time_window);
 		constrained = false;
-	} else {
-		if (!dynamic_phy_max_enable) {
-			curr_state = state;
-		}
-		new_state = state;
+	} else if (control) {
+		if (!constrained) {
+			std::stringstream time_window_attr;
 
-		time_window_attr << "constraint_" << constraint_index
-				<< "_time_window_us";
-		cdev_sysfs.write(time_window_attr.str(), def_rapl_time_window);
-		cdev_sysfs.write("enabled", "1");
-		constrained = true;
+			time_window_attr << "constraint_" << constraint_index
+					<< "_time_window_us";
+			cdev_sysfs.write(time_window_attr.str(), def_rapl_time_window);
+			cdev_sysfs.write("enabled", "1");
+			constrained = true;
+		}
 	}
-	state_str << new_state;
-	thd_log_debug("set cdev state index %d state %d wr:%d\n", index, state,
+	thd_log_info("set cdev state index %d state %d wr:%d\n", index, state,
 			new_state);
+
 	tc_state_dev << "constraint_" << constraint_index << "_power_limit_uw";
-	ret = cdev_sysfs.write(tc_state_dev.str(), state_str.str());
+	ret = cdev_sysfs.write(tc_state_dev.str(), new_state);
 	if (ret < 0) {
 		curr_state = (state == 0) ? 0 : max_state;
 		if (ret == -ENODATA) {
@@ -83,6 +90,7 @@ void cthd_sysfs_cdev_rapl::set_curr_state(int state, int control) {
 			bios_locked = true;
 		}
 	}
+	curr_state = new_state;
 }
 
 void cthd_sysfs_cdev_rapl::set_curr_state_raw(int state, int arg) {
@@ -142,7 +150,8 @@ int cthd_sysfs_cdev_rapl::update() {
 		int current_pl1;
 
 		phy_max = pl0_max_pwr;
-		set_inc_dec_value(-pl0_step_pwr);
+		set_inc_value(-pl0_step_pwr * 2);
+		set_dec_value(-pl0_step_pwr);
 		min_state = pl0_max_pwr;
 		max_state = pl0_min_pwr;
 
@@ -168,6 +177,10 @@ int cthd_sysfs_cdev_rapl::update() {
 							pl0_max_pwr);
 			}
 		}
+
+		thd_engine->rapl_power_meter.rapl_start_measure_power();
+		dynamic_phy_max_enable = true;
+		//set_debounce_interval(1);
 	} else {
 
 		temp_str.str(std::string());
