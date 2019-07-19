@@ -94,7 +94,8 @@ gboolean thd_dbus_interface_get_zone_count(PrefObject *obj, int *status,
 		GError **error);
 
 gboolean thd_dbus_interface_get_zone_information(PrefObject *obj, gint index,
-		gchar **zone_out, gint *sensor_count, gint *trip_count, GError **error);
+		gchar **zone_out, gint *sensor_count, gint *trip_count, gint *bound,
+		GError **error);
 
 gboolean thd_dbus_interface_get_zone_sensor_at_index(PrefObject *obj,
 		gint zone_index, gint sensor_index, gchar **sensor_out, GError **error);
@@ -343,7 +344,7 @@ gboolean thd_dbus_interface_get_zone_count(PrefObject *obj, int *count,
 }
 
 gboolean thd_dbus_interface_get_zone_information(PrefObject *obj, gint index,
-		gchar **zone_out, gint *sensor_count, gint *trip_count,
+		gchar **zone_out, gint *sensor_count, gint *trip_count, gint *bound,
 		GError **error) {
 	char *zone_str;
 
@@ -363,7 +364,7 @@ gboolean thd_dbus_interface_get_zone_information(PrefObject *obj, gint index,
 	*zone_out = zone_str;
 	*sensor_count = zone->get_sensor_count();
 	*trip_count = zone->get_trip_count();
-
+	*bound = (gint) zone->zone_active_status();
 	return TRUE;
 }
 

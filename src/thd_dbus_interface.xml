@@ -69,6 +69,7 @@
       <arg type="s" name="zone" direction="out"/>
       <arg type="i" name="sensor_count" direction="out"/>
       <arg type="i" name="trip_count" direction="out"/>
+      <arg type="i" name="bound" direction="out"/>
     </method>
 
     <method name="GetZoneSensorAtIndex">
