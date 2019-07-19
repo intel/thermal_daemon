@@ -26,6 +26,9 @@ tripsDialog::~tripsDialog()
 
 void tripsDialog::addZone(zoneInformationType *zone)
 {
+    if (!zone->active)
+        return;
+
     QTreeWidgetItem *treeItem = new QTreeWidgetItem(ui->treeWidget);
 
     treeItem->setText(0, zone->name);
@@ -33,6 +36,7 @@ void tripsDialog::addZone(zoneInformationType *zone)
         QTreeWidgetItem *treeTripItem = new QTreeWidgetItem(treeItem);
         treeTripItem->setData(1, Qt::DisplayRole, zone->trips[i].temp);
         treeTripItem->setFlags(Qt::ItemIsUserCheckable | Qt::ItemIsEnabled);
+        zone_display_list.append(zone->id);
 
         QString str;
         switch(zone->trips[i].trip_type){
@@ -112,6 +116,7 @@ void tripsDialog::on_treeWidget_clicked(const QModelIndex &index)
         trip = -1;
     } else {  // otherwise the user clicked on a trip
         zone = index.parent().row();
+        zone = zone_display_list[zone];
         col = index.column();
         trip = index.row();
     }
@@ -153,6 +158,7 @@ void tripsDialog::on_treeWidget_doubleClicked(const QModelIndex &index)
         zone = index.row();
     } else {  // otherwise the user clicked on a trip
         zone = index.parent().row();
+        zone = zone_display_list[zone];
         trip = index.row();
 
         // Invert the fore and background colors to display trip on the graph

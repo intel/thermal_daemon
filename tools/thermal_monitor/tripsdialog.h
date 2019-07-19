@@ -35,6 +35,7 @@ private slots:
 private:
     Ui::tripsDialog *ui;
     ThermaldInterface *thermal;
+    QVector<uint> zone_display_list;
 
     QTreeWidgetItem *last_item;
     uint last_trip;
