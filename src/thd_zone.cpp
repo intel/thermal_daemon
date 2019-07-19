@@ -178,7 +178,7 @@ int cthd_zone::zone_update() {
 	if (usr_psv_temp > 0) {
 		cthd_trip_point trip_pt_passive(0, PASSIVE, usr_psv_temp, 0, index,
 		DEFAULT_SENSOR_ID);
-		update_trip_temp(trip_pt_passive);
+		update_highest_trip_temp(trip_pt_passive);
 	}
 
 	ret = read_cdev_trip_points();
@@ -314,6 +314,22 @@ void cthd_zone::add_trip(cthd_trip_point &trip) {
 		trip_points.push_back(trip);
 
 	sort_and_update_poll_trip();
+}
+
+void cthd_zone::update_highest_trip_temp(cthd_trip_point &trip)
+{
+	if (trip_points.size()) {
+		thd_log_info("trip_points.size():%lu\n", trip_points.size());
+		for (unsigned int j = trip_points.size() - 1;; --j) {
+			if (trip_points[j].get_trip_type() == trip.get_trip_type()) {
+				thd_log_info("updating existing trip temp \n");
+				trip_points[j].update_trip_temp(trip.get_trip_temp());
+				trip_points[j].update_trip_hyst(trip.get_trip_hyst());
+				break;
+			}
+		}
+		sort_and_update_poll_trip();
+	}
 }
 
 void cthd_zone::update_trip_temp(cthd_trip_point &trip) {
