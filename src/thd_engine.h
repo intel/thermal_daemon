@@ -255,6 +255,9 @@ public:
 		return rt_kernel;
 	}
 
+	virtual void workarounds() {
+	}
+
 	// User/External messages
 	int user_add_sensor(std::string name, std::string path);
 	cthd_sensor *user_get_sensor(unsigned int index);

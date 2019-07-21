@@ -787,3 +787,101 @@ int thd_engine_create_default_engine(bool ignore_cpuid_check,
 
 	return THD_SUCCESS;
 }
+
+void cthd_engine_default::workarounds()
+{
+	// Every 30 seconds repeat
+	if (workaround_enabled && !workaround_interval) {
+		workaround_rapl_mmio_power();
+		workaround_tcc_offset();
+		workaround_interval = 7;
+	} else {
+		--workaround_interval;
+	}
+}
+
+#ifndef ANDROID
+#include <cpuid.h>
+#include <sys/mman.h>
+#define BIT_ULL(nr)	(1ULL << (nr))
+#endif
+
+void cthd_engine_default::workaround_rapl_mmio_power(void)
+{
+#ifndef ANDROID
+	int map_fd;
+	void *rapl_mem;
+	unsigned char *rapl_pkg_pwr_addr;
+	unsigned long long pkg_power_limit;
+
+	unsigned int ebx, ecx, edx;
+	unsigned int fms, family, model;
+
+	csys_fs sys_fs;
+
+
+	ecx = edx = 0;
+	__cpuid(1, fms, ebx, ecx, edx);
+	family = (fms >> 8) & 0xf;
+	model = (fms >> 4) & 0xf;
+	if (family == 6 || family == 0xf)
+		model += ((fms >> 16) & 0xf) << 4;
+
+	// Apply for KabyLake only
+	if (model != 0x8e && model != 0x9e)
+		return;
+
+	map_fd = open("/dev/mem", O_RDWR, 0);
+	if (map_fd < 0)
+		return;
+
+	rapl_mem = mmap(NULL, 4096, PROT_READ | PROT_WRITE, MAP_SHARED, map_fd,
+			0xfed15000);
+	if (!rapl_mem || rapl_mem == MAP_FAILED) {
+		close(map_fd);
+	}
+
+	rapl_pkg_pwr_addr = ((unsigned char *)rapl_mem + 0x9a0);
+	pkg_power_limit = *(unsigned long long *)rapl_pkg_pwr_addr;
+	*(unsigned long long *)rapl_pkg_pwr_addr = pkg_power_limit
+			& ~BIT_ULL(15);
+
+	munmap(rapl_mem, 4096);
+	close(map_fd);
+#endif
+}
+
+void cthd_engine_default::workaround_tcc_offset(void)
+{
+#ifndef ANDROID
+	csys_fs sys_fs;
+	int tcc;
+
+	if (sys_fs.exists("/sys/bus/pci/devices/0000:00:04.0/tcc_offset_degree_celsius")) {
+		if (sys_fs.read("/sys/bus/pci/devices/0000:00:04.0/tcc_offset_degree_celsius", &tcc) <= 0)
+			return;
+
+		if (tcc > 5)
+			sys_fs.write("/sys/bus/pci/devices/0000:00:04.0/tcc_offset_degree_celsius", 5);
+	} else {
+		csys_fs msr_sysfs;
+		int ret;
+
+		if(msr_sysfs.exists("/dev/cpu/0/msr")) {
+			unsigned long long val = 0;
+
+			ret = msr_sysfs.read("/dev/cpu/0/msr", 0x1a2, (char *)&val, sizeof(val));
+			if (ret > 0) {
+				int tcc;
+
+				tcc = (val >> 24) & 0xff;
+				if (tcc > 5) {
+					val &= ~(0xff << 24);
+					val |= (0x05 << 24);
+					msr_sysfs.write("/dev/cpu/0/msr", 0x1a2, val);
+				}
+			}
+		}
+	}
+#endif
+}

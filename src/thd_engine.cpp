@@ -155,6 +155,7 @@ void cthd_engine::thd_engine_thread() {
 				thd_log_debug("Terminating thread..\n");
 			}
 		}
+		workarounds();
 	}
 	thd_log_debug("thd_engine_thread_end\n");
 }
@@ -318,6 +319,7 @@ int cthd_engine::thd_engine_start(bool ignore_cpuid_check) {
 		thd_log_info("Control is taken over from kernel\n");
 		takeover_thermal_control();
 	}
+
 	return ret;
 }
 

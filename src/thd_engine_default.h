@@ -33,19 +33,23 @@ private:
 	int add_replace_cdev(cooling_dev_t *config);
 	bool add_int340x_processor_dev(void);
 	void disable_cpu_zone(thermal_zone_t *zone_config);
+	void workaround_rapl_mmio_power(void);
+	void workaround_tcc_offset(void);
 
 	cthd_cpu_default_binding def_binding;
+	int workaround_interval;
 
 public:
 	static const int power_clamp_reduction_percent = 5;
 
 	cthd_engine_default() :
-			cthd_engine() {
+			cthd_engine(), workaround_interval(0) {
 	}
 	~cthd_engine_default();
 	int read_thermal_zones();
 	int read_cooling_devices();
 	int read_thermal_sensors();
+	void workarounds();
 };
 
 int thd_engine_create_default_engine(bool ignore_cpuid_check,
