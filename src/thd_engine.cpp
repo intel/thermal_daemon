@@ -658,6 +658,7 @@ static supported_ids_t id_table[] = {
 		{ 6, 0x8e }, // kabylake
 		{ 6, 0x9e }, // kabylake
 		{ 6, 0x66 }, // Cannonlake
+		{ 6, 0x7e }, // Icelake
 		{ 0, 0 } // Last Invalid entry
 };
 #endif
