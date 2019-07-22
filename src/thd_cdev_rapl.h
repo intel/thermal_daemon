@@ -57,16 +57,26 @@ public:
 	cthd_sysfs_cdev_rapl(unsigned int _index, int package) :
 			cthd_cdev(_index,
 					"/sys/devices/virtual/powercap/intel-rapl/intel-rapl:0/"), phy_max(
-					0), package_id(package), constraint_index(0), dynamic_phy_max_enable(
-					false), pl0_max_pwr(0), pl0_min_pwr(0), pl0_min_window(0), pl0_step_pwr(
-					0), bios_locked(false), constrained(false), power_on_constraint_0_pwr(0) {
+					0), package_id(package), constraint_index(
+					0), dynamic_phy_max_enable(
+					false), pl0_max_pwr(0), pl0_min_pwr(0), pl0_min_window(
+					0), pl0_step_pwr(
+					0), bios_locked(false), constrained(
+					false), power_on_constraint_0_pwr(0), power_on_constraint_0_time_window(
+					0)
+	{
 	}
 	cthd_sysfs_cdev_rapl(unsigned int _index, int package,
 			std::string contol_path) :
-			cthd_cdev(_index, contol_path), phy_max(0), package_id(package), constraint_index(
-					0), dynamic_phy_max_enable(false), pl0_max_pwr(0), pl0_min_pwr(
-					0), pl0_min_window(0), pl0_step_pwr(0), bios_locked(false), constrained(
-					false), power_on_constraint_0_pwr(0) {
+			cthd_cdev(_index, contol_path), phy_max(0), package_id(
+					package), constraint_index(
+					0), dynamic_phy_max_enable(false), pl0_max_pwr(
+					0), pl0_min_pwr(
+					0), pl0_min_window(0), pl0_step_pwr(0), bios_locked(
+					false), constrained(
+					false), power_on_constraint_0_pwr(0), power_on_constraint_0_time_window(
+					0)
+	{
 	}
 
 	virtual void set_curr_state(int state, int arg);

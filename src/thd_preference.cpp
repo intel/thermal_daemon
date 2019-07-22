@@ -25,7 +25,7 @@
 #include "thd_preference.h"
 
 cthd_preference::cthd_preference() :
-		old_preference(0) {
+		preference(PREF_ENERGY_CONSERVE), old_preference(0) {
 	std::stringstream filename;
 	filename << TDRUNDIR << "/" << "thd_preference.conf";
 	std::ifstream ifs(filename.str().c_str(), std::ifstream::in);

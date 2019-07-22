@@ -1072,6 +1072,9 @@ int cthd_engine::user_add_zone(std::string zone_name, unsigned int trip_temp,
 		pthread_mutex_unlock(&thd_engine_mutex);
 		zone->set_zone_active();
 		++current_zone_index;
+	} else {
+		delete zone;
+		return THD_ERROR;
 	}
 
 	for (unsigned int i = 0; i < zones.size(); ++i) {
