@@ -423,16 +423,6 @@ int cthd_engine_default::read_thermal_zones() {
 		}
 	}
 
-
-	cthd_zone_kbl_g_mcp *mcp = new cthd_zone_kbl_g_mcp(index);
-	if (mcp->zone_update() == THD_SUCCESS) {
-		mcp->set_zone_active();
-		zones.push_back(mcp);
-		++index;
-	} else {
-		delete mcp;
-	}
-
 	current_zone_index = index;
 
 	// Add from XML thermal zone

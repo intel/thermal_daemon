@@ -69,7 +69,7 @@ int cthd_zone_kbl_g_mcp::read_trip_points() {
 
 	int cpu_max_power = cdev_cpu->get_phy_max_state();
 
-	thd_log_info("gpu %d cpu %d\n", gpu_max_power, cpu_max_power);
+	thd_log_debug("gpu %d cpu %d\n", gpu_max_power, cpu_max_power);
 	int total_power = gpu_max_power + cpu_max_power;
 
 	cthd_trip_point trip_pt_passive(0, PASSIVE, total_power ,
