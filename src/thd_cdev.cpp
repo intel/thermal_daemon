@@ -54,12 +54,22 @@ int cthd_cdev::thd_cdev_exponential_controller(int set_point, int target_temp,
 	if (state) {
 		if ((min_state < max_state && curr_state < max_state)
 				|| (min_state > max_state && curr_state > max_state)) {
-			int state = curr_state + inc_dec_val;
+			int state;
+
+			if (inc_val)
+				state = curr_state + inc_val;
+			else
+				state = curr_state + inc_dec_val;
 			if (trend_increase) {
 				if (curr_pow == 0)
 					base_pow_state = curr_state;
 				++curr_pow;
-				state = base_pow_state + int_2_pow(curr_pow) * inc_dec_val;
+
+				if (inc_val)
+					state = base_pow_state + int_2_pow(curr_pow) * inc_val;
+				else
+					state = base_pow_state + int_2_pow(curr_pow) * inc_dec_val;
+
 				thd_log_info(
 						"cdev index:%d consecutive call, increment exponentially state %d (min %d max %d)\n",
 						index, state, min_state, max_state);
@@ -85,7 +95,12 @@ int cthd_cdev::thd_cdev_exponential_controller(int set_point, int target_temp,
 		if (((min_state < max_state && curr_state > min_state)
 				|| (min_state > max_state && curr_state < min_state))
 				&& auto_down_adjust == false) {
-			int state = curr_state - inc_dec_val;
+			int state;
+
+			if (dec_val)
+				state = curr_state - dec_val;
+			else
+				state = curr_state - inc_dec_val;
 			if ((min_state < max_state && state < min_state)
 					|| (min_state > max_state && state > min_state))
 				state = min_state;
@@ -250,16 +265,23 @@ int cthd_cdev::thd_cdev_set_state(int set_point, int target_temp,
 					return THD_SUCCESS;
 				}
 
-			} else if (force) {
-				thd_log_info("forced to min_state \n");
-			} else {
+			} else if (_target_state_valid){
 				// If the deleted entry has a target then on deactivation
 				// set the state to min_state
-				if (_target_state_valid)
-					target_value = get_min_state();
+				target_value = get_min_state();
+			} else if (force) {
+				thd_log_info("forced to min_state \n");
+				target_state_valid = 1;
+				target_value = get_min_state();
 			}
 		} else {
-			target_state_valid = 0;
+			if (force) {
+				thd_log_info("forced to min_state \n");
+				target_state_valid = 1;
+				target_value = get_min_state();
+			} else {
+				target_state_valid = 0;
+			}
 		}
 	}
 

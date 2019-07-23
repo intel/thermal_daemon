@@ -114,13 +114,16 @@ void MainWindow::setupPlotWidget()
     pen.setWidth(1);
 
     currentTempsensorIndex = 0;
+    int active_zone = 0;
     for (uint zone = 0; zone < m_thermaldInterface->getZoneCount(); zone++) {
 
         zoneInformationType *zone_info = m_thermaldInterface->getZone(zone);
         if (!zone_info)
             continue;
 
-        pen.setColor(colors[zone % colors.count()]);
+        pen.setColor(colors[active_zone % colors.count()]);
+        if ( zone_info->active)
+            active_zone++;
 
         int sensor_cnt_per_zone = m_thermaldInterface->getSensorCountForZone(zone);
         if (sensor_cnt_per_zone <= 0)
@@ -128,7 +131,7 @@ void MainWindow::setupPlotWidget()
 
         pen.setStyle(Qt::SolidLine);
 
-        for (int cnt = 0; cnt < sensor_cnt_per_zone; cnt++) {
+        for (int cnt = 0; zone_info->active && cnt < sensor_cnt_per_zone; cnt++) {
             QString sensor_type;
             QString sensor_name;
 
@@ -168,7 +171,7 @@ void MainWindow::setupPlotWidget()
                 line->start->setCoords(0, temp);
                 line->end->setCoords(SAMPLE_STORE_SIZE - 1, temp);
                 line->setPen(pen);
-                if (temp == m_thermaldInterface->getLowestValidTripTempForZone(zone)) {
+                if (zone_info->active && temp == m_thermaldInterface->getLowestValidTripTempForZone(zone)) {
                     line->setVisible(true);
                     m_thermaldInterface->setTripVisibility(zone, trip, true);
                 } else {
@@ -181,6 +184,7 @@ void MainWindow::setupPlotWidget()
         }
     }
 
+#ifdef DISPLAY_UNKNOWN
     // Now display sensors which are not part of any zone. Users can use this and assign to some zone
     for (uint i = 0; i < m_thermaldInterface->getSensorCount(); ++i) {
         sensorInformationType info;
@@ -220,7 +224,7 @@ void MainWindow::setupPlotWidget()
 
         }
     }
-
+#endif
     connect(&tempUpdateTimer, SIGNAL(timeout()),
             this, SLOT(updateTemperatureDataSlot()));
     tempUpdateTimer.start(temp_poll_interval);

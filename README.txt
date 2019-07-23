@@ -60,7 +60,7 @@ Building on Ubuntu
 Build
 
 	./autogen.sh
-	 ./configure prefix=/usr
+	 ./configure prefix=/
 	make
 	sudo make install
 (It will give error for systemd configuration, but ignore)
@@ -77,6 +77,41 @@ If using systemd, use
 -------------------------------------------
 
 Releases
+
+Release 1.9
+- The major change in this version is the active power limits adjustment.
+This will be useful to improve performance on some newer platform. But
+this will will lead to increase in CPU and other temperatures. Hence this
+is important to run dptfxtract version 1.4.1 tool to get performance
+sensitive thermal limits (https://github.com/intel/dptfxtract/commits/v1.4.1).
+If the default configuration picked up by thermald is not optimal, user
+can select other less aggressive configuration. Refer to the README here
+https://github.com/intel/dptfxtract/blob/master/README.txt
+
+This power limit adjustment depends on some kernel changes released with
+kernel version v5.3-rc1. For older kernel release run thermald with
+--workaround-enabled
+But this will depend on /dev/mem access, which means that platforms with
+secure boot must update to newer kernels.
+
+- TCC offset limits
+As reported in some forums that some platforms have issue with high TCC
+offset settings. Under some special condition this offset is adjusted.
+But currently needs msr module loaded to get MSR access
+from user space. I have submitted a patch to have this exported via sysfs
+for v5.4+ kernel.
+
+- To disable all the above performance optimization, use --disable-active-power.
+Since Linux Thermal Daemon implementation doesn't have capability to match
+Intel® Dynamic Platform and Thermal Framework (DPTF) implementation on other
+Operating systems, this option is very important if the user is experiencing
+thermal issues. If there is some OEM/manufactures have issue with this
+implementation, please get back to me for blacklist of platforms.
+
+- Added support for Ice Lake platform
+
+- ThermalMonitor
+Cleaned up the plots, so that only active sensors and trips gets plotted.
 
 Release 1.8
 - Support of KBL-G with discrete GPU

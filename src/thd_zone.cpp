@@ -115,8 +115,6 @@ void cthd_zone::sort_and_update_poll_trip() {
 			trip_points[i].trip_dump();
 		}
 
-		// Set the lowest trip point as the threshold for sensor async mode
-		// Use that the lowest point, after that we poll
 		if (trip_points.size())
 			polling_trip = trip_points[0].get_trip_temp();
 
@@ -128,15 +126,23 @@ void cthd_zone::sort_and_update_poll_trip() {
 				poll_trip_present = 1;
 				poll_trip_index = i;
 			}
-			if (polling_trip > trip_points[i].get_trip_temp())
+			if (trip_points[i].get_trip_type() == PASSIVE && polling_trip > trip_points[i].get_trip_temp())
 				polling_trip = trip_points[i].get_trip_temp();
 			thd_log_info("trip type: %d temp: %d \n",
 					trip_points[i].get_trip_type(),
 					trip_points[i].get_trip_temp());
 		}
 
-		if (polling_trip > def_async_trip_offset)
-			polling_trip -= def_async_trip_offset;
+		if (!polling_trip)
+			return;
+
+		unsigned int poll_offset = polling_trip * def_async_trip_offset_pct
+				/ 100;
+
+		if (poll_offset < def_async_trip_offset)
+			poll_offset = def_async_trip_offset;
+
+		polling_trip -= poll_offset;
 
 		for (unsigned int i = 0; i < sensors.size(); ++i) {
 			cthd_sensor *sensor;
@@ -172,7 +178,7 @@ int cthd_zone::zone_update() {
 	if (usr_psv_temp > 0) {
 		cthd_trip_point trip_pt_passive(0, PASSIVE, usr_psv_temp, 0, index,
 		DEFAULT_SENSOR_ID);
-		update_trip_temp(trip_pt_passive);
+		update_highest_trip_temp(trip_pt_passive);
 	}
 
 	ret = read_cdev_trip_points();
@@ -308,6 +314,22 @@ void cthd_zone::add_trip(cthd_trip_point &trip) {
 		trip_points.push_back(trip);
 
 	sort_and_update_poll_trip();
+}
+
+void cthd_zone::update_highest_trip_temp(cthd_trip_point &trip)
+{
+	if (trip_points.size()) {
+		thd_log_info("trip_points.size():%lu\n", trip_points.size());
+		for (unsigned int j = trip_points.size() - 1;; --j) {
+			if (trip_points[j].get_trip_type() == trip.get_trip_type()) {
+				thd_log_info("updating existing trip temp \n");
+				trip_points[j].update_trip_temp(trip.get_trip_temp());
+				trip_points[j].update_trip_hyst(trip.get_trip_hyst());
+				break;
+			}
+		}
+		sort_and_update_poll_trip();
+	}
 }
 
 void cthd_zone::update_trip_temp(cthd_trip_point &trip) {

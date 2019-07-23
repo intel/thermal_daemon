@@ -155,6 +155,7 @@ void cthd_engine::thd_engine_thread() {
 				thd_log_debug("Terminating thread..\n");
 			}
 		}
+		workarounds();
 	}
 	thd_log_debug("thd_engine_thread_end\n");
 }
@@ -318,6 +319,7 @@ int cthd_engine::thd_engine_start(bool ignore_cpuid_check) {
 		thd_log_info("Control is taken over from kernel\n");
 		takeover_thermal_control();
 	}
+
 	return ret;
 }
 
@@ -456,7 +458,8 @@ void cthd_engine::fast_poll_enable_disable(bool status, message_capsul_t *msg) {
 
 	if (status) {
 		fast_poll_sensor_mask |= (1 << (*sensor_id));
-		saved_poll_interval = poll_timeout_msec;
+		if (!saved_poll_interval)
+			saved_poll_interval = poll_timeout_msec;
 		poll_timeout_msec = 1000;
 		thd_log_debug("thd_engine fast polling enabled via %u \n", *sensor_id);
 	} else {
@@ -655,6 +658,7 @@ static supported_ids_t id_table[] = {
 		{ 6, 0x8e }, // kabylake
 		{ 6, 0x9e }, // kabylake
 		{ 6, 0x66 }, // Cannonlake
+		{ 6, 0x7e }, // Icelake
 		{ 0, 0 } // Last Invalid entry
 };
 #endif
@@ -1068,6 +1072,9 @@ int cthd_engine::user_add_zone(std::string zone_name, unsigned int trip_temp,
 		pthread_mutex_unlock(&thd_engine_mutex);
 		zone->set_zone_active();
 		++current_zone_index;
+	} else {
+		delete zone;
+		return THD_ERROR;
 	}
 
 	for (unsigned int i = 0; i < zones.size(); ++i) {

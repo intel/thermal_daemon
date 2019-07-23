@@ -70,6 +70,8 @@ static gboolean dbus_enable;
 int thd_poll_interval = 4; //in seconds
 
 bool thd_ignore_default_control = false;
+bool workaround_enabled = false;
+bool disable_active_power = false;
 
 // check cpuid
 static gboolean ignore_cpuid_check = false;
@@ -83,32 +85,43 @@ void thd_logger(const gchar *log_domain, GLogLevelFlags log_level,
 		const gchar *message, gpointer user_data) {
 	if (!(thd_log_level & log_level))
 		return;
-	if (thd_daemonize) {
-		int syslog_priority;
-		switch (log_level) {
-		case G_LOG_LEVEL_ERROR:
-			syslog_priority = LOG_CRIT;
-			break;
-		case G_LOG_LEVEL_CRITICAL:
-			syslog_priority = LOG_ERR;
-			break;
-		case G_LOG_LEVEL_WARNING:
-			syslog_priority = LOG_WARNING;
-			break;
-		case G_LOG_LEVEL_MESSAGE:
-			syslog_priority = LOG_NOTICE;
-			break;
-		case G_LOG_LEVEL_DEBUG:
-			syslog_priority = LOG_DEBUG;
-			break;
-		case G_LOG_LEVEL_INFO:
-		default:
-			syslog_priority = LOG_INFO;
-			break;
-		}
-		syslog(syslog_priority, "%s", message);
-	} else
-		g_print("%s", message);
+
+	int syslog_priority;
+	const char *prefix;
+
+	switch (log_level) {
+	case G_LOG_LEVEL_ERROR:
+		prefix = "[CRIT]";
+		syslog_priority = LOG_CRIT;
+		break;
+	case G_LOG_LEVEL_CRITICAL:
+		prefix = "[ERR]";
+		syslog_priority = LOG_ERR;
+		break;
+	case G_LOG_LEVEL_WARNING:
+		prefix = "[WARN]";
+		syslog_priority = LOG_WARNING;
+		break;
+	case G_LOG_LEVEL_MESSAGE:
+		prefix = "[MSG]";
+		syslog_priority = LOG_NOTICE;
+		break;
+	case G_LOG_LEVEL_DEBUG:
+		prefix = "[DEBUG]";
+		syslog_priority = LOG_DEBUG;
+		break;
+	case G_LOG_LEVEL_INFO:
+	default:
+		prefix = "[INFO]";
+		syslog_priority = LOG_INFO;
+		break;
+	}
+
+	if (thd_daemonize)
+		syslog(syslog_priority, "%s%s", prefix, message);
+	else
+		g_print("%s%s", prefix, message);
+
 }
 
 void clean_up_lockfile(void) {
@@ -191,6 +204,12 @@ int main(int argc, char *argv[]) {
 			{ "ignore-default-control", 0, 0, G_OPTION_ARG_NONE, &ignore_default_control, N_(
 							"Ignore default CPU temperature control."
 							"Strictly follow thermal-conf.xml"), NULL },
+			{ "workaround-enabled", 0, 0, G_OPTION_ARG_NONE,
+						&workaround_enabled, N_(
+						"Enable workarounds for power"), NULL },
+			{ "disable-active-power", 0, 0, G_OPTION_ARG_NONE,
+						&disable_active_power, N_(
+						"Disable active power settings to reduce thermal impact"), NULL },
 			{ NULL, 0, 0,
 					G_OPTION_ARG_NONE, NULL, NULL, NULL } };
 

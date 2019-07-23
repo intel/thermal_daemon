@@ -43,19 +43,25 @@ and associated cooling device. For example a trip temperature X in a sensor can 
 the sensor temperature = X, the cooling driver "Y" is activated.
 
 Thermal daemon allows one to change this relationship or add new one via a thermal configuration file (thermal-conf.xml). This
-file is automatically created and used, if the platform has ACPI thermal relationship table. If not this needs to be
-manually configured.
+file is automatically created (thermal-conf.xml.auto) and used, if the platform has ACPI thermal relationship table.
+If not this needs to be manually configured.
 
-When there is a sensor, which has no associate cooling device, via configuration file or thermal relationship table, then
-this sensor is tested for relationship with CPU load dynamically up to maximum 3 times. If there is no relationship, then
-it is added to a black list of unbinded sensors and not tried again.
+For manual configuration refer to the manual page of the thermal-conf.xml.
 
-Optionally thermal daemon can act as an exclusive thermal controller by using thermal sysfs and acting as a user space governor.
-In this case kernel thermal core is not active and decision is taken by thermal daemon only.
+In some newer platforms the auto creation of the config file is done by a companion tool "dptfxtract". This tool can be downloaded from
+"https://github.com/intel/dptfxtract". It is suggested as parts of the install process, run dptfxtract.
 
-Dbus Interface: When started with dbus-enable option, dbus interface can be used to control thermal temperature at which cooling action takes place. This change is persistent. For example, to start CPU cooling at 80C, dbus-send command can be used:
+There can be multiple configuration files. User can select a configuration file via -config-file option to overide the default selection. The default selection picks one of the file in the following order:
 
-# dbus-send --system --dest=org.freedesktop.thermald /org/freedesktop/thermald org.freedesktop.thermald.SetUserPassiveTemperature string:cpu uint32:80000
+- /etc/thermald/thermal-conf.xml.auto
+
+- /var/run/thermald/thermal-conf.xml.auto
+
+- /etc/thermald/thermal-conf.xml
+
+(*Assuming configure prefix=/ is used during build.)
+
+There is another companion tool "ThermalMonitor", which presents a graphical front end. This allows the monitoring of sensors and changing of thermal trips to give the user more control. The source code of "ThermalMonitor" is a part of the thermald github source, in the tools folder.
 
 
 .SH OPTIONS
@@ -91,6 +97,13 @@ Ignore cpuid check for supported CPU models.
 .TP
 .B \-\-config-file
 Specify thermal-conf.xml path and ignore default thermal-conf.xml.
+.TP
+.B \-\-ignore-default-control
+Ignore default CPU temperature control. Strictly follow thermal-conf.xml or thermal-conf.xml.auto.
+.B \-\-workaround-enabled
+Enable special workarounds. This is currently used for /dev/mem based power control.
+.B \-\-disable-active-power
+Disable active power management. This will not set active power limits.
 
 .SH SEE ALSO
 thermal-conf.xml(5)

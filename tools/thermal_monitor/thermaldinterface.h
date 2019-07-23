@@ -54,11 +54,13 @@ typedef struct {
 } tripInformationType;
 
 typedef struct {
+    uint id;
     QString name;
     uint sensor_count;
     uint trip_count;
     QVector<tripInformationType> trips;
     uint lowest_valid_index;
+    int active;
 } zoneInformationType;
 
 class ThermaldInterface {
