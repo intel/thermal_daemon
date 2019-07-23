@@ -168,7 +168,8 @@ int cthd_acpi_rel::generate_conf(std::string file_name) {
 
 	if (int3400.match_supported_uuid() != THD_SUCCESS) {
 		thd_log_info("Passive 1 UUID is not present, hence ignore _TRT, as it may have junk!!");
-		return -1;
+		ret = -1;
+		goto cleanup;
 	}
 
 	conf_file.open(file_name.c_str());
