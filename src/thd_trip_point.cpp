@@ -350,6 +350,7 @@ int cthd_trip_point::thd_trip_point_add_cdev_index(int _index, int influence) {
 		thd_cdev.influence = influence;
 		thd_cdev.sampling_priod = 0;
 		thd_cdev.last_op_time = 0;
+		thd_cdev.target_state_valid = 0;
 		trip_cdev_add(thd_cdev);
 		return THD_SUCCESS;
 	} else {
