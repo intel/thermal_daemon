@@ -71,6 +71,7 @@ int thd_poll_interval = 4; //in seconds
 
 bool thd_ignore_default_control = false;
 bool workaround_enabled = false;
+bool disable_active_power = false;
 
 // check cpuid
 static gboolean ignore_cpuid_check = false;
@@ -206,6 +207,9 @@ int main(int argc, char *argv[]) {
 			{ "workaround-enabled", 0, 0, G_OPTION_ARG_NONE,
 						&workaround_enabled, N_(
 						"Enable workarounds for power and TCC offset"), NULL },
+			{ "disable-active-power", 0, 0, G_OPTION_ARG_NONE,
+						&disable_active_power, N_(
+						"Disable active power settings to reduce thermal impact"), NULL },
 			{ NULL, 0, 0,
 					G_OPTION_ARG_NONE, NULL, NULL, NULL } };
 

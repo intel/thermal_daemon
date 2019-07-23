@@ -680,14 +680,18 @@ int cthd_engine_default::read_cooling_devices() {
 	}
 
 	// Add RAPL mmio cooling device
-	cthd_sysfs_cdev_rapl *rapl_mmio_dev = new cthd_sysfs_cdev_rapl(
-			current_cdev_index, 0, "/sys/devices/virtual/powercap/intel-rapl-mmio/intel-rapl-mmio:0/");
-	rapl_mmio_dev->set_cdev_type("rapl_controller_mmio");
-	if (rapl_mmio_dev->update() == THD_SUCCESS) {
-		cdevs.push_back(rapl_mmio_dev);
-		++current_cdev_index;
-	} else {
-		delete rapl_mmio_dev;
+	if (!disable_active_power) {
+		cthd_sysfs_cdev_rapl *rapl_mmio_dev =
+				new cthd_sysfs_cdev_rapl(
+						current_cdev_index, 0,
+						"/sys/devices/virtual/powercap/intel-rapl-mmio/intel-rapl-mmio:0/");
+		rapl_mmio_dev->set_cdev_type("rapl_controller_mmio");
+		if (rapl_mmio_dev->update() == THD_SUCCESS) {
+			cdevs.push_back(rapl_mmio_dev);
+			++current_cdev_index;
+		} else {
+			delete rapl_mmio_dev;
+		}
 	}
 
 	// Add Intel P state driver as cdev
@@ -791,7 +795,7 @@ int thd_engine_create_default_engine(bool ignore_cpuid_check,
 void cthd_engine_default::workarounds()
 {
 	// Every 30 seconds repeat
-	if (workaround_enabled && !workaround_interval) {
+	if (!disable_active_power && workaround_enabled && !workaround_interval) {
 		workaround_rapl_mmio_power();
 		workaround_tcc_offset();
 		workaround_interval = 7;

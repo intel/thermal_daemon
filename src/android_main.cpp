@@ -51,6 +51,7 @@ int thd_poll_interval = 4; //in seconds
 
 bool thd_ignore_default_control = false;
 bool workaround_enabled = false;
+bool disable_active_power = false;
 
 static int pid_file_handle;
 
