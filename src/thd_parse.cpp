@@ -59,7 +59,8 @@ char *cthd_parse::char_trim(char *str) {
 }
 
 cthd_parse::cthd_parse() :
-		matched_thermal_info_index(-1), doc(NULL), root_element(NULL) {
+		matched_thermal_info_index(-1), doc(NULL), root_element(NULL), auto_config(
+				0) {
 	std::string name_conf = TDCONFDIR;
 	std::string name_run = TDRUNDIR;
 #ifdef ANDROID
@@ -81,11 +82,13 @@ int cthd_parse::parser_init(std::string config_file) {
 		if (conf_auto.is_open()) {
 			thd_log_warn("Using generated %s \n", filename_auto_conf.c_str());
 			xml_config_file = filename_auto_conf.c_str();
+			auto_config = 1;
 		} else {
 			ret = rel.generate_conf(filename_auto);
 			if (!ret) {
 				thd_log_warn("Using generated %s\n", filename_auto.c_str());
 				xml_config_file = filename_auto.c_str();
+				auto_config = 1;
 			} else {
 				xml_config_file = filename.c_str();
 			}

@@ -785,7 +785,7 @@ int thd_engine_create_default_engine(bool ignore_cpuid_check,
 void cthd_engine_default::workarounds()
 {
 	// Every 30 seconds repeat
-	if (!disable_active_power && workaround_enabled && !workaround_interval) {
+	if (!disable_active_power && !workaround_interval) {
 		workaround_rapl_mmio_power();
 		workaround_tcc_offset();
 		workaround_interval = 7;
@@ -813,6 +813,8 @@ void cthd_engine_default::workaround_rapl_mmio_power(void)
 
 	csys_fs sys_fs;
 
+	if (!workaround_enabled)
+		return;
 
 	ecx = edx = 0;
 	__cpuid(1, fms, ebx, ecx, edx);
@@ -851,12 +853,35 @@ void cthd_engine_default::workaround_tcc_offset(void)
 	csys_fs sys_fs;
 	int tcc;
 
-	if (sys_fs.exists("/sys/bus/pci/devices/0000:00:04.0/tcc_offset_degree_celsius")) {
-		if (sys_fs.read("/sys/bus/pci/devices/0000:00:04.0/tcc_offset_degree_celsius", &tcc) <= 0)
-			return;
+	if (tcc_offset_checked && tcc_offset_low)
+		return;
 
-		if (tcc > 5)
-			sys_fs.write("/sys/bus/pci/devices/0000:00:04.0/tcc_offset_degree_celsius", 5);
+	if (!parser.thermal_conf_auto()) {
+		tcc_offset_checked = 1;
+		tcc_offset_low = 1;
+		return;
+	}
+
+	if (sys_fs.exists("/sys/bus/pci/devices/0000:00:04.0/tcc_offset_degree_celsius")) {
+		if (sys_fs.read("/sys/bus/pci/devices/0000:00:04.0/tcc_offset_degree_celsius", &tcc) <= 0) {
+			tcc_offset_checked = 1;
+			tcc_offset_low = 1;
+			return;
+		}
+
+		if (tcc > 10) {
+			int ret;
+
+			ret = sys_fs.write("/sys/bus/pci/devices/0000:00:04.0/tcc_offset_degree_celsius", 5);
+			if (ret < 0)
+				tcc_offset_low = 1; // probably locked so retryA
+
+			tcc_offset_checked = 1;
+		} else {
+			if (!tcc_offset_checked)
+				tcc_offset_low = 1;
+			tcc_offset_checked = 1;
+		}
 	} else {
 		csys_fs msr_sysfs;
 		int ret;
@@ -869,10 +894,15 @@ void cthd_engine_default::workaround_tcc_offset(void)
 				int tcc;
 
 				tcc = (val >> 24) & 0xff;
-				if (tcc > 5) {
+				if (tcc > 10) {
 					val &= ~(0xff << 24);
 					val |= (0x05 << 24);
 					msr_sysfs.write("/dev/cpu/0/msr", 0x1a2, val);
+					tcc_offset_checked = 1;
+				} else {
+					if (!tcc_offset_checked)
+						tcc_offset_low = 1;
+					tcc_offset_checked = 1;
 				}
 			}
 		}

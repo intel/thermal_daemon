@@ -151,6 +151,7 @@ private:
 	int matched_thermal_info_index;
 	xmlDoc *doc;
 	xmlNode *root_element;
+	int auto_config;
 
 	int parse(xmlNode * a_node, xmlDoc *doc);
 	int parse_pid_values(xmlNode * a_node, xmlDoc *doc, pid_control_t *pid_ptr);
@@ -204,6 +205,10 @@ public:
 
 	int sensor_count() {
 		return thermal_info_list[matched_thermal_info_index].sensors.size();
+	}
+
+	int thermal_conf_auto() {
+		return auto_config;
 	}
 
 	int set_default_preference();

@@ -38,12 +38,15 @@ private:
 
 	cthd_cpu_default_binding def_binding;
 	int workaround_interval;
+	int tcc_offset_checked;
+	int tcc_offset_low;
 
 public:
 	static const int power_clamp_reduction_percent = 5;
 
 	cthd_engine_default() :
-			cthd_engine(), workaround_interval(0) {
+			cthd_engine(), workaround_interval(0),
+			tcc_offset_checked(0), tcc_offset_low(0) {
 	}
 	~cthd_engine_default();
 	int read_thermal_zones();

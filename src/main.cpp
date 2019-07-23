@@ -206,7 +206,7 @@ int main(int argc, char *argv[]) {
 							"Strictly follow thermal-conf.xml"), NULL },
 			{ "workaround-enabled", 0, 0, G_OPTION_ARG_NONE,
 						&workaround_enabled, N_(
-						"Enable workarounds for power and TCC offset"), NULL },
+						"Enable workarounds for power"), NULL },
 			{ "disable-active-power", 0, 0, G_OPTION_ARG_NONE,
 						&disable_active_power, N_(
 						"Disable active power settings to reduce thermal impact"), NULL },
