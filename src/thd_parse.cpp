@@ -103,6 +103,7 @@ int cthd_parse::parser_init(std::string config_file) {
 
 	if (root_element == NULL) {
 		thd_log_warn("error: could not get root element \n");
+		xmlFreeDoc(doc);
 		return THD_ERROR;
 	}
 
