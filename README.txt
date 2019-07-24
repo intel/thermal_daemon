@@ -8,11 +8,16 @@ Prerequisites:
 			Intel RAPL power capping driver : Available from Linux kernel 3.13.rc1
 			Intel P State driver (Available in Linux kernel stable release)
 			Intel Power clamp driver (Available in Linux kernel stable release)
+			Intel INT340X drivers
+			Intel RAPL-mmio power capping driver: Available from 5.3-rc1
 
-		CONFIG_X86_MSR, so that x86 MSR can be read/write from user space to control RAPL if no RAPL powecap class driver is not present.
-
-	Default
-		If none of the above available cpufreq to control P states.
+Companion tools
+	ThermalMonitor
+		Graphical front end for monitoring and control.
+		Source code is as part of tools folder in this git repository.
+	dptfxtract
+		Download from: https://github.com/intel/dptfxtract
+		This generates configuration files for thermald on some systems.
 
 Building and executing on Fedora
 1.
