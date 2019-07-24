@@ -670,7 +670,7 @@ int cthd_engine_default::read_cooling_devices() {
 	}
 
 	// Add RAPL mmio cooling device
-	if (!disable_active_power) {
+	if (!disable_active_power && parser.thermal_conf_auto()) {
 		cthd_sysfs_cdev_rapl *rapl_mmio_dev =
 				new cthd_sysfs_cdev_rapl(
 						current_cdev_index, 0,
