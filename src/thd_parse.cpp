@@ -97,6 +97,7 @@ int cthd_parse::parser_init(std::string config_file) {
 		xml_config_file = config_file.c_str();
 	}
 
+	thd_log_info("Using config file %s\n", xml_config_file);
 	doc = xmlReadFile(xml_config_file, NULL, 0);
 	if (doc == NULL) {
 		thd_log_warn("error: could not parse file %s\n", xml_config_file);

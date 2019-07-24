@@ -211,6 +211,10 @@ public:
 		return auto_config;
 	}
 
+	int thermal_matched_platform_index() {
+		return matched_thermal_info_index;
+	}
+
 	int set_default_preference();
 	int trip_count(unsigned int zone_index);
 	bool pid_status(int cdev_index);
