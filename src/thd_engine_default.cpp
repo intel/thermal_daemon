@@ -670,7 +670,7 @@ int cthd_engine_default::read_cooling_devices() {
 	}
 
 	// Add RAPL mmio cooling device
-	if (!disable_active_power && parser.thermal_conf_auto()) {
+	if (!disable_active_power && parser.thermal_matched_platform_index() >= 0) {
 		cthd_sysfs_cdev_rapl *rapl_mmio_dev =
 				new cthd_sysfs_cdev_rapl(
 						current_cdev_index, 0,
@@ -856,7 +856,7 @@ void cthd_engine_default::workaround_tcc_offset(void)
 	if (tcc_offset_checked && tcc_offset_low)
 		return;
 
-	if (!parser.thermal_conf_auto()) {
+	if (parser.thermal_matched_platform_index() < 0) {
 		tcc_offset_checked = 1;
 		tcc_offset_low = 1;
 		return;
