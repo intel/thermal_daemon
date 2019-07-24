@@ -74,6 +74,18 @@ If using systemd, use
 - Stop service
 	sudo systemctl stop thermald.service
 
+Building and executing on openSUSE
+1.
+Install
+	zypper in automake
+	zypper in gcc
+	zypper in gcc-c++
+	zypper in glib2-devel
+	zypper in dbus-1-glib-devel
+	zypper in libxml2-devel
+
+For build, follow the same procedure as Fedora.
+
 -------------------------------------------
 
 Releases
