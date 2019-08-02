@@ -51,7 +51,7 @@ LOCAL_CFLAGS := \
 		-Wall \
 		-Werror \
 
-ifneq (,$(filter userdebug eng, $(TARGET_BUILD_VARIANT)))
+ifneq (,$(filter eng, $(TARGET_BUILD_VARIANT)))
   LOCAL_CFLAGS += -DLOG_DEBUG_INFO=1
 endif
 
