@@ -95,6 +95,10 @@ For build, follow the same procedure as Fedora.
 
 Releases
 
+Release 1.9.1
+- Remove default CPU temperature compensation for auto generated configuration from dptfxtract
+- Minor Android build warnings
+
 Release 1.9
 - The major change in this version is the active power limits adjustment.
 This will be useful to improve performance on some newer platform. But
