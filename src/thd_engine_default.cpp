@@ -333,6 +333,14 @@ bool cthd_engine_default::add_int340x_processor_dev(void)
 }
 
 void cthd_engine_default::disable_cpu_zone(thermal_zone_t *zone_config) {
+
+	if (parser.thermal_conf_auto()) {
+		cthd_zone *cpu_zone = search_zone("cpu");
+		if (cpu_zone)
+			cpu_zone->set_zone_inactive();
+		return;
+	}
+
 	cthd_zone *zone = search_zone(zone_config->type);
 	if (!zone)
 		return;
