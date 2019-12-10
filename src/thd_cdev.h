@@ -253,9 +253,15 @@ public:
 	}
 
 	void cdev_dump() {
-		thd_log_info("%d: %s, C:%d MN: %d MX:%d ST:%d pt:%s rd_bk %d \n", index,
+		if (inc_val || dec_val){
+			thd_log_info("%d: %s, C:%d MN: %d MX:%d Inc ST:%d Dec ST:%d pt:%s rd_bk %d \n", index,
+				type_str.c_str(), curr_state, min_state, max_state, inc_val, dec_val,
+				get_base_path().c_str(), read_back);
+		} else {
+			thd_log_info("%d: %s, C:%d MN: %d MX:%d ST:%d pt:%s rd_bk %d \n", index,
 				type_str.c_str(), curr_state, min_state, max_state, inc_dec_val,
 				get_base_path().c_str(), read_back);
+		}
 	}
 };
 
