@@ -78,7 +78,27 @@ AC_C_CONST
 AC_C_INLINE
 AC_TYPE_SIZE_T
 
+# Check for flag support.
+for flag in \
+    -Wall \
+    -Wclobbered \
+    -Wempty-body \
+    -Werror \
+    -Wformat \
+    -Wignored-qualifiers \
+    -Wmissing-field-initializers \
+    -Wreorder \
+    -Wreturn-type \
+    -Wsign-compare \
+    -Wtype-limits \
+    -Wuninitialized \
+    -Wunused-but-set-variable \
+; do
+    AX_CHECK_COMPILE_FLAG([-Werror ${flag}],
+                          [CXXFLAGS="$CXXFLAGS ${flag}"])
+done
+
 AC_CONFIG_FILES([Makefile
-data/Makefile])
+                 data/Makefile])
 
 AC_OUTPUT
