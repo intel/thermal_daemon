@@ -24,11 +24,14 @@ Building and executing on Fedora
 Install
 
 	yum install automake
+	yum install autoconf-archive
 	yum install gcc
 	yum install gcc-c++
 	yum install glib-devel
 	yum install dbus-glib-devel
 	yum install libxml2-devel
+
+Replace yum with dnf for later Fedora versions.
 
 2
 Build
@@ -55,6 +58,7 @@ Build
 Building on Ubuntu
 1. Install
 	sudo apt-get install autoconf
+	sudo apt-get install autoconf-archive
 	sudo apt-get install g++
 	sudo apt-get install libglib2.0-dev
 	sudo apt-get install libdbus-1-dev
@@ -88,6 +92,7 @@ Install
 	zypper in glib2-devel
 	zypper in dbus-1-glib-devel
 	zypper in libxml2-devel
+	zypper in automake autoconf-archive
 
 For build, follow the same procedure as Fedora.
 
