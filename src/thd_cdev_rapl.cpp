@@ -62,7 +62,9 @@ void cthd_sysfs_cdev_rapl::set_curr_state(int state, int control) {
 
 		curr_state = min_state;
 
-		rapl_update_enable_status(0);
+		// If disabled during power on, disable
+		if (!power_on_enable_status)
+			rapl_update_enable_status(0);
 
 		rapl_update_time_window(power_on_constraint_0_time_window);
 
@@ -73,7 +75,11 @@ void cthd_sysfs_cdev_rapl::set_curr_state(int state, int control) {
 			// If it is the first time to activate this device, set the enabled flag
 			// and set the time window.
 			rapl_update_time_window(def_rapl_time_window);
-			rapl_update_enable_status(1);
+
+			// Set enable flag only if it was disabled
+			if (!power_on_enable_status)
+				rapl_update_enable_status(1);
+
 			constrained = true;
 		}
 	}
@@ -308,6 +314,10 @@ int cthd_sysfs_cdev_rapl::update() {
 		thd_engine->rapl_power_meter.rapl_start_measure_power();
 		dynamic_phy_max_enable = true;
 		//set_debounce_interval(1);
+
+		// By default enable the rapl device to enforce any power limits
+		rapl_update_enable_status(1);
+
 	} else {
 
 		// This is not a DPTF platform
@@ -358,7 +368,9 @@ int cthd_sysfs_cdev_rapl::update() {
 	}
 
 	power_on_constraint_0_time_window = rapl_read_time_window();
-	rapl_update_enable_status(0);
+	power_on_enable_status = rapl_read_enable_status();
+
+	thd_log_debug("power_on_enable_status: %d\n", power_on_enable_status);
 
 	thd_log_debug("RAPL max limit %d increment: %d\n", max_state, inc_dec_val);
 
