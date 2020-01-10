@@ -265,22 +265,21 @@ int cthd_engine::thd_engine_start(bool ignore_cpuid_check) {
 		if (i == zones.size()) {
 			thd_log_info("Proceed without polling mode! \n");
 		}
-	}
 
-	uevent_fd = poll_fd_cnt;
-	poll_fds[uevent_fd].fd = kobj_uevent.kobj_uevent_open();
-	if (poll_fds[uevent_fd].fd < 0) {
-		thd_log_warn("Invalid kobj_uevent handle\n");
-		uevent_fd = -1;
-		goto skip_kobj;
+		uevent_fd = poll_fd_cnt;
+		poll_fds[uevent_fd].fd = kobj_uevent.kobj_uevent_open();
+		if (poll_fds[uevent_fd].fd < 0) {
+			thd_log_warn("Invalid kobj_uevent handle\n");
+			uevent_fd = -1;
+			goto skip_kobj;
+		}
+		thd_log_info("FD = %d\n", poll_fds[uevent_fd].fd);
+		kobj_uevent.register_dev_path(
+				(char *) "/devices/virtual/thermal/thermal_zone");
+		poll_fds[uevent_fd].events = POLLIN;
+		poll_fds[uevent_fd].revents = 0;
+		poll_fd_cnt++;
 	}
-	thd_log_info("FD = %d\n", poll_fds[uevent_fd].fd);
-	kobj_uevent.register_dev_path(
-			(char *) "/devices/virtual/thermal/thermal_zone");
-	poll_fds[uevent_fd].events = POLLIN;
-	poll_fds[uevent_fd].revents = 0;
-	poll_fd_cnt++;
-
 	skip_kobj:
 #ifndef DISABLE_PTHREAD
 	// Create thread
