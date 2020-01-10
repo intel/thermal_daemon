@@ -189,6 +189,13 @@ int cthd_cdev::thd_cdev_set_state(int set_point, int target_temp,
 	time_t tm;
 	int ret;
 
+	if (!state && in_min_state() && zone_trip_limits.size() == 0) {
+		// This means that the there is no device in activated state
+		// There are no entries in the list, cdev is min state and
+		// there is a call for deactivation.
+		return THD_SUCCESS;
+	}
+
 	time(&tm);
 	thd_log_info(
 			">>thd_cdev_set_state temperature %d:%d index:%d state:%d :zone:%d trip_id:%d target_state_valid:%d target_value :%d force:%d\n",
@@ -238,6 +245,19 @@ int cthd_cdev::thd_cdev_set_state(int set_point, int target_temp,
 				}
 			}
 		}
+
+		zone_trip_limits_t limit;
+
+		limit = zone_trip_limits[zone_trip_limits.size() - 1];
+		target_value = limit.target_value;
+		target_state_valid = limit.target_state_valid;
+		if (target_state_valid
+				&& cmp_current_state(
+						map_target_state(target_state_valid, target_value))
+						<= 0) {
+			thd_log_info("Already more constraint\n");
+			return THD_SUCCESS;
+		}
 	} else {
 		thd_log_debug("zone_trip_limits.size() %zu\n", (size_t)zone_trip_limits.size());
 		if (zone_trip_limits.size() > 0) {
@@ -275,6 +295,10 @@ int cthd_cdev::thd_cdev_set_state(int set_point, int target_temp,
 				target_state_valid = limit.target_state_valid;
 				zone_id = limit.zone;
 				trip_id = limit.trip;
+				// If the above loop caused erase of last control
+				// then the next one in the line will be activated.
+				// If not erased, this means that the previous
+				// lower control is still active.
 				if (!erased)
 				{
 					thd_log_info(
