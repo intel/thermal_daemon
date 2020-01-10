@@ -48,9 +48,6 @@ void cthd_sysfs_cdev_rapl::set_curr_state(int state, int control) {
 	if (state < max_state)
 		new_state = max_state;
 
-	if (!control && state <= max_state)
-		new_state = min_state;
-
 	if (new_state >= min_state) {
 		std::stringstream time_window_attr;
 
@@ -97,20 +94,18 @@ void cthd_sysfs_cdev_rapl::set_curr_state_raw(int state, int arg) {
 	set_curr_state(state, arg);
 }
 
+// Return the last state or power set during set_curr_state
 int cthd_sysfs_cdev_rapl::get_curr_state() {
-	if (dynamic_phy_max_enable) {
-		if (constrained)
-			return thd_engine->rapl_power_meter.rapl_action_get_power(
-					PACKAGE);
-		else
-			return min_state;
-	}
 	return curr_state;
 }
 
+// Return the current power, using this the controller can choose the next state
 int cthd_sysfs_cdev_rapl::get_curr_state(bool read_again) {
-	thd_engine->rapl_power_meter.rapl_start_measure_power();
-	return thd_engine->rapl_power_meter.rapl_action_get_power(PACKAGE);
+	if (dynamic_phy_max_enable) {
+		thd_engine->rapl_power_meter.rapl_start_measure_power();
+		return thd_engine->rapl_power_meter.rapl_action_get_power(PACKAGE);
+	}
+	return curr_state;
 }
 
 int cthd_sysfs_cdev_rapl::get_max_state() {
