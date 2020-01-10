@@ -45,41 +45,42 @@ void cthd_sysfs_cdev_rapl::set_curr_state(int state, int control) {
 		return;
 	}
 
+	// If request to set a state which less than max_state i.e. lowest rapl power limit
+	// then limit to the max_state.
 	if (state < max_state)
 		new_state = max_state;
 
+	// If the state is more or equal to min_state, means that more than the
+	// max rapl power limit, restore the power limit to min_state or
+	// whatever the power on limit. Also make the rapl limit enforcement
+	// to disabled, also restore power on time window.
 	if (new_state >= min_state) {
-		std::stringstream time_window_attr;
-
 		if (power_on_constraint_0_pwr)
 			new_state = power_on_constraint_0_pwr;
 		else
 			new_state = min_state;
 
 		curr_state = min_state;
-		cdev_sysfs.write("enabled", "0");
 
-		time_window_attr << "constraint_" << constraint_index
-				<< "_time_window_us";
-		cdev_sysfs.write(time_window_attr.str(),
-				power_on_constraint_0_time_window);
+		rapl_update_enable_status(0);
+
+		rapl_update_time_window(power_on_constraint_0_time_window);
+
 		constrained = false;
 	} else if (control) {
 		if (!constrained) {
-			std::stringstream time_window_attr;
 
-			time_window_attr << "constraint_" << constraint_index
-					<< "_time_window_us";
-			cdev_sysfs.write(time_window_attr.str(), def_rapl_time_window);
-			cdev_sysfs.write("enabled", "1");
+			// If it is the first time to activate this device, set the enabled flag
+			// and set the time window.
+			rapl_update_time_window(def_rapl_time_window);
+			rapl_update_enable_status(1);
 			constrained = true;
 		}
 	}
 	thd_log_info("set cdev state index %d state %d wr:%d\n", index, state,
 			new_state);
 
-	tc_state_dev << "constraint_" << constraint_index << "_power_limit_uw";
-	ret = cdev_sysfs.write(tc_state_dev.str(), new_state);
+	ret = rapl_update_pl1(new_state);
 	if (ret < 0) {
 		curr_state = (state == 0) ? 0 : max_state;
 		if (ret == -ENODATA) {
@@ -113,30 +114,163 @@ int cthd_sysfs_cdev_rapl::get_max_state() {
 	return max_state;
 }
 
-int cthd_sysfs_cdev_rapl::update() {
-	int i;
+int cthd_sysfs_cdev_rapl::rapl_sysfs_valid()
+{
 	std::stringstream temp_str;
-	int _index = -1;
-	int constraint_phy_max;
-	bool ppcc = false;
-	std::string domain_name;
+	int found = 0;
+	int i;
 
+	// The primary control is powercap rapl long_term control
+	// If absent we can't use rapl cooling device
 	for (i = 0; i < rapl_no_time_windows; ++i) {
 		temp_str << "constraint_" << i << "_name";
 		if (cdev_sysfs.exists(temp_str.str())) {
 			std::string type_str;
 			cdev_sysfs.read(temp_str.str(), type_str);
 			if (type_str == "long_term") {
-				_index = i;
-				break;
+				constraint_index = i;
+				found = 1;
 			}
 		}
 	}
-	if (_index < 0) {
+
+	if (!found) {
 		thd_log_info("powercap RAPL no long term time window\n");
 		return THD_ERROR;
 	}
 
+	temp_str.str(std::string());
+	temp_str << "constraint_" << constraint_index << "_power_limit_uw";
+	if (!cdev_sysfs.exists(temp_str.str())) {
+		thd_log_debug("powercap RAPL no  power limit uw %s \n",
+				temp_str.str().c_str());
+		return THD_ERROR;
+	}
+
+	temp_str.str(std::string());
+	temp_str << "constraint_" << constraint_index << "_time_window_us";
+	if (!cdev_sysfs.exists(temp_str.str())) {
+		thd_log_info("powercap RAPL no time_window_us %s \n",
+				temp_str.str().c_str());
+		return THD_ERROR;
+	}
+
+	return 0;
+}
+
+int cthd_sysfs_cdev_rapl::rapl_read_pl1_max()
+{
+	std::stringstream temp_power_str;
+	int current_pl1_max;
+
+	temp_power_str << "constraint_" << constraint_index << "_max_power_uw";
+	if (cdev_sysfs.read(temp_power_str.str(), &current_pl1_max) > 0) {
+		return current_pl1_max;
+	}
+
+	return THD_ERROR;
+}
+
+int cthd_sysfs_cdev_rapl::rapl_read_pl1()
+{
+	std::stringstream temp_power_str;
+	int current_pl1;
+
+	temp_power_str << "constraint_" << constraint_index << "_power_limit_uw";
+	if (cdev_sysfs.read(temp_power_str.str(), &current_pl1) > 0) {
+		return current_pl1;
+	}
+
+	return THD_ERROR;
+}
+
+int cthd_sysfs_cdev_rapl::rapl_update_pl1(int pl1)
+{
+	std::stringstream temp_power_str;
+	int ret;
+
+	temp_power_str << "constraint_" << constraint_index << "_power_limit_uw";
+	ret = cdev_sysfs.write(temp_power_str.str(), pl1);
+	if (ret <= 0) {
+		thd_log_info(
+				"pkg_power: powercap RAPL max power limit failed to write %d \n",
+				pl1);
+		return ret;
+	}
+
+	return THD_SUCCESS;
+}
+
+int cthd_sysfs_cdev_rapl::rapl_read_time_window()
+{
+	std::stringstream temp_time_str;
+	int tm_window;
+
+	temp_time_str << "constraint_" << constraint_index << "_time_window_us";
+	if (cdev_sysfs.read(temp_time_str.str(), &tm_window) > 0) {
+		return tm_window;
+	}
+
+	return THD_ERROR;
+}
+
+int cthd_sysfs_cdev_rapl::rapl_update_time_window(int time_window)
+{
+	std::stringstream temp_time_str;
+
+	temp_time_str << "constraint_" << constraint_index << "_time_window_us";
+
+	if (cdev_sysfs.write(temp_time_str.str(), time_window) <= 0) {
+		thd_log_info(
+				"pkg_power: powercap RAPL time window failed to write %d \n",
+				time_window);
+		return THD_ERROR;
+	}
+
+	return THD_SUCCESS;
+}
+
+int cthd_sysfs_cdev_rapl::rapl_update_enable_status(int enable)
+{
+	std::stringstream temp_str;
+
+	temp_str << "enabled";
+	if (cdev_sysfs.write(temp_str.str(), enable) <= 0) {
+		thd_log_info(
+				"pkg_power: powercap RAPL enable failed to write %d \n",
+				enable);
+		return THD_ERROR;
+	}
+
+	return THD_SUCCESS;
+}
+
+int cthd_sysfs_cdev_rapl::rapl_read_enable_status()
+{
+	std::stringstream temp_str;
+	int enable;
+
+	temp_str << "enabled";
+	if (cdev_sysfs.read(temp_str.str(), &enable) > 0) {
+		return enable;
+	}
+
+	return THD_ERROR;
+
+}
+
+int cthd_sysfs_cdev_rapl::update() {
+	std::stringstream temp_str;
+	int constraint_phy_max;
+	bool ppcc = false;
+	std::string domain_name;
+
+	if (rapl_sysfs_valid())
+		return THD_ERROR;
+
+	// Since this base class is also used by DRAM rapl, avoid reading PPCC as
+	// there are no power limits defined by DPTF based systems for any other
+	// domain other than package-0
 	cdev_sysfs.read("name", domain_name);
 	if (domain_name == "package-0")
 		ppcc = read_ppcc_power_limits();
@@ -144,69 +278,57 @@ int cthd_sysfs_cdev_rapl::update() {
 	if (ppcc) {
 		int current_pl1;
 
+		// This is a DPTF compatible platform, which defined
+		// maximum and minimum power limits. We can trust this to be something sane.
 		phy_max = pl0_max_pwr;
+		// We want to be aggressive controlling temperature but lazy during
+		// removing of controls
 		set_inc_value(-pl0_step_pwr * 2);
 		set_dec_value(-pl0_step_pwr);
 		min_state = pl0_max_pwr;
 		max_state = pl0_min_pwr;
 
-		std::stringstream temp_power_str;
-		temp_power_str.str(std::string());
-
-		temp_power_str << "constraint_0" << "_power_limit_uw";
-		if (!cdev_sysfs.exists(temp_power_str.str())) {
-			thd_log_debug("powercap RAPL no  power limit uw %s \n",
-					temp_str.str().c_str());
-			return THD_ERROR;
-		}
-
-		if (cdev_sysfs.read(temp_power_str.str(), &current_pl1) > 0) {
+		// Read the current power limit. If it is more than the what PPPC max, simply leave the current
+		// limit. If not set set the current power limit as the ppcc max power.
+		current_pl1 = rapl_read_pl1();
+		if (current_pl1 > 0) {
 			if (pl0_max_pwr > current_pl1) {
 				thd_log_info(
 						"pkg_power: powercap ppcc RAPL max power limit is more than the current PL1, current:%d max:%d \n",
 						current_pl1, pl0_max_pwr);
 
-				if (cdev_sysfs.write(temp_power_str.str(), pl0_max_pwr) <= 0)
-					thd_log_info(
-							"pkg_power: powercap ppcc RAPL max power limit failed to write %d \n",
-							pl0_max_pwr);
+				rapl_update_pl1(pl0_max_pwr);
+			} else {
+				pl0_max_pwr = current_pl1;
 			}
 		}
 
+
+		// To be efficient to control from the current power instead of PPCC max.
 		thd_engine->rapl_power_meter.rapl_start_measure_power();
 		dynamic_phy_max_enable = true;
 		//set_debounce_interval(1);
 	} else {
 
-		temp_str.str(std::string());
-		temp_str << "constraint_" << _index << "_max_power_uw";
-		if (!cdev_sysfs.exists(temp_str.str())) {
-			thd_log_info("powercap RAPL no max power limit range %s \n",
-					temp_str.str().c_str());
-			return THD_ERROR;
-		}
+		// This is not a DPTF platform
+		// Read the max power from the powercap rapl sysfs
+		// If not present, we can't use rapl to cool.
+		phy_max = rapl_read_pl1_max();
+
+		// Check if there is any sane max power limit set
 		if (cdev_sysfs.read(temp_str.str(), &phy_max) < 0 || phy_max < 0
 				|| phy_max > rapl_max_sane_phy_max) {
 			thd_log_info("%s:powercap RAPL invalid max power limit range \n",
 					domain_name.c_str());
 			thd_log_info("Calculate dynamically phy_max \n");
 
-			std::stringstream temp_power_str;
-			temp_power_str.str(std::string());
-			temp_power_str << "constraint_" << _index << "_power_limit_uw";
-			if (!cdev_sysfs.exists(temp_power_str.str())) {
-				thd_log_info("powercap RAPL no  power limit uw %s \n",
-						temp_str.str().c_str());
-				return THD_ERROR;
-			}
-
-			if (cdev_sysfs.read(temp_power_str.str(),
-					&power_on_constraint_0_pwr) <= 0) {
-				thd_log_info("powercap RAPL invalid max power limit range \n");
-			}
-
+			power_on_constraint_0_pwr = rapl_read_pl1();
 			thd_log_debug("power_on_constraint_0_pwr %d\n",
 					power_on_constraint_0_pwr);
+
+			power_on_constraint_0_time_window = rapl_read_time_window();
+			thd_log_debug("power_on_constraint_0_time_window %d\n",
+					power_on_constraint_0_time_window);
 
 			phy_max = max_state = 0;
 			curr_state = min_state = rapl_max_sane_phy_max;
@@ -214,36 +336,13 @@ int cthd_sysfs_cdev_rapl::update() {
 			set_inc_dec_value(-rapl_min_default_step);
 			dynamic_phy_max_enable = true;
 
-			std::stringstream time_window;
-			temp_str.str(std::string());
-			temp_str << "constraint_" << _index << "_time_window_us";
-			if (!cdev_sysfs.exists(temp_str.str())) {
-				thd_log_info("powercap RAPL no time_window_us %s \n",
-						temp_str.str().c_str());
-				return THD_ERROR;
-			}
-
-			if (cdev_sysfs.read(temp_str.str(), &power_on_constraint_0_time_window)
-					<= 0) {
-				thd_log_info("powercap RAPL invalid time window \n");
-				return THD_ERROR;
-			}
-
 			return THD_SUCCESS;
 		}
 
-		std::stringstream temp_power_str;
-		temp_power_str.str(std::string());
-		temp_power_str << "constraint_" << _index << "_power_limit_uw";
-		if (!cdev_sysfs.exists(temp_power_str.str())) {
-			thd_log_info("powercap RAPL no  power limit uw %s \n",
-					temp_str.str().c_str());
-			return THD_ERROR;
-		}
-		if (cdev_sysfs.read(temp_power_str.str(), &constraint_phy_max) <= 0) {
-			thd_log_info("powercap RAPL invalid max power limit range \n");
-			constraint_phy_max = 0;
-		}
+		constraint_phy_max = rapl_read_pl1();
+
+		// If the constraint_0_max_power_uw < constraint_0_power_limit_uw
+		// Use constraint_0_power_limit_uw as the phy_max and min_state
 		if (constraint_phy_max > phy_max) {
 			thd_log_info(
 					"Default constraint power limit is more than max power %d:%d\n",
@@ -257,32 +356,12 @@ int cthd_sysfs_cdev_rapl::update() {
 		max_state = min_state
 				- (float) min_state * rapl_low_limit_percent / 100;
 	}
-	std::stringstream time_window;
-	temp_str.str(std::string());
-	temp_str << "constraint_" << _index << "_time_window_us";
-	if (!cdev_sysfs.exists(temp_str.str())) {
-		thd_log_info("powercap RAPL no time_window_us %s \n",
-				temp_str.str().c_str());
-		return THD_ERROR;
-	}
 
-	if (cdev_sysfs.read(temp_str.str(), &power_on_constraint_0_time_window)
-			<= 0) {
-		thd_log_info("powercap RAPL invalid time window \n");
-		return THD_ERROR;
-	}
-
-	std::stringstream enable;
-	temp_str.str(std::string());
-	temp_str << "enabled";
-	if (!cdev_sysfs.exists(temp_str.str())) {
-		thd_log_info("powercap RAPL not enabled %s \n", temp_str.str().c_str());
-		return THD_ERROR;
-	}
-	cdev_sysfs.write(temp_str.str(), "0");
+	power_on_constraint_0_time_window = rapl_read_time_window();
+	rapl_update_enable_status(0);
 
 	thd_log_debug("RAPL max limit %d increment: %d\n", max_state, inc_dec_val);
-	constraint_index = _index;
+
 	set_pid_param(-1000, 100, 10);
 	curr_state = min_state;
 

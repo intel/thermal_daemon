@@ -45,6 +45,16 @@ protected:
 
 	virtual bool read_ppcc_power_limits();
 
+private:
+	int rapl_sysfs_valid();
+	int rapl_read_pl1();
+	int rapl_read_pl1_max();
+	int rapl_update_pl1(int pl1);
+	int rapl_read_time_window();
+	int rapl_update_time_window(int time_window);
+	int rapl_read_enable_status();
+	int rapl_update_enable_status(int enable);
+
 public:
 	static const int rapl_no_time_windows = 6;
 	static const long def_rapl_time_window = 1000000; // micro seconds
