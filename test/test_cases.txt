@@ -1,0 +1,1307 @@
+Setup
+- Intel 8th gen system
+- Use "pch_skylake" to emulate temperature. It can be any sensor which can emulate a temperature.
+- One window: while true; do cat /sys/class/powercap/intel-rapl/intel-rapl\:0/constraint_0_power_limit_uw;sleep 1; done
+- Other window: sudo turbostat --show PkgWatt
+
+1. Singe step
+
+File Name: thermal_conf.xml.1
+
+thermald command line
+$ sudo ./thermald --no-daemon --loglevel=info --ignore-default-control --config-file test/thermal_conf.xml.1 
+
+<?xml version="1.0"?>
+ <!-- BEGIN -->
+ <ThermalConfiguration>
+ <Platform>
+        <Name> Auto generated </Name>
+        <ProductName>HP Spectre x360 Convertible 15-ch0xx</ProductName>
+        <Preference>QUIET</Preference>
+        <PPCC>
+                <PowerLimitIndex>0</PowerLimitIndex>
+                <PowerLimitMinimum>6000</PowerLimitMinimum>
+                <PowerLimitMaximum>25000</PowerLimitMaximum>
+                <TimeWindowMinimum>28000</TimeWindowMinimum>
+                <TimeWindowMaximum>28000</TimeWindowMaximum>
+                <StepSize>250</StepSize>
+        </PPCC>
+        <ThermalZones>
+                <ThermalZone>
+                        <Type>auto_zone_1</Type>
+                        <TripPoints>
+                                <TripPoint>
+                                        <SensorType>pch_skylake</SensorType>
+                                        <Temperature>52000</Temperature>
+                                        <Type>Passive</Type>
+                                        <CoolingDevice>
+                                                <Type>B0D4</Type>
+                                                <SamplingPeriod>5</SamplingPeriod>
+                                        </CoolingDevice>
+                                </TripPoint>
+                        </TripPoints>
+                </ThermalZone>
+        </ThermalZones>
+</Platform>
+</ThermalConfiguration>
+<!-- END -->
+
+1.1 No load: Current power is less than max like in this case 6W
+
+1.1.1: Temp == 52C and then Temp == 51C
+
+Current power
+PkgWatt
+2.76
+2.76
+
+
+#echo 52000 > emul_temp
+
+25000000
+25000000
+25000000
+25000000
+6000000
+6000000
+6000000
+6000000
+6000000
+6000000
+6000000
+
+#echo 51000 > emul_temp 6000000
+6000000
+6000000
+6000000
+6000000
+6000000
+6000000
+6000000
+6250000
+6500000
+6750000
+7000000
+7250000
+7500000
+7750000
+8000000
+8250000
+..
+..
+25000000
+
+1.1.2
+Temp == 52C and then drop below polling temp; 
+
+#echo 52000 > emul_temp
+#echo 40000 > emul_temp
+000000
+25000000
+6000000
+6000000
+6000000
+6000000
+6000000
+6000000
+6000000
+6000000
+6000000
+6000000
+6000000
+6000000
+25000000
+25000000
+
+Instead of stepwise the, power is set to 25W in one shot.
+
+1.2 Full load
+
+1.2.1 Go up to min state
+
+PkgWatt
+14.96
+14.96
+PkgWatt
+14.96
+14.96
+
+#echo 52000 > emul_temp
+
+25000000
+25000000
+14375000
+14375000
+14375000
+14375000
+14375000
+13500000
+13500000
+13500000
+13500000
+13500000
+12500000
+12500000
+12500000
+12500000
+12500000
+10500000
+10500000
+10500000
+10500000
+10500000
+6500000
+6500000
+6500000
+6500000
+6500000
+6000000
+6000000
+6000000
+6000000
+
+# echo 51000 > emul_temp
+6000000
+6250000
+6500000
+6750000
+7000000
+7250000
+7500000
+7750000
+8000000
+8250000
+8500000
+8750000
+9000000
+9250000
+9500000
+9750000
+10000000
+10250000
+10500000
+10750000
+11000000
+11250000
+11500000
+11750000
+12000000
+12250000
+12500000
+12750000
+13000000
+13250000
+13500000
+13750000
+14000000
+14250000
+14500000
+14750000
+15000000
+15250000
+15500000
+15750000
+16000000
+16250000
+16500000
+16750000
+17000000
+17250000
+17500000
+18000000
+18250000
+18500000
+18750000
+19000000
+19250000
+19500000
+19750000
+20000000
+20250000
+20500000
+20750000
+21000000
+21250000
+21500000
+21750000
+22000000
+22250000
+22500000
+22750000
+23000000
+23250000
+23500000
+23750000
+24000000
+24250000
+24500000
+24750000
+25000000
+25000000
+
+
+1.2.2 Not upto min
+The trip recovers before.
+
+25000000
+24500000
+24500000
+24500000
+24500000
+24500000
+13500000
+13500000
+13500000
+13750000
+14000000
+14250000
+14500000
+14750000
+15000000
+15250000
+15500000
+15750000
+16000000
+16250000
+16500000
+16750000
+17000000
+17250000
+17500000
+17750000
+18000000
+18250000
+18500000
+18750000
+19000000
+19250000
+19500000
+19750000
+20000000
+20250000
+20500000
+20750000
+21000000
+21250000
+21500000
+21750000
+22000000
+22250000
+22500000
+22750000
+23000000
+23250000
+23500000
+23750000
+24000000
+24250000
+24500000
+24750000
+25000000
+25000000
+25000000
+
+
+2. Single target state for max
+
+command line: $ sudo ./thermald --no-daemon --loglevel=info --ignore-default-control --config-file test/thermal_conf.xml.2 
+
+<?xml version="1.0"?>
+ <!-- BEGIN -->
+ <ThermalConfiguration>
+ <Platform>
+        <Name> Auto generated </Name>
+        <ProductName>HP Spectre x360 Convertible 15-ch0xx</ProductName>
+        <Preference>QUIET</Preference>
+        <PPCC>
+                <PowerLimitIndex>0</PowerLimitIndex>
+                <PowerLimitMinimum>6000</PowerLimitMinimum>
+                <PowerLimitMaximum>25000</PowerLimitMaximum>
+                <TimeWindowMinimum>28000</TimeWindowMinimum>
+                <TimeWindowMaximum>28000</TimeWindowMaximum>
+                <StepSize>250</StepSize>
+        </PPCC>
+        <ThermalZones>
+                <ThermalZone>
+                        <Type>auto_zone_1</Type>
+                        <TripPoints>
+                                <TripPoint>
+                                        <SensorType>pch_skylake</SensorType>
+                                        <Temperature>51000</Temperature>
+                                        <Type>Passive</Type>
+                                        <CoolingDevice>
+                                                <Type>B0D4</Type>
+                                                <SamplingPeriod>0</SamplingPeriod>
+                                                <TargetState>2147483647</TargetState>
+                                        </CoolingDevice>
+                                </TripPoint>
+                                <TripPoint>
+                                        <SensorType>pch_skylake</SensorType>
+                                        <Temperature>52000</Temperature>
+                                        <Type>Passive</Type>
+                                        <CoolingDevice>
+                                                <Type>B0D4</Type>
+                                                <SamplingPeriod>5</SamplingPeriod>
+                                        </CoolingDevice>
+                                </TripPoint>
+                        </TripPoints>
+                </ThermalZone>
+        </ThermalZones>
+</Platform>
+</ThermalConfiguration>
+<!-- END -->
+~                                                                                            
+Same as the above tests, but at 38C, the full power must be set to 25W.
+#echo 52000 > emul_temp 
+25000000
+25000000
+25000000
+25000000
+24375000
+24375000
+24375000
+23875000
+23875000
+23875000
+22875000
+22875000
+22875000
+20875000
+20875000
+20875000
+16875000
+
+Wait for a few seconds
+# echo 51000 > emul_temp 
+25000000
+25000000
+25000000
+25000000
+25000000
+25000000
+25000000
+25000000
+
+# echo 50000 > emul_temp 
+25000000
+25000000
+
+Since already in min state, it will not change power
+but should not print anything in logs with info log level as
+there is nothing in the queue.
+
+3. Multi step control
+
+command line: $ sudo ./thermald --no-daemon --loglevel=info --ignore-default-control --config-file test/thermal_conf.xml.3
+
+- Run some busy workload to reach TDP
+
+- Configuration
+
+<?xml version="1.0"?> 
+ <!-- BEGIN --> 
+ <ThermalConfiguration> 
+ <Platform>
+	<Name> Auto generated </Name>
+	<ProductName>HP Spectre x360 Convertible 15-ch0xx</ProductName>
+	<Preference>QUIET</Preference>
+	<PPCC>
+                <PowerLimitIndex>0</PowerLimitIndex>
+                <PowerLimitMinimum>6000</PowerLimitMinimum>
+                <PowerLimitMaximum>15000</PowerLimitMaximum>
+                <TimeWindowMinimum>28000</TimeWindowMinimum>
+                <TimeWindowMaximum>28000</TimeWindowMaximum>
+                <StepSize>250</StepSize>
+        </PPCC>
+	<ThermalZones>
+		<ThermalZone>
+			<Type>auto_zone_1</Type>
+			<TripPoints>
+				<TripPoint>
+					<SensorType>pch_skylake</SensorType>
+					<Temperature>38000</Temperature>
+					<Type>Passive</Type>
+					<CoolingDevice>
+						<Type>B0D4</Type>
+						<SamplingPeriod>0</SamplingPeriod>
+						<TargetState>2147483647</TargetState>
+					</CoolingDevice>
+				</TripPoint>
+				<TripPoint>
+					<SensorType>pch_skylake</SensorType>
+					<Temperature>43000</Temperature>
+					<Type>Passive</Type>
+					<CoolingDevice>
+						<Type>B0D4</Type>
+						<SamplingPeriod>5</SamplingPeriod>
+						<TargetState>13000000</TargetState>
+					</CoolingDevice>
+				</TripPoint>
+				<TripPoint>
+					<SensorType>pch_skylake</SensorType>
+					<Temperature>47000</Temperature>
+					<Type>Passive</Type>
+					<CoolingDevice>
+						<Type>B0D4</Type>
+						<SamplingPeriod>5</SamplingPeriod>
+						<TargetState>12000000</TargetState>
+					</CoolingDevice>
+				</TripPoint>
+				<TripPoint>
+					<SensorType>pch_skylake</SensorType>
+					<Temperature>52000</Temperature>
+					<Type>Passive</Type>
+					<CoolingDevice>
+						<Type>B0D4</Type>
+						<SamplingPeriod>5</SamplingPeriod>
+					</CoolingDevice>
+				</TripPoint>
+			</TripPoints>
+		</ThermalZone>
+	</ThermalZones>
+</Platform>
+</ThermalConfiguration>
+<!-- END -->
+
+Test cases
+
+Take one Step to 43C
+# echo 43000 > emul_temp 
+Set :Power_limit: 13000000
+
+Bring back to max target state
+#echo 38000 > emul_temp
+Set :Power_limit: 15000000
+
+Take one Step to 43C
+# echo 43000 > emul_temp 
+Set :Power_limit: 13000000
+
+Set temp < max target state temperature
+#echo 35000 > emul_temp
+Set :Power_limit: 15000000
+
+Take step  to 43C
+# echo 43000 > emul_temp 
+Set :Power_limit: 13000000
+
+Take step  to 47C
+# echo 47000 > emul_temp 
+Set :Power_limit: 12000000
+
+Bring back to max target state
+#echo 38000 > emul_temp
+Set :Power_limit: 15000000
+
+Directly take two step to 47C
+# echo 47000 > emul_temp 
+Set :Power_limit: 12000000
+
+Take step to 52C where the exponenential step control is used
+#echo 52000 > emul_temp 
+
+5000000
+14500000
+14500000
+14500000
+14500000
+14500000
+13375000
+13375000
+13375000
+13375000
+13375000
+12375000
+12375000
+12375000
+12375000
+12375000
+
+10375000
+10375000
+10375000
+10375000
+10375000
+10500000
+10750000
+
+11000000
+11250000
+11500000
+
+11750000
+
+Bring back the temp 1C lower. It will jump back to last clameped temp by 47C. Which is 12W
+#echo 52000 > emul_temp 
+
+Set :Power_limit: 12000000
+
+4. Control via powerclamp
+<?xml version="1.0"?>
+ <!-- BEGIN -->
+ <ThermalConfiguration>
+ <Platform>
+        <Name> Auto generated </Name>
+        <ProductName>HP Spectre x360 Convertible 15-ch0xx</ProductName>
+        <Preference>QUIET</Preference>
+        <ThermalZones>
+                <ThermalZone>
+                        <Type>auto_zone_1</Type>
+                        <TripPoints>
+                                <TripPoint>
+                                        <SensorType>pch_skylake</SensorType>
+                                        <Temperature>52000</Temperature>
+                                        <Type>Passive</Type>
+                                        <CoolingDevice>
+                                                <Type>intel_powerclamp</Type>
+                                                <SamplingPeriod>5</SamplingPeriod>
+                                        </CoolingDevice>
+                                </TripPoint>
+                        </TripPoints>
+                </ThermalZone>
+        </ThermalZones>
+</Platform>
+</ThermalConfiguration>
+<!-- END -->
+
+- Run busy workload
+- In one window run turbostat
+sudo turbostat --show Core,CPU,Busy%,Bzy_MHz -i 1
+
+
+echo 52000 > emul_temp
+Core	CPU	Busy%	Bzy_MHz
+-	-	98.78	3161
+0	0	98.78	3161
+0	4	98.78	3161
+1	1	98.78	3161
+1	5	98.78	3161
+2	2	98.78	3161
+2	6	98.78	3161
+3	3	98.78	3161
+3	7	98.78	3161
+
+Core	CPU	Busy%	Bzy_MHz
+-	-	99.72	2196
+0	0	99.72	2196
+0	4	99.72	2196
+1	1	99.72	2196
+1	5	99.72	2196
+2	2	99.72	2196
+2	6	99.72	2196
+3	3	99.72	2196
+3	7	99.72	2196
+Core	CPU	Busy%	Bzy_MHz
+-	-	97.40	2113
+0	0	97.25	2112
+0	4	97.83	2113
+1	1	97.26	2112
+1	5	97.86	2113
+2	2	96.66	2113
+2	6	97.86	2113
+3	3	97.26	2113
+3	7	97.26	2113
+Core	CPU	Busy%	Bzy_MHz
+-	-	94.77	2156
+0	0	94.71	2156
+0	4	94.65	2156
+1	1	94.75	2156
+1	5	94.78	2156
+2	2	94.75	2156
+2	6	94.79	2156
+3	3	94.82	2156
+3	7	94.87	2156
+Core	CPU	Busy%	Bzy_MHz
+-	-	94.21	2128
+0	0	94.22	2128
+0	4	94.21	2128
+1	1	94.21	2128
+1	5	94.20	2128
+2	2	94.24	2128
+2	6	94.19	2128
+3	3	94.21	2128
+3	7	94.22	2128
+Core	CPU	Busy%	Bzy_MHz
+-	-	94.75	2192
+0	0	94.74	2192
+0	4	94.71	2192
+1	1	94.73	2192
+1	5	94.78	2192
+2	2	94.77	2192
+2	6	94.80	2192
+3	3	94.74	2192
+3	7	94.75	2192
+Core	CPU	Busy%	Bzy_MHz
+-	-	94.75	2189
+0	0	94.75	2189
+0	4	94.70	2189
+1	1	94.76	2189
+1	5	94.74	2189
+2	2	94.79	2189
+2	6	94.77	2189
+3	3	94.75	2188
+3	7	94.74	2188
+Core	CPU	Busy%	Bzy_MHz
+-	-	87.87	2209
+0	0	87.93	2209
+0	4	87.92	2209
+1	1	87.90	2209
+1	5	87.63	2209
+2	2	87.83	2209
+2	6	87.99	2208
+3	3	87.84	2208
+3	7	87.91	2208
+Core	CPU	Busy%	Bzy_MHz
+-	-	84.41	2298
+0	0	84.43	2297
+0	4	84.42	2297
+1	1	84.47	2298
+1	5	84.42	2298
+2	2	84.40	2298
+2	6	84.30	2299
+3	3	84.37	2299
+3	7	84.51	2299
+Core	CPU	Busy%	Bzy_MHz
+-	-	84.36	2300
+0	0	84.51	2300
+0	4	84.28	2300
+1	1	84.27	2300
+1	5	84.27	2300
+2	2	84.32	2300
+2	6	84.31	2300
+3	3	84.46	2300
+3	7	84.46	2300
+Core	CPU	Busy%	Bzy_MHz
+-	-	84.11	2307
+0	0	84.13	2307
+0	4	84.14	2307
+1	1	84.14	2307
+1	5	84.02	2306
+2	2	84.08	2307
+2	6	84.19	2306
+3	3	84.10	2307
+3	7	84.09	2306
+Core	CPU	Busy%	Bzy_MHz
+-	-	83.97	2334
+0	0	84.01	2334
+0	4	83.97	2334
+1	1	83.91	2334
+1	5	83.97	2334
+2	2	84.06	2334
+2	6	83.94	2334
+3	3	83.90	2334
+3	7	84.00	2334
+Core	CPU	Busy%	Bzy_MHz
+-	-	77.10	2320
+0	0	77.10	2320
+0	4	77.06	2320
+1	1	77.17	2320
+1	5	77.06	2320
+2	2	77.13	2320
+2	6	77.01	2320
+3	3	77.20	2320
+3	7	77.08	2320
+Core	CPU	Busy%	Bzy_MHz
+-	-	73.13	2300
+0	0	73.21	2300
+0	4	73.10	2300
+1	1	73.28	2300
+1	5	73.04	2300
+2	2	73.04	2300
+2	6	73.12	2300
+3	3	73.05	2300
+3	7	73.15	2300
+Core	CPU	Busy%	Bzy_MHz
+-	-	73.47	2299
+0	0	73.55	2299
+0	4	73.47	2299
+1	1	73.55	2299
+1	5	73.19	2299
+2	2	73.60	2299
+2	6	73.58	2299
+3	3	73.37	2299
+3	7	73.46	2299
+Core	CPU	Busy%	Bzy_MHz
+-	-	73.70	2183
+0	0	73.65	2183
+0	4	73.65	2183
+1	1	73.81	2183
+1	5	73.66	2183
+2	2	73.82	2183
+2	6	73.85	2183
+3	3	73.48	2183
+3	7	73.67	2183
+Core	CPU	Busy%	Bzy_MHz
+-	-	73.12	2100
+0	0	73.17	2100
+0	4	73.16	2100
+1	1	73.16	2100
+1	5	73.00	2100
+2	2	73.24	2100
+2	6	73.06	2100
+3	3	73.07	2100
+3	7	73.08	2100
+Core	CPU	Busy%	Bzy_MHz
+-	-	59.52	1685
+0	0	59.81	1686
+0	4	59.55	1686
+1	1	59.48	1684
+1	5	59.57	1686
+2	2	59.27	1686
+2	6	59.37	1686
+3	3	59.51	1684
+3	7	59.55	1684
+Core	CPU	Busy%	Bzy_MHz
+-	-	52.00	800
+0	0	52.10	800
+0	4	51.92	800
+1	1	51.99	800
+1	5	52.02	800
+2	2	52.09	800
+2	6	51.85	800
+3	3	52.13	800
+3	7	51.91	800
+Core	CPU	Busy%	Bzy_MHz
+-	-	53.40	800
+0	0	53.58	800
+0	4	52.98	800
+1	1	53.92	800
+1	5	53.05	800
+2	2	53.51	800
+2	6	53.31	800
+3	3	53.48	800
+3	7	53.41	800
+Core	CPU	Busy%	Bzy_MHz
+-	-	52.69	800
+0	0	52.84	800
+0	4	52.71	800
+1	1	52.51	800
+1	5	52.56	800
+2	2	52.66	800
+2	6	52.67	800
+3	3	52.82	800
+3	7	52.72	800
+Core	CPU	Busy%	Bzy_MHz
+-	-	52.39	800
+0	0	52.26	800
+0	4	52.19	800
+1	1	52.88	800
+1	5	52.57	800
+2	2	52.10	800
+2	6	52.32	800
+3	3	51.92	800
+3	7	52.92	800
+Core	CPU	Busy%	Bzy_MHz
+-	-	49.97	800
+0	0	50.79	800
+0	4	50.30	800
+1	1	50.19	800
+1	5	50.00	800
+2	2	50.13	800
+2	6	50.07	800
+3	3	50.36	800
+3	7	47.90	800
+
+#echo 51000 > emul_temp
+
+CCore	CPU	Busy%	Bzy_MHz
+-	-	99.38	1908
+0	0	98.64	1909
+0	4	99.49	1908
+1	1	99.49	1908
+1	5	99.49	1908
+2	2	99.49	1908
+2	6	99.49	1908
+3	3	99.49	1908
+3	7	99.49	1908
+
+
+5. Control via intel_pstate
+<?xml version="1.0"?>
+ <!-- BEGIN -->
+ <ThermalConfiguration>
+ <Platform>
+        <Name> Auto generated </Name>
+        <ProductName>HP Spectre x360 Convertible 15-ch0xx</ProductName>
+        <Preference>QUIET</Preference>
+        <ThermalZones>
+                <ThermalZone>
+                        <Type>auto_zone_1</Type>
+                        <TripPoints>
+                                <TripPoint>
+                                        <SensorType>pch_skylake</SensorType>
+                                        <Temperature>52000</Temperature>
+                                        <Type>Passive</Type>
+                                        <CoolingDevice>
+                                                <Type>intel_pstate</Type>
+                                                <SamplingPeriod>5</SamplingPeriod>
+                                        </CoolingDevice>
+                                </TripPoint>
+                        </TripPoints>
+                </ThermalZone>
+        </ThermalZones>
+</Platform>
+</ThermalConfiguration>
+<!-- END -->
+
+echo 52000 > emul_temp
+
+#while true; do cat /sys/devices/system/cpu/intel_pstate/max_perf_pct; cat /sys/devices/system/cpu/intel_pstate/no_turbo; sleep 1; done
+
+100
+0
+90
+0
+90
+0
+90
+0
+90
+0
+90
+0
+70
+1
+70
+1
+70
+1
+70
+1
+70
+1
+50
+1
+50
+1
+50
+1
+50
+1
+50
+1
+10
+1
+10
+1
+10
+1
+10
+1
+10
+1
+10
+1
+10
+1
+10
+1
+10
+1
+10
+1
+
+#echo 51000 > emul_temp
+
+10
+1
+20
+1
+30
+1
+40
+1
+50
+1
+60
+1
+70
+1
+80
+0
+90
+0
+100
+0
+100
+
+6. Default with no XML config
+..sensors.. 
+[INFO]sensor index:5 x86_pkg_temp /sys/class/thermal/thermal_zone5/ Async:1 
+[INFO]..trips.. 
+[INFO]index 0: type:passive temp:95000 hyst:0 zone id:7 sensor id:65535 control_type:1 cdev size:4
+[INFO]cdev[0] rapl_controller, Sampling period: 0
+[INFO]	 target_state:not defined
+[INFO]cdev[1] intel_pstate, Sampling period: 0
+[INFO]	 target_state:not defined
+[INFO]cdev[2] intel_powerclamp, Sampling period: 0
+[INFO]	 target_state:not defined
+[INFO]cdev[3] Processor, Sampling period: 0
+[INFO]	 target_state:not defined
+[INFO]index 1: type:polling temp:85500 hyst:0 zone id:7 sensor id:5 control_type:0 cdev size:0
+
+Open  one window and monitor for each command. Run a busy workload. 
+
+
+# while true; do cat /sys/class/powercap/intel-rapl/intel-rapl\:0/constraint_0_power_limit_uw;sleep 1; done
+On this platform max power is 15W
+
+# while true; do cat /sys/devices/system/cpu/intel_pstate/max_perf_pct; cat /sys/devices/system/cpu/intel_pstate/no_turbo; sleep 1; done
+
+In powerclamp and processor cooling device folder
+# while true; do cat cur_state ; sleep 1; done;
+
+Monitor by emulating 95C to x86_pkg_temp
+#echo 95000 > emul_temp
+
+First rapl power limit transition from 15W to 10W, then pstate percent drop from 100 to 10 and then power clamp curr_state from -1 to ~40 followed by the processor state.
+When temperature trip is recovered via
+#echo 94000 > emul_temp
+The device gets activated in the reverse fashion stepwise.
+
+Also try by directly emulating less than 20% drop. For example:
+echo 65000 > emul_temp
+This dectivates all the devices in one shot without going stepwise.
+
+7. Multiple zones with the same target
+
+<?xml version="1.0"?> 
+ <!-- BEGIN --> 
+ <ThermalConfiguration> 
+ <Platform>
+	<Name> Auto generated </Name>
+	<ProductName>HP Spectre x360 Convertible 15-ch0xx</ProductName>
+	<Preference>QUIET</Preference>
+	<PPCC>
+                <PowerLimitIndex>0</PowerLimitIndex>
+                <PowerLimitMinimum>6000</PowerLimitMinimum>
+                <PowerLimitMaximum>15000</PowerLimitMaximum>
+                <TimeWindowMinimum>28000</TimeWindowMinimum>
+                <TimeWindowMaximum>28000</TimeWindowMaximum>
+                <StepSize>250</StepSize>
+        </PPCC>
+	<ThermalZones>
+		<ThermalZone>
+			<Type>auto_zone_1</Type>
+			<TripPoints>
+				<TripPoint>
+					<SensorType>pch_skylake</SensorType>
+					<Temperature>38000</Temperature>
+					<Type>Passive</Type>
+					<CoolingDevice>
+						<Type>B0D4</Type>
+						<SamplingPeriod>0</SamplingPeriod>
+						<TargetState>2147483647</TargetState>
+					</CoolingDevice>
+				</TripPoint>
+				<TripPoint>
+					<SensorType>pch_skylake</SensorType>
+					<Temperature>43000</Temperature>
+					<Type>Passive</Type>
+					<CoolingDevice>
+						<Type>B0D4</Type>
+						<SamplingPeriod>5</SamplingPeriod>
+						<TargetState>13000000</TargetState>
+					</CoolingDevice>
+				</TripPoint>
+				<TripPoint>
+					<SensorType>pch_skylake</SensorType>
+					<Temperature>47000</Temperature>
+					<Type>Passive</Type>
+					<CoolingDevice>
+						<Type>B0D4</Type>
+						<SamplingPeriod>5</SamplingPeriod>
+						<TargetState>12000000</TargetState>
+					</CoolingDevice>
+				</TripPoint>
+				<TripPoint>
+					<SensorType>pch_skylake</SensorType>
+					<Temperature>52000</Temperature>
+					<Type>Passive</Type>
+					<CoolingDevice>
+						<Type>B0D4</Type>
+						<SamplingPeriod>5</SamplingPeriod>
+					</CoolingDevice>
+				</TripPoint>
+			</TripPoints>
+		</ThermalZone>
+		<ThermalZone>
+			<Type>auto_zone_2</Type>
+			<TripPoints>
+				<TripPoint>
+					<SensorType>x86_pkg_temp</SensorType>
+					<Temperature>38000</Temperature>
+					<Type>Passive</Type>
+					<CoolingDevice>
+						<Type>B0D4</Type>
+						<SamplingPeriod>0</SamplingPeriod>
+						<TargetState>2147483647</TargetState>
+					</CoolingDevice>
+				</TripPoint>
+				<TripPoint>
+					<SensorType>x86_pkg_temp</SensorType>
+					<Temperature>43000</Temperature>
+					<Type>Passive</Type>
+					<CoolingDevice>
+						<Type>B0D4</Type>
+						<SamplingPeriod>5</SamplingPeriod>
+						<TargetState>13000000</TargetState>
+					</CoolingDevice>
+				</TripPoint>
+				<TripPoint>
+					<SensorType>x86_pkg_temp</SensorType>
+					<Temperature>47000</Temperature>
+					<Type>Passive</Type>
+					<CoolingDevice>
+						<Type>B0D4</Type>
+						<SamplingPeriod>5</SamplingPeriod>
+						<TargetState>12000000</TargetState>
+					</CoolingDevice>
+				</TripPoint>
+				<TripPoint>
+					<SensorType>x86_pkg_temp</SensorType>
+					<Temperature>52000</Temperature>
+					<Type>Passive</Type>
+					<CoolingDevice>
+						<Type>B0D4</Type>
+						<SamplingPeriod>5</SamplingPeriod>
+					</CoolingDevice>
+				</TripPoint>
+			</TripPoints>
+		</ThermalZone>
+	</ThermalZones>
+</Platform>
+</ThermalConfiguration>
+<!-- END -->
+
+Emulate temperature in both x86_pkg_temp and pch_skylake.
+
+-Set
+43C to pch_skylake
+Resulting power
+13000000
+
+-Set
+47C to x86_pkg_temp
+Resulting power
+12000000
+
+-Set
+38C to pch_skylake
+Resulting power
+12000000
+
+- Set
+38C to x86_pkg_temp
+Resulting power
+25000
+
+8. intel_powerclamp control
+<?xml version="1.0"?>
+ <!-- BEGIN -->
+ <ThermalConfiguration>
+ <Platform>
+        <Name> Auto generated </Name>
+        <ProductName>HP Spectre x360 Convertible 15-ch0xx</ProductName>
+        <Preference>QUIET</Preference>
+        <ThermalZones>
+                <ThermalZone>
+                        <Type>auto_zone_1</Type>
+                        <TripPoints>
+                                <TripPoint>
+                                        <SensorType>pch_skylake</SensorType>
+                                        <Temperature>52000</Temperature>
+                                        <Type>Passive</Type>
+                                        <CoolingDevice>
+                                                <Type>intel_powerclamp</Type>
+                                                <SamplingPeriod>5</SamplingPeriod>
+                                        </CoolingDevice>
+                                </TripPoint>
+                        </TripPoints>
+                </ThermalZone>
+        </ThermalZones>
+</Platform>
+</ThermalConfiguration>
+<!-- END -->
+
+Run some busy workload
+emulate temp to 52C
+monitir the powerclamp cooling device state in the sysfs.
+it should start from
+-1
+4
+3
+3
+3
+4
+11
+10
+11
+10
+12
+..
+
+then emulate to 51C
+the curr_state slowly brought back to -1
+
+Repeat by emulating to 30C after 52C instead of 51C
+the curr_state in set to -1 in one shot.
+
+10. intel_pstate
+
+<?xml version="1.0"?>
+ <!-- BEGIN -->
+ <ThermalConfiguration>
+ <Platform>
+        <Name> Auto generated </Name>
+        <ProductName>HP Spectre x360 Convertible 15-ch0xx</ProductName>
+        <Preference>QUIET</Preference>
+        <ThermalZones>
+                <ThermalZone>
+                        <Type>auto_zone_1</Type>
+                        <TripPoints>
+                                <TripPoint>
+                                        <SensorType>pch_skylake</SensorType>
+                                        <Temperature>52000</Temperature>
+                                        <Type>Passive</Type>
+                                        <CoolingDevice>
+                                                <Type>intel_pstate</Type>
+                                                <SamplingPeriod>5</SamplingPeriod>
+                                        </CoolingDevice>
+                                </TripPoint>
+                        </TripPoints>
+                </ThermalZone>
+        </ThermalZones>
+</Platform>
+</ThermalConfiguration>
+<!-- END -->
+~                   
+
+Like previous test repeat with emulating 52C, 51C and 30C.
+
+Activation:
+Dump of max_perf_pct and no_turbo
+
+100
+0
+--
+100
+0
+--
+90
+0
+--
+90
+0
+--
+90
+0
+--
+90
+0
+--
+90
+0
+--
+70
+1
+--
+70
+1
+--
+70
+1
+--
+70
+1
+--
+70
+1
+--
+50
+1
+--
+50
+1
+--
+50
+1
+--
+50
+1
+--
+50
+1
+--
+10
+1
+--
+
+Deactivation
+
+10
+1
+--
+20
+1
+--
+30
+1
+--
+40
+1
+--
+50
+1
+--
+60
+1
+--
+70
+1
+--
+80
+0
+--
+90
+0
+--
+100
+0
+
+11. Processor cooling device
+<?xml version="1.0"?>
+ <!-- BEGIN -->
+ <ThermalConfiguration>
+ <Platform>
+        <Name> Auto generated </Name>
+        <ProductName>HP Spectre x360 Convertible 15-ch0xx</ProductName>
+        <Preference>QUIET</Preference>
+        <ThermalZones>
+                <ThermalZone>
+                        <Type>auto_zone_1</Type>
+                        <TripPoints>
+                                <TripPoint>
+                                        <SensorType>pch_skylake</SensorType>
+                                        <Temperature>52000</Temperature>
+                                        <Type>Passive</Type>
+                                        <CoolingDevice>
+                                                <Type>Processor</Type>
+                                                <SamplingPeriod>5</SamplingPeriod>
+                                        </CoolingDevice>
+                                </TripPoint>
+                        </TripPoints>
+                </ThermalZone>
+        </ThermalZones>
+</Platform>
+</ThermalConfiguration>
+<!-- END -->
+
+Use the command
+while true; do for i in {0..7}; do cat cooling_device$i/cur_state; sleep 1; done; echo "--";done
+
+Same as previous step once temperature is emulated to 52C, monitor output of the above command.
+It starts with 0. Also measure the power in one window. Run a busy workload. The power should
+drop as the state increments. When deactivated the state prints should return to 0.
+
+
