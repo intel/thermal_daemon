@@ -282,8 +282,6 @@ int cthd_sysfs_cdev_rapl::update() {
 		ppcc = read_ppcc_power_limits();
 
 	if (ppcc) {
-		int current_pl1;
-
 		// This is a DPTF compatible platform, which defined
 		// maximum and minimum power limits. We can trust this to be something sane.
 		phy_max = pl0_max_pwr;
@@ -294,21 +292,7 @@ int cthd_sysfs_cdev_rapl::update() {
 		min_state = pl0_max_pwr;
 		max_state = pl0_min_pwr;
 
-		// Read the current power limit. If it is more than the what PPPC max, simply leave the current
-		// limit. If not set set the current power limit as the ppcc max power.
-		current_pl1 = rapl_read_pl1();
-		if (current_pl1 > 0) {
-			if (pl0_max_pwr > current_pl1) {
-				thd_log_info(
-						"pkg_power: powercap ppcc RAPL max power limit is more than the current PL1, current:%d max:%d \n",
-						current_pl1, pl0_max_pwr);
-
-				rapl_update_pl1(pl0_max_pwr);
-			} else {
-				pl0_max_pwr = current_pl1;
-			}
-		}
-
+		rapl_update_pl1(pl0_max_pwr);
 
 		// To be efficient to control from the current power instead of PPCC max.
 		thd_engine->rapl_power_meter.rapl_start_measure_power();
