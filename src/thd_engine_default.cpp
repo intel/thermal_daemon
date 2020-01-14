@@ -843,6 +843,7 @@ void cthd_engine_default::workaround_rapl_mmio_power(void)
 			0xfed15000);
 	if (!rapl_mem || rapl_mem == MAP_FAILED) {
 		close(map_fd);
+		return;
 	}
 
 	rapl_pkg_pwr_addr = ((unsigned char *)rapl_mem + 0x9a0);
