@@ -556,6 +556,10 @@ int cthd_parse::parse_new_platform_info(xmlNode * a_node, xmlDoc *doc,
 					"ProductName")) {
 				info_ptr->product_name.assign((const char*) tmp_value);
 				string_trim(info_ptr->product_name);
+			} else if (!strcasecmp((const char*) cur_node->name,
+					"ProductSku")) {
+				info_ptr->product_sku.assign((const char*) tmp_value);
+				string_trim(info_ptr->product_sku);
 			} else if (!strcasecmp((const char*) cur_node->name, "Name")) {
 				info_ptr->name.assign((const char*) tmp_value);
 				string_trim(info_ptr->name);
@@ -707,6 +711,8 @@ void cthd_parse::dump_thermal_conf() {
 	for (unsigned int i = 0; i < thermal_info_list.size(); ++i) {
 		thd_log_info(" *** Index %u ***\n", i);
 		thd_log_info("Name: %s\n", thermal_info_list[i].name.c_str());
+		thd_log_info("Product Name: %s\n", thermal_info_list[i].product_name.c_str());
+		thd_log_info("Product SKU: %s\n", thermal_info_list[i].product_sku.c_str());
 		thd_log_info("UUID: %s\n", thermal_info_list[i].uuid.c_str());
 		thd_log_info("type: %d\n", thermal_info_list[i].default_preference);
 		thd_log_info("Polling Interval: %d seconds\n", thermal_info_list[i].polling_interval);
@@ -812,6 +818,31 @@ int cthd_parse::get_polling_interval() {
 	return thermal_info_list[matched_thermal_info_index].polling_interval;
 }
 
+bool cthd_parse::match_product_sku(int index) {
+	std::string line;
+	std::ifstream product_sku("/sys/class/dmi/id/product_sku");
+
+	if (product_sku.is_open() && getline(product_sku, line)) {
+		if (!thermal_info_list[index].product_sku.size())
+			return true;
+		string_trim(line);
+		thd_log_debug("config product sku [%s] match with [%s]\n",
+				thermal_info_list[index].product_sku.c_str(), line.c_str());
+		if (thermal_info_list[index].product_sku == "*") {
+			thd_log_info("Product Sku matched [wildcard]\n");
+			return true;
+		}
+		if (line == thermal_info_list[index].product_sku) {
+			thd_log_info("Product Sku matched \n");
+			return true;
+		}
+	} else {
+		return true;
+	}
+
+	return false;
+}
+
 bool cthd_parse::platform_matched() {
 
 	std::string line;
@@ -853,6 +884,8 @@ bool cthd_parse::platform_matched() {
 				return true;
 			}
 			if (line == thermal_info_list[i].product_name) {
+				if (!match_product_sku(i))
+					continue;
 				matched_thermal_info_index = i;
 				thd_log_info("Product Name matched \n");
 				return true;

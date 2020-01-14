@@ -134,6 +134,7 @@ typedef struct {
 	std::string name;
 	std::string uuid;
 	std::string product_name;
+	std::string product_sku;
 	int default_preference;
 	int polling_interval;
 	ppcc_t ppcc;
@@ -186,6 +187,7 @@ private:
 
 	void string_trim(std::string &str);
 	char *char_trim(char *trim);
+	bool match_product_sku(int index);
 
 public:
 	cthd_parse();
