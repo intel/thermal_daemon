@@ -42,8 +42,18 @@ protected:
 	bool constrained;
 	int power_on_constraint_0_pwr;
 	int power_on_constraint_0_time_window;
-
+	int power_on_enable_status;
 	virtual bool read_ppcc_power_limits();
+
+private:
+	int rapl_sysfs_valid();
+	int rapl_read_pl1();
+	int rapl_read_pl1_max();
+	int rapl_update_pl1(int pl1);
+	int rapl_read_time_window();
+	int rapl_update_time_window(int time_window);
+	int rapl_read_enable_status();
+	int rapl_update_enable_status(int enable);
 
 public:
 	static const int rapl_no_time_windows = 6;
@@ -63,7 +73,7 @@ public:
 					0), pl0_step_pwr(
 					0), bios_locked(false), constrained(
 					false), power_on_constraint_0_pwr(0), power_on_constraint_0_time_window(
-					0)
+					0), power_on_enable_status(0)
 	{
 	}
 	cthd_sysfs_cdev_rapl(unsigned int _index, int package,
@@ -75,7 +85,7 @@ public:
 					0), pl0_min_window(0), pl0_step_pwr(0), bios_locked(
 					false), constrained(
 					false), power_on_constraint_0_pwr(0), power_on_constraint_0_time_window(
-					0)
+					0), power_on_enable_status(0)
 	{
 	}
 

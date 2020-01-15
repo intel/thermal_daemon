@@ -100,6 +100,12 @@ For build, follow the same procedure as Fedora.
 
 Releases
 
+Release 2.0
+- Tiger Lake support
+- PL1 limit setting from PPCC as is
+- Optimize multi step, multi zone control
+- Add new tag for product identification "product_sku"
+
 Release 1.9.1
 - Remove default CPU temperature compensation for auto generated configuration from dptfxtract
 - Minor Android build warnings

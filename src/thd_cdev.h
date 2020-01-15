@@ -79,7 +79,8 @@ private:
 	}
 	int thd_cdev_exponential_controller(int set_point, int target_temp,
 			int temperature, int state, int arg);
-
+	int thd_clamp_state_min(int _state);
+	int thd_clamp_state_max(int _state);
 public:
 	static const int default_debounce_interval = 2; // In seconds
 	cthd_cdev(unsigned int _index, std::string control_path) :
