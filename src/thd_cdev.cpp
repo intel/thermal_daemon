@@ -265,31 +265,23 @@ int cthd_cdev::thd_cdev_set_state(int set_point, int target_temp,
 			int _target_state_valid = 0;
 			int i;
 			int erased = 0;
+			zone_trip_limits_t limit;
 
-			// Just remove the current zone requesting to turn off
-			for (i = 0; i < length; ++i) {
-				thd_log_info("match zone %d trip %d clamp_valid %d clamp %d\n",
-						zone_trip_limits[i].zone, zone_trip_limits[i].trip,
-						zone_trip_limits[i].target_state_valid,
-						zone_trip_limits[i].target_value);
+			if (length) {
+				limit = zone_trip_limits[zone_trip_limits.size() - 1];
 
-				if (zone_trip_limits[i].zone == zone_id
-						&& zone_trip_limits[i].trip == trip_id
-						&& (force || target_state_valid
-								== zone_trip_limits[i].target_state_valid)
-						&& (force || target_value == zone_trip_limits[i].target_value)) {
-					_target_state_valid = zone_trip_limits[i].target_state_valid;
+				if (limit.zone == zone_id && limit.trip == trip_id) {
+					i = zone_trip_limits.size() - 1;
+					_target_state_valid = limit.target_state_valid;
 					zone_trip_limits.erase(zone_trip_limits.begin() + i);
 					thd_log_info("Erased  [%d: %d %d\n", zone_id, trip_id,
 							target_value);
 					erased = 1;
-					break;
+
 				}
 			}
 
 			if (zone_trip_limits.size()) {
-				zone_trip_limits_t limit;
-
 				limit = zone_trip_limits[zone_trip_limits.size() - 1];
 				target_value = limit.target_value;
 				target_state_valid = limit.target_state_valid;
@@ -332,6 +324,8 @@ int cthd_cdev::thd_cdev_set_state(int set_point, int target_temp,
 	curr_state = get_curr_state();
 	if (curr_state == get_min_state()) {
 		control_begin();
+		curr_pow = 0;
+		trend_increase = false;
 	}
 
 	if (target_state_valid) {
