@@ -324,6 +324,8 @@ int cthd_cdev::thd_cdev_set_state(int set_point, int target_temp,
 	curr_state = get_curr_state();
 	if (curr_state == get_min_state()) {
 		control_begin();
+		curr_pow = 0;
+		trend_increase = false;
 	}
 
 	if (target_state_valid) {
