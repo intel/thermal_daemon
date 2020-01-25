@@ -88,6 +88,7 @@ void thd_logger(const gchar *log_domain, GLogLevelFlags log_level,
 
 	int syslog_priority;
 	const char *prefix;
+	time_t seconds;
 
 	switch (log_level) {
 	case G_LOG_LEVEL_ERROR:
@@ -117,10 +118,12 @@ void thd_logger(const gchar *log_domain, GLogLevelFlags log_level,
 		break;
 	}
 
+	seconds = time(NULL);
+
 	if (thd_daemonize)
-		syslog(syslog_priority, "%s%s", prefix, message);
+		syslog(syslog_priority, "[%ld]%s%s", seconds, prefix, message);
 	else
-		g_print("%s%s", prefix, message);
+		g_print("[%ld]%s%s", seconds, prefix, message);
 
 }
 
