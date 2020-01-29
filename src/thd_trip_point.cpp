@@ -290,6 +290,13 @@ bool cthd_trip_point::thd_trip_point_check(int id, unsigned int read_temp,
 			thd_log_debug("cdev at index %d:%s\n", cdev->thd_cdev_get_index(),
 					cdev->get_cdev_type().c_str());
 
+
+			if (cdev->in_min_state()) {
+				thd_log_debug("Need to switch to next cdev \n");
+				// No scope of control with this cdev
+				continue;
+			}
+
 			if (cdevs[i].target_state == TRIP_PT_INVALID_TARGET_STATE)
 				cdevs[i].target_state = cdev->get_min_state();
 
