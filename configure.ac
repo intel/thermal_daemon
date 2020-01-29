@@ -78,6 +78,7 @@ AC_C_CONST
 AC_C_INLINE
 AC_TYPE_SIZE_T
 
+m4_ifdef([AX_CHECK_COMPILE_FLAG], [
 # Check for flag support.
 for flag in \
     -Wall \
@@ -97,6 +98,7 @@ for flag in \
     AX_CHECK_COMPILE_FLAG([-Werror ${flag}],
                           [CXXFLAGS="$CXXFLAGS ${flag}"])
 done
+], [AC_MSG_ERROR([AX_CHECK_COMPILE_FLAG not found, you'll need to install autoconf-archive])])
 
 AC_CONFIG_FILES([Makefile
                  data/Makefile])
