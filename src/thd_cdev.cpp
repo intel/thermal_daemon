@@ -202,15 +202,6 @@ int cthd_cdev::thd_cdev_set_state(int set_point, int target_temp,
 			target_temp, temperature, index, state, zone_id, trip_id,
 			target_state_valid, target_value, force);
 
-	if (!force && last_state == state && state
-			&& (tm - last_action_time) <= debounce_interval) {
-		thd_log_debug(
-				"Ignore: delay < debounce interval : %d, %d, %d, %d, %d\n",
-				set_point, temperature, index, get_curr_state(), max_state);
-		return THD_SUCCESS;
-	}
-	last_state = state;
-
 	if (state) {
 		bool found = false;
 		bool first_entry = false;
@@ -260,6 +251,14 @@ int cthd_cdev::thd_cdev_set_state(int set_point, int target_temp,
 						map_target_state(target_state_valid, target_value))
 						<= 0) {
 			thd_log_info("Already more constraint\n");
+			return THD_SUCCESS;
+		}
+
+		if (!force && last_state == state && state
+			&& (tm - last_action_time) <= debounce_interval) {
+			thd_log_debug(
+				"Ignore: delay < debounce interval : %d, %d, %d, %d, %d\n",
+				set_point, temperature, index, get_curr_state(), max_state);
 			return THD_SUCCESS;
 		}
 	} else {
@@ -324,6 +323,7 @@ int cthd_cdev::thd_cdev_set_state(int set_point, int target_temp,
 	}
 
 	last_action_time = tm;
+	last_state = state;
 
 	curr_state = get_curr_state();
 	if (curr_state == get_min_state()) {
