@@ -716,6 +716,13 @@ void cthd_engine::thd_read_default_thermal_sensors() {
 	const std::string base_path = "/sys/class/thermal/";
 	int max_index = 0;
 
+	if ((dir = opendir("/sys/class/thermal/thermal_zone1/")) == NULL) {
+		thd_log_info("Waiting for thermal sysfs to be ready\n");
+		sleep(2);
+	} else {
+		closedir(dir);
+	}
+
 	thd_log_debug("thd_read_default_thermal_sensors \n");
 	if ((dir = opendir(base_path.c_str())) != NULL) {
 		while ((entry = readdir(dir)) != NULL) {
