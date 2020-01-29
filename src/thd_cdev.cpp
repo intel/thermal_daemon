@@ -213,6 +213,10 @@ int cthd_cdev::thd_cdev_set_state(int set_point, int target_temp,
 
 	if (state) {
 		bool found = false;
+		bool first_entry = false;
+
+		if (zone_trip_limits.size() == 0)
+			first_entry = true;
 
 		// Search for the zone and trip id in the list
 		for (unsigned int i = 0; i < zone_trip_limits.size(); ++i) {
@@ -251,7 +255,7 @@ int cthd_cdev::thd_cdev_set_state(int set_point, int target_temp,
 		limit = zone_trip_limits[zone_trip_limits.size() - 1];
 		target_value = limit.target_value;
 		target_state_valid = limit.target_state_valid;
-		if (target_state_valid
+		if (!first_entry && target_state_valid
 				&& cmp_current_state(
 						map_target_state(target_state_valid, target_value))
 						<= 0) {
