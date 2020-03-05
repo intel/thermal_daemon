@@ -242,15 +242,9 @@ bool cthd_trip_point::thd_trip_point_check(int id, unsigned int read_temp,
 				time_t tm;
 				time(&tm);
 				if ((tm - cdevs[i].last_op_time) < cdevs[i].sampling_priod) {
-#if defined __x86_64__ && defined __ILP32__
-					thd_log_info("Too early to act zone:%d index %d tm %lld\n",
+					thd_log_info("Too early to act zone:%d index %d tm %jd\n",
 							zone_id, cdev->thd_cdev_get_index(),
-							tm - cdevs[i].last_op_time);
-#else
-					thd_log_info("Too early to act zone:%d index %d tm %ld\n",
-							zone_id, cdev->thd_cdev_get_index(),
-							tm - cdevs[i].last_op_time);
-#endif
+							(intmax_t)tm - cdevs[i].last_op_time);
 					break;
 				}
 				cdevs[i].last_op_time = tm;
