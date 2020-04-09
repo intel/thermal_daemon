@@ -51,9 +51,18 @@ public:
 			workaround_interval(0), tcc_offset_checked(0),
 			tcc_offset_low(0) {
 	}
+	cthd_engine_default(std::string _uuid) :
+			cthd_engine(_uuid),
+			workaround_interval(0), tcc_offset_checked(0),
+			tcc_offset_low(0) {
+	}
 #else
 	cthd_engine_default() :
 			cthd_engine("42A441D6-AE6A-462b-A84B-4A8CE79027D3"),
+			workaround_interval(0) {
+	}
+	cthd_engine_default(std::string _uuid) :
+			cthd_engine(_uuid),
 			workaround_interval(0) {
 	}
 
