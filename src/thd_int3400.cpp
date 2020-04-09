@@ -28,7 +28,10 @@
 #include <iostream>
 #include <sstream>
 
-int cthd_INT3400::match_supported_uuid(void) {
+cthd_INT3400::cthd_INT3400(std::string _uuid) : uuid(_uuid) {
+}
+
+int cthd_INT3400::match_supported_uuid() {
 	std::string filename =
 			"/sys/bus/acpi/devices/INT3400:00/physical_node/uuids/available_uuids";
 
@@ -37,7 +40,7 @@ int cthd_INT3400::match_supported_uuid(void) {
 		std::string line;
 		while (std::getline(ifs, line)) {
 			thd_log_debug("uuid: %s\n", line.c_str());
-			if (line == "42A441D6-AE6A-462b-A84B-4A8CE79027D3")
+			if (line == uuid)
 				return THD_SUCCESS;
 		}
 		ifs.close();
@@ -52,7 +55,7 @@ void cthd_INT3400::set_default_uuid(void) {
 
 	std::ofstream ofs(filename.c_str(), std::ofstream::out);
 	if (ofs.good()) {
-		thd_log_info("Set Default UUID: 42A441D6-AE6A-462b-A84B-4A8CE79027D3\n");
-		ofs << "42A441D6-AE6A-462b-A84B-4A8CE79027D3";
+		thd_log_info("Set Default UUID: %s\n", uuid.c_str());
+		ofs << uuid;
 	}
 }

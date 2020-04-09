@@ -82,6 +82,7 @@ protected:
 	int current_sensor_index;
 	bool parse_thermal_zone_success;
 	bool parse_thermal_cdev_success;
+	std::string uuid;
 
 private:
 
@@ -135,7 +136,7 @@ public:
 	cthd_parse parser;
 	cthd_rapl_power_meter rapl_power_meter;
 
-	cthd_engine();
+	cthd_engine(std::string _uuid);
 	virtual ~cthd_engine();
 	void set_control_mode(control_mode_t mode) {
 		control_mode = mode;
