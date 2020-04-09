@@ -83,6 +83,7 @@ protected:
 	bool parse_thermal_zone_success;
 	bool parse_thermal_cdev_success;
 	std::string uuid;
+	bool parser_disabled;
 
 private:
 

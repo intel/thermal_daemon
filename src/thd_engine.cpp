@@ -48,7 +48,7 @@ static void *cthd_engine_thread(void *arg);
 
 cthd_engine::cthd_engine(std::string _uuid) :
 		current_cdev_index(0), current_zone_index(0), current_sensor_index(0), parse_thermal_zone_success(
-				false), parse_thermal_cdev_success(false), uuid(_uuid), poll_timeout_msec(
+				false), parse_thermal_cdev_success(false), uuid(_uuid), parser_disabled(false), poll_timeout_msec(
 				-1), wakeup_fd(-1), uevent_fd(-1), control_mode(COMPLEMENTRY), write_pipe_fd(
 				0), preference(0), status(true), thz_last_uevent_time(0), thz_last_temp_ind_time(
 				0), terminate(false), genuine_intel(0), has_invariant_tsc(0), has_aperf(
@@ -1192,6 +1192,8 @@ int cthd_engine::user_add_cdev(std::string cdev_name, std::string cdev_path,
 }
 
 int cthd_engine::parser_init() {
+	if (parser_disabled)
+		return THD_ERROR;
 	if (parser_init_done)
 		return THD_SUCCESS;
 	if (parser.parser_init(get_config_file()) == THD_SUCCESS) {
