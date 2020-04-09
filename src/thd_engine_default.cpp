@@ -255,7 +255,7 @@ bool cthd_engine_default::add_int340x_processor_dev(void)
 
 	/* Specialized processor thermal device names */
 	cthd_zone *processor_thermal = NULL, *acpi_thermal = NULL;
-	cthd_INT3400 int3400;
+	cthd_INT3400 int3400(uuid);
 	unsigned int passive, new_passive = 0, critical = 0;
 
 	if (int3400.match_supported_uuid() == THD_SUCCESS) {

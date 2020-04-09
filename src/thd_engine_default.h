@@ -47,12 +47,14 @@ public:
 	static const int power_clamp_reduction_percent = 5;
 #ifndef ANDROID
 	cthd_engine_default() :
-			cthd_engine(), workaround_interval(0),
-			tcc_offset_checked(0), tcc_offset_low(0) {
+			cthd_engine("42A441D6-AE6A-462b-A84B-4A8CE79027D3"),
+			workaround_interval(0), tcc_offset_checked(0),
+			tcc_offset_low(0) {
 	}
 #else
 	cthd_engine_default() :
-			cthd_engine(), workaround_interval(0){
+			cthd_engine("42A441D6-AE6A-462b-A84B-4A8CE79027D3"),
+			workaround_interval(0) {
 	}
 
 #endif

@@ -46,15 +46,14 @@
 
 static void *cthd_engine_thread(void *arg);
 
-cthd_engine::cthd_engine() :
+cthd_engine::cthd_engine(std::string _uuid) :
 		current_cdev_index(0), current_zone_index(0), current_sensor_index(0), parse_thermal_zone_success(
-				false), parse_thermal_cdev_success(false), poll_timeout_msec(
+				false), parse_thermal_cdev_success(false), uuid(_uuid), poll_timeout_msec(
 				-1), wakeup_fd(-1), uevent_fd(-1), control_mode(COMPLEMENTRY), write_pipe_fd(
 				0), preference(0), status(true), thz_last_uevent_time(0), thz_last_temp_ind_time(
 				0), terminate(false), genuine_intel(0), has_invariant_tsc(0), has_aperf(
 				0), proc_list_matched(false), poll_interval_sec(0), poll_sensor_mask(
-				0), fast_poll_sensor_mask(0), saved_poll_interval(0), poll_fd_cnt(
-				0), rt_kernel(false), parser_init_done(false) {
+				0), fast_poll_sensor_mask(0), saved_poll_interval(0), poll_fd_cnt(0), rt_kernel(false), parser_init_done(false) {
 	thd_engine = pthread_t();
 	thd_attr = pthread_attr_t();
 
@@ -535,7 +534,7 @@ void cthd_engine::takeover_thermal_control() {
 	DIR *dir;
 	struct dirent *entry;
 	const std::string base_path = "/sys/class/thermal/";
-	cthd_INT3400 int3400;
+	cthd_INT3400 int3400(uuid);
 
 	thd_log_info("Taking over thermal control \n");
 
