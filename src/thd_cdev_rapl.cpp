@@ -368,7 +368,7 @@ bool cthd_sysfs_cdev_rapl::read_ppcc_power_limits() {
 	csys_fs sys_fs;
 	ppcc_t *ppcc;
 
-	ppcc = thd_engine->parser.get_ppcc_param();
+	ppcc = thd_engine->get_ppcc_param();
 	if (ppcc) {
 		thd_log_info("Reading PPCC from the thermal-conf.xml\n");
 		pl0_max_pwr = ppcc->power_limit_max * 1000;
