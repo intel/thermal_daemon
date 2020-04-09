@@ -374,7 +374,7 @@ bool cthd_sysfs_cdev_rapl::read_ppcc_power_limits() {
 	csys_fs sys_fs;
 	ppcc_t *ppcc;
 
-	ppcc = thd_engine->parser.get_ppcc_param();
+	ppcc = thd_engine->get_ppcc_param();
 	if (ppcc) {
 		int def_max_power;
 
