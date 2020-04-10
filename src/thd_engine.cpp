@@ -553,9 +553,13 @@ void cthd_engine::takeover_thermal_control() {
 
 				policy << "thermal_zone" << i << "/policy";
 				if (sysfs.exists(policy.str().c_str())) {
-					sysfs.read(policy.str(), curr_policy);
-					zone_preferences.push_back(curr_policy);
-					sysfs.write(policy.str(), "user_space");
+					int ret;
+
+					ret = sysfs.read(policy.str(), curr_policy);
+					if (ret >= 0) {
+						zone_preferences.push_back(curr_policy);
+						sysfs.write(policy.str(), "user_space");
+					}
 				}
 			}
 		}
