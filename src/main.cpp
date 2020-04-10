@@ -42,6 +42,7 @@
 #include "thermald.h"
 #include "thd_preference.h"
 #include "thd_engine.h"
+#include "thd_engine_adaptive.h"
 #include "thd_engine_default.h"
 #include "thd_parse.h"
 #include <syslog.h>
@@ -172,11 +173,13 @@ int main(int argc, char *argv[]) {
 	gboolean log_debug = FALSE;
 	gboolean no_daemon = FALSE;
 	gboolean test_mode = FALSE;
+	gboolean adaptive = FALSE;
 	gboolean ignore_default_control = FALSE;
 	gchar *conf_file = NULL;
 	gint poll_interval = -1;
 	gboolean success;
 	GOptionContext *opt_ctx;
+	int ret;
 
 	thd_daemonize = TRUE;
 	dbus_enable = FALSE;
@@ -192,6 +195,8 @@ int main(int argc, char *argv[]) {
 					"log severity: debug level and up: Max logging"), NULL },
 			{ "test-mode", 0, 0, G_OPTION_ARG_NONE, &test_mode, N_(
 					"Test Mode only: Allow non root user"), NULL },
+			{ "adaptive", 0, 0, G_OPTION_ARG_NONE, &adaptive, N_(
+					"adaptive mode: use adaptive performance tables if available"), NULL },
 			{ "poll-interval", 0, 0, G_OPTION_ARG_INT, &poll_interval,
 					N_("Poll interval in seconds: Poll for zone temperature changes. "
 						"If want to disable polling set to zero."), NULL },
@@ -322,8 +327,12 @@ int main(int argc, char *argv[]) {
 		}
 	}
 
-	if (thd_engine_create_default_engine((bool) ignore_cpuid_check,
-			(bool) exclusive_control, conf_file) != THD_SUCCESS) {
+	if (adaptive)
+		ret = thd_engine_create_adaptive_engine((bool) ignore_cpuid_check);
+	else
+		ret = thd_engine_create_default_engine((bool) ignore_cpuid_check,
+						       (bool) exclusive_control, conf_file);
+	if (ret != THD_SUCCESS) {
 		clean_up_lockfile();
 		closelog();
 		exit(EXIT_FAILURE);
