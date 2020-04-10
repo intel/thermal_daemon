@@ -45,6 +45,7 @@ thermald_SOURCES = \
 	src/thd_cdev.cpp \
 	src/thd_cdev_therm_sys_fs.cpp \
 	src/thd_engine_default.cpp \
+	src/thd_engine_adaptive.cpp \
 	src/thd_sys_fs.cpp \
 	src/thd_trip_point.cpp \
 	src/thd_zone.cpp \
