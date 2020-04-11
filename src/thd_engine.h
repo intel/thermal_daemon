@@ -229,7 +229,7 @@ public:
 	std::string get_config_file() {
 		return config_file;
 	}
-	ppcc_t *get_ppcc_param();
+	virtual ppcc_t *get_ppcc_param(std::string name);
 	cthd_zone *search_zone(std::string name);
 	cthd_cdev *search_cdev(std::string name);
 	cthd_sensor *search_sensor(std::string name);

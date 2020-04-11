@@ -953,7 +953,10 @@ thermal_zone_t *cthd_parse::get_zone_dev_index(unsigned int zone_index) {
 
 }
 
-ppcc_t *cthd_parse::get_ppcc_param() {
+ppcc_t *cthd_parse::get_ppcc_param(std::string name) {
+	if (name != "TCPU.D0")
+		return NULL;
+
 	if (matched_thermal_info_index >= 0 && thermal_info_list[matched_thermal_info_index].ppcc.valid)
 		return &thermal_info_list[matched_thermal_info_index].ppcc;
 

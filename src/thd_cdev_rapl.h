@@ -43,6 +43,7 @@ protected:
 	int power_on_constraint_0_pwr;
 	int power_on_constraint_0_time_window;
 	int power_on_enable_status;
+	std::string device_name;
 	virtual bool read_ppcc_power_limits();
 
 private:
@@ -73,7 +74,7 @@ public:
 					0), pl0_step_pwr(
 					0), bios_locked(false), constrained(
 					false), power_on_constraint_0_pwr(0), power_on_constraint_0_time_window(
-					0), power_on_enable_status(0)
+					0), power_on_enable_status(0), device_name("TCPU.D0")
 	{
 	}
 	cthd_sysfs_cdev_rapl(unsigned int _index, int package,
