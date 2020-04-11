@@ -678,7 +678,7 @@ int cthd_engine_default::read_cooling_devices() {
 	}
 
 	// Add RAPL mmio cooling device
-	if (!disable_active_power && parser.thermal_matched_platform_index() >= 0) {
+	if (!disable_active_power && (parser.thermal_matched_platform_index() >= 0 || force_mmio_rapl)) {
 		cthd_sysfs_cdev_rapl *rapl_mmio_dev =
 				new cthd_sysfs_cdev_rapl(
 						current_cdev_index, 0,
@@ -687,6 +687,10 @@ int cthd_engine_default::read_cooling_devices() {
 		if (rapl_mmio_dev->update() == THD_SUCCESS) {
 			cdevs.push_back(rapl_mmio_dev);
 			++current_cdev_index;
+
+			// Prefer MMIO access over MSR access for B0D4
+			rapl_dev->set_cdev_alias("");
+			rapl_mmio_dev->set_cdev_alias("B0D4");
 		} else {
 			delete rapl_mmio_dev;
 		}
