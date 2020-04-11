@@ -154,6 +154,7 @@ void cthd_engine::thd_engine_thread() {
 				thd_log_debug("Terminating thread..\n");
 			}
 		}
+		update_engine_state();
 		workarounds();
 	}
 	thd_log_debug("thd_engine_thread_end\n");
