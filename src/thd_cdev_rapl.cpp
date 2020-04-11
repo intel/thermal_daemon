@@ -265,6 +265,15 @@ int cthd_sysfs_cdev_rapl::rapl_read_enable_status()
 
 }
 
+void cthd_sysfs_cdev_rapl::set_adaptive_target(struct adaptive_target target) {
+	int argument = std::stoi(target.argument, NULL);
+	if (target.code == "PL1MAX") {
+		set_curr_state(argument * 1000, 1);
+	} else if (target.code == "PL1TimeWindow") {
+		rapl_update_time_window(argument * 1000);
+	}
+}
+
 int cthd_sysfs_cdev_rapl::update() {
 	std::stringstream temp_str;
 	int constraint_phy_max;
