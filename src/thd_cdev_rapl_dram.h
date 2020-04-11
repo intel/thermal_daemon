@@ -33,6 +33,7 @@ private:
 public:
 	cthd_sysfs_cdev_rapl_dram(unsigned int _index, int _package) :
 			cthd_sysfs_cdev_rapl(_index, _package) {
+		device_name = "TMEM.D0";
 	}
 
 	virtual int update();

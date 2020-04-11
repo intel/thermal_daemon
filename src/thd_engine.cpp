@@ -821,8 +821,8 @@ void cthd_engine::thd_read_default_cooling_devices() {
 			cdevs.size());
 }
 
-ppcc_t* cthd_engine::get_ppcc_param() {
-	return parser.get_ppcc_param();
+ppcc_t* cthd_engine::get_ppcc_param(std::string name) {
+	return parser.get_ppcc_param(name);
 }
 
 cthd_zone* cthd_engine::search_zone(std::string name) {

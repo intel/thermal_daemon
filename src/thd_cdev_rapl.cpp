@@ -277,12 +277,7 @@ int cthd_sysfs_cdev_rapl::update() {
 	if (rapl_sysfs_valid())
 		return THD_ERROR;
 
-	// Since this base class is also used by DRAM rapl, avoid reading PPCC as
-	// there are no power limits defined by DPTF based systems for any other
-	// domain other than package-0
-	cdev_sysfs.read("name", domain_name);
-	if (domain_name == "package-0")
-		ppcc = read_ppcc_power_limits();
+	ppcc = read_ppcc_power_limits();
 
 	if (ppcc) {
 		// This is a DPTF compatible platform, which defined
@@ -374,7 +369,7 @@ bool cthd_sysfs_cdev_rapl::read_ppcc_power_limits() {
 	csys_fs sys_fs;
 	ppcc_t *ppcc;
 
-	ppcc = thd_engine->get_ppcc_param();
+	ppcc = thd_engine->get_ppcc_param(device_name);
 	if (ppcc) {
 		int def_max_power;
 
