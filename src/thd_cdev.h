@@ -31,6 +31,7 @@
 #include "thd_sys_fs.h"
 #include "thd_preference.h"
 #include "thd_pid.h"
+#include "thd_adaptive_types.h"
 
 typedef struct {
 	int zone;
@@ -180,6 +181,7 @@ public:
 	virtual int map_target_state(int target_valid, int target_state) {
 		return target_state;
 	}
+	virtual void set_adaptive_target(struct adaptive_target) {};
 	void set_debounce_interval(int interval) {
 		debounce_interval = interval;
 	}
