@@ -550,6 +550,9 @@ void cthd_engine::takeover_thermal_control() {
 				i = atoi(entry->d_name + strlen("thermal_zone"));
 				std::stringstream policy;
 				std::string curr_policy;
+				std::stringstream type;
+				std::string thermal_type;
+				std::stringstream mode;
 
 				policy << "thermal_zone" << i << "/policy";
 				if (sysfs.exists(policy.str().c_str())) {
@@ -559,6 +562,15 @@ void cthd_engine::takeover_thermal_control() {
 					if (ret >= 0) {
 						zone_preferences.push_back(curr_policy);
 						sysfs.write(policy.str(), "user_space");
+					}
+				}
+				type << "thermal_zone" << i << "/type";
+				if (sysfs.exists(type.str().c_str())) {
+					sysfs.read(type.str(), thermal_type);
+					thd_log_info("Thermal zone of type %s\n", thermal_type.c_str());
+					if (thermal_type == "INT3400") {
+						mode << "thermal_zone" << i << "/mode";
+						sysfs.write(mode.str(), "enabled");
 					}
 				}
 			}
@@ -590,10 +602,21 @@ void cthd_engine::giveup_thermal_control() {
 
 				i = atoi(entry->d_name + strlen("thermal_zone"));
 				std::stringstream policy;
+				std::stringstream type;
+				std::string thermal_type;
+				std::stringstream mode;
 
 				policy << "thermal_zone" << i << "/policy";
 				if (sysfs.exists(policy.str().c_str())) {
 					sysfs.write(policy.str(), zone_preferences[cnt++]);
+				}
+				type << "thermal_zone" << i << "/type";
+				if (sysfs.exists(type.str().c_str())) {
+					sysfs.read(type.str(), thermal_type);
+					if (thermal_type == "INT3400") {
+						mode << "thermal_zone" << i << "/mode";
+						sysfs.write(mode.str(), "disabled");
+					}
 				}
 			}
 		}
