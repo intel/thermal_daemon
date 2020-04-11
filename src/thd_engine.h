@@ -177,6 +177,7 @@ public:
 	void thd_read_default_thermal_zones();
 	void thd_read_default_cooling_devices();
 
+	virtual void update_engine_state() {};
 	virtual int read_thermal_sensors() {
 		return 0;
 	}
