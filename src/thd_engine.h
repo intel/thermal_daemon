@@ -146,7 +146,7 @@ public:
 		return control_mode;
 	}
 	void thd_engine_thread();
-	int thd_engine_start(bool ignore_cpuid_check);
+	virtual int thd_engine_start(bool ignore_cpuid_check);
 	int thd_engine_stop();
 	int check_cpu_id();
 
