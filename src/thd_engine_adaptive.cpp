@@ -128,7 +128,7 @@ int cthd_engine_adaptive::parse_apat (char *apat, int len) {
 	if (version != 2)
 		thd_log_fatal("Found unsupported APAT version %d\n", (int)version);
 
-        while (1) {
+        while (offset < len) {
 		struct adaptive_target target;
 
                 if (offset >= len)
