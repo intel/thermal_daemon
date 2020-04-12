@@ -402,18 +402,23 @@ int cthd_engine_adaptive::verify_condition(struct condition condition) {
 	if (condition.condition == Default)
 		return 0;
 
-	thd_log_fatal("Unsupported condition %d, exiting\n", condition.condition);
+	thd_log_error("Unsupported condition %d\n", condition.condition);
 	return THD_ERROR;
 }
 
 int cthd_engine_adaptive::verify_conditions() {
+	int result = 0;
 	for (int i = 0; i < (int)conditions.size(); i++) {
 		for (int j = 0; j < (int)conditions[i].size(); j++) {
 			if (verify_condition(conditions[i][j]))
-				return THD_ERROR;
+				result = THD_ERROR;
 		}
 	}
-	return 0;
+
+	if (result != 0)
+		thd_log_error("Exiting due to unsupported conditions\n");
+
+	return result;
 }
 
 int cthd_engine_adaptive::evaluate_condition(struct condition condition) {
