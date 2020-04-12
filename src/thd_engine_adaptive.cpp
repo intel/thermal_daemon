@@ -288,6 +288,8 @@ int cthd_engine_adaptive::parse_gddv(char *buf, int size) {
 		if (header->version == htonl(2)) {
 			memcpy(&unk1, buf + offset, sizeof(unk1));
 			offset += sizeof(unk1);
+			if (unk1 == 0x005d)
+				thd_log_fatal("Found unsupported compressed GDDV object\n");
 		}
 
 		memcpy(&keyflags, buf + offset, sizeof(keyflags));
