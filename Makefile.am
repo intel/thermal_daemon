@@ -33,7 +33,8 @@ thermald_LDADD = \
 	$(LIBNL_LIBS) \
 	$(LIBM) \
 	$(LIBDL) \
-	$(XML_LIBS)
+	$(XML_LIBS) \
+	$(LZMA_LIBS)
 
 BUILT_SOURCES = \
 	thd_dbus_interface.h

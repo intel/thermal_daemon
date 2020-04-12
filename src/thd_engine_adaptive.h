@@ -140,6 +140,7 @@ protected:
 	int parse_apct(char *apct, int len);
 	int parse_ppcc(char *name, char *ppcc, int len);
 	int parse_psvt(char *name, char *psvt, int len);
+	int handle_compressed_gddv(char *buf, int size);
 	int parse_gddv(char *buf, int size);
 	struct psvt *find_psvt(std::string name);
 	void set_int3400_target(struct adaptive_target target);
