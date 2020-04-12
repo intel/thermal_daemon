@@ -470,12 +470,34 @@ int cthd_engine_adaptive::verify_conditions() {
 	return result;
 }
 
-int cthd_engine_adaptive::evaluate_condition(struct condition condition) {
-	int oem_condition = -1;
-	csys_fs sysfs("/sys/bus/platform/devices/INT3400:00/");
+int cthd_engine_adaptive::compare_condition(struct condition condition, int value) {
+	switch (condition.comparison) {
+	case ADAPTIVE_EQUAL:
+		if (value == condition.argument)
+			return THD_SUCCESS;
+		else
+			return THD_ERROR;
+		break;
+	case ADAPTIVE_LESSER_OR_EQUAL:
+		if (value <= condition.argument)
+			return THD_SUCCESS;
+		else
+			return THD_ERROR;
+		break;
+	case ADAPTIVE_GREATER_OR_EQUAL:
+		if (value >= condition.argument)
+			return THD_SUCCESS;
+		else
+			return THD_ERROR;
+		break;
+	default:
+		return THD_ERROR;
+	}
+}
 
-	if (condition.condition == Default)
-		return THD_SUCCESS;
+int cthd_engine_adaptive::evaluate_oem_condition(struct condition condition) {
+	csys_fs sysfs("/sys/bus/platform/devices/INT3400:00/");
+	int oem_condition = -1;
 
 	if (condition.condition >= Oem0 &&
 	    condition.condition <= Oem5)
@@ -493,26 +515,49 @@ int cthd_engine_adaptive::evaluate_condition(struct condition condition) {
 		}
 		int value = std::stoi(data, NULL);
 
-		switch (condition.comparison) {
-		case ADAPTIVE_EQUAL:
-			if (value == condition.argument)
-				return THD_SUCCESS;
-			else
-				return THD_ERROR;
-			break;
-		case ADAPTIVE_LESSER_OR_EQUAL:
-			if (value <= condition.argument)
-				return THD_SUCCESS;
-			else
-				return THD_ERROR;
-			break;
-		case ADAPTIVE_GREATER_OR_EQUAL:
-			if (value >= condition.argument)
-				return THD_SUCCESS;
-			else
-				return THD_ERROR;
-			break;
-		}
+		return compare_condition(condition, value);
+	}
+
+	return THD_ERROR;
+}
+
+int cthd_engine_adaptive::evaluate_temperature_condition(struct condition condition) {
+	std::string sensor_name;
+
+	size_t pos = condition.device.find_last_of(".");
+	if (pos == std::string::npos)
+		sensor_name = condition.device;
+	else
+		sensor_name = condition.device.substr(pos + 1);
+
+	cthd_sensor *sensor = search_sensor(sensor_name);
+	if (!sensor) {
+		thd_log_warn("Unable to find a sensor for %s\n", condition.device.c_str());
+		return THD_ERROR;
+	}
+
+	int value = sensor->read_temperature();
+
+	// Conditions are specified in decikelvin, temperatures are in
+	// millicelsius.
+	value = value / 100 + 2732;
+	return  compare_condition(condition, value);
+}
+
+int cthd_engine_adaptive::evaluate_condition(struct condition condition) {
+	if (condition.condition == Default)
+		return THD_SUCCESS;
+
+	if ((condition.condition >= Oem0 &&
+	    condition.condition <= Oem5) ||
+	    (condition.condition >= (adaptive_condition)0x1000 &&
+	     condition.condition < (adaptive_condition)0x10000))
+		return evaluate_oem_condition(condition);
+
+	if (condition.condition == Temperature ||
+	    condition.condition == Temperature_without_hysteresis ||
+	    condition.condition == (adaptive_condition)0) {
+		return evaluate_temperature_condition(condition);
 	}
 
 	return THD_ERROR;

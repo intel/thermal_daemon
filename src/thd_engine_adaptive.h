@@ -164,6 +164,9 @@ protected:
 	void set_int3400_target(struct adaptive_target target);
 	int verify_condition(struct condition condition);
 	int verify_conditions();
+	int compare_condition(struct condition condition, int value);
+	int evaluate_oem_condition(struct condition condition);
+	int evaluate_temperature_condition(struct condition condition);
 	int evaluate_condition(struct condition condition);
 	int evaluate_condition_set(std::vector<struct condition> condition_set);
 	int evaluate_conditions();
