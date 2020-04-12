@@ -99,8 +99,14 @@ int cthd_engine_adaptive::merge_appc () {
 
 int cthd_engine_adaptive::parse_appc (char *appc, int len) {
 	int offset = 0;
-	uint64_t version = get_uint64(appc, &offset);
+	uint64_t version;
 
+	if (appc[0] != 4) {
+		thd_log_info("Found malformed APPC table, ignoring\n");
+		return 0;
+	}
+
+	version = get_uint64(appc, &offset);
 	if (version != 1) {
 		// Invalid APPC tables aren't fatal
 		thd_log_info("Found unsupported or malformed APPC version %d\n", (int)version);
