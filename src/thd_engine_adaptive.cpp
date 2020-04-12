@@ -346,6 +346,11 @@ int cthd_engine_adaptive::parse_gddv(char *buf, int size) {
 		offset += vallength;
 
 		str = strtok(key, "/");
+		if (!str) {
+			free(key);
+			free(val);
+			continue;
+		}
                 if (strcmp(str, "participants") == 0) {
                         name = strtok(NULL, "/");
                         type = strtok(NULL, "/");
