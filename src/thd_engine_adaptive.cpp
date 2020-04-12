@@ -74,8 +74,50 @@ char * cthd_engine_adaptive::get_string(char *object, int *offset) {
         return value;
 }
 
+int cthd_engine_adaptive::merge_custom(struct custom_condition *custom, struct condition *condition) {
+	condition->device = custom->participant;
+	condition->condition = (enum adaptive_condition)custom->type;
+
+	return 0;
+}
+
+int cthd_engine_adaptive::merge_appc () {
+	for (int i = 0; i < (int)custom_conditions.size(); i++) {
+		for (int j = 0; j < (int)conditions.size(); j++) {
+			for (int k = 0; k < (int)conditions[j].size(); k++) {
+				if (custom_conditions[i].condition ==
+				    conditions[j][k].condition) {
+					merge_custom(&custom_conditions[i],
+						     &conditions[j][k]);
+				}
+			}
+		}
+	}
+
+	return 0;
+}
+
 int cthd_engine_adaptive::parse_appc (char *appc, int len) {
-	/* Currently unhandled */
+	int offset = 0;
+	uint64_t version = get_uint64(appc, &offset);
+
+	if (version != 1) {
+		// Invalid APPC tables aren't fatal
+		thd_log_info("Found unsupported or malformed APPC version %d\n", (int)version);
+		return 0;
+	}
+
+	while (offset < len) {
+		struct custom_condition condition;
+
+		condition.condition = (enum adaptive_condition)get_uint64(appc, &offset);
+		condition.name = get_string(appc, &offset);
+		condition.participant = get_string(appc, &offset);
+		condition.domain = get_uint64(appc, &offset);
+		condition.type = get_uint64(appc, &offset);
+		custom_conditions.push_back(condition);
+	}
+
         return 0;
 }
 
@@ -389,6 +431,7 @@ int cthd_engine_adaptive::parse_gddv(char *buf, int size) {
 		delete(val);
 	}
 
+	merge_appc();
 	return 0;
 }
 
