@@ -27,6 +27,8 @@
 #ifndef THD_ENGINE_ADAPTIVE_H_
 #define THD_ENGINE_ADAPTIVE_H_
 
+#include <upower.h>
+
 #include "thd_engine_default.h"
 #include "thd_cpu_default_binding.h"
 #include "thd_adaptive_types.h"
@@ -147,6 +149,7 @@ protected:
 	std::vector<struct adaptive_target> targets;
 	std::vector<struct psvt> psvts;
 	std::string int3400_path;
+	UpClient *upower_client;
 	int get_type(char *object, int *offset);
 	uint64_t get_uint64(char *object, int *offset);
 	char *get_string(char *object, int *offset);
@@ -167,6 +170,7 @@ protected:
 	int compare_condition(struct condition condition, int value);
 	int evaluate_oem_condition(struct condition condition);
 	int evaluate_temperature_condition(struct condition condition);
+	int evaluate_lid_condition(struct condition condition);
 	int evaluate_condition(struct condition condition);
 	int evaluate_condition_set(std::vector<struct condition> condition_set);
 	int evaluate_conditions();
