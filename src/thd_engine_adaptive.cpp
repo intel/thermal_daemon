@@ -456,6 +456,13 @@ int cthd_engine_adaptive::verify_condition(struct condition condition) {
 		return 0;
 	if (condition.condition == Default)
 		return 0;
+	if (condition.condition == Temperature ||
+	    condition.condition == Temperature_without_hysteresis ||
+	    condition.condition == (adaptive_condition)0) {
+		return 0;
+	}
+	if (condition.condition == Lid_state && upower_client != NULL)
+		return 0;
 
 	thd_log_error("Unsupported condition %d\n", condition.condition);
 	return THD_ERROR;
@@ -550,6 +557,15 @@ int cthd_engine_adaptive::evaluate_temperature_condition(struct condition condit
 	return  compare_condition(condition, value);
 }
 
+int cthd_engine_adaptive::evaluate_lid_condition(struct condition condition) {
+	int value = 0;
+	bool lid_closed = up_client_get_lid_is_closed (upower_client);
+
+	if (!lid_closed)
+		value = 1;
+
+	return compare_condition(condition, value);
+}
 int cthd_engine_adaptive::evaluate_condition(struct condition condition) {
 	if (condition.condition == Default)
 		return THD_SUCCESS;
@@ -564,6 +580,10 @@ int cthd_engine_adaptive::evaluate_condition(struct condition condition) {
 	    condition.condition == Temperature_without_hysteresis ||
 	    condition.condition == (adaptive_condition)0) {
 		return evaluate_temperature_condition(condition);
+	}
+
+	if (condition.condition == Lid_state) {
+		return evaluate_lid_condition(condition);
 	}
 
 	return THD_ERROR;
@@ -753,6 +773,11 @@ int cthd_engine_adaptive::thd_engine_start(bool ignore_cpuid_check) {
 	if (parse_gddv(buf, size)) {
 		thd_log_error("Unable to parse GDDV");
 		return THD_ERROR;
+	}
+
+	upower_client = up_client_new();
+	if (upower_client == NULL) {
+		thd_log_error("Unable to connect to upower\n");
 	}
 
 	if (verify_conditions()) {
