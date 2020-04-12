@@ -1,6 +1,7 @@
 #include <arpa/inet.h>
 #include <dirent.h>
 #include <errno.h>
+#include <lzma.h>
 #include <sys/types.h>
 #include "thd_engine_adaptive.h"
 #include "thd_zone_cpu.h"
@@ -257,6 +258,33 @@ int cthd_engine_adaptive::parse_psvt(char *name, char *buf, int len) {
 	return 0;
 }
 
+int cthd_engine_adaptive::handle_compressed_gddv(char *buf, int size) {
+	uint64_t output_size = *(uint64_t *)(buf+5);
+	lzma_ret ret;
+	unsigned char *decompressed = (unsigned char*)malloc(output_size);
+	lzma_stream strm = LZMA_STREAM_INIT;
+
+	if (!decompressed)
+		thd_log_fatal("Failed to allocate buffer for decompressed output\n");
+	ret = lzma_auto_decoder(&strm, 64 * 1024 * 1024, 0);
+	if (ret)
+		thd_log_fatal("Failed to initialize LZMA decoder: %d\n", ret);
+
+	strm.next_out = decompressed;
+	strm.avail_out = output_size;
+	strm.next_in = (const unsigned char *)(buf);
+	strm.avail_in = size;
+	ret = lzma_code(&strm, LZMA_FINISH);
+	lzma_end(&strm);
+	if (ret && ret != LZMA_STREAM_END)
+		thd_log_fatal("Failed to decompress GDDV data: %d\n", ret);
+
+	parse_gddv((char *)decompressed, output_size);
+	free(decompressed);
+
+	return THD_SUCCESS;
+}
+
 int cthd_engine_adaptive::parse_gddv(char *buf, int size) {
 	int offset = 0;
 	struct header *header;
@@ -284,12 +312,13 @@ int cthd_engine_adaptive::parse_gddv(char *buf, int size) {
 		char *type = NULL;
 		char *point = NULL;
 		char *ns = NULL;
-		
+
 		if (header->version == htonl(2)) {
 			memcpy(&unk1, buf + offset, sizeof(unk1));
+			if (unk1 == 0x005d) {
+				return handle_compressed_gddv(buf + offset, size - offset);
+			}
 			offset += sizeof(unk1);
-			if (unk1 == 0x005d)
-				thd_log_fatal("Found unsupported compressed GDDV object\n");
 		}
 
 		memcpy(&keyflags, buf + offset, sizeof(keyflags));
