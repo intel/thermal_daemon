@@ -133,6 +133,7 @@ protected:
 	std::vector<struct adaptive_target> targets;
 	std::vector<struct psvt> psvts;
 	std::string int3400_path;
+	int get_type(char *object, int *offset);
 	uint64_t get_uint64(char *object, int *offset);
 	char *get_string(char *object, int *offset);
 	int parse_appc(char *appc, int len);

@@ -37,6 +37,10 @@ struct header {
 cthd_engine_adaptive::~cthd_engine_adaptive() {
 }
 
+int cthd_engine_adaptive::get_type(char *object, int *offset) {
+	return *(uint32_t *)(object + *offset);
+}
+
 uint64_t cthd_engine_adaptive::get_uint64(char *object, int *offset) {
         uint64_t value;
         int type = *(uint32_t *)(object + *offset);
@@ -248,7 +252,12 @@ int cthd_engine_adaptive::parse_psvt(char *name, char *buf, int len) {
 	psvt.temp = get_uint64(buf, &offset);
 	psvt.domain = get_uint64(buf, &offset);
 	psvt.control_knob = get_uint64(buf, &offset);
-	psvt.limit = get_string(buf, &offset);
+	if (get_type(buf, &offset) == 8) {
+		psvt.limit = get_string(buf, &offset);
+	} else {
+		uint64_t tmp = get_uint64(buf, &offset);
+		psvt.limit = std::to_string(tmp);
+	}
 	psvt.step_size = get_uint64(buf, &offset);
 	psvt.limit_coeff = get_uint64(buf, &offset);
 	psvt.unlimit_coeff = get_uint64(buf, &offset);
@@ -348,13 +357,15 @@ int cthd_engine_adaptive::parse_gddv(char *buf, int size) {
                                 point = strtok(NULL, "/");
                         }
                 }
-
 		if (type && strcmp(type, "ppcc") == 0) {
                         parse_ppcc(name, val, vallength);
                 }
 
                 if (type && strcmp(type, "psvt") == 0) {
-			parse_psvt(point, val, vallength);
+			if (point == NULL)
+				parse_psvt(name, val, vallength);
+			else
+				parse_psvt(point, val, vallength);
                 }
 
                 if (type && strcmp(type, "appc") == 0) {
