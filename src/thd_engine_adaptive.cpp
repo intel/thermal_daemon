@@ -184,10 +184,10 @@ int cthd_engine_adaptive::parse_apct (char *apct, int len) {
 				if (i < 9) {
 					condition.operation = adaptive_operation(get_uint64(apct, &offset));
 					if (condition.operation == FOR) {
-						offset += 8;
+						offset += 12;
 						condition.time_comparison = adaptive_comparison(get_uint64(apct, &offset));
 						condition.time = get_uint64(apct, &offset);
-						offset += 8;
+						offset += 12;
 						i++;
 					}
 				}
