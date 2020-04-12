@@ -126,16 +126,27 @@ struct condition {
 	int state_entry_time;
 };
 
+struct custom_condition {
+	enum adaptive_condition condition;
+	std::string name;
+	std::string participant;
+	int domain;
+	int type;
+};
+
 class cthd_engine_adaptive: public cthd_engine_default {
 protected:
 	std::vector<ppcc_t> ppccs;
 	std::vector<std::vector<struct condition>> conditions;
+	std::vector<struct custom_condition> custom_conditions;
 	std::vector<struct adaptive_target> targets;
 	std::vector<struct psvt> psvts;
 	std::string int3400_path;
 	int get_type(char *object, int *offset);
 	uint64_t get_uint64(char *object, int *offset);
 	char *get_string(char *object, int *offset);
+	int merge_custom(struct custom_condition *custom, struct condition *condition);
+	int merge_appc(void);
 	int parse_appc(char *appc, int len);
 	int parse_apat(char *apat, int len);
 	int parse_apct(char *apct, int len);
