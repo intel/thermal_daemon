@@ -287,22 +287,28 @@ int cthd_engine_adaptive::parse_psvt(char *name, char *buf, int len) {
 		psvt.name = "Default";
 	else
 		psvt.name = name;
-	psvt.source = get_string(buf, &offset);
-	psvt.target = get_string(buf, &offset);
-	psvt.priority = get_uint64(buf, &offset);
-	psvt.sample_period = get_uint64(buf, &offset);
-	psvt.temp = get_uint64(buf, &offset);
-	psvt.domain = get_uint64(buf, &offset);
-	psvt.control_knob = get_uint64(buf, &offset);
-	if (get_type(buf, &offset) == 8) {
-		psvt.limit = get_string(buf, &offset);
-	} else {
-		uint64_t tmp = get_uint64(buf, &offset);
-		psvt.limit = std::to_string(tmp);
+	while (offset < len) {
+		struct psv psv;
+
+		psv.source = get_string(buf, &offset);
+		psv.target = get_string(buf, &offset);
+		psv.priority = get_uint64(buf, &offset);
+		psv.sample_period = get_uint64(buf, &offset);
+		psv.temp = get_uint64(buf, &offset);
+		psv.domain = get_uint64(buf, &offset);
+		psv.control_knob = get_uint64(buf, &offset);
+		if (get_type(buf, &offset) == 8) {
+			psv.limit = get_string(buf, &offset);
+		} else {
+			uint64_t tmp = get_uint64(buf, &offset);
+			psv.limit = std::to_string(tmp);
+		}
+		psv.step_size = get_uint64(buf, &offset);
+		psv.limit_coeff = get_uint64(buf, &offset);
+		psv.unlimit_coeff = get_uint64(buf, &offset);
+		offset += 12;
+		psvt.psvs.push_back(psv);
 	}
-	psvt.step_size = get_uint64(buf, &offset);
-	psvt.limit_coeff = get_uint64(buf, &offset);
-	psvt.unlimit_coeff = get_uint64(buf, &offset);
 
 	psvts.push_back(psvt);
 
@@ -543,6 +549,82 @@ struct psvt *cthd_engine_adaptive::find_psvt(std::string name) {
 	return NULL;
 }
 
+int cthd_engine_adaptive::install_passive(struct psv *psv) {
+	std::string psv_zone;
+
+	size_t pos = psv->target.find_last_of(".");
+	if (pos == std::string::npos)
+		psv_zone = psv->target;
+	else
+		psv_zone = psv->target.substr(pos + 1);
+
+	cthd_zone *zone = search_zone(psv_zone);
+	if (!zone) {
+		thd_log_warn("Unable to find a zone for %s\n", psv_zone.c_str());
+		return THD_ERROR;
+	}
+
+	std::string psv_cdev;
+	pos = psv->source.find_last_of(".");
+	if (pos == std::string::npos)
+		psv_cdev = psv->source;
+	else
+		psv_cdev = psv->source.substr(pos + 1);
+
+	cthd_cdev *cdev = search_cdev(psv_cdev);
+
+	// HACK - if the cdev is RAPL and the sensor is memory, use the
+	// rapl-dram device instead
+	if (psv_zone == "TMEM" && psv_cdev == "B0D4")
+		cdev = search_cdev("rapl_controller_dram");
+
+	if (!cdev) {
+		thd_log_warn("Unable to find a cooling device for %s\n", psv_cdev.c_str());
+		return THD_ERROR;
+	}
+
+	cthd_sensor *sensor = search_sensor(psv_zone);
+	if (!sensor) {
+		thd_log_warn("Unable to find a sensor for %s\n", psv_zone.c_str());
+		return THD_ERROR;
+	}
+
+	int temp = (psv->temp - 2732) * 100;
+	int index = 0;
+	cthd_trip_point *trip = zone->get_trip_at_index(index);
+	while (trip != NULL) {
+		trip->trip_dump();
+		if (trip->get_trip_type() == PASSIVE) {
+			int cdev_index = 0;
+			while (true) {
+				try {
+					trip_pt_cdev_t trip_cdev = trip->get_cdev_at_index(cdev_index);
+					if (trip_cdev.cdev == cdev) {
+						trip->update_trip_temp(temp);
+						return 0;
+					}
+					cdev_index++;
+				} catch (const std::invalid_argument &) {
+					break;
+				}
+			}
+		}
+		index++;
+		trip = zone->get_trip_at_index(index);
+	}
+
+	// If we're here, there's no existing trip point for this device
+	// that includes the relevant cdev. Add one.
+	cthd_trip_point trip_pt(index, PASSIVE, temp, 0,
+				zone->get_zone_index(),
+				sensor->get_index());
+	trip_pt.thd_trip_point_add_cdev(*cdev, cthd_trip_point::default_influence, psv->sample_period/10);
+	zone->add_trip(trip_pt);
+	zone->zone_cdev_set_binded();
+
+	return 0;
+}
+
 void cthd_engine_adaptive::set_int3400_target(struct adaptive_target target) {
 	struct psvt *psvt;
 	if (target.code == "PSVT") {
@@ -550,70 +632,9 @@ void cthd_engine_adaptive::set_int3400_target(struct adaptive_target target) {
 		if (!psvt) {
 			return;
 		}
-		std::string psv_zone;
-		size_t pos = psvt->target.find_last_of(".");
-		if (pos == std::string::npos)
-			psv_zone = psvt->target;
-		else
-			psv_zone = psvt->target.substr(pos + 1);
-
-		cthd_zone *zone = search_zone(psv_zone);
-		if (!zone)
-			return;
-
-		std::string psv_cdev;
-		pos = psvt->source.find_last_of(".");
-		if (pos == std::string::npos)
-			psv_cdev = psvt->source;
-		else
-			psv_cdev = psvt->source.substr(pos + 1);
-
-		cthd_cdev *cdev = search_cdev(psv_cdev);
-
-		// HACK - if the cdev is RAPL and the sensor is memory, use
-		// the rapl-dram device instead
-		if (psv_zone == "TMEM" && psv_cdev == "B0D4")
-			cdev = search_cdev("rapl_controller_dram");
-
-		if (!cdev)
-			return;
-
-		cthd_sensor *sensor = search_sensor(psv_zone);
-		if (!sensor)
-			return;
-
-		int temp = (psvt->temp - 2732) * 100;
-		int index = 0;
-		cthd_trip_point *trip = zone->get_trip_at_index(index);
-		while (trip != NULL) {
-			trip->trip_dump();
-			if (trip->get_trip_type() == PASSIVE) {
-				int cdev_index = 0;
-				while (true) {
-					try {
-						trip_pt_cdev_t trip_cdev = trip->get_cdev_at_index(cdev_index);
-						if (trip_cdev.cdev == cdev) {
-							trip->update_trip_temp(temp);
-							return;
-						}
-						cdev_index++;
-					} catch (const std::invalid_argument &) {
-						break;
-					}
-				}
-			}
-			index++;
-			trip = zone->get_trip_at_index(index);
+		for (int i = 0; i < (int)psvt->psvs.size(); i++) {
+			install_passive(&psvt->psvs[i]);
 		}
-
-		// If we're here, there's no existing trip point for this
-		// device that includes the relevant cdev. Add one.
-		cthd_trip_point trip_pt(index, PASSIVE, temp, 0,
-					zone->get_zone_index(),
-					sensor->get_index());
-		trip_pt.thd_trip_point_add_cdev(*cdev, cthd_trip_point::default_influence, psvt->sample_period/10);
-		zone->add_trip(trip_pt);
-		zone->zone_cdev_set_binded();
 	}
 }
 

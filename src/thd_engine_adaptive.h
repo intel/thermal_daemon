@@ -97,7 +97,7 @@ enum adaptive_operation {
 	FOR
 };
 
-struct psvt {
+struct psv {
 	std::string name;
 	std::string source;
 	std::string target;
@@ -133,6 +133,11 @@ struct custom_condition {
 	int type;
 };
 
+struct psvt {
+	std::string name;
+	std::vector<struct psv> psvs;
+};
+
 class cthd_engine_adaptive: public cthd_engine_default {
 protected:
 	std::vector<ppcc_t> ppccs;
@@ -154,6 +159,7 @@ protected:
 	int handle_compressed_gddv(char *buf, int size);
 	int parse_gddv(char *buf, int size);
 	struct psvt *find_psvt(std::string name);
+	int install_passive(struct psv *psv);
 	void set_int3400_target(struct adaptive_target target);
 	int verify_condition(struct condition condition);
 	int verify_conditions();
