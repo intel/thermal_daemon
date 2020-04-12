@@ -184,18 +184,18 @@ int cthd_engine_adaptive::parse_apct (char *apct, int len) {
 
 				condition.condition = adaptive_condition(get_uint64(apct, &offset));
 				condition.device = get_string(apct, &offset);
-				offset += 8;
+				offset += 12;
 				condition.comparison = adaptive_comparison(get_uint64(apct, &offset));
 				condition.argument = get_uint64(apct, &offset);
 				if (i < int(count - 1)) {
 					condition.operation = adaptive_operation(get_uint64(apct, &offset));
 					if (condition.operation == FOR) {
-						offset += 8;
+						offset += 12;
 						get_string(apct, &offset);
-						offset += 8;
+						offset += 12;
 						condition.time_comparison = adaptive_comparison(get_uint64(apct, &offset));
 						condition.time = get_uint64(apct, &offset);
-						offset += 8;
+						offset += 12;
 						i++;
 					}
 				}
