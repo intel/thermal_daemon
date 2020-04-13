@@ -10,6 +10,7 @@ AM_CXXFLAGS = \
 	${DBUS_CFLAGS} \
 	$(XML_CFLAGS) \
 	$(UPOWER_CFLAGS) \
+	$(EVDEV_CFLAGS) \
 	-DTDRUNDIR=\"$(tdrundir)\" \
 	-DTDCONFDIR=\"$(tdconfdir)\" \
 	$(CXXFLAGS) \
@@ -36,7 +37,8 @@ thermald_LDADD = \
 	$(LIBDL) \
 	$(XML_LIBS) \
 	$(LZMA_LIBS) \
-	$(UPOWER_LIBS)
+	$(UPOWER_LIBS) \
+	$(EVDEV_LIBS)
 
 BUILT_SOURCES = \
 	thd_dbus_interface.h

@@ -27,6 +27,7 @@
 #ifndef THD_ENGINE_ADAPTIVE_H_
 #define THD_ENGINE_ADAPTIVE_H_
 
+#include <libevdev/libevdev.h>
 #include <upower.h>
 
 #include "thd_engine_default.h"
@@ -150,6 +151,7 @@ protected:
 	std::vector<struct psvt> psvts;
 	std::string int3400_path;
 	UpClient *upower_client;
+	struct libevdev *tablet_dev;
 	int get_type(char *object, int *offset);
 	uint64_t get_uint64(char *object, int *offset);
 	char *get_string(char *object, int *offset);
@@ -173,10 +175,12 @@ protected:
 	int evaluate_ac_condition(struct condition condition);
 	int evaluate_lid_condition(struct condition condition);
 	int evaluate_workload_condition(struct condition condition);
+	int evaluate_platform_type_condition(struct condition condition);
 	int evaluate_condition(struct condition condition);
 	int evaluate_condition_set(std::vector<struct condition> condition_set);
 	int evaluate_conditions();
 	void execute_target(struct adaptive_target target);
+	void setup_input_devices();
 public:
 	cthd_engine_adaptive() :
 		cthd_engine_default("63BE270F-1C11-48FD-A6F7-3AF253FF3E2D") {
