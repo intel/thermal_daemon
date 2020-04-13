@@ -30,6 +30,9 @@ Install
 	yum install glib-devel
 	yum install dbus-glib-devel
 	yum install libxml2-devel
+	yum install upower-devel
+	yum install xz-devel
+	yum install libevdev-devel
 
 Replace yum with dnf for later Fedora versions.
 
@@ -66,6 +69,7 @@ Building on Ubuntu
 	sudo apt-get install libxml2-dev
 	sudo apt-get install libupower-glib-dev
 	sudo apt-get install liblzma-dev
+	sudo apt-get install libevdev-dev
 
 2
 Build
