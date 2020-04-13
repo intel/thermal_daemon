@@ -31,6 +31,9 @@ Install
 	yum install dbus-glib-devel
 	yum install libxml2-devel
 	yum install gtk-doc
+	yum install upower-devel
+	yum install xz-devel
+	yum install libevdev-devel
 
 Replace yum with dnf for later Fedora versions.
 
@@ -67,6 +70,7 @@ Building on Ubuntu
 	sudo apt-get install gtk-doc-tools
 	sudo apt-get install libupower-glib-dev
 	sudo apt-get install liblzma-dev
+	sudo apt-get install libevdev-dev
 
 2
 Build
