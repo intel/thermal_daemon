@@ -2,6 +2,7 @@
 #include <dirent.h>
 #include <errno.h>
 #include <lzma.h>
+#include <linux/input.h>
 #include <sys/types.h>
 #include "thd_engine_adaptive.h"
 #include "thd_zone_cpu.h"
@@ -467,6 +468,8 @@ int cthd_engine_adaptive::verify_condition(struct condition condition) {
 		return 0;
 	if (condition.condition == Workload)
 		return 0;
+	if (condition.condition == Platform_type)
+		return 0;
 
 	thd_log_error("Unsupported condition %d\n", condition.condition);
 	return THD_ERROR;
@@ -578,6 +581,17 @@ int cthd_engine_adaptive::evaluate_workload_condition(struct condition condition
 	return compare_condition(condition, 3);
 }
 
+int cthd_engine_adaptive::evaluate_platform_type_condition(struct condition condition) {
+	int value = 1;
+
+	if (tablet_dev) {
+		int tablet = libevdev_get_event_value(tablet_dev, EV_SW, SW_TABLET_MODE);
+		if (tablet)
+			value = 2;
+	}
+	return compare_condition(condition, value);
+}
+
 int cthd_engine_adaptive::evaluate_ac_condition(struct condition condition) {
 	int value = 0;
 	bool on_battery = up_client_get_on_battery(upower_client);
@@ -614,6 +628,10 @@ int cthd_engine_adaptive::evaluate_condition(struct condition condition) {
 
 	if (condition.condition == Workload) {
 		return evaluate_workload_condition(condition);
+	}
+
+	if (condition.condition == Platform_type) {
+		return evaluate_platform_type_condition(condition);
 	}
 
 	return THD_ERROR;
@@ -769,6 +787,39 @@ void cthd_engine_adaptive::update_engine_state() {
 	}
 }
 
+static int is_event_device(const struct dirent *dir) {
+	return strncmp("event", dir->d_name, 5) == 0;
+}
+
+void cthd_engine_adaptive::setup_input_devices() {
+	struct dirent **namelist;
+	int i, ndev, ret;
+
+	tablet_dev = NULL;
+
+	ndev = scandir("/dev/input", &namelist, is_event_device, versionsort);
+	for (i = 0; i < ndev; i++)
+	{
+		char fname[267];
+		int fd = -1;
+
+		snprintf(fname, sizeof(fname),
+			 "/dev/input/%s", namelist[i]->d_name);
+		fd = open(fname, O_RDONLY);
+		if (fd < 0)
+			continue;
+		ret = libevdev_new_from_fd(fd, &tablet_dev);
+		if (ret) {
+			close(fd);
+			continue;
+		}
+		if (libevdev_has_event_code(tablet_dev, EV_SW, SW_TABLET_MODE))
+			return;
+		libevdev_free(tablet_dev);
+		close(fd);
+	}
+}
+
 int cthd_engine_adaptive::thd_engine_start(bool ignore_cpuid_check) {
 	char *buf;
 	csys_fs sysfs("/sys/");
@@ -804,6 +855,8 @@ int cthd_engine_adaptive::thd_engine_start(bool ignore_cpuid_check) {
 		thd_log_error("Unable to parse GDDV");
 		return THD_ERROR;
 	}
+
+	setup_input_devices();
 
 	upower_client = up_client_new();
 	if (upower_client == NULL) {
