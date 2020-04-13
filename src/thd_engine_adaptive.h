@@ -172,6 +172,7 @@ protected:
 	int evaluate_temperature_condition(struct condition condition);
 	int evaluate_ac_condition(struct condition condition);
 	int evaluate_lid_condition(struct condition condition);
+	int evaluate_workload_condition(struct condition condition);
 	int evaluate_condition(struct condition condition);
 	int evaluate_condition_set(std::vector<struct condition> condition_set);
 	int evaluate_conditions();
