@@ -64,6 +64,8 @@ Building on Ubuntu
 	sudo apt-get install libdbus-1-dev
 	sudo apt-get install libdbus-glib-1-dev
 	sudo apt-get install libxml2-dev
+	sudo apt-get install libupower-glib-dev
+	sudo apt-get install liblzma-dev
 
 2
 Build
