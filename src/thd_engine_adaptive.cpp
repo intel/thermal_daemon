@@ -463,6 +463,8 @@ int cthd_engine_adaptive::verify_condition(struct condition condition) {
 	}
 	if (condition.condition == Lid_state && upower_client != NULL)
 		return 0;
+	if (condition.condition == Power_source && upower_client != NULL)
+		return 0;
 
 	thd_log_error("Unsupported condition %d\n", condition.condition);
 	return THD_ERROR;
@@ -566,6 +568,17 @@ int cthd_engine_adaptive::evaluate_lid_condition(struct condition condition) {
 
 	return compare_condition(condition, value);
 }
+
+int cthd_engine_adaptive::evaluate_ac_condition(struct condition condition) {
+	int value = 0;
+	bool on_battery = up_client_get_on_battery(upower_client);
+
+	if (on_battery)
+		value = 1;
+
+	return compare_condition(condition, value);
+}
+
 int cthd_engine_adaptive::evaluate_condition(struct condition condition) {
 	if (condition.condition == Default)
 		return THD_SUCCESS;
@@ -584,6 +597,10 @@ int cthd_engine_adaptive::evaluate_condition(struct condition condition) {
 
 	if (condition.condition == Lid_state) {
 		return evaluate_lid_condition(condition);
+	}
+
+	if (condition.condition == Power_source) {
+		return evaluate_ac_condition(condition);
 	}
 
 	return THD_ERROR;
