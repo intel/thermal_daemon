@@ -465,6 +465,8 @@ int cthd_engine_adaptive::verify_condition(struct condition condition) {
 		return 0;
 	if (condition.condition == Power_source && upower_client != NULL)
 		return 0;
+	if (condition.condition == Workload)
+		return 0;
 
 	thd_log_error("Unsupported condition %d\n", condition.condition);
 	return THD_ERROR;
@@ -569,6 +571,13 @@ int cthd_engine_adaptive::evaluate_lid_condition(struct condition condition) {
 	return compare_condition(condition, value);
 }
 
+int cthd_engine_adaptive::evaluate_workload_condition(struct condition condition) {
+	// We don't have a good way to assert workload at the moment, so just
+	// default to bursty
+
+	return compare_condition(condition, 3);
+}
+
 int cthd_engine_adaptive::evaluate_ac_condition(struct condition condition) {
 	int value = 0;
 	bool on_battery = up_client_get_on_battery(upower_client);
@@ -601,6 +610,10 @@ int cthd_engine_adaptive::evaluate_condition(struct condition condition) {
 
 	if (condition.condition == Power_source) {
 		return evaluate_ac_condition(condition);
+	}
+
+	if (condition.condition == Workload) {
+		return evaluate_workload_condition(condition);
 	}
 
 	return THD_ERROR;
