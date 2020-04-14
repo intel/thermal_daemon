@@ -679,6 +679,10 @@ int cthd_engine_adaptive::install_passive(struct psv *psv) {
 	else
 		psv_zone = psv->target.substr(pos + 1);
 
+	while (psv_zone.back() == '_') {
+		psv_zone.pop_back();
+	}
+
 	cthd_zone *zone = search_zone(psv_zone);
 	if (!zone) {
 		thd_log_warn("Unable to find a zone for %s\n", psv_zone.c_str());
@@ -691,6 +695,10 @@ int cthd_engine_adaptive::install_passive(struct psv *psv) {
 		psv_cdev = psv->source;
 	else
 		psv_cdev = psv->source.substr(pos + 1);
+
+	while (psv_cdev.back() == '_') {
+		psv_cdev.pop_back();
+	}
 
 	cthd_cdev *cdev = search_cdev(psv_cdev);
 
