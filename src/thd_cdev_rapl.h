@@ -96,6 +96,7 @@ public:
 	virtual int get_max_state();
 	virtual int update();
 	virtual void set_curr_state_raw(int state, int arg);
+	void set_tcc(int tcc);
 	void set_adaptive_target(struct adaptive_target target);
 	void thd_cdev_set_min_state_param(int arg);
 	int get_phy_max_state() {

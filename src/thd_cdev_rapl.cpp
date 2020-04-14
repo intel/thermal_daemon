@@ -265,12 +265,23 @@ int cthd_sysfs_cdev_rapl::rapl_read_enable_status()
 
 }
 
+void cthd_sysfs_cdev_rapl::set_tcc(int tcc) {
+	csys_fs sysfs("/sys/bus/pci/devices/0000:00:04.0/");
+
+	if (!sysfs.exists("tcc_offset_degree_celsius"))
+		return;
+
+	sysfs.write("tcc_offset_degree_celsius", tcc);
+}
+
 void cthd_sysfs_cdev_rapl::set_adaptive_target(struct adaptive_target target) {
 	int argument = std::stoi(target.argument, NULL);
 	if (target.code == "PL1MAX") {
 		set_curr_state(argument * 1000, 1);
 	} else if (target.code == "PL1TimeWindow") {
 		rapl_update_time_window(argument * 1000);
+	} else if (target.code == "TccOffset") {
+		set_tcc(argument);
 	}
 }
 
