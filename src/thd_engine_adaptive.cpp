@@ -702,11 +702,6 @@ int cthd_engine_adaptive::install_passive(struct psv *psv) {
 
 	cthd_cdev *cdev = search_cdev(psv_cdev);
 
-	// HACK - if the cdev is RAPL and the sensor is memory, use the
-	// rapl-dram device instead
-	if (psv_zone == "TMEM" && psv_cdev == "B0D4")
-		cdev = search_cdev("rapl_controller_dram");
-
 	if (!cdev) {
 		thd_log_warn("Unable to find a cooling device for %s\n", psv_cdev.c_str());
 		return THD_ERROR;
