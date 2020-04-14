@@ -40,7 +40,7 @@ int cthd_INT3400::match_supported_uuid() {
 		std::string line;
 		while (std::getline(ifs, line)) {
 			thd_log_debug("uuid: %s\n", line.c_str());
-			if (line == uuid)
+			if (line == uuid || line == "UNKNOWN")
 				return THD_SUCCESS;
 		}
 		ifs.close();
