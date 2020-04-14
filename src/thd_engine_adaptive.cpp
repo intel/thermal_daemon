@@ -382,6 +382,8 @@ int cthd_engine_adaptive::parse_gddv(char *buf, int size) {
 			if (unk1 == 0x005d) {
 				return handle_compressed_gddv(buf + offset, size - offset);
 			}
+			if (unk1 == 0x1fe5)
+				break;
 			offset += sizeof(unk1);
 		}
 
@@ -402,8 +404,8 @@ int cthd_engine_adaptive::parse_gddv(char *buf, int size) {
 
 		str = strtok(key, "/");
 		if (!str) {
-			free(key);
-			free(val);
+			delete[](key);
+			delete[](val);
 			continue;
 		}
                 if (strcmp(str, "participants") == 0) {
@@ -440,8 +442,8 @@ int cthd_engine_adaptive::parse_gddv(char *buf, int size) {
                         parse_apat(val, vallength);
                 }
 
-		delete(key);
-		delete(val);
+		delete[](key);
+		delete[](val);
 	}
 
 	merge_appc();
