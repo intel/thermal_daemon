@@ -277,9 +277,17 @@ void cthd_sysfs_cdev_rapl::set_tcc(int tcc) {
 void cthd_sysfs_cdev_rapl::set_adaptive_target(struct adaptive_target target) {
 	int argument = std::stoi(target.argument, NULL);
 	if (target.code == "PL1MAX") {
-		set_curr_state(argument * 1000, 1);
+		min_state = pl0_max_pwr = argument * 1000;
+	} else if (target.code == "PL1MIN") {
+		max_state = pl0_min_pwr = argument * 1000;
+	} else if (target.code == "PL1STEP") {
+		pl0_step_pwr = argument * 1000;
+		set_inc_value(-pl0_step_pwr * 2);
+		set_dec_value(-pl0_step_pwr);
 	} else if (target.code == "PL1TimeWindow") {
-		rapl_update_time_window(argument * 1000);
+		pl0_min_window = argument * 1000;
+	} else if (target.code == "PL1PowerLimit") {
+		set_curr_state(argument * 1000, 1);
 	} else if (target.code == "TccOffset") {
 		set_tcc(argument);
 	}
