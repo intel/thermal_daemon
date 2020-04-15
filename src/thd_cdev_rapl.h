@@ -33,6 +33,7 @@ protected:
 	int phy_max;
 	int package_id;
 	int constraint_index;
+	int pl2_index;
 	bool dynamic_phy_max_enable;
 	int pl0_max_pwr;
 	int pl0_min_pwr;
@@ -51,6 +52,7 @@ private:
 	int rapl_read_pl1();
 	int rapl_read_pl1_max();
 	int rapl_update_pl1(int pl1);
+	int rapl_update_pl2(int pl2);	
 	int rapl_read_time_window();
 	int rapl_update_time_window(int time_window);
 	int rapl_read_enable_status();

@@ -137,6 +137,9 @@ int cthd_sysfs_cdev_rapl::rapl_sysfs_valid()
 				constraint_index = i;
 				found = 1;
 			}
+			if (type_str == "short_term") {
+				pl2_index = i;
+			}
 		}
 	}
 
@@ -201,6 +204,23 @@ int cthd_sysfs_cdev_rapl::rapl_update_pl1(int pl1)
 		thd_log_info(
 				"pkg_power: powercap RAPL max power limit failed to write %d \n",
 				pl1);
+		return ret;
+	}
+
+	return THD_SUCCESS;
+}
+
+int cthd_sysfs_cdev_rapl::rapl_update_pl2(int pl2)
+{
+	std::stringstream temp_power_str;
+	int ret;
+
+	temp_power_str << "constraint_" << pl2_index << "_power_limit_uw";
+	ret = cdev_sysfs.write(temp_power_str.str(), pl2);
+	if (ret <= 0) {
+		thd_log_info(
+				"pkg_power: powercap RAPL max power limit failed to write PL2 %d \n",
+				pl2);
 		return ret;
 	}
 
@@ -292,6 +312,8 @@ void cthd_sysfs_cdev_rapl::set_adaptive_target(struct adaptive_target target) {
 		pl0_min_window = argument * 1000;
 	} else if (target.code == "PL1PowerLimit") {
 		set_curr_state(argument * 1000, 1);
+	} else if (target.code == "PL2PowerLimit") {
+		rapl_update_pl2(argument * 1000);
 	} else if (target.code == "TccOffset") {
 		set_tcc(argument);
 	}
