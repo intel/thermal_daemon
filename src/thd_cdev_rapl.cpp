@@ -278,8 +278,12 @@ void cthd_sysfs_cdev_rapl::set_adaptive_target(struct adaptive_target target) {
 	int argument = std::stoi(target.argument, NULL);
 	if (target.code == "PL1MAX") {
 		min_state = pl0_max_pwr = argument * 1000;
+		if (curr_state > min_state)
+			set_curr_state(min_state, 1);
 	} else if (target.code == "PL1MIN") {
 		max_state = pl0_min_pwr = argument * 1000;
+		if (curr_state < max_state)
+			set_curr_state(max_state, 1);
 	} else if (target.code == "PL1STEP") {
 		pl0_step_pwr = argument * 1000;
 		set_inc_value(-pl0_step_pwr * 2);
