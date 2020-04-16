@@ -787,6 +787,41 @@ int cthd_engine_adaptive::install_passive(struct psv *psv) {
 	return 0;
 }
 
+void cthd_engine_adaptive::set_trip(std::string target, std::string argument) {
+	std::string psv_zone;
+	float float_temp = stof(argument, NULL);
+	int temp = (int)(float_temp * 1000);
+
+	size_t pos = target.find_last_of(".");
+
+	if (pos == std::string::npos)
+		psv_zone = target;
+	else
+		psv_zone = target.substr(pos + 1);
+
+	while (psv_zone.back() == '_') {
+		psv_zone.pop_back();
+	}
+
+	cthd_zone *zone = search_zone(psv_zone);
+	if (!zone) {
+		thd_log_warn("Unable to find a zone for %s\n", psv_zone.c_str());
+		return;
+	}
+
+	int index = 0;
+	cthd_trip_point *trip = zone->get_trip_at_index(index);
+	while (trip != NULL) {
+		if (trip->get_trip_type() == PASSIVE) {
+			trip->update_trip_temp(temp);
+			return;
+		}
+		index++;
+		trip = zone->get_trip_at_index(index);
+	}
+	thd_log_warn("Unable to find a passive trippoint for %s\n", target.c_str());
+}
+
 void cthd_engine_adaptive::set_int3400_target(struct adaptive_target target) {
 	struct psvt *psvt;
 	if (target.code == "PSVT") {
@@ -797,6 +832,9 @@ void cthd_engine_adaptive::set_int3400_target(struct adaptive_target target) {
 		for (int i = 0; i < (int)psvt->psvs.size(); i++) {
 			install_passive(&psvt->psvs[i]);
 		}
+	}
+	if (target.code == "PSV") {
+		set_trip(target.participant, target.argument);
 	}
 }
 
