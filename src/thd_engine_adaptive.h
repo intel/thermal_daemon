@@ -166,6 +166,7 @@ protected:
 	int parse_gddv(char *buf, int size);
 	struct psvt *find_psvt(std::string name);
 	int install_passive(struct psv *psv);
+	void set_trip(std::string device, std::string argument);
 	void set_int3400_target(struct adaptive_target target);
 	int verify_condition(struct condition condition);
 	int verify_conditions();
