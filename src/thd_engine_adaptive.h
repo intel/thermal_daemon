@@ -170,6 +170,7 @@ protected:
 	int verify_condition(struct condition condition);
 	int verify_conditions();
 	int compare_condition(struct condition condition, int value);
+	int compare_time(struct condition condition);
 	int evaluate_oem_condition(struct condition condition);
 	int evaluate_temperature_condition(struct condition condition);
 	int evaluate_ac_condition(struct condition condition);

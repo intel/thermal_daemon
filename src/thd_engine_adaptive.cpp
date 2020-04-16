@@ -517,6 +517,33 @@ int cthd_engine_adaptive::compare_condition(struct condition condition, int valu
 	}
 }
 
+int cthd_engine_adaptive::compare_time(struct condition condition) {
+	int elapsed = time(NULL) - condition.state_entry_time;
+
+	switch (condition.time_comparison) {
+	case ADAPTIVE_EQUAL:
+		if (elapsed == condition.time)
+			return THD_SUCCESS;
+		else
+			return THD_ERROR;
+		break;
+	case ADAPTIVE_LESSER_OR_EQUAL:
+		if (elapsed <= condition.time)
+			return THD_SUCCESS;
+		else
+			return THD_ERROR;
+		break;
+	case ADAPTIVE_GREATER_OR_EQUAL:
+		if (elapsed >= condition.time)
+			return THD_SUCCESS;
+		else
+			return THD_ERROR;
+		break;
+	default:
+		return THD_ERROR;
+	}
+}
+
 int cthd_engine_adaptive::evaluate_oem_condition(struct condition condition) {
 	csys_fs sysfs("/sys/bus/platform/devices/INT3400:00/");
 	int oem_condition = -1;
@@ -563,7 +590,7 @@ int cthd_engine_adaptive::evaluate_temperature_condition(struct condition condit
 	// Conditions are specified in decikelvin, temperatures are in
 	// millicelsius.
 	value = value / 100 + 2732;
-	return  compare_condition(condition, value);
+	return compare_condition(condition, value);
 }
 
 int cthd_engine_adaptive::evaluate_lid_condition(struct condition condition) {
@@ -605,6 +632,8 @@ int cthd_engine_adaptive::evaluate_ac_condition(struct condition condition) {
 }
 
 int cthd_engine_adaptive::evaluate_condition(struct condition condition) {
+	int ret = THD_ERROR;
+
 	if (condition.condition == Default)
 		return THD_SUCCESS;
 
@@ -612,31 +641,40 @@ int cthd_engine_adaptive::evaluate_condition(struct condition condition) {
 	    condition.condition <= Oem5) ||
 	    (condition.condition >= (adaptive_condition)0x1000 &&
 	     condition.condition < (adaptive_condition)0x10000))
-		return evaluate_oem_condition(condition);
+		ret = evaluate_oem_condition(condition);
 
 	if (condition.condition == Temperature ||
 	    condition.condition == Temperature_without_hysteresis ||
 	    condition.condition == (adaptive_condition)0) {
-		return evaluate_temperature_condition(condition);
+		ret = evaluate_temperature_condition(condition);
 	}
 
 	if (condition.condition == Lid_state) {
-		return evaluate_lid_condition(condition);
+		ret = evaluate_lid_condition(condition);
 	}
 
 	if (condition.condition == Power_source) {
-		return evaluate_ac_condition(condition);
+		ret = evaluate_ac_condition(condition);
 	}
 
 	if (condition.condition == Workload) {
-		return evaluate_workload_condition(condition);
+		ret = evaluate_workload_condition(condition);
 	}
 
 	if (condition.condition == Platform_type) {
-		return evaluate_platform_type_condition(condition);
+		ret = evaluate_platform_type_condition(condition);
 	}
 
-	return THD_ERROR;
+	if (ret) {
+		if (condition.time && condition.state_entry_time == 0) {
+			condition.state_entry_time = time(NULL);
+		}
+		ret = compare_time(condition);
+	} else {
+		condition.state_entry_time = 0;
+	}
+
+	return ret;
 }
 
 int cthd_engine_adaptive::evaluate_condition_set(std::vector<struct condition> condition_set) {
