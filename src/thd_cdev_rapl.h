@@ -71,7 +71,7 @@ public:
 			cthd_cdev(_index,
 					"/sys/devices/virtual/powercap/intel-rapl/intel-rapl:0/"), phy_max(
 					0), package_id(package), constraint_index(
-					0), dynamic_phy_max_enable(
+					0), pl2_index(-1), dynamic_phy_max_enable(
 					false), pl0_max_pwr(0), pl0_min_pwr(0), pl0_min_window(
 					0), pl0_step_pwr(
 					0), bios_locked(false), constrained(
@@ -83,7 +83,8 @@ public:
 			std::string contol_path) :
 			cthd_cdev(_index, contol_path), phy_max(0), package_id(
 					package), constraint_index(
-					0), dynamic_phy_max_enable(false), pl0_max_pwr(
+					0), pl2_index(
+					-1), dynamic_phy_max_enable(false), pl0_max_pwr(
 					0), pl0_min_pwr(
 					0), pl0_min_window(0), pl0_step_pwr(0), bios_locked(
 					false), constrained(
