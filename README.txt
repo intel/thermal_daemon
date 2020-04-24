@@ -100,6 +100,10 @@ For build, follow the same procedure as Fedora.
 
 Releases
 
+Release 2.1
+- Workaround for invalid PPCC power limits
+- Reduce polling for power when PPCC is not present
+
 Release 2.0
 - Tiger Lake support
 - PL1 limit setting from PPCC as is
