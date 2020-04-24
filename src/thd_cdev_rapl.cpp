@@ -310,8 +310,7 @@ int cthd_sysfs_cdev_rapl::update() {
 		phy_max = rapl_read_pl1_max();
 
 		// Check if there is any sane max power limit set
-		if (cdev_sysfs.read(temp_str.str(), &phy_max) < 0 || phy_max < 0
-				|| phy_max > rapl_max_sane_phy_max) {
+		if (phy_max < 0 || phy_max > rapl_max_sane_phy_max) {
 			thd_log_info("%s:powercap RAPL invalid max power limit range \n",
 					domain_name.c_str());
 			thd_log_info("Calculate dynamically phy_max \n");
