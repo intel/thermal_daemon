@@ -369,11 +369,20 @@ bool cthd_sysfs_cdev_rapl::read_ppcc_power_limits() {
 
 	ppcc = thd_engine->parser.get_ppcc_param();
 	if (ppcc) {
+		int def_max_power;
+
 		thd_log_info("Reading PPCC from the thermal-conf.xml\n");
 		pl0_max_pwr = ppcc->power_limit_max * 1000;
 		pl0_min_pwr = ppcc->power_limit_min * 1000;
 		pl0_min_window = ppcc->time_wind_min * 1000;
 		pl0_step_pwr = ppcc->step_size * 1000;
+
+		thd_log_info("ppcc limits max:%u min:%u  min_win:%u step:%u\n",
+				pl0_max_pwr, pl0_min_pwr, pl0_min_window, pl0_step_pwr);
+		def_max_power = rapl_read_pl1_max();
+		if (def_max_power > pl0_max_pwr)
+			thd_log_warn("ppcc limits is less than def PL1 max power :%d check thermal-conf.xml.auto\n", def_max_power);
+
 		return true;
 	}
 
@@ -409,8 +418,17 @@ bool cthd_sysfs_cdev_rapl::read_ppcc_power_limits() {
 	}
 
 	if (pl0_max_pwr && pl0_min_pwr && pl0_min_window && pl0_step_pwr) {
-		thd_log_debug("ppcc limits max:%u min:%u  min_win:%u step:%u\n",
+		int def_max_power;
+
+		thd_log_info("ppcc limits max:%u min:%u  min_win:%u step:%u\n",
 				pl0_max_pwr, pl0_min_pwr, pl0_min_window, pl0_step_pwr);
+
+		def_max_power = rapl_read_pl1_max();
+		if (def_max_power > pl0_max_pwr) {
+			thd_log_info("ppcc limits is less than def PL1 max power :%d, so ignore\n", def_max_power);
+			return false;
+		}
+
 		return true;
 	}
 
