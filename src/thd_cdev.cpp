@@ -41,7 +41,7 @@
 
 int cthd_cdev::thd_clamp_state_min(int _state)
 {
-	if ((min_state < max_state && _state < min_state)
+	if ((min_state <= max_state && _state < min_state)
 			|| (min_state > max_state && _state > min_state))
 		return min_state;
 	else
@@ -50,7 +50,7 @@ int cthd_cdev::thd_clamp_state_min(int _state)
 
 int cthd_cdev::thd_clamp_state_max(int _state)
 {
-	if ((min_state < max_state && _state > max_state)
+	if ((min_state <= max_state && _state > max_state)
 			|| (min_state > max_state && _state < max_state))
 		return max_state;
 	else
@@ -231,7 +231,7 @@ int cthd_cdev::thd_cdev_set_state(int set_point, int target_temp,
 			zone_trip_limits.push_back(limit);
 
 			if (target_state_valid) {
-				if (min_state < max_state) {
+				if (min_state <= max_state) {
 					std::sort(zone_trip_limits.begin(), zone_trip_limits.end(),
 							sort_clamp_values_asc);
 				} else {

@@ -190,14 +190,14 @@ public:
 		max_state = _max_state;
 	}
 	bool in_min_state() {
-		if ((min_state < max_state && get_curr_state() <= min_state)
+		if ((min_state <= max_state && get_curr_state() <= min_state)
 				|| (min_state > max_state && get_curr_state() >= min_state))
 			return true;
 		return false;
 	}
 
 	bool in_max_state() {
-		if ((min_state < max_state && get_curr_state() >= get_max_state())
+		if ((min_state <= max_state && get_curr_state() >= get_max_state())
 				|| (min_state > max_state && get_curr_state() <= get_max_state()))
 			return true;
 		return false;
@@ -207,7 +207,7 @@ public:
 		if (get_curr_state() == state)
 			return 0;
 
-		if (min_state < max_state) {
+		if (min_state <= max_state) {
 			if (state > get_curr_state())
 				return 1;
 			else
