@@ -137,6 +137,7 @@ int cthd_cdev_cpufreq::init() {
 		thd_log_debug("cpu freq %d: %d\n", i, cpufreqs[i]);
 	}
 
+	max_state = cpufreqs.size() - 1;
 	pstate_active_freq_index = 0;
 
 	return THD_SUCCESS;
@@ -154,7 +155,7 @@ void cthd_cdev_cpufreq::add_frequency(unsigned int freq_int) {
 
 void cthd_cdev_cpufreq::set_curr_state(int state, int arg) {
 
-	if (state < (int) cpufreqs.size()) {
+	if (state < (int) cpufreqs.size() && state >= 0) {
 		thd_log_debug("cpu freq set_curr_stat %d: %d\n", state,
 				cpufreqs[state]);
 
@@ -188,7 +189,7 @@ void cthd_cdev_cpufreq::set_curr_state(int state, int arg) {
 }
 
 int cthd_cdev_cpufreq::get_max_state() {
-	return cpufreqs.size() - 1;
+	return max_state;
 }
 
 int cthd_cdev_cpufreq::update() {
