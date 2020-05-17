@@ -708,16 +708,6 @@ int cthd_engine_default::read_cooling_devices() {
 		add_replace_cdev(&cpu_def_cooling_devices[i]);
 	}
 
-	// Add from XML cooling device config
-	if (!parser_init() && parser.platform_matched()) {
-		for (int i = 0; i < parser.cdev_count(); ++i) {
-			cooling_dev_t *cdev_config = parser.get_cool_dev_index(i);
-			if (!cdev_config)
-				continue;
-			add_replace_cdev(cdev_config);
-		}
-	}
-
 	cthd_cdev_cpufreq *cpu_freq_dev = new cthd_cdev_cpufreq(current_cdev_index,
 			-1);
 	cpu_freq_dev->set_cdev_type("cpufreq");
@@ -758,6 +748,16 @@ int cthd_engine_default::read_cooling_devices() {
 			++current_cdev_index;
 		} else
 			delete cdev_amdgpu;
+	}
+
+	// Add from XML cooling device config
+	if (!parser_init() && parser.platform_matched()) {
+		for (int i = 0; i < parser.cdev_count(); ++i) {
+			cooling_dev_t *cdev_config = parser.get_cool_dev_index(i);
+			if (!cdev_config)
+				continue;
+			add_replace_cdev(cdev_config);
+		}
 	}
 
 	// Dump all cooling devices
