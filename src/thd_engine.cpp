@@ -257,13 +257,13 @@ int cthd_engine::thd_engine_start(bool ignore_cpuid_check) {
 				continue;
 			if (!zone->check_sensor_async_status()) {
 				thd_log_warn(
-						"Polling will be enabled as some sensors are not capable to notify asynchnously \n");
+						"Polling will be enabled as some sensors are not capable to notify asynchronously\n");
 				poll_timeout_msec = def_poll_interval;
 				break;
 			}
 		}
 		if (i == zones.size()) {
-			thd_log_info("Proceed without polling mode! \n");
+			thd_log_info("Proceed without polling mode!\n");
 		}
 
 		uevent_fd = poll_fd_cnt;
