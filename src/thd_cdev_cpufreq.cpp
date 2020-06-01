@@ -137,6 +137,9 @@ int cthd_cdev_cpufreq::init() {
 		thd_log_debug("cpu freq %d: %d\n", i, cpufreqs[i]);
 	}
 
+	if (cpufreqs.size())
+		max_state = cpufreqs.size() - 1;
+
 	pstate_active_freq_index = 0;
 
 	return THD_SUCCESS;
