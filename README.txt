@@ -100,6 +100,10 @@ For build, follow the same procedure as Fedora.
 
 Releases
 
+Release 2.2
+- Ignore PPCC power limits when max and min power is same
+- Regression in cpufreq cooling device causing min state to get stuck
+
 Release 2.1
 - Workaround for invalid PPCC power limits
 - Reduce polling for power when PPCC is not present
