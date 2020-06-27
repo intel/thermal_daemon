@@ -15,9 +15,23 @@
             <ControlType>SEQUENTIAL</ControlType>
             <CoolingDevice>
               <index>1</index>
-              <type>intel_powerclamp</type>
+              <type>rapl_controller</type>
               <influence>100</influence>
-              <SamplingPeriod>1</SamplingPeriod>
+            </CoolingDevice>
+            <CoolingDevice>
+              <index>2</index>
+              <type>intel_pstate</type>
+              <influence>90</influence>
+            </CoolingDevice>
+            <CoolingDevice>
+              <index>3</index>
+              <type>intel_powerclamp</type>
+              <influence>80</influence>
+            </CoolingDevice>
+            <CoolingDevice>
+              <index>4</index>
+              <type>Processor</type>
+              <influence>70</influence>
             </CoolingDevice>
           </TripPoint>
         </TripPoints>

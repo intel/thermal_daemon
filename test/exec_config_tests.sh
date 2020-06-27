@@ -1,5 +1,9 @@
 #!/bin/bash
 
+make
+
+insmod thermald_test_kern_module.ko
+
 CONF_FILE="/var/run/thermald/thermal-conf.xml.auto"
 
 #Test 1: Simple association: one zone to one cooling device
@@ -11,7 +15,7 @@ cp test1.xml $CONF_FILE
 dbus-send --system --dest=org.freedesktop.thermald /org/freedesktop/thermald org.freedesktop.thermald.Reinit
 sleep 5
 
-THD0_ZONE=$(grep -r . /sys/class/thermal/* 2>/tmp/err.txt | grep  thd_test_0 | sed 's/\/type.*//')
+THD0_ZONE=$(grep -r . /sys/class/thermal/* 2>/tmp/err.txt | grep  type:thd_test_0 | sed 's/\/type.*//')
 THD0_CDEV=$(grep -r . /sys/class/thermal/* 2>/tmp/err.txt | grep  thd_cdev_0 | sed 's/\/type.*//')
 echo "Current temperature for thd_test_0 temp to"
 cat ${THD0_ZONE}/temp
@@ -62,7 +66,7 @@ cp test2.xml $CONF_FILE
 dbus-send --system --dest=org.freedesktop.thermald /org/freedesktop/thermald org.freedesktop.thermald.Reinit
 sleep 5
 
-THD0_ZONE=$(grep -r . /sys/class/thermal/* 2>/tmp/err.txt | grep  thd_test_0 | sed 's/\/type.*//')
+THD0_ZONE=$(grep -r . /sys/class/thermal/* 2>/tmp/err.txt | grep  type:thd_test_0 | sed 's/\/type.*//')
 THD0_CDEV0=$(grep -r . /sys/class/thermal/* 2>/tmp/err.txt | grep  thd_cdev_0 | sed 's/\/type.*//')
 THD0_CDEV1=$(grep -r . /sys/class/thermal/* 2>/tmp/err.txt | grep  thd_cdev_1 | sed 's/\/type.*//')
 echo "Current temperature for thd_test_0 temp to"
@@ -156,7 +160,7 @@ cp test3.xml $CONF_FILE
 dbus-send --system --dest=org.freedesktop.thermald /org/freedesktop/thermald org.freedesktop.thermald.Reinit
 sleep 5
 
-THD0_ZONE=$(grep -r . /sys/class/thermal/* 2>/tmp/err.txt | grep  thd_test_0 | sed 's/\/type.*//')
+THD0_ZONE=$(grep -r . /sys/class/thermal/* 2>/tmp/err.txt | grep  type:thd_test_0 | sed 's/\/type.*//')
 THD0_CDEV=$(grep -r . /sys/class/thermal/* 2>/tmp/err.txt | grep  thd_cdev_0 | sed 's/\/type.*//')
 echo "Current temperature for thd_test_0 temp to"
 cat ${THD0_ZONE}/temp
@@ -211,7 +215,7 @@ cp test4.xml $CONF_FILE
 dbus-send --system --dest=org.freedesktop.thermald /org/freedesktop/thermald org.freedesktop.thermald.Reinit
 sleep 5
 
-THD0_ZONE=$(grep -r . /sys/class/thermal/* 2>/tmp/err.txt | grep  thd_test_0 | sed 's/\/type.*//')
+THD0_ZONE=$(grep -r . /sys/class/thermal/* 2>/tmp/err.txt | grep  type:thd_test_0 | sed 's/\/type.*//')
 THD0_CDEV=$(grep -r . /sys/class/thermal/* 2>/tmp/err.txt | grep  thd_cdev_0 | sed 's/\/type.*//')
 echo "Current temperature for thd_test_0 temp to"
 cat ${THD0_ZONE}/temp
@@ -272,7 +276,7 @@ cat ${THD5_ZONE}/sensor_temp
 sleep 2
 echo 50000 > ${THD5_ZONE}/sensor_temp
 echo "Emulate temp to"
-cat ${THD5_ZONE}
+cat ${THD5_ZONE}/sensor_temp
 COUNTER=0
 while [  $COUNTER -lt 10 ]; do
 	curr_state=$(cat ${THD5_CDEV}/control_state)
@@ -291,7 +295,7 @@ if [ $curr_state -ne 10 ]; then
 else
 	echo "Test passed"
 fi
-cat ${THD5_CDEV}
+cat ${THD5_CDEV}/control_state
 echo 10000 > ${THD5_ZONE}/sensor_temp
 COUNTER=0
 while [  $COUNTER -lt 10 ]; do

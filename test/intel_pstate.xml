@@ -15,7 +15,7 @@
             <ControlType>SEQUENTIAL</ControlType>
             <CoolingDevice>
               <index>1</index>
-              <type>intel_powerclamp</type>
+              <type>intel_pstate</type>
               <influence>100</influence>
               <SamplingPeriod>1</SamplingPeriod>
             </CoolingDevice>

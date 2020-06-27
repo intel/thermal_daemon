@@ -6,7 +6,7 @@
     <Preference>QUIET</Preference>
     <ThermalZones>
       <ThermalZone>
-        <Type>cpu</Type>
+        <Type>_cpu</Type>
         <TripPoints>
           <TripPoint>
             <SensorType>x86_pkg_temp</SensorType>
