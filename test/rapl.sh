@@ -42,21 +42,21 @@ echo "Removing throttle slowly stepwise"
 echo 69000 > ${THD0_ZONE}/emul_temp
 
 COUNTER=0
-while [  $COUNTER -lt 10 ]; do
+while [  $COUNTER -lt 20 ]; do
 	curr_power_limit=$(cat /sys/class/powercap/intel-rapl/intel-rapl\:0/constraint_0_power_limit_uw)
 	echo "current state " ${curr_power_limit}
-	if [ $curr_power_limit -eq $rapl_max_power ]; then
+	if [ $curr_power_limit -ge $rapl_max_power ]; then
 		echo "Reached Max State"
 		break
 	fi
 	sleep 5
 	let COUNTER=COUNTER+1 
 done
-if [ $curr_power_limit -ne $rapl_max_power ]; then
-	echo "intel_state: Step 1: Test failed"
+if [ $curr_power_limit -lt $rapl_max_power ]; then
+	echo "intel_rapl: Step 1: Test failed"
 	exit 1
 else
-	echo "intel_psatte: Step 1: Test passed"
+	echo "intel_rapl: Step 1: Test passed"
 fi
 
 echo "Forcing throttle again "
@@ -86,17 +86,17 @@ echo "Removing throttle in one step"
 echo 0 > ${THD0_ZONE}/emul_temp
 
 COUNTER=0
-while [  $COUNTER -lt 10 ]; do
+while [  $COUNTER -lt 20 ]; do
 	curr_power_limit=$(cat /sys/class/powercap/intel-rapl/intel-rapl\:0/constraint_0_power_limit_uw)
 	echo "current state " ${curr_power_limit}
-	if [ $curr_power_limit -eq $rapl_max_power ]; then
+	if [ $curr_power_limit -ge $rapl_max_power ]; then
 		echo "Reached Max State"
 		break
 	fi
 	sleep 5
 	let COUNTER=COUNTER+1 
 done
-if [ $curr_power_limit -ne $rapl_max_power ]; then
+if [ $curr_power_limit -lt $rapl_max_power ]; then
 	echo "intel_rapl: Step 2: Test failed"
 	exit 1
 else

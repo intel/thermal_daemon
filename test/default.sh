@@ -33,7 +33,7 @@ echo "Emulate temp to"
 cat ${THD0_ZONE}/temp
 
 COUNTER=0
-while [  $COUNTER -lt 10 ]; do
+while [  $COUNTER -lt 20 ]; do
 	curr_power_limit=$(cat /sys/class/powercap/intel-rapl/intel-rapl\:0/constraint_0_power_limit_uw)
 	echo "current state " ${curr_power_limit}
 	if [ $curr_power_limit -le $rapl_min_power ]; then
@@ -52,7 +52,7 @@ fi
 
 
 COUNTER=0
-while [  $COUNTER -lt 10 ]; do
+while [  $COUNTER -lt 20 ]; do
 	scaling_max_freq=$(cat /sys/devices/system/cpu/intel_pstate/max_perf_pct)
 	echo "current state " ${scaling_max_freq}
 	if [ $scaling_max_freq -le $min_perf_pct ]; then
@@ -74,7 +74,7 @@ max_state=$(cat ${CDEV_POWERCLAMP}/max_state)
 max_state=$(expr $max_state / 2)
 echo $max_state 
 COUNTER=0
-while [  $COUNTER -lt 10 ]; do
+while [  $COUNTER -lt 20 ]; do
 	cur_state=$(cat ${CDEV_POWERCLAMP}/cur_state)
 	echo "current state " ${cur_state}
 	if [ $cur_state -ge $max_state ]; then
@@ -96,7 +96,7 @@ fi
 max_state_processor=3
 echo $max_state_processor 
 COUNTER=0
-while [  $COUNTER -lt 10 ]; do
+while [  $COUNTER -lt 20 ]; do
 	cur_state=$(cat ${CDEV_PROCESSOR}/cur_state)
 	echo "current state " ${cur_state}
 	if [ $cur_state -ge $max_state_processor ]; then
@@ -123,7 +123,7 @@ echo 0 > ${THD0_ZONE}/emul_temp
 fi
 
 COUNTER=0
-while [  $COUNTER -lt 10 ]; do
+while [  $COUNTER -lt 20 ]; do
 	cur_state=$(cat ${CDEV_PROCESSOR}/cur_state)
 	echo "current state " ${cur_state}
 	if [ $cur_state -le  0 ]; then
@@ -141,7 +141,7 @@ else
 fi
 
 COUNTER=0
-while [  $COUNTER -lt 10 ]; do
+while [  $COUNTER -lt 20 ]; do
 	cur_state=$(cat ${CDEV_POWERCLAMP}/cur_state)
 	echo "current state " ${cur_state}
 	if [ $cur_state -le  0 ]; then
@@ -159,7 +159,7 @@ else
 fi
 
 COUNTER=0
-while [  $COUNTER -lt 10 ]; do
+while [  $COUNTER -lt 20 ]; do
 	scaling_max_freq=$(cat /sys/devices/system/cpu/intel_pstate/max_perf_pct)
 	echo "current state " ${scaling_max_freq}
 	if [ $scaling_max_freq -eq $max_perf_pct ]; then
@@ -178,21 +178,21 @@ fi
 
 
 COUNTER=0
-while [  $COUNTER -lt 10 ]; do
+while [  $COUNTER -lt 20 ]; do
 	curr_power_limit=$(cat /sys/class/powercap/intel-rapl/intel-rapl\:0/constraint_0_power_limit_uw)
 	echo "current state " ${curr_power_limit}
-	if [ $curr_power_limit -eq $rapl_max_power ]; then
+	if [ $curr_power_limit -ge $rapl_max_power ]; then
 		echo "Reached Max State"
 		break
 	fi
 	sleep 5
 	let COUNTER=COUNTER+1 
 done
-if [ $curr_power_limit -ne $rapl_max_power ]; then
-	echo "intel_pstate: Step 1: Test failed"
+if [ $curr_power_limit -lt $rapl_max_power ]; then
+	echo "intel_rapl: Step 1: Test failed"
 	exit 1
 else
-	echo "intel_pstate: Step 1: Test passed"
+	echo "intel_rapl: Step 1: Test passed"
 fi
 
 done
