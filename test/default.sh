@@ -8,8 +8,12 @@ dbus-send --system --dest=org.freedesktop.thermald /org/freedesktop/thermald org
 sleep 5
 
 THD0_ZONE=$(grep -r . /sys/class/thermal/* 2>/tmp/err.txt | grep  type:x86_pkg_temp | sed 's/\/type.*//')
-rapl_max_power=$(cat /sys/class/powercap/intel-rapl/intel-rapl\:0/constraint_0_max_power_uw)
-rapl_min_power=$(expr $rapl_max_power / 2)
+#rapl_max_power=$(cat /sys/class/powercap/intel-rapl/intel-rapl\:0/constraint_0_max_power_uw)
+#rapl_min_power=$(expr $rapl_max_power / 2)
+
+rapl_max_power=25000000
+rapl_min_power=10000000
+
 echo "rapl_min_power:" $rapl_min_power
 echo "rapl_max_power:" $rapl_max_power
 

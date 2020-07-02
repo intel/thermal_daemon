@@ -8,8 +8,10 @@ dbus-send --system --dest=org.freedesktop.thermald /org/freedesktop/thermald org
 sleep 5
 
 THD0_ZONE=$(grep -r . /sys/class/thermal/* 2>/tmp/err.txt | grep  type:x86_pkg_temp | sed 's/\/type.*//')
-rapl_max_power=$(cat /sys/class/powercap/intel-rapl/intel-rapl\:0/constraint_0_max_power_uw)
-rapl_min_power=$(expr $rapl_max_power / 2)
+#rapl_max_power=$(cat /sys/class/powercap/intel-rapl/intel-rapl\:0/constraint_0_max_power_uw)
+#rapl_min_power=$(expr $rapl_max_power / 2 )
+rapl_max_power=25000000
+rapl_min_power=10000000
 echo "rapl_min_power:" $rapl_min_power
 echo "rapl_max_power:" $rapl_max_power
 
@@ -21,7 +23,7 @@ echo "Emulate temp to"
 cat ${THD0_ZONE}/temp
 
 COUNTER=0
-while [  $COUNTER -lt 10 ]; do
+while [  $COUNTER -lt 20 ]; do
 	curr_power_limit=$(cat /sys/class/powercap/intel-rapl/intel-rapl\:0/constraint_0_power_limit_uw)
 	echo "current state " ${curr_power_limit}
 	if [ $curr_power_limit -le $rapl_min_power ]; then
@@ -65,7 +67,7 @@ echo "Emulate temp to"
 cat ${THD0_ZONE}/temp
 
 COUNTER=0
-while [  $COUNTER -lt 10 ]; do
+while [  $COUNTER -lt 20 ]; do
 	curr_power_limit=$(cat /sys/class/powercap/intel-rapl/intel-rapl\:0/constraint_0_power_limit_uw)
 	echo "current state " ${curr_power_limit}
 	if [ $curr_power_limit -le $rapl_min_power ]; then

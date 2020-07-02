@@ -4,6 +4,15 @@
     <Name>Example Laptop</Name>
     <ProductName>*</ProductName>
     <Preference>QUIET</Preference>
+    <PPCC>
+                <PowerLimitIndex>0</PowerLimitIndex>
+                <PowerLimitMinimum>10000</PowerLimitMinimum>
+                <PowerLimitMaximum>25000</PowerLimitMaximum>
+                <TimeWindowMinimum>28000</TimeWindowMinimum>
+                <TimeWindowMaximum>28000</TimeWindowMaximum>
+                <StepSize>250</StepSize>
+     </PPCC>
+
     <ThermalZones>
       <ThermalZone>
         <Type>_cpu</Type>
