@@ -74,7 +74,10 @@ void cthd_sysfs_cdev_rapl::set_curr_state(int state, int control) {
 
 			// If it is the first time to activate this device, set the enabled flag
 			// and set the time window.
-			rapl_update_time_window(def_rapl_time_window);
+			if (pl0_min_window)
+				rapl_update_time_window(pl0_min_window);
+			else
+				rapl_update_time_window(def_rapl_time_window);
 
 			// Set enable flag only if it was disabled
 			if (!power_on_enable_status)
@@ -294,6 +297,9 @@ int cthd_sysfs_cdev_rapl::update() {
 
 		rapl_update_pl1(pl0_max_pwr);
 
+		if (pl0_max_window > pl0_min_window)
+			rapl_update_time_window(pl0_max_window);
+
 		// To be efficient to control from the current power instead of PPCC max.
 		thd_engine->rapl_power_meter.rapl_start_measure_power();
 		dynamic_phy_max_enable = true;
@@ -354,6 +360,7 @@ int cthd_sysfs_cdev_rapl::update() {
 	power_on_enable_status = rapl_read_enable_status();
 
 	thd_log_debug("power_on_enable_status: %d\n", power_on_enable_status);
+	thd_log_debug("power_on_constraint_0_time_window: %d\n", power_on_constraint_0_time_window);
 
 	thd_log_debug("RAPL max limit %d increment: %d\n", max_state, inc_dec_val);
 
@@ -375,6 +382,8 @@ bool cthd_sysfs_cdev_rapl::read_ppcc_power_limits() {
 		pl0_max_pwr = ppcc->power_limit_max * 1000;
 		pl0_min_pwr = ppcc->power_limit_min * 1000;
 		pl0_min_window = ppcc->time_wind_min * 1000;
+		pl0_min_window = ppcc->time_wind_min * 1000;
+		pl0_max_window = ppcc->time_wind_max * 1000;
 		pl0_step_pwr = ppcc->step_size * 1000;
 
 		if (pl0_max_pwr <= pl0_min_pwr) {
@@ -418,12 +427,17 @@ bool cthd_sysfs_cdev_rapl::read_ppcc_power_limits() {
 			return false;
 	}
 
+	if (sys_fs.exists("power_limit_0_tmax_us")) {
+		if (sys_fs.read("power_limit_0_tmax_us", &pl0_max_window) <= 0)
+			return false;
+	}
+
 	if (sys_fs.exists("power_limit_0_step_uw")) {
 		if (sys_fs.read("power_limit_0_step_uw", &pl0_step_pwr) <= 0)
 			return false;
 	}
 
-	if (pl0_max_pwr && pl0_min_pwr && pl0_min_window && pl0_step_pwr) {
+	if (pl0_max_pwr && pl0_min_pwr && pl0_min_window && pl0_step_pwr && pl0_max_window) {
 		int def_max_power;
 
 		if (pl0_max_pwr <= pl0_min_pwr) {

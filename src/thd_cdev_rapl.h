@@ -37,6 +37,7 @@ protected:
 	int pl0_max_pwr;
 	int pl0_min_pwr;
 	int pl0_min_window;
+	int pl0_max_window;
 	int pl0_step_pwr;
 	bool bios_locked;
 	bool constrained;
@@ -70,7 +71,7 @@ public:
 					0), package_id(package), constraint_index(
 					0), dynamic_phy_max_enable(
 					false), pl0_max_pwr(0), pl0_min_pwr(0), pl0_min_window(
-					0), pl0_step_pwr(
+					0), pl0_max_window(0), pl0_step_pwr(
 					0), bios_locked(false), constrained(
 					false), power_on_constraint_0_pwr(0), power_on_constraint_0_time_window(
 					0), power_on_enable_status(0)
