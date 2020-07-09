@@ -74,12 +74,12 @@ int csys_fs::read(const std::string &path, char *buf, int len) {
 	std::string p = base_path + path;
 	int fd = ::open(p.c_str(), O_RDONLY);
 	if (fd < 0) {
-		thd_log_warn("sysfs read failed %s\n", path.c_str());
+		thd_log_warn("sysfs read failed %s\n", p.c_str());
 		return -errno;
 	}
 	int ret = ::read(fd, buf, len);
 	if (ret < 0)
-		thd_log_warn("sysfs read failed %s\n", path.c_str());
+		thd_log_warn("sysfs read failed %s\n", p.c_str());
 	close(fd);
 
 	return ret;
@@ -90,17 +90,17 @@ int csys_fs::read(const std::string &path, unsigned int position, char *buf,
 	std::string p = base_path + path;
 	int fd = ::open(p.c_str(), O_RDONLY);
 	if (fd < 0) {
-		thd_log_warn("sysfs read failed %s\n", path.c_str());
+		thd_log_warn("sysfs read failed %s\n", p.c_str());
 		return -errno;
 	}
 	if (::lseek(fd, position, SEEK_CUR) == -1) {
-		thd_log_warn("sysfs read failed %s\n", path.c_str());
+		thd_log_warn("sysfs read failed %s\n", p.c_str());
 		close(fd);
 		return -errno;
 	}
 	int ret = ::read(fd, buf, len);
 	if (ret < 0)
-		thd_log_warn("sysfs read failed %s\n", path.c_str());
+		thd_log_warn("sysfs read failed %s\n", p.c_str());
 	close(fd);
 
 	return ret;
@@ -113,14 +113,14 @@ int csys_fs::read(const std::string &path, int *ptr_val) {
 
 	int fd = ::open(p.c_str(), O_RDONLY);
 	if (fd < 0) {
-		thd_log_warn("sysfs open failed %s\n", path.c_str());
+		thd_log_warn("sysfs open failed %s\n", p.c_str());
 		return -errno;
 	}
 	ret = ::read(fd, str, sizeof(str));
 	if (ret > 0)
 		*ptr_val = atoi(str);
 	else
-		thd_log_info("sysfs read failed %s\n", path.c_str());
+		thd_log_info("sysfs read failed %s\n", p.c_str());
 	close(fd);
 
 	return ret;
@@ -133,14 +133,14 @@ int csys_fs::read(const std::string &path, unsigned long *ptr_val) {
 
 	int fd = ::open(p.c_str(), O_RDONLY);
 	if (fd < 0) {
-		thd_log_warn("sysfs read failed %s\n", path.c_str());
+		thd_log_warn("sysfs read failed %s\n", p.c_str());
 		return -errno;
 	}
 	ret = ::read(fd, str, sizeof(str));
 	if (ret > 0)
 		*ptr_val = atol(str);
 	else
-		thd_log_warn("sysfs read failed %s\n", path.c_str());
+		thd_log_warn("sysfs read failed %s\n", p.c_str());
 	close(fd);
 
 	return ret;
