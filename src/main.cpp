@@ -121,7 +121,7 @@ void thd_logger(const gchar *log_domain, GLogLevelFlags log_level,
 	seconds = time(NULL);
 
 	if (thd_daemonize)
-		syslog(syslog_priority, "[%lld]%s%s", (long long) seconds, prefix, message);
+		syslog(syslog_priority, "%s", message);
 	else
 		g_print("[%lld]%s%s", (long long) seconds, prefix, message);
 
