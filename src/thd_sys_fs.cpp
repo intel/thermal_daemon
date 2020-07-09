@@ -184,7 +184,7 @@ int csys_fs::create() {
 
 	int fd = ::open(base_path.c_str(), O_CREAT | O_WRONLY | O_TRUNC, S_IRWXU);
 	if (fd < 0) {
-		thd_log_warn("sysfs open failed %s\n", base_path.c_str());
+		thd_log_warn("sysfs create failed %s\n", base_path.c_str());
 		return -errno;
 	}
 	close(fd);
