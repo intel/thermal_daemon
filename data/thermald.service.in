@@ -1,5 +1,6 @@
 [Unit]
 Description=Thermal Daemon Service
+ConditionVirtualization=no
 
 [Service]
 Type=dbus
