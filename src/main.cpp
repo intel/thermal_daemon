@@ -58,7 +58,7 @@ static const char *lock_file = TDRUNDIR "/thermald.pid";
 
 // Default log level
 static int thd_log_level = G_LOG_LEVEL_ERROR | G_LOG_LEVEL_CRITICAL
-		| G_LOG_LEVEL_WARNING;
+		| G_LOG_LEVEL_WARNING | G_LOG_LEVEL_MESSAGE;
 
 // Daemonize or not
 static gboolean thd_daemonize;
@@ -265,11 +265,10 @@ int main(int argc, char *argv[]) {
 	g_mkdir_with_parents(TDCONFDIR, 0755); // Don't care return value as directory
 	// may already exist
 	if (log_info) {
-		thd_log_level |= G_LOG_LEVEL_MESSAGE | G_LOG_LEVEL_INFO;
+		thd_log_level |= G_LOG_LEVEL_INFO;
 	}
 	if (log_debug) {
-		thd_log_level |= G_LOG_LEVEL_MESSAGE | G_LOG_LEVEL_INFO
-				| G_LOG_LEVEL_DEBUG;
+		thd_log_level |= G_LOG_LEVEL_INFO | G_LOG_LEVEL_DEBUG;
 	}
 	if (poll_interval >= 0) {
 		fprintf(stdout, "Polling enabled: %d\n", poll_interval);
