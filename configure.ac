@@ -6,6 +6,7 @@ m4_define([td_version],
           [td_major_version.td_minor_version])
 
 AC_INIT([thermald], [td_version], [], [thermald])
+m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])])
 
 AC_CONFIG_AUX_DIR(build-aux)
 AC_CONFIG_HEADERS([config.h])

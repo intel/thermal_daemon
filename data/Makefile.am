@@ -5,14 +5,14 @@ systemdsystemunit_DATA = \
 	thermald.service
 
 thermald.service: thermald.service.in
-	$(edit) $< >$@
+	@$(edit) $< >$@
 
 servicedir = $(datadir)/dbus-1/system-services
 service_in_files = org.freedesktop.thermald.service.in
 service_DATA = $(service_in_files:.service.in=.service)
 
 $(service_DATA): $(service_in_files) Makefile
-	$(edit) $< >$@
+	@$(edit) $< >$@
 endif
 
 edit = sed \
