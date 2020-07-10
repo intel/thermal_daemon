@@ -50,6 +50,7 @@
 #define thd_log_fatal	ALOGE
 #define thd_log_error	ALOGE
 #define thd_log_warn	ALOGW
+#define thd_log_msg	ALOGI
 #if LOG_DEBUG_INFO == 1
 #define thd_log_info	ALOGI
 #define thd_log_debug 	ALOGD
@@ -78,6 +79,7 @@
 #define thd_log_fatal		g_error		// Print error and terminate
 #define thd_log_error		g_critical
 #define thd_log_warn		g_warning
+#define thd_log_msg		g_message
 #define thd_log_debug		g_debug
 #define thd_log_info(...)	g_log(NULL, G_LOG_LEVEL_INFO, __VA_ARGS__)
 #else
@@ -87,6 +89,7 @@ static int dummy_printf(const char *__restrict __format, ...) {
 #define thd_log_fatal		printf
 #define thd_log_error		printf
 #define thd_log_warn		printf
+#define thd_log_msg		printf
 #define thd_log_debug		dummy_printf
 #define thd_log_info		printf
 #endif

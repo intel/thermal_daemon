@@ -58,10 +58,11 @@ static const char *lock_file = TDRUNDIR "/thermald.pid";
 
 // Default log level
 static int thd_log_level = G_LOG_LEVEL_ERROR | G_LOG_LEVEL_CRITICAL
-		| G_LOG_LEVEL_WARNING;
+		| G_LOG_LEVEL_WARNING | G_LOG_LEVEL_MESSAGE;
 
 // Daemonize or not
 static gboolean thd_daemonize;
+static gboolean use_syslog;
 
 // Disable dbus
 static gboolean dbus_enable;
@@ -120,8 +121,8 @@ void thd_logger(const gchar *log_domain, GLogLevelFlags log_level,
 
 	seconds = time(NULL);
 
-	if (thd_daemonize)
-		syslog(syslog_priority, "[%lld]%s%s", (long long) seconds, prefix, message);
+	if (use_syslog)
+		syslog(syslog_priority, "%s", message);
 	else
 		g_print("[%lld]%s%s", (long long) seconds, prefix, message);
 
@@ -171,6 +172,7 @@ int main(int argc, char *argv[]) {
 	gboolean log_info = FALSE;
 	gboolean log_debug = FALSE;
 	gboolean no_daemon = FALSE;
+	gboolean systemd = FALSE;
 	gboolean test_mode = FALSE;
 	gboolean ignore_default_control = FALSE;
 	gchar *conf_file = NULL;
@@ -179,6 +181,7 @@ int main(int argc, char *argv[]) {
 	GOptionContext *opt_ctx;
 
 	thd_daemonize = TRUE;
+	use_syslog = TRUE;
 	dbus_enable = FALSE;
 
 	GOptionEntry options[] = {
@@ -186,6 +189,8 @@ int main(int argc, char *argv[]) {
 					&show_version, N_("Print thermald version and exit"), NULL },
 			{ "no-daemon", 0, 0, G_OPTION_ARG_NONE, &no_daemon, N_(
 					"Don't become a daemon: Default is daemon mode"), NULL },
+			{ "systemd", 0, 0, G_OPTION_ARG_NONE, &systemd, N_(
+					"Assume daemon is started by systemd"), NULL },
 			{ "loglevel=info", 0, 0, G_OPTION_ARG_NONE, &log_info, N_(
 					"log severity: info level and up"), NULL },
 			{ "loglevel=debug", 0, 0, G_OPTION_ARG_NONE, &log_debug, N_(
@@ -265,11 +270,10 @@ int main(int argc, char *argv[]) {
 	g_mkdir_with_parents(TDCONFDIR, 0755); // Don't care return value as directory
 	// may already exist
 	if (log_info) {
-		thd_log_level |= G_LOG_LEVEL_MESSAGE | G_LOG_LEVEL_INFO;
+		thd_log_level |= G_LOG_LEVEL_INFO;
 	}
 	if (log_debug) {
-		thd_log_level |= G_LOG_LEVEL_MESSAGE | G_LOG_LEVEL_INFO
-				| G_LOG_LEVEL_DEBUG;
+		thd_log_level |= G_LOG_LEVEL_INFO | G_LOG_LEVEL_DEBUG;
 	}
 	if (poll_interval >= 0) {
 		fprintf(stdout, "Polling enabled: %d\n", poll_interval);
@@ -281,7 +285,8 @@ int main(int argc, char *argv[]) {
 	openlog("thermald", LOG_PID, LOG_USER | LOG_DAEMON | LOG_SYSLOG);
 	// Don't care return val
 	//setlogmask(LOG_CRIT | LOG_ERR | LOG_WARNING | LOG_NOTICE | LOG_DEBUG | LOG_INFO);
-	thd_daemonize = !no_daemon;
+	thd_daemonize = !no_daemon && !systemd;
+	use_syslog = !no_daemon || systemd;
 	g_log_set_handler(NULL, G_LOG_LEVEL_MASK, thd_logger, NULL);
 
 	if (check_thermald_running()) {
@@ -290,7 +295,7 @@ int main(int argc, char *argv[]) {
 		exit(EXIT_FAILURE);
 	}
 
-	if (no_daemon) {
+	if (!thd_daemonize) {
 		signal(SIGINT, sig_int_handler);
 		signal(SIGTERM, sig_int_handler);
 	}
@@ -309,7 +314,7 @@ int main(int argc, char *argv[]) {
 	if (dbus_enable)
 		thd_dbus_server_init(sig_int_handler);
 
-	if (!no_daemon) {
+	if (thd_daemonize) {
 		printf("Ready to serve requests: Daemonizing.. %d\n", thd_daemonize);
 		thd_log_info(
 				"thermald ver %s: Ready to serve requests: Daemonizing..\n",

@@ -80,13 +80,13 @@ int cthd_parse::parser_init(std::string config_file) {
 	if (config_file.empty()) {
 		std::ifstream conf_auto(filename_auto_conf.c_str());
 		if (conf_auto.is_open()) {
-			thd_log_warn("Using generated %s \n", filename_auto_conf.c_str());
+			thd_log_msg("Using generated %s \n", filename_auto_conf.c_str());
 			xml_config_file = filename_auto_conf.c_str();
 			auto_config = 1;
 		} else {
 			ret = rel.generate_conf(filename_auto);
 			if (!ret) {
-				thd_log_warn("Using generated %s\n", filename_auto.c_str());
+				thd_log_msg("Using generated %s\n", filename_auto.c_str());
 				xml_config_file = filename_auto.c_str();
 				auto_config = 1;
 			} else {
@@ -97,7 +97,16 @@ int cthd_parse::parser_init(std::string config_file) {
 		xml_config_file = config_file.c_str();
 	}
 
-	thd_log_info("Using config file %s\n", xml_config_file);
+	/* We have not tested existance yet in this case. */
+	if (!auto_config) {
+		std::ifstream conf(xml_config_file);
+		if (!conf.is_open()) {
+			thd_log_msg("Config file %s does not exist\n", xml_config_file);
+			return THD_ERROR;
+		}
+	}
+
+	thd_log_msg("Using config file %s\n", xml_config_file);
 	doc = xmlReadFile(xml_config_file, NULL, 0);
 	if (doc == NULL) {
 		thd_log_warn("error: could not parse file %s\n", xml_config_file);
