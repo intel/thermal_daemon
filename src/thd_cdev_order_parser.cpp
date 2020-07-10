@@ -32,10 +32,14 @@ cthd_cdev_order_parse::cthd_cdev_order_parse() :
 }
 
 int cthd_cdev_order_parse::parser_init() {
+	struct stat s;
+
+	if (stat(filename.c_str(), &s))
+		return THD_ERROR;
 
 	doc = xmlReadFile(filename.c_str(), NULL, 0);
 	if (doc == NULL) {
-		thd_log_warn("error: could not parse file %s\n", filename.c_str());
+		thd_log_msg("error: could not parse file %s\n", filename.c_str());
 		return THD_ERROR;
 	}
 	root_element = xmlDocGetRootElement(doc);
