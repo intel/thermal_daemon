@@ -31,6 +31,9 @@ int cthd_gen_sysfs_cdev::update() {
 		std::istringstream(state_str) >> curr_state;
 		min_state = max_state = curr_state;
 	} else {
+		if (cdev_sysfs.get_base_path() && !strcmp(cdev_sysfs.get_base_path(), ""))
+			return THD_ERROR;
+
 		int ret = cdev_sysfs.create();
 
 		if (ret < 0)
