@@ -111,6 +111,8 @@ int cthd_cdev_kgl_amdgpu::update() {
 			thd_log_info("cthd_cdev_kgl_amdgpu : not present\n");
 			return THD_ERROR;
 		}
+	} else {
+		return THD_ERROR;
 	}
 
 	if (cdev_sysfs.exists("power1_cap_max")) {
@@ -122,7 +124,10 @@ int cthd_cdev_kgl_amdgpu::update() {
 			thd_log_info("cthd_cdev_kgl_amdgpu : not present\n");
 			return THD_ERROR;
 		}
+	} else {
+		return THD_ERROR;
 	}
+
 	set_inc_dec_value(-(min_state * (float) 10 / 100));
         set_pid_param(-0.4, 0, 0);
 
