@@ -7,11 +7,28 @@
 <node>
   <interface name="org.freedesktop.thermald">
 
-    <!-- SetCurrentPreference(G_TYPE_STRING new_pref): 
-    preference string values:
-        "PERFORMANCE" : performance driven policy (ACPI: ACTIVE)
-        "ENERGY_CONSERVE" : Energy conservation "Quiet" mode(ACPI: PASSIVE)
-	"DISABLE": Disable thermal daemon
+    <!--
+       SetCurrentPreference:
+       @new_pref: a string representing the selected preference
+
+       The new preference can be one of:
+       <itemizedlist>
+         <listitem>
+           <para>
+             PERFORMANCE: performance driven policy (ACPI: ACTIVE)
+           </para>
+         </listitem>
+         <listitem>
+           <para>
+             ENERGY_CONSERVE: Energy conservation "Quiet" mode (ACPI: PASSIVE)
+           </para>
+         </listitem>
+         <listitem>
+           <para>
+             DISABLE: Disable thermal daemon
+           </para>
+         </listitem>
+       </itemizedlist>
     -->
     <method name="SetCurrentPreference">
       <arg type="s" name="new_pref" direction="in"/>
