@@ -8,11 +8,14 @@ m4_define([td_version],
 AC_INIT([thermald], [td_version], [], [thermald])
 m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])])
 
+AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_AUX_DIR(build-aux)
 AC_CONFIG_HEADERS([config.h])
 
 AM_INIT_AUTOMAKE([1.11 foreign no-define subdir-objects])
 AM_MAINTAINER_MODE([enable])
+
+GTK_DOC_CHECK([1.11],[--flavour no-tmpl])
 
 AC_ARG_WITH(dbus-sys-dir, AS_HELP_STRING([--with-dbus-sys-dir=DIR], [where D-BUS system.d directory is]))
 if test -n "$with_dbus_sys_dir" ; then
@@ -71,6 +74,8 @@ AC_SUBST(GLIB_LIBS)
 
 PKG_CHECK_MODULES(XML, libxml-2.0 >= 2.4)
 
+AC_PATH_PROG([GDBUS_CODEGEN],[gdbus-codegen])
+
 AC_PROG_CC
 AC_PROG_CPP
 AC_PROG_CXX
@@ -102,6 +107,8 @@ done
 ], [AC_MSG_ERROR([AX_CHECK_COMPILE_FLAG not found, you'll need to install autoconf-archive])])
 
 AC_CONFIG_FILES([Makefile
+                 docs/Makefile
+                 docs/version.xml
                  data/Makefile])
 
 AC_OUTPUT

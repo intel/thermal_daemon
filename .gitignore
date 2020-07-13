@@ -38,3 +38,4 @@ thd_dbus_interface.h
 .project
 *thermald.service
 .dirstamp
+version.xml

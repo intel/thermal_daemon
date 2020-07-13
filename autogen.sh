@@ -6,7 +6,9 @@ olddir=`pwd`
 
 cd "$srcdir"
 
-autoreconf --install --verbose
+aclocal --install || exit 1
+gtkdocize --copy --flavour no-tmpl || exit 1
+autoreconf --install --verbose || exit 1
 
 cd "$olddir"
 

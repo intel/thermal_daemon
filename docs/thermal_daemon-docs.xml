@@ -1,0 +1,81 @@
+<?xml version="1.0"?>
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
+               "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd" [
+<!ENTITY version SYSTEM "version.xml">
+]>
+<book id="index" xmlns:xi="http://www.w3.org/2003/XInclude">
+  <bookinfo>
+    <title>Thermal Daemon Reference Manual</title>
+    <releaseinfo>Version &version;</releaseinfo>
+    <authorgroup>
+      <author>
+	<firstname>Bastien</firstname>
+	<surname>Nocera</surname>
+	<affiliation>
+	  <address>
+	    <email>hadess@hadess.net</email>
+	  </address>
+	</affiliation>
+      </author>
+    </authorgroup>
+
+    <copyright>
+      <year>2020</year>
+      <holder>Red Hat, Inc.</holder>
+    </copyright>
+
+    <legalnotice>
+      <para>
+	Permission is granted to copy, distribute and/or modify this
+	document under the terms of the <citetitle>GNU Free
+	Documentation License</citetitle>, Version 1.1 or any later
+	version published by the Free Software Foundation with no
+	Invariant Sections, no Front-Cover Texts, and no Back-Cover
+	Texts. You may obtain a copy of the <citetitle>GNU Free
+	Documentation License</citetitle> from the Free Software
+	Foundation by visiting <ulink type="http"
+	url="http://www.fsf.org">their Web site</ulink> or by writing
+	to:
+
+	<address>
+	  The Free Software Foundation, Inc.,
+	  <street>59 Temple Place</street> - Suite 330,
+	  <city>Boston</city>, <state>MA</state> <postcode>02111-1307</postcode>,
+	  <country>USA</country>
+	</address>
+      </para>
+
+      <para>
+	Many of the names used by companies to distinguish their
+	products and services are claimed as trademarks. Where those
+	names appear in any GNOME documentation, and those trademarks
+	are made aware to the members of the GNOME Documentation
+	Project, the names have been printed in caps or initial caps.
+      </para>
+    </legalnotice>
+  </bookinfo>
+
+  <reference id="ref-dbus">
+    <title>D-Bus API Reference</title>
+    <partintro>
+      <para>
+	This part documents the D-Bus interface used to access the
+	Thermal Daemon service.
+      </para>
+    </partintro>
+    <xi:include href="docs-org.freedesktop.thermald.xml"/>
+  </reference>
+
+  <index>
+    <title>Index</title>
+  </index>
+
+  <!-- License -->
+
+  <appendix id="license">
+    <title>License</title>
+    <para>
+<programlisting><xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="../COPYING" parse="text"><xi:fallback>FIXME: MISSING XINCLUDE CONTENT</xi:fallback></xi:include></programlisting>
+    </para>
+  </appendix>
+</book>
