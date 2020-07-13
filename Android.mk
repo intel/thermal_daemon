@@ -37,8 +37,9 @@ LOCAL_SRC_FILES := \
 		src/thd_sensor_kbl_amdgpu_thermal.cpp \
 		src/thd_zone_kbl_g_mcp.cpp \
 		src/thd_sensor_kbl_g_mcp.cpp \
-		src/thd_zone_kbl_amdgpu.cpp
-
+		src/thd_zone_kbl_amdgpu.cpp \
+		src/thd_sensor_rapl_power.cpp \
+		src/thd_zone_rapl_power.cpp
 
 LOCAL_C_INCLUDES += external/libxml2/include
 

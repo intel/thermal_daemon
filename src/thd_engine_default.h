@@ -42,6 +42,7 @@ private:
 	int tcc_offset_checked;
 	int tcc_offset_low;
 #endif
+	int debug_mode_on(void);
 
 public:
 	static const int power_clamp_reduction_percent = 5;
