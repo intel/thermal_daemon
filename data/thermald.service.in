@@ -2,6 +2,12 @@
 Description=Thermal Daemon Service
 ConditionVirtualization=no
 
+# A udev rule may create this file to disable thermald on certain hardware
+ConditionPathExists=!/run/thermald/firmware-managed
+
+Wants=systemd-udev-trigger.service systemd-udev-settle.service
+After=systemd-udev-trigger.service systemd-udev-settle.service
+
 [Service]
 Type=dbus
 SuccessExitStatus=1
