@@ -1,0 +1,17 @@
+# thermald udev rules
+#
+# SPDX-License-Identifier: GPL-2.1+
+#
+# Copyright © 2020 Red Hat, Inc
+#
+# Authors:
+#       Benjamin Berg <bberg@redhat.com>
+#
+
+ACTION=="remove", GOTO="thermald_end"
+
+# Assume that having lap-mode exported by thinkpad_acpi
+# implies the device has in-firmware thermal management.
+DEVPATH=="/devices/platform/thinkpad_acpi", ATTR{dytc_lapmode}=="*", RUN+="@libexecdir@/thermald-udev-helper --firmware-managed"
+
+LABEL="thermald_end"

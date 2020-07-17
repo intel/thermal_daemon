@@ -39,3 +39,4 @@ thd_dbus_interface.h
 .project
 *thermald.service
 .dirstamp
+*90-thermald.rules

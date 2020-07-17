@@ -31,10 +31,16 @@ PKG_PROG_PKG_CONFIG
 AC_ARG_WITH([systemdsystemunitdir],
         AS_HELP_STRING([--with-systemdsystemunitdir=DIR], [Directory for systemd service files]),
         [], [with_systemdsystemunitdir=$($PKG_CONFIG --variable=systemdsystemunitdir systemd)])
+AC_ARG_WITH([udevdir],
+        AS_HELP_STRING([--with-udevdir=DIR], [Directory for udev]),
+        [], [with_udevdir=$($PKG_CONFIG --variable=udevdir udev)])
 if test "x$with_systemdsystemunitdir" != xno; then
         AC_SUBST([systemdsystemunitdir], [$with_systemdsystemunitdir])
 fi
-AM_CONDITIONAL(HAVE_SYSTEMD, [test -n "$with_systemdsystemunitdir" -a "x$with_systemdsystemunitdir" != xno ])
+if test "x$with_udevdir" != xno; then
+        AC_SUBST([udevdir], [$with_udevdir])
+fi
+AM_CONDITIONAL(HAVE_SYSTEMD, [test -n "$with_systemdsystemunitdir" -a "x$with_systemdsystemunitdir" != xno -a -n "$with_udevdir" -a "x$with_udevdir" != xno ])
 
 # print configuration
 echo
@@ -42,6 +48,7 @@ echo "System paths:"
 echo "  prefix: $prefix"
 echo "  exec_prefix: $exec_prefix"
 echo "  systemdunitdir: $with_systemdsystemunitdir"
+echo "  udevdir: $with_udevdir"
 echo "  tdbinary: $tdbinary"
 echo "  tdconfdir: $tdconfdir"
 echo "  tdrundir: $tdrundir"

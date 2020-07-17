@@ -1,5 +1,12 @@
 include $(GLIB_MAKEFILE)
 
+edit = sed \
+	-e 's|@bindir[@]|$(bindir)|g' \
+	-e 's|@sbindir[@]|$(sbindir)|g' \
+	-e 's|@libexecdir[@]|$(libexecdir)|g' \
+	-e 's|@sysconfdir[@]|$(sysconfdir)|g' \
+	-e 's|@localstatedir[@]|$(localstatedir)|g'
+
 if HAVE_SYSTEMD
 systemdsystemunit_DATA = \
 	thermald.service
@@ -13,13 +20,13 @@ service_DATA = $(service_in_files:.service.in=.service)
 
 $(service_DATA): $(service_in_files) Makefile
 	@$(edit) $< >$@
-endif
 
-edit = sed \
-	-e 's|@bindir[@]|$(bindir)|g' \
-	-e 's|@sbindir[@]|$(sbindir)|g' \
-	-e 's|@sysconfdir[@]|$(sysconfdir)|g' \
-	-e 's|@localstatedir[@]|$(localstatedir)|g'
+udevrulesdir = $(udevdir)/rules.d
+udevrules_in_files = 90-thermald.rules.in
+udevrules_DATA = $(udevrules_in_files:.rules.in=.rules)
+$(udevrules_DATA): $(udevrules_in_files) Makefile
+	@$(edit) $< >$@
+endif
 
 dbusservicedir = $(DBUS_SYS_DIR)
 dbusservice_DATA = org.freedesktop.thermald.conf
