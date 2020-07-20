@@ -689,6 +689,10 @@ static supported_ids_t id_table[] = {
 		{ 6, 0x8d }, // Tigerlake
 		{ 0, 0 } // Last Invalid entry
 };
+
+std::vector<std::string> blocklist_paths {
+	"/devices/platform/thinkpad_acpi/dytc_lapmode",
+};
 #endif
 
 int cthd_engine::check_cpu_id() {
@@ -731,6 +735,17 @@ int cthd_engine::check_cpu_id() {
 	}
 	if (!valid) {
 		thd_log_msg(" Need Linux PowerCap sysfs \n");
+	}
+
+
+	for (std::string path : blocklist_paths) {
+		struct stat s;
+
+		if (!stat(path.c_str(), &s)) {
+			proc_list_matched = false;
+			thd_log_warn("[%s] present: Thermald can't run on this platform\n", path.c_str());
+			break;
+		}
 	}
 
 #endif
