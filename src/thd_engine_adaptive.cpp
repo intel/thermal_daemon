@@ -383,22 +383,43 @@ int cthd_engine_adaptive::handle_compressed_gddv(char *buf, int size) {
 	return THD_SUCCESS;
 }
 
+// From Common/esif_sdk_iface_esif.h:
+#define ESIF_SERVICE_CONFIG_COMPRESSED  0x40000000/* Payload is Compressed */
+// From Common/esif_sdk.h
+#define ESIFHDR_VERSION(major, minor, revision) ((uint32_t)((((major) & 0xFF) << 24) | (((minor) & 0xFF) << 16) | ((revision) & 0xFFFF)))
+#define ESIFHDR_GET_MAJOR(version)	((uint32_t)(((version) >> 24) & 0xFF))
+#define ESIFHDR_GET_MINOR(version)	((uint32_t)(((version) >> 16) & 0xFF))
+#define ESIFHDR_GET_REVISION(version)	((uint32_t)((version) & 0xFFFF))
+//From ESIF/Products/ESIF_LIB/Sources/esif_lib_datavault.c
+#define ESIFDV_HEADER_SIGNATURE			0x1FE5
+#define ESIFDV_ITEM_KEYS_REV0_SIGNATURE	0xA0D8
+
 int cthd_engine_adaptive::parse_gddv(char *buf, int size) {
 	int offset = 0;
 	struct header *header;
 
 	header = (struct header*) buf;
 
-	if (header->signature != 0x1fe5)
+	if (header->signature != ESIFDV_HEADER_SIGNATURE)
 		thd_log_fatal("Unexpected GDDV signature 0x%x\n", header->signature);
 
-	if (header->version != htonl(1) && header->version != htonl(2))
+	if (ESIFHDR_GET_MAJOR(header->version) != 1
+			&& ESIFHDR_GET_MAJOR(header->version) != 2)
 		return THD_ERROR;
 
 	offset = header->headersize;
 
-	while (offset < size) {
-		uint16_t unk1;
+	thd_log_debug("header version[%d] size[%d] header_size[%d]\n",
+			ESIFHDR_GET_MAJOR(header->version), size, header->headersize);
+
+	if (ESIFHDR_GET_MAJOR(header->version) == 2) {
+		if (header->flags == ESIF_SERVICE_CONFIG_COMPRESSED) {
+			thd_log_debug("Uncompress GDDV payload\n");
+			return handle_compressed_gddv(buf + offset, size - offset);
+		}
+	}
+
+	while ((offset + header->headersize) < size) {
 		uint32_t keyflags;
 		uint32_t keylength;
 		uint32_t valtype;
@@ -411,14 +432,15 @@ int cthd_engine_adaptive::parse_gddv(char *buf, int size) {
 		char *point = NULL;
 		char *ns = NULL;
 
-		if (header->version == htonl(2)) {
-			memcpy(&unk1, buf + offset, sizeof(unk1));
-			if (unk1 == 0x005d) {
-				return handle_compressed_gddv(buf + offset, size - offset);
+		if (ESIFHDR_GET_MAJOR(header->version) == 2) {
+			unsigned short signature;
+
+			signature = *(unsigned short *) (buf + offset);
+			if (signature != ESIFDV_ITEM_KEYS_REV0_SIGNATURE) {
+				thd_log_info("REV0 key signature not found\n");
+				return THD_ERROR;
 			}
-			if (unk1 == 0x1fe5)
-				break;
-			offset += sizeof(unk1);
+			offset += sizeof(unsigned short);
 		}
 
 		memcpy(&keyflags, buf + offset, sizeof(keyflags));
