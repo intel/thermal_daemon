@@ -111,6 +111,10 @@ public:
 			int target_state =
 			TRIP_PT_INVALID_TARGET_STATE, pid_param_t *pid_param = NULL);
 
+	void delete_cdevs() {
+		cdevs.clear();
+	}
+
 	void thd_trip_cdev_state_reset();
 	int thd_trip_point_value() {
 		return temp;

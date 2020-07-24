@@ -175,6 +175,16 @@ public:
 			return NULL;
 	}
 
+	void trip_delete_all() {
+		if (!trip_points.size())
+			return;
+
+		for (unsigned int i = 0; i < trip_points.size(); ++i) {
+			trip_points[i].delete_cdevs();
+		}
+		trip_points.clear();
+	}
+
 	void zone_dump() {
 		if (!zone_active)
 			return;

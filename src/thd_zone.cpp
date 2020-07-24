@@ -42,6 +42,9 @@ cthd_zone::cthd_zone(int _index, std::string control_path, sensor_relate_t rel) 
 }
 
 cthd_zone::~cthd_zone() {
+	for (unsigned int i = 0; i < trip_points.size(); ++i) {
+		trip_points[i].delete_cdevs();
+	}
 	trip_points.clear();
 	sensors.clear();
 }
