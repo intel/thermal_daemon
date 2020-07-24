@@ -216,9 +216,6 @@ public:
 };
 
 static inline bool trip_sort(cthd_trip_point trip1, cthd_trip_point trip2) {
-	if (trip1.get_trip_type() != trip2.get_trip_type())
-		return false;
-
 	return (trip1.get_trip_temp() < trip2.get_trip_temp());
 }
 #endif

@@ -87,7 +87,7 @@ public:
 		return index;
 	}
 
-	void add_trip(cthd_trip_point &trip);
+	void add_trip(cthd_trip_point &trip, int force = 0);
 	void update_trip_temp(cthd_trip_point &trip);
 	void update_highest_trip_temp(cthd_trip_point &trip);
 
