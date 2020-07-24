@@ -42,7 +42,6 @@ private:
 	int tcc_offset_checked;
 	int tcc_offset_low;
 #endif
-	int debug_mode_on(void);
 
 protected:
 	bool force_mmio_rapl;
@@ -75,6 +74,7 @@ public:
 	int read_cooling_devices();
 	int read_thermal_sensors();
 	void workarounds();
+	int debug_mode_on(void);
 };
 
 int thd_engine_create_default_engine(bool ignore_cpuid_check,
