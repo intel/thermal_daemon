@@ -5,7 +5,7 @@ struct adaptive_target {
 	uint64_t target_id;
 	std::string name;
 	std::string participant;
-	std::string domain;
+	uint64_t domain;
 	std::string code;
 	std::string argument;
 };
