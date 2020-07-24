@@ -63,7 +63,7 @@ enum adaptive_condition {
 	ARTG,
 	CTYP,
 	PROP,
-        Unk1,
+	Unk1,
 	Unk2,
 	Battery_state,
 	Battery_rate,
@@ -121,11 +121,11 @@ struct psv {
 struct condition {
 	enum adaptive_condition condition;
 	std::string device;
-        enum adaptive_comparison comparison;
-        int argument;
+	enum adaptive_comparison comparison;
+	int argument;
 	enum adaptive_operation operation;
-        enum adaptive_comparison time_comparison;
-        int time;
+	enum adaptive_comparison time_comparison;
+	int time;
 	int target;
 	int state;
 	int state_entry_time;
@@ -156,8 +156,9 @@ protected:
 	struct libevdev *tablet_dev;
 	int get_type(char *object, int *offset);
 	uint64_t get_uint64(char *object, int *offset);
-	char *get_string(char *object, int *offset);
-	int merge_custom(struct custom_condition *custom, struct condition *condition);
+	char* get_string(char *object, int *offset);
+	int merge_custom(struct custom_condition *custom,
+			struct condition *condition);
 	int merge_appc(void);
 	int parse_appc(char *appc, int len);
 	int parse_apat(char *apat, int len);
@@ -166,7 +167,7 @@ protected:
 	int parse_psvt(char *name, char *psvt, int len);
 	int handle_compressed_gddv(char *buf, int size);
 	int parse_gddv(char *buf, int size);
-	struct psvt *find_psvt(std::string name);
+	struct psvt* find_psvt(std::string name);
 	int install_passive(struct psv *psv);
 	void set_trip(std::string device, std::string argument);
 	void set_int3400_target(struct adaptive_target target);
@@ -187,11 +188,11 @@ protected:
 	void setup_input_devices();
 public:
 	cthd_engine_adaptive() :
-		cthd_engine_default("63BE270F-1C11-48FD-A6F7-3AF253FF3E2D") {
+			cthd_engine_default("63BE270F-1C11-48FD-A6F7-3AF253FF3E2D") {
 	}
 
 	~cthd_engine_adaptive();
-	ppcc_t *get_ppcc_param(std::string name);
+	ppcc_t* get_ppcc_param(std::string name);
 	int thd_engine_start(bool ignore_cpuid_check);
 	void update_engine_state();
 };

@@ -1,3 +1,27 @@
+/*
+ * cthd_engine_adaptive.cpp: Adaptive thermal engine
+ *
+ * Copyright (C) 2013 Intel Corporation. All rights reserved.
+ * Copyright 2020 Google LLC
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License version
+ * 2 or later as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+ * 02110-1301, USA.
+ *
+ *
+ * Author Name Matthew Garrett <mjg59@google.com>
+ *
+ */
 #include <arpa/inet.h>
 #include <dirent.h>
 #include <errno.h>
@@ -30,66 +54,66 @@
 
 struct header {
 	uint16_t signature;
-        uint16_t headersize;
-        uint32_t version;
-        uint32_t flags;
+	uint16_t headersize;
+	uint32_t version;
+	uint32_t flags;
 } __attribute__ ((packed));
 
 cthd_engine_adaptive::~cthd_engine_adaptive() {
 }
 
 int cthd_engine_adaptive::get_type(char *object, int *offset) {
-	return *(uint32_t *)(object + *offset);
+	return *(uint32_t*) (object + *offset);
 }
 
 uint64_t cthd_engine_adaptive::get_uint64(char *object, int *offset) {
-        uint64_t value;
-        int type = *(uint32_t *)(object + *offset);
+	uint64_t value;
+	int type = *(uint32_t*) (object + *offset);
 
-        if (type != 4) {
+	if (type != 4) {
 		thd_log_fatal("Found object of type %d, expecting 4\n", type);
-        }
-        *offset += 4;
+	}
+	*offset += 4;
 
-        value = *(uint64_t *)(object + *offset);
-        *offset += 8;
+	value = *(uint64_t*) (object + *offset);
+	*offset += 8;
 
-        return value;
+	return value;
 }
 
-char * cthd_engine_adaptive::get_string(char *object, int *offset) {
-        int type = *(uint32_t *)(object + *offset);
-        uint64_t length;
-        char *value;
+char* cthd_engine_adaptive::get_string(char *object, int *offset) {
+	int type = *(uint32_t*) (object + *offset);
+	uint64_t length;
+	char *value;
 
-        if (type != 8) {
+	if (type != 8) {
 		thd_log_fatal("Found object of type %d, expecting 8\n", type);
-        }
-        *offset += 4;
+	}
+	*offset += 4;
 
-        length = *(uint64_t *)(object + *offset);
-        *offset += 8;
+	length = *(uint64_t*) (object + *offset);
+	*offset += 8;
 
-        value = &object[*offset];
-        *offset += length;
-        return value;
+	value = &object[*offset];
+	*offset += length;
+	return value;
 }
 
-int cthd_engine_adaptive::merge_custom(struct custom_condition *custom, struct condition *condition) {
+int cthd_engine_adaptive::merge_custom(struct custom_condition *custom,
+		struct condition *condition) {
 	condition->device = custom->participant;
-	condition->condition = (enum adaptive_condition)custom->type;
+	condition->condition = (enum adaptive_condition) custom->type;
 
 	return 0;
 }
 
-int cthd_engine_adaptive::merge_appc () {
-	for (int i = 0; i < (int)custom_conditions.size(); i++) {
-		for (int j = 0; j < (int)conditions.size(); j++) {
-			for (int k = 0; k < (int)conditions[j].size(); k++) {
-				if (custom_conditions[i].condition ==
-				    conditions[j][k].condition) {
-					merge_custom(&custom_conditions[i],
-						     &conditions[j][k]);
+int cthd_engine_adaptive::merge_appc() {
+	for (int i = 0; i < (int) custom_conditions.size(); i++) {
+		for (int j = 0; j < (int) conditions.size(); j++) {
+			for (int k = 0; k < (int) conditions[j].size(); k++) {
+				if (custom_conditions[i].condition
+						== conditions[j][k].condition) {
+					merge_custom(&custom_conditions[i], &conditions[j][k]);
 				}
 			}
 		}
@@ -98,7 +122,7 @@ int cthd_engine_adaptive::merge_appc () {
 	return 0;
 }
 
-int cthd_engine_adaptive::parse_appc (char *appc, int len) {
+int cthd_engine_adaptive::parse_appc(char *appc, int len) {
 	int offset = 0;
 	uint64_t version;
 
@@ -110,14 +134,16 @@ int cthd_engine_adaptive::parse_appc (char *appc, int len) {
 	version = get_uint64(appc, &offset);
 	if (version != 1) {
 		// Invalid APPC tables aren't fatal
-		thd_log_info("Found unsupported or malformed APPC version %d\n", (int)version);
+		thd_log_info("Found unsupported or malformed APPC version %d\n",
+				(int) version);
 		return 0;
 	}
 
 	while (offset < len) {
 		struct custom_condition condition;
 
-		condition.condition = (enum adaptive_condition)get_uint64(appc, &offset);
+		condition.condition = (enum adaptive_condition) get_uint64(appc,
+				&offset);
 		condition.name = get_string(appc, &offset);
 		condition.participant = get_string(appc, &offset);
 		condition.domain = get_uint64(appc, &offset);
@@ -125,40 +151,40 @@ int cthd_engine_adaptive::parse_appc (char *appc, int len) {
 		custom_conditions.push_back(condition);
 	}
 
-        return 0;
+	return 0;
 }
 
-int cthd_engine_adaptive::parse_apat (char *apat, int len) {
-        int offset = 0;
-        uint64_t version = get_uint64(apat, &offset);
+int cthd_engine_adaptive::parse_apat(char *apat, int len) {
+	int offset = 0;
+	uint64_t version = get_uint64(apat, &offset);
 
 	if (version != 2)
-		thd_log_fatal("Found unsupported APAT version %d\n", (int)version);
+		thd_log_fatal("Found unsupported APAT version %d\n", (int) version);
 
-        while (offset < len) {
+	while (offset < len) {
 		struct adaptive_target target;
 
-                if (offset >= len)
-                        return THD_ERROR;
+		if (offset >= len)
+			return THD_ERROR;
 
-                target.target_id = get_uint64(apat, &offset);
-                target.name = get_string(apat, &offset);
-                target.participant = get_string(apat, &offset);
-                target.domain = get_uint64(apat, &offset);
-                target.code = get_string(apat, &offset);
-                target.argument = get_string(apat, &offset);
+		target.target_id = get_uint64(apat, &offset);
+		target.name = get_string(apat, &offset);
+		target.participant = get_string(apat, &offset);
+		target.domain = get_uint64(apat, &offset);
+		target.code = get_string(apat, &offset);
+		target.argument = get_string(apat, &offset);
 		targets.push_back(target);
-        }
-        return 0;
+	}
+	return 0;
 }
 
-int cthd_engine_adaptive::parse_apct (char *apct, int len) {
-        int i;
-        int offset = 0;
-        uint64_t version = get_uint64(apct, &offset);
+int cthd_engine_adaptive::parse_apct(char *apct, int len) {
+	int i;
+	int offset = 0;
+	uint64_t version = get_uint64(apct, &offset);
 
-        if (version == 1) {
-                while (offset < len) {
+	if (version == 1) {
+		while (offset < len) {
 			std::vector<struct condition> condition_set;
 
 			uint64_t target = get_uint64(apct, &offset);
@@ -166,7 +192,7 @@ int cthd_engine_adaptive::parse_apct (char *apct, int len) {
 				thd_log_fatal("Invalid APCT target\n");
 			}
 
-                        for (i = 0; i < 10; i++) {
+			for (i = 0; i < 10; i++) {
 				struct condition condition;
 
 				condition.condition = adaptive_condition(0);
@@ -183,27 +209,31 @@ int cthd_engine_adaptive::parse_apct (char *apct, int len) {
 
 				if (offset >= len) {
 					thd_log_fatal("Read off end of buffer in APCT parsing\n");
-                                }
+				}
 
-				condition.condition = adaptive_condition(get_uint64(apct, &offset));
-				condition.comparison = adaptive_comparison(get_uint64(apct, &offset));
+				condition.condition = adaptive_condition(
+						get_uint64(apct, &offset));
+				condition.comparison = adaptive_comparison(
+						get_uint64(apct, &offset));
 				condition.argument = get_uint64(apct, &offset);
 				if (i < 9) {
-					condition.operation = adaptive_operation(get_uint64(apct, &offset));
+					condition.operation = adaptive_operation(
+							get_uint64(apct, &offset));
 					if (condition.operation == FOR) {
 						offset += 12;
-						condition.time_comparison = adaptive_comparison(get_uint64(apct, &offset));
+						condition.time_comparison = adaptive_comparison(
+								get_uint64(apct, &offset));
 						condition.time = get_uint64(apct, &offset);
 						offset += 12;
 						i++;
 					}
 				}
 				condition_set.push_back(condition);
-                        }
+			}
 			conditions.push_back(condition_set);
-                }
-        } else if (version == 2) {
-                while (offset < len) {
+		}
+	} else if (version == 2) {
+		while (offset < len) {
 			std::vector<struct condition> condition_set;
 
 			uint64_t target = get_uint64(apct, &offset);
@@ -212,7 +242,7 @@ int cthd_engine_adaptive::parse_apct (char *apct, int len) {
 			}
 
 			uint64_t count = get_uint64(apct, &offset);
-                        for (i = 0; i < int(count); i++) {
+			for (i = 0; i < int(count); i++) {
 				struct condition condition;
 
 				condition.condition = adaptive_condition(0);
@@ -227,39 +257,43 @@ int cthd_engine_adaptive::parse_apct (char *apct, int len) {
 				condition.state_entry_time = 0;
 				condition.target = target;
 
-                                if (offset >= len) {
+				if (offset >= len) {
 					thd_log_fatal("Read off end of buffer in parsing APCT\n");
-                                }
+				}
 
-				condition.condition = adaptive_condition(get_uint64(apct, &offset));
+				condition.condition = adaptive_condition(
+						get_uint64(apct, &offset));
 				condition.device = get_string(apct, &offset);
 				offset += 12;
-				condition.comparison = adaptive_comparison(get_uint64(apct, &offset));
+				condition.comparison = adaptive_comparison(
+						get_uint64(apct, &offset));
 				condition.argument = get_uint64(apct, &offset);
 				if (i < int(count - 1)) {
-					condition.operation = adaptive_operation(get_uint64(apct, &offset));
+					condition.operation = adaptive_operation(
+							get_uint64(apct, &offset));
 					if (condition.operation == FOR) {
 						offset += 12;
 						get_string(apct, &offset);
 						offset += 12;
-						condition.time_comparison = adaptive_comparison(get_uint64(apct, &offset));
+						condition.time_comparison = adaptive_comparison(
+								get_uint64(apct, &offset));
 						condition.time = get_uint64(apct, &offset);
 						offset += 12;
 						i++;
 					}
 				}
 				condition_set.push_back(condition);
-                        }
+			}
 			conditions.push_back(condition_set);
-                }
-        } else {
-		thd_log_fatal("Unsupported APCT version %d\n", (int)version);
+		}
+	} else {
+		thd_log_fatal("Unsupported APCT version %d\n", (int) version);
 	}
-        return 0;
+	return 0;
 }
 
-ppcc_t * cthd_engine_adaptive::get_ppcc_param(std::string name) {
-	for (int i = 0; i < (int)ppccs.size(); i++) {
+ppcc_t* cthd_engine_adaptive::get_ppcc_param(std::string name) {
+	for (int i = 0; i < (int) ppccs.size(); i++) {
 		if (ppccs[i].name == name)
 			return &ppccs[i];
 	}
@@ -267,19 +301,19 @@ ppcc_t * cthd_engine_adaptive::get_ppcc_param(std::string name) {
 	return NULL;
 }
 
-int cthd_engine_adaptive::parse_ppcc (char *name, char *buf, int len) {
+int cthd_engine_adaptive::parse_ppcc(char *name, char *buf, int len) {
 	ppcc_t ppcc;
 
 	ppcc.name = name;
-        ppcc.power_limit_min = *(uint64_t *)(buf + 28);
-        ppcc.power_limit_max = *(uint64_t *)(buf + 40);
-        ppcc.time_wind_min = *(uint64_t *)(buf + 52);
-        ppcc.time_wind_max = *(uint64_t *)(buf + 64);
-        ppcc.step_size = *(uint64_t *)(buf + 76);
+	ppcc.power_limit_min = *(uint64_t*) (buf + 28);
+	ppcc.power_limit_max = *(uint64_t*) (buf + 40);
+	ppcc.time_wind_min = *(uint64_t*) (buf + 52);
+	ppcc.time_wind_max = *(uint64_t*) (buf + 64);
+	ppcc.step_size = *(uint64_t*) (buf + 76);
 
 	ppccs.push_back(ppcc);
 
-        return 0;
+	return 0;
 }
 
 int cthd_engine_adaptive::parse_psvt(char *name, char *buf, int len) {
@@ -288,7 +322,7 @@ int cthd_engine_adaptive::parse_psvt(char *name, char *buf, int len) {
 	struct psvt psvt;
 
 	if (version != 2)
-		thd_log_fatal("Found unsupported PSVT version %d\n", (int)version);
+		thd_log_fatal("Found unsupported PSVT version %d\n", (int) version);
 
 	if (name == NULL)
 		psvt.name = "Default";
@@ -323,9 +357,9 @@ int cthd_engine_adaptive::parse_psvt(char *name, char *buf, int len) {
 }
 
 int cthd_engine_adaptive::handle_compressed_gddv(char *buf, int size) {
-	uint64_t output_size = *(uint64_t *)(buf+5);
+	uint64_t output_size = *(uint64_t*) (buf + 5);
 	lzma_ret ret;
-	unsigned char *decompressed = (unsigned char*)malloc(output_size);
+	unsigned char *decompressed = (unsigned char*) malloc(output_size);
 	lzma_stream strm = LZMA_STREAM_INIT;
 
 	if (!decompressed)
@@ -336,14 +370,14 @@ int cthd_engine_adaptive::handle_compressed_gddv(char *buf, int size) {
 
 	strm.next_out = decompressed;
 	strm.avail_out = output_size;
-	strm.next_in = (const unsigned char *)(buf);
+	strm.next_in = (const unsigned char*) (buf);
 	strm.avail_in = size;
 	ret = lzma_code(&strm, LZMA_FINISH);
 	lzma_end(&strm);
 	if (ret && ret != LZMA_STREAM_END)
 		thd_log_fatal("Failed to decompress GDDV data: %d\n", ret);
 
-	parse_gddv((char *)decompressed, output_size);
+	parse_gddv((char*) decompressed, output_size);
 	free(decompressed);
 
 	return THD_SUCCESS;
@@ -353,7 +387,7 @@ int cthd_engine_adaptive::parse_gddv(char *buf, int size) {
 	int offset = 0;
 	struct header *header;
 
-	header = (struct header *)buf;
+	header = (struct header*) buf;
 
 	if (header->signature != 0x1fe5)
 		thd_log_fatal("Unexpected GDDV signature 0x%x\n", header->signature);
@@ -404,46 +438,46 @@ int cthd_engine_adaptive::parse_gddv(char *buf, int size) {
 
 		str = strtok(key, "/");
 		if (!str) {
-			delete[](key);
-			delete[](val);
+			delete[] (key);
+			delete[] (val);
 			continue;
 		}
-                if (strcmp(str, "participants") == 0) {
-                        name = strtok(NULL, "/");
-                        type = strtok(NULL, "/");
-                        point = strtok(NULL, "/");
-                } else if (strcmp(str, "shared") == 0) {
-                        ns = strtok(NULL, "/");
-                        type = strtok(NULL, "/");
-                        if (strcmp(ns, "tables") == 0) {
-                                point = strtok(NULL, "/");
-                        }
-                }
+		if (strcmp(str, "participants") == 0) {
+			name = strtok(NULL, "/");
+			type = strtok(NULL, "/");
+			point = strtok(NULL, "/");
+		} else if (strcmp(str, "shared") == 0) {
+			ns = strtok(NULL, "/");
+			type = strtok(NULL, "/");
+			if (strcmp(ns, "tables") == 0) {
+				point = strtok(NULL, "/");
+			}
+		}
 		if (type && strcmp(type, "ppcc") == 0) {
-                        parse_ppcc(name, val, vallength);
-                }
+			parse_ppcc(name, val, vallength);
+		}
 
-                if (type && strcmp(type, "psvt") == 0) {
+		if (type && strcmp(type, "psvt") == 0) {
 			if (point == NULL)
 				parse_psvt(name, val, vallength);
 			else
 				parse_psvt(point, val, vallength);
-                }
+		}
 
-                if (type && strcmp(type, "appc") == 0) {
-                        parse_appc(val, vallength);
-                }
+		if (type && strcmp(type, "appc") == 0) {
+			parse_appc(val, vallength);
+		}
 
-                if (type && strcmp(type, "apct") == 0) {
-                        parse_apct(val, vallength);
-                }
+		if (type && strcmp(type, "apct") == 0) {
+			parse_apct(val, vallength);
+		}
 
-                if (type && strcmp(type, "apat") == 0) {
-                        parse_apat(val, vallength);
-                }
+		if (type && strcmp(type, "apat") == 0) {
+			parse_apat(val, vallength);
+		}
 
-		delete[](key);
-		delete[](val);
+		delete[] (key);
+		delete[] (val);
 	}
 
 	merge_appc();
@@ -451,17 +485,16 @@ int cthd_engine_adaptive::parse_gddv(char *buf, int size) {
 }
 
 int cthd_engine_adaptive::verify_condition(struct condition condition) {
-	if (condition.condition >= Oem0 &&
-	    condition.condition <= Oem5)
+	if (condition.condition >= Oem0 && condition.condition <= Oem5)
 		return 0;
-	if (condition.condition >= adaptive_condition(0x1000) &&
-	    condition.condition < adaptive_condition(0x10000))
+	if (condition.condition >= adaptive_condition(0x1000)
+			&& condition.condition < adaptive_condition(0x10000))
 		return 0;
 	if (condition.condition == Default)
 		return 0;
-	if (condition.condition == Temperature ||
-	    condition.condition == Temperature_without_hysteresis ||
-	    condition.condition == (adaptive_condition)0) {
+	if (condition.condition == Temperature
+			|| condition.condition == Temperature_without_hysteresis
+			|| condition.condition == (adaptive_condition) 0) {
 		return 0;
 	}
 	if (condition.condition == Lid_state && upower_client != NULL)
@@ -479,8 +512,8 @@ int cthd_engine_adaptive::verify_condition(struct condition condition) {
 
 int cthd_engine_adaptive::verify_conditions() {
 	int result = 0;
-	for (int i = 0; i < (int)conditions.size(); i++) {
-		for (int j = 0; j < (int)conditions[i].size(); j++) {
+	for (int i = 0; i < (int) conditions.size(); i++) {
+		for (int j = 0; j < (int) conditions[i].size(); j++) {
 			if (verify_condition(conditions[i][j]))
 				result = THD_ERROR;
 		}
@@ -492,7 +525,8 @@ int cthd_engine_adaptive::verify_conditions() {
 	return result;
 }
 
-int cthd_engine_adaptive::compare_condition(struct condition condition, int value) {
+int cthd_engine_adaptive::compare_condition(struct condition condition,
+		int value) {
 	switch (condition.comparison) {
 	case ADAPTIVE_EQUAL:
 		if (value == condition.argument)
@@ -548,12 +582,11 @@ int cthd_engine_adaptive::evaluate_oem_condition(struct condition condition) {
 	csys_fs sysfs("/sys/bus/platform/devices/INT3400:00/");
 	int oem_condition = -1;
 
-	if (condition.condition >= Oem0 &&
-	    condition.condition <= Oem5)
-		oem_condition = (int)condition.condition - 19;
-	else if (condition.condition >= (adaptive_condition)0x1000 &&
-		 condition.condition < (adaptive_condition)0x10000)
-		oem_condition = (int)condition.condition - 0x1000 + 6;
+	if (condition.condition >= Oem0 && condition.condition <= Oem5)
+		oem_condition = (int) condition.condition - 19;
+	else if (condition.condition >= (adaptive_condition) 0x1000
+			&& condition.condition < (adaptive_condition) 0x10000)
+		oem_condition = (int) condition.condition - 0x1000 + 6;
 
 	if (oem_condition != -1) {
 		std::string filename = "odvp" + std::to_string(oem_condition);
@@ -570,7 +603,8 @@ int cthd_engine_adaptive::evaluate_oem_condition(struct condition condition) {
 	return THD_ERROR;
 }
 
-int cthd_engine_adaptive::evaluate_temperature_condition(struct condition condition) {
+int cthd_engine_adaptive::evaluate_temperature_condition(
+		struct condition condition) {
 	std::string sensor_name;
 
 	size_t pos = condition.device.find_last_of(".");
@@ -581,7 +615,8 @@ int cthd_engine_adaptive::evaluate_temperature_condition(struct condition condit
 
 	cthd_sensor *sensor = search_sensor(sensor_name);
 	if (!sensor) {
-		thd_log_warn("Unable to find a sensor for %s\n", condition.device.c_str());
+		thd_log_warn("Unable to find a sensor for %s\n",
+				condition.device.c_str());
 		return THD_ERROR;
 	}
 
@@ -595,7 +630,7 @@ int cthd_engine_adaptive::evaluate_temperature_condition(struct condition condit
 
 int cthd_engine_adaptive::evaluate_lid_condition(struct condition condition) {
 	int value = 0;
-	bool lid_closed = up_client_get_lid_is_closed (upower_client);
+	bool lid_closed = up_client_get_lid_is_closed(upower_client);
 
 	if (!lid_closed)
 		value = 1;
@@ -603,18 +638,21 @@ int cthd_engine_adaptive::evaluate_lid_condition(struct condition condition) {
 	return compare_condition(condition, value);
 }
 
-int cthd_engine_adaptive::evaluate_workload_condition(struct condition condition) {
+int cthd_engine_adaptive::evaluate_workload_condition(
+		struct condition condition) {
 	// We don't have a good way to assert workload at the moment, so just
 	// default to bursty
 
 	return compare_condition(condition, 3);
 }
 
-int cthd_engine_adaptive::evaluate_platform_type_condition(struct condition condition) {
+int cthd_engine_adaptive::evaluate_platform_type_condition(
+		struct condition condition) {
 	int value = 1;
 
 	if (tablet_dev) {
-		int tablet = libevdev_get_event_value(tablet_dev, EV_SW, SW_TABLET_MODE);
+		int tablet = libevdev_get_event_value(tablet_dev, EV_SW,
+				SW_TABLET_MODE);
 		if (tablet)
 			value = 2;
 	}
@@ -637,15 +675,14 @@ int cthd_engine_adaptive::evaluate_condition(struct condition condition) {
 	if (condition.condition == Default)
 		return THD_SUCCESS;
 
-	if ((condition.condition >= Oem0 &&
-	    condition.condition <= Oem5) ||
-	    (condition.condition >= (adaptive_condition)0x1000 &&
-	     condition.condition < (adaptive_condition)0x10000))
+	if ((condition.condition >= Oem0 && condition.condition <= Oem5)
+			|| (condition.condition >= (adaptive_condition) 0x1000
+					&& condition.condition < (adaptive_condition) 0x10000))
 		ret = evaluate_oem_condition(condition);
 
-	if (condition.condition == Temperature ||
-	    condition.condition == Temperature_without_hysteresis ||
-	    condition.condition == (adaptive_condition)0) {
+	if (condition.condition == Temperature
+			|| condition.condition == Temperature_without_hysteresis
+			|| condition.condition == (adaptive_condition) 0) {
 		ret = evaluate_temperature_condition(condition);
 	}
 
@@ -677,18 +714,19 @@ int cthd_engine_adaptive::evaluate_condition(struct condition condition) {
 	return ret;
 }
 
-int cthd_engine_adaptive::evaluate_condition_set(std::vector<struct condition> condition_set) {
-	for (int i = 0; i < (int)condition_set.size(); i++) {
+int cthd_engine_adaptive::evaluate_condition_set(
+		std::vector<struct condition> condition_set) {
+	for (int i = 0; i < (int) condition_set.size(); i++) {
 		if (evaluate_condition(condition_set[i]) != 0)
 			return THD_ERROR;
 	}
 	return THD_SUCCESS;
 }
-	
+
 int cthd_engine_adaptive::evaluate_conditions() {
 	int target = -1;
 
-	for (int i = 0; i < (int)conditions.size(); i++) {
+	for (int i = 0; i < (int) conditions.size(); i++) {
 		if (evaluate_condition_set(conditions[i]) == THD_SUCCESS) {
 			target = conditions[i][0].target;
 			break;
@@ -698,8 +736,8 @@ int cthd_engine_adaptive::evaluate_conditions() {
 	return target;
 }
 
-struct psvt *cthd_engine_adaptive::find_psvt(std::string name) {
-	for (int i = 0; i < (int)psvts.size(); i++) {
+struct psvt* cthd_engine_adaptive::find_psvt(std::string name) {
+	for (int i = 0; i < (int) psvts.size(); i++) {
 		if (psvts[i].name == name) {
 			return &psvts[i];
 		}
@@ -741,7 +779,8 @@ int cthd_engine_adaptive::install_passive(struct psv *psv) {
 	cthd_cdev *cdev = search_cdev(psv_cdev);
 
 	if (!cdev) {
-		thd_log_warn("Unable to find a cooling device for %s\n", psv_cdev.c_str());
+		thd_log_warn("Unable to find a cooling device for %s\n",
+				psv_cdev.c_str());
 		return THD_ERROR;
 	}
 
@@ -760,13 +799,14 @@ int cthd_engine_adaptive::install_passive(struct psv *psv) {
 			int cdev_index = 0;
 			while (true) {
 				try {
-					trip_pt_cdev_t trip_cdev = trip->get_cdev_at_index(cdev_index);
+					trip_pt_cdev_t trip_cdev = trip->get_cdev_at_index(
+							cdev_index);
 					if (trip_cdev.cdev == cdev) {
 						trip->update_trip_temp(temp);
 						return 0;
 					}
 					cdev_index++;
-				} catch (const std::invalid_argument &) {
+				} catch (const std::invalid_argument&) {
 					break;
 				}
 			}
@@ -777,10 +817,10 @@ int cthd_engine_adaptive::install_passive(struct psv *psv) {
 
 	// If we're here, there's no existing trip point for this device
 	// that includes the relevant cdev. Add one.
-	cthd_trip_point trip_pt(index, PASSIVE, temp, 0,
-				zone->get_zone_index(),
-				sensor->get_index());
-	trip_pt.thd_trip_point_add_cdev(*cdev, cthd_trip_point::default_influence, psv->sample_period/10);
+	cthd_trip_point trip_pt(index, PASSIVE, temp, 0, zone->get_zone_index(),
+			sensor->get_index());
+	trip_pt.thd_trip_point_add_cdev(*cdev, cthd_trip_point::default_influence,
+			psv->sample_period / 10);
 	zone->add_trip(trip_pt);
 	zone->zone_cdev_set_binded();
 
@@ -790,7 +830,7 @@ int cthd_engine_adaptive::install_passive(struct psv *psv) {
 void cthd_engine_adaptive::set_trip(std::string target, std::string argument) {
 	std::string psv_zone;
 	float float_temp = stof(argument, NULL);
-	int temp = (int)(float_temp * 1000);
+	int temp = (int) (float_temp * 1000);
 
 	size_t pos = target.find_last_of(".");
 
@@ -829,7 +869,7 @@ void cthd_engine_adaptive::set_int3400_target(struct adaptive_target target) {
 		if (!psvt) {
 			return;
 		}
-		for (int i = 0; i < (int)psvt->psvs.size(); i++) {
+		for (int i = 0; i < (int) psvt->psvs.size(); i++) {
 			install_passive(&psvt->psvs[i]);
 		}
 	}
@@ -861,8 +901,8 @@ void cthd_engine_adaptive::update_engine_state() {
 	int target = evaluate_conditions();
 	if (target == -1)
 		return;
-	for (int i = 0; i < (int)targets.size(); i++) {
-		if (targets[i].target_id != (uint64_t)target)
+	for (int i = 0; i < (int) targets.size(); i++) {
+		if (targets[i].target_id != (uint64_t) target)
 			continue;
 		execute_target(targets[i]);
 	}
@@ -879,13 +919,11 @@ void cthd_engine_adaptive::setup_input_devices() {
 	tablet_dev = NULL;
 
 	ndev = scandir("/dev/input", &namelist, is_event_device, versionsort);
-	for (i = 0; i < ndev; i++)
-	{
+	for (i = 0; i < ndev; i++) {
 		char fname[267];
 		int fd = -1;
 
-		snprintf(fname, sizeof(fname),
-			 "/dev/input/%s", namelist[i]->d_name);
+		snprintf(fname, sizeof(fname), "/dev/input/%s", namelist[i]->d_name);
 		fd = open(fname, O_RDONLY);
 		if (fd < 0)
 			continue;
@@ -910,14 +948,14 @@ int cthd_engine_adaptive::thd_engine_start(bool ignore_cpuid_check) {
 	force_mmio_rapl = true;
 
 	if (sysfs.read("bus/platform/devices/INT3400:00/firmware_node/path",
-		       int3400_path) < 0) {
+			int3400_path) < 0) {
 		thd_log_error("Unable to locate INT3400 firmware path\n");
 		return THD_ERROR;
 	}
 
 	size = sysfs.size("bus/platform/devices/INT3400:00/data_vault");
 	if (size == 0) {
-                thd_log_error("Unable to open GDDV data vault\n");
+		thd_log_error("Unable to open GDDV data vault\n");
 		return THD_ERROR;
 	}
 
@@ -927,7 +965,8 @@ int cthd_engine_adaptive::thd_engine_start(bool ignore_cpuid_check) {
 		return THD_ERROR;
 	}
 
-	if (sysfs.read("bus/platform/devices/INT3400:00/data_vault", buf, size) < int(size)) {
+	if (sysfs.read("bus/platform/devices/INT3400:00/data_vault", buf, size)
+			< int(size)) {
 		thd_log_error("Unable to read GDDV data vault\n");
 		return THD_ERROR;
 	}
@@ -957,15 +996,15 @@ int cthd_engine_adaptive::thd_engine_start(bool ignore_cpuid_check) {
 }
 
 int thd_engine_create_adaptive_engine(bool ignore_cpuid_check) {
-        thd_engine = new cthd_engine_adaptive();
+	thd_engine = new cthd_engine_adaptive();
 
-        thd_engine->set_poll_interval(thd_poll_interval);
+	thd_engine->set_poll_interval(thd_poll_interval);
 
-        // Initialize thermald objects
-        if (thd_engine->thd_engine_start(ignore_cpuid_check) != THD_SUCCESS) {
-                thd_log_error("THD engine start failed\n");
+	// Initialize thermald objects
+	if (thd_engine->thd_engine_start(ignore_cpuid_check) != THD_SUCCESS) {
+		thd_log_error("THD engine start failed\n");
 		return THD_ERROR;
 	}
 
-        return THD_SUCCESS;
+	return THD_SUCCESS;
 }
