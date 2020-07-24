@@ -186,6 +186,10 @@ protected:
 	int evaluate_conditions();
 	void execute_target(struct adaptive_target target);
 	void setup_input_devices();
+	void dump_apat();
+	void dump_apct();
+	void dump_ppcc();
+	void dump_psvt();
 public:
 	cthd_engine_adaptive() :
 			cthd_engine_default("63BE270F-1C11-48FD-A6F7-3AF253FF3E2D") {

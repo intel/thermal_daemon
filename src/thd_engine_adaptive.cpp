@@ -178,6 +178,19 @@ int cthd_engine_adaptive::parse_apat(char *apat, int len) {
 	return 0;
 }
 
+void cthd_engine_adaptive::dump_apat()
+{
+	thd_log_info("..apat dump begin.. \n");
+	for (unsigned int i = 0; i < targets.size(); ++i) {
+		thd_log_info(
+				"target_id:%lu name:%s participant:%s domain:%d code:%s argument:%s\n",
+				targets[i].target_id, targets[i].name.c_str(),
+				targets[i].participant.c_str(), (int)targets[i].domain,
+				targets[i].code.c_str(), targets[i].argument.c_str());
+	}
+	thd_log_info("apat dump end\n");
+}
+
 int cthd_engine_adaptive::parse_apct(char *apct, int len) {
 	int i;
 	int offset = 0;
@@ -292,6 +305,121 @@ int cthd_engine_adaptive::parse_apct(char *apct, int len) {
 	return 0;
 }
 
+static const char *condition_names[] = {
+		"Invalid",
+		"Default",
+		"Orientation",
+		"Proximity",
+		"Motion",
+		"Dock",
+		"Workload",
+		"Cooling_mode",
+		"Power_source",
+		"Aggregate_power_percentage",
+		"Lid_state",
+		"Platform_type",
+		"Platform_SKU",
+		"Utilisation",
+		"TDP",
+		"Duty_cycle",
+		"Power",
+		"Temperature",
+		"Display_orientation",
+		"Oem0",
+		"Oem1",
+		"Oem2",
+		"Oem3",
+		"Oem4",
+		"Oem5",
+		"PMAX",
+		"PSRC",
+		"ARTG",
+		"CTYP",
+		"PROP",
+		"Unk1",
+		"Unk2",
+		"Battery_state",
+		"Battery_rate",
+		"Battery_remaining",
+		"Battery_voltage",
+		"PBSS",
+		"Battery_cycles",
+		"Battery_last_full",
+		"Power_personality",
+		"Battery_design_capacity",
+		"Screen_state",
+		"AVOL",
+		"ACUR",
+		"AP01",
+		"AP02",
+		"AP10",
+		"Time",
+		"Temperature_without_hysteresis",
+		"Mixed_reality",
+		"User_presence",
+		"RBHF",
+		"VBNL",
+		"CMPP",
+		"Battery_percentage",
+		"Battery_count",
+		"Power_slider"
+};
+
+static const char *comp_strs[] = {
+		"INVALID",
+		"ADAPTIVE_EQUAL",
+		"ADAPTIVE_LESSER_OR_EQUAL",
+		"ADAPTIVE_GREATER_OR_EQUAL"
+};
+
+#define ARRAY_SIZE(array) \
+    (sizeof(array) / sizeof(array[0]))
+
+void cthd_engine_adaptive::dump_apct() {
+	thd_log_info("..apct dump begin.. \n");
+	for (unsigned int i = 0; i < conditions.size(); ++i) {
+		std::vector<struct condition> condition_set;
+
+		thd_log_info("condition_set %d\n", i);
+		condition_set = conditions[i];
+		for (unsigned int j = 0; j < condition_set.size(); ++j) {
+			std::string cond_name, comp_str, op_str;
+
+			if (condition_set[j].condition < ARRAY_SIZE(condition_names)) {
+				cond_name = condition_names[condition_set[j].condition];
+			} else {
+				std::stringstream msg;
+
+				msg << "UNKNOWN" << "( " << condition_set[j].condition << " )";
+				cond_name = msg.str();
+			}
+
+			if (condition_set[j].comparison < ARRAY_SIZE(comp_strs)) {
+				comp_str = comp_strs[condition_set[j].comparison];
+			}
+
+			if (condition_set[j].operation == 1) {
+				op_str = "AND";
+			} else if (condition_set[j].operation == 2) {
+				op_str = "FOR";
+			} else {
+				op_str = "INVALID";
+			}
+
+			thd_log_info(
+					"\ttarget:%d device:%s condition:%s comparison:%s argument:%d"
+							" operation:%s time_comparison:%d time:%d"
+							" stare:%d state_entry_time:%d \n",
+					condition_set[j].target, condition_set[j].device.c_str(),
+					cond_name.c_str(), comp_str.c_str(),
+					condition_set[j].argument, op_str.c_str(),
+					condition_set[j].time_comparison, condition_set[j].time,
+					condition_set[j].state, condition_set[j].state_entry_time);
+		}
+	}
+	thd_log_info("..apct dump end.. \n");
+}
+
 ppcc_t* cthd_engine_adaptive::get_ppcc_param(std::string name) {
 	for (int i = 0; i < (int) ppccs.size(); i++) {
 		if (ppccs[i].name == name)
@@ -314,6 +442,19 @@ int cthd_engine_adaptive::parse_ppcc(char *name, char *buf, int len) {
 	ppccs.push_back(ppcc);
 
 	return 0;
+}
+
+void cthd_engine_adaptive::dump_ppcc()
+{
+	thd_log_info("..ppcc dump begin.. \n");
+	for (unsigned int i = 0; i < ppccs.size(); ++i) {
+		thd_log_info(
+				"Name:%s power_limit_max:%d power_limit_min:%d step_size:%d time_win_max:%d time_win_min:%d\n",
+				ppccs[i].name.c_str(), ppccs[i].power_limit_max,
+				ppccs[i].power_limit_min, ppccs[i].step_size,
+				ppccs[i].time_wind_max, ppccs[i].time_wind_min);
+	}
+	thd_log_info("ppcc dump end\n");
 }
 
 int cthd_engine_adaptive::parse_psvt(char *name, char *buf, int len) {
@@ -354,6 +495,30 @@ int cthd_engine_adaptive::parse_psvt(char *name, char *buf, int len) {
 	psvts.push_back(psvt);
 
 	return 0;
+}
+
+#define DECI_KELVIN_TO_CELSIUS(t)       ({                      \
+        int _t = (t);                                          \
+        ((_t-2732 >= 0) ? (_t-2732+5)/10 : (_t-2732-5)/10);     \
+})
+
+void cthd_engine_adaptive::dump_psvt() {
+	thd_log_info("..psvt dump begin.. \n");
+	for (unsigned int i = 0; i < psvts.size(); ++i) {
+		std::vector<struct psv> psvs = psvts[i].psvs;
+
+		thd_log_info("Name :%s\n", psvts[i].name.c_str());
+		for (unsigned int j = 0; j < psvs.size(); ++j) {
+			thd_log_info(
+					"\t source:%s target:%s priority:%d sample_period:%d temp:%d domain:%d control_knob:%d psv.limit:%s\n",
+					psvs[j].source.c_str(), psvs[j].target.c_str(),
+					psvs[j].priority, psvs[j].sample_period,
+					DECI_KELVIN_TO_CELSIUS(psvs[j].temp), psvs[j].domain,
+					psvs[j].control_knob, psvs[j].limit.c_str());
+
+		}
+	}
+	thd_log_info("psvt dump end\n");
 }
 
 int cthd_engine_adaptive::handle_compressed_gddv(char *buf, int size) {
@@ -503,6 +668,12 @@ int cthd_engine_adaptive::parse_gddv(char *buf, int size) {
 	}
 
 	merge_appc();
+
+	dump_ppcc();
+	dump_psvt();
+	dump_apat();
+	dump_apct();
+
 	return 0;
 }
 
