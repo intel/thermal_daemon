@@ -713,7 +713,7 @@ int cthd_engine_adaptive::verify_conditions() {
 	}
 
 	if (result != 0)
-		thd_log_error("Exiting due to unsupported conditions\n");
+		thd_log_error("Unsupported conditions are present\n");
 
 	return result;
 }
@@ -943,6 +943,9 @@ int cthd_engine_adaptive::evaluate_condition_set(
 
 int cthd_engine_adaptive::evaluate_conditions() {
 	int target = -1;
+
+	if (fallback_id >= 0)
+		return -1;
 
 	for (int i = 0; i < (int) conditions.size(); i++) {
 		thd_log_debug("evaluate condition set %d\n", i);
@@ -1239,16 +1242,58 @@ void cthd_engine_adaptive::execute_target(struct adaptive_target target) {
 	cdev->set_adaptive_target(target);
 }
 
+void cthd_engine_adaptive::exec_fallback_target(int target){
+	thd_log_debug("exec_fallback_target %d\n", target);
+	for (int i = 0; i < (int) targets.size(); i++) {
+		if (targets[i].target_id != (uint64_t) target)
+			continue;
+		execute_target(targets[i]);
+	}
+}
+
 void cthd_engine_adaptive::update_engine_state() {
 	int target = evaluate_conditions();
-	if (target == -1)
+	if (target == -1) {
+		if (fallback_id >= 0 && !policy_active) {
+			exec_fallback_target(targets[fallback_id].target_id);
+			policy_active = 1;
+		}
 		return;
+	}
 	for (int i = 0; i < (int) targets.size(); i++) {
 		if (targets[i].target_id != (uint64_t) target)
 			continue;
 		execute_target(targets[i]);
 	}
 	policy_active = 1;
+}
+
+int cthd_engine_adaptive::find_agressive_target() {
+	int max_pl1_max = 0;
+	int max_target_id = -1;
+
+	for (int i = 0; i < (int) targets.size(); i++) {
+		int argument;
+
+		try {
+			argument = std::stoi(targets[i].argument, NULL);
+		}
+		catch (...) {
+			thd_log_info("Invalid target target:%s %s\n", targets[i].code.c_str(),
+					targets[i].argument.c_str());
+			continue;
+		}
+		thd_log_info("target:%s %d\n", targets[i].code.c_str(), argument);
+
+		if (targets[i].code == "PL1MAX") {
+			if (max_pl1_max < argument) {
+				max_pl1_max = argument;
+				max_target_id = i;
+			}
+		}
+	}
+
+	return max_target_id;
 }
 
 static int is_event_device(const struct dirent *dir) {
@@ -1278,6 +1323,7 @@ void cthd_engine_adaptive::setup_input_devices() {
 		if (libevdev_has_event_code(tablet_dev, EV_SW, SW_TABLET_MODE))
 			return;
 		libevdev_free(tablet_dev);
+		tablet_dev = NULL;
 		close(fd);
 	}
 }
@@ -1292,13 +1338,13 @@ int cthd_engine_adaptive::thd_engine_start(bool ignore_cpuid_check) {
 
 	if (sysfs.read("bus/platform/devices/INT3400:00/firmware_node/path",
 			int3400_path) < 0) {
-		thd_log_error("Unable to locate INT3400 firmware path\n");
+		thd_log_debug("Unable to locate INT3400 firmware path\n");
 		return THD_ERROR;
 	}
 
 	size = sysfs.size("bus/platform/devices/INT3400:00/data_vault");
 	if (size == 0) {
-		thd_log_error("Unable to open GDDV data vault\n");
+		thd_log_debug("Unable to open GDDV data vault\n");
 		return THD_ERROR;
 	}
 
@@ -1310,25 +1356,43 @@ int cthd_engine_adaptive::thd_engine_start(bool ignore_cpuid_check) {
 
 	if (sysfs.read("bus/platform/devices/INT3400:00/data_vault", buf, size)
 			< int(size)) {
-		thd_log_error("Unable to read GDDV data vault\n");
+		thd_log_debug("Unable to read GDDV data vault\n");
 		return THD_ERROR;
 	}
 
 	if (parse_gddv(buf, size)) {
-		thd_log_error("Unable to parse GDDV");
+		thd_log_debug("Unable to parse GDDV");
 		return THD_ERROR;
 	}
 
 	setup_input_devices();
 
 	upower_client = up_client_new();
-	if (upower_client == NULL) {
-		thd_log_error("Unable to connect to upower\n");
+	if (!upower_client) {
+		thd_log_info("Unable to connect to upower\n");
 	}
 
 	if (verify_conditions()) {
-		thd_log_error("Unable to verify conditions are supported\n");
-		return THD_ERROR;
+		thd_log_info("Some conditions are not supported, so check if any condition set can be matched\n");
+		int target = evaluate_conditions();
+		if (target == -1) {
+			thd_log_info("Also unable to evaluate any conditions\n");
+			thd_log_info("Falling back to use configuration with the highest power\n");
+
+			if (tablet_dev)
+				libevdev_free(tablet_dev);
+
+			// Looks like there is no free call for up_client_new()
+
+			int i = find_agressive_target();
+			thd_log_info("target:%d\n", i);
+			if (i >= 0) {
+				thd_log_info("fallback id:%d\n", i);
+				fallback_id = i;
+			} else {
+				return THD_ERROR;
+			}
+		}
 	}
 
 	set_control_mode(EXCLUSIVE);

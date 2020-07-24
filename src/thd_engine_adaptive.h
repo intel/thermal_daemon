@@ -156,6 +156,7 @@ protected:
 	struct libevdev *tablet_dev;
 	int current_condition_set;
 	int policy_active;
+	int fallback_id;
 	int get_type(char *object, int *offset);
 	uint64_t get_uint64(char *object, int *offset);
 	char* get_string(char *object, int *offset);
@@ -188,14 +189,17 @@ protected:
 	int evaluate_conditions();
 	void execute_target(struct adaptive_target target);
 	void setup_input_devices();
+	int find_agressive_target();
+	void exec_fallback_target(int target);
 	void dump_apat();
 	void dump_apct();
 	void dump_ppcc();
 	void dump_psvt();
 public:
 	cthd_engine_adaptive() :
-			cthd_engine_default("63BE270F-1C11-48FD-A6F7-3AF253FF3E2D"), current_condition_set(
-					0xffff), policy_active(0) {
+			cthd_engine_default("63BE270F-1C11-48FD-A6F7-3AF253FF3E2D"), upower_client(
+					NULL), tablet_dev(NULL), current_condition_set(0xffff), policy_active(
+					0), fallback_id(-1) {
 	}
 
 	~cthd_engine_adaptive();
