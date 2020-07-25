@@ -108,7 +108,7 @@ public:
 	}
 
 	void zone_cdev_set_binded() {
-		thd_log_info("zone %s bounded \n", type_str.c_str());
+		thd_log_debug("zone %s bounded \n", type_str.c_str());
 		zone_cdev_binded_status = true;
 	}
 

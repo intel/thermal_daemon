@@ -121,12 +121,6 @@ void cthd_zone::sort_and_update_poll_trip() {
 		unsigned int polling_trip = 0;
 
 		std::sort(trip_points.begin(), trip_points.end(), trip_sort);
-		thd_log_info("Sorted trip dump zone index:%d type:%s:\n", index,
-				type_str.c_str());
-		for (unsigned int i = 0; i < trip_points.size(); ++i) {
-			trip_points[i].trip_dump();
-		}
-
 		if (trip_points.size())
 			polling_trip = trip_points[0].get_trip_temp();
 
