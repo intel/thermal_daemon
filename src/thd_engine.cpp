@@ -51,7 +51,7 @@ cthd_engine::cthd_engine(std::string _uuid) :
 				false), parse_thermal_cdev_success(false), uuid(_uuid), parser_disabled(false), poll_timeout_msec(
 				-1), wakeup_fd(-1), uevent_fd(-1), control_mode(COMPLEMENTRY), write_pipe_fd(
 				0), preference(0), status(true), thz_last_uevent_time(0), thz_last_temp_ind_time(
-				0), terminate(false), genuine_intel(0), has_invariant_tsc(0), has_aperf(
+				0), thz_last_update_event_time(0), terminate(false), genuine_intel(0), has_invariant_tsc(0), has_aperf(
 				0), proc_list_matched(false), poll_interval_sec(0), poll_sensor_mask(
 				0), fast_poll_sensor_mask(0), saved_poll_interval(0), poll_fd_cnt(0), rt_kernel(false), parser_init_done(false) {
 	thd_engine = pthread_t();
@@ -154,7 +154,14 @@ void cthd_engine::thd_engine_thread() {
 				thd_log_debug("Terminating thread..\n");
 			}
 		}
-		update_engine_state();
+
+		if ((tm - thz_last_update_event_time) >= thd_poll_interval) {
+			pthread_mutex_lock(&thd_engine_mutex);
+			update_engine_state();
+			pthread_mutex_unlock(&thd_engine_mutex);
+			thz_last_update_event_time = tm;
+		}
+
 		workarounds();
 	}
 	thd_log_debug("thd_engine_thread_end\n");

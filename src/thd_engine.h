@@ -96,6 +96,7 @@ private:
 	bool status;
 	time_t thz_last_uevent_time;
 	time_t thz_last_temp_ind_time;
+	time_t thz_last_update_event_time;
 	bool terminate;
 	int genuine_intel;
 	int has_invariant_tsc;
