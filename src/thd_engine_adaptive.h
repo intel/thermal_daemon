@@ -154,6 +154,8 @@ protected:
 	std::string int3400_path;
 	UpClient *upower_client;
 	struct libevdev *tablet_dev;
+	int current_condition_set;
+	int policy_active;
 	int get_type(char *object, int *offset);
 	uint64_t get_uint64(char *object, int *offset);
 	char* get_string(char *object, int *offset);
@@ -192,7 +194,8 @@ protected:
 	void dump_psvt();
 public:
 	cthd_engine_adaptive() :
-			cthd_engine_default("63BE270F-1C11-48FD-A6F7-3AF253FF3E2D") {
+			cthd_engine_default("63BE270F-1C11-48FD-A6F7-3AF253FF3E2D"), current_condition_set(
+					0xffff), policy_active(0) {
 	}
 
 	~cthd_engine_adaptive();

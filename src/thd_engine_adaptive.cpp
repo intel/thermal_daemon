@@ -921,6 +921,10 @@ int cthd_engine_adaptive::evaluate_conditions() {
 
 	for (int i = 0; i < (int) conditions.size(); i++) {
 		if (evaluate_condition_set(conditions[i]) == THD_SUCCESS) {
+			if (policy_active && i == current_condition_set)
+				break;
+
+			current_condition_set = i;
 			target = conditions[i][0].target;
 			break;
 		}
@@ -1201,6 +1205,7 @@ void cthd_engine_adaptive::update_engine_state() {
 			continue;
 		execute_target(targets[i]);
 	}
+	policy_active = 1;
 }
 
 static int is_event_device(const struct dirent *dir) {
