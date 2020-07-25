@@ -720,6 +720,28 @@ int cthd_engine_adaptive::verify_conditions() {
 
 int cthd_engine_adaptive::compare_condition(struct condition condition,
 		int value) {
+
+	if (debug_mode_on()) {
+		if (condition.condition < ARRAY_SIZE(condition_names)) {
+			std::string cond_name, comp_str, op_str;
+
+			cond_name = condition_names[condition.condition];
+			if (condition.comparison < ARRAY_SIZE(comp_strs)) {
+				comp_str = comp_strs[condition.comparison];
+				thd_log_debug(
+						"compare condition [%s] comparison [%s] value [%d]\n",
+						cond_name.c_str(), comp_str.c_str(), value);
+			} else {
+				thd_log_debug(
+						"compare condition [%s] comparison [%d] value [%d]\n",
+						cond_name.c_str(), condition.comparison, value);
+			}
+		} else {
+			thd_log_debug("compare condition %d value %d\n",
+					condition.comparison, value);
+		}
+	}
+
 	switch (condition.comparison) {
 	case ADAPTIVE_EQUAL:
 		if (value == condition.argument)
@@ -868,6 +890,8 @@ int cthd_engine_adaptive::evaluate_condition(struct condition condition) {
 	if (condition.condition == Default)
 		return THD_SUCCESS;
 
+	thd_log_debug("evaluate condition.condition %d\n", condition.condition);
+
 	if ((condition.condition >= Oem0 && condition.condition <= Oem5)
 			|| (condition.condition >= (adaptive_condition) 0x1000
 					&& condition.condition < (adaptive_condition) 0x10000))
@@ -910,6 +934,7 @@ int cthd_engine_adaptive::evaluate_condition(struct condition condition) {
 int cthd_engine_adaptive::evaluate_condition_set(
 		std::vector<struct condition> condition_set) {
 	for (int i = 0; i < (int) condition_set.size(); i++) {
+		thd_log_debug("evaluate condition.condition at index %d\n", i);
 		if (evaluate_condition(condition_set[i]) != 0)
 			return THD_ERROR;
 	}
@@ -920,6 +945,7 @@ int cthd_engine_adaptive::evaluate_conditions() {
 	int target = -1;
 
 	for (int i = 0; i < (int) conditions.size(); i++) {
+		thd_log_debug("evaluate condition set %d\n", i);
 		if (evaluate_condition_set(conditions[i]) == THD_SUCCESS) {
 			if (policy_active && i == current_condition_set)
 				break;
@@ -1193,6 +1219,8 @@ void cthd_engine_adaptive::execute_target(struct adaptive_target target) {
 		}
 		return;
 	}
+	thd_log_info("target:%s %d\n", target.code.c_str(),
+			std::stoi(target.argument, NULL));
 	cdev->set_adaptive_target(target);
 }
 
