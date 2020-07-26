@@ -961,7 +961,7 @@ int cthd_engine_adaptive::evaluate_conditions() {
 
 struct psvt* cthd_engine_adaptive::find_psvt(std::string name) {
 	for (int i = 0; i < (int) psvts.size(); i++) {
-		if (psvts[i].name == name) {
+		if (!strcasecmp(psvts[i].name.c_str(), name.c_str())) {
 			return &psvts[i];
 		}
 	}
@@ -1206,6 +1206,7 @@ void cthd_engine_adaptive::set_int3400_target(struct adaptive_target target) {
 void cthd_engine_adaptive::execute_target(struct adaptive_target target) {
 	cthd_cdev *cdev;
 	std::string name;
+	int argument;
 
 	size_t pos = target.participant.find_last_of(".");
 	if (pos == std::string::npos)
@@ -1219,8 +1220,22 @@ void cthd_engine_adaptive::execute_target(struct adaptive_target target) {
 		}
 		return;
 	}
-	thd_log_info("target:%s %d\n", target.code.c_str(),
-			std::stoi(target.argument, NULL));
+
+	if (target.code == "PSVT") {
+		thd_log_info("PSVT...\n");
+		set_int3400_target(target);
+		return;
+	}
+
+	try {
+		argument = std::stoi(target.argument, NULL);
+	}
+	catch (...) {
+		thd_log_info("Invalid target target:%s %s\n", target.code.c_str(),
+			target.argument.c_str());
+		return;
+	}
+	thd_log_info("target:%s %d\n", target.code.c_str(), argument);
 	cdev->set_adaptive_target(target);
 }
 
