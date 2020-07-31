@@ -77,7 +77,7 @@ public:
 	void zone_temperature_notification(int type, int data);
 	int zone_update();
 	virtual void update_zone_preference();
-	void zone_reset();
+	void zone_reset(int force = 0);
 
 	virtual int read_trip_points() = 0;
 	virtual int read_cdev_trip_points() = 0;

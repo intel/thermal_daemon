@@ -115,7 +115,7 @@ public:
 		cdevs.clear();
 	}
 
-	void thd_trip_cdev_state_reset();
+	void thd_trip_cdev_state_reset(int force = 0);
 	int thd_trip_point_value() {
 		return temp;
 	}

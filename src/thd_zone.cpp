@@ -59,7 +59,7 @@ void cthd_zone::thermal_zone_temp_change(int id, unsigned int temp, int pref) {
 		trip_point.thd_trip_point_check(id, temp, pref, &reset);
 		// Force all cooling devices to min state
 		if (reset) {
-			zone_reset();
+			zone_reset(0);
 			break;
 		}
 	}
@@ -200,14 +200,14 @@ void cthd_zone::zone_temperature_notification(int type, int data) {
 	read_zone_temp();
 }
 
-void cthd_zone::zone_reset() {
+void cthd_zone::zone_reset(int force) {
 	int i, count;
 
 	if (zone_active) {
 		count = trip_points.size();
 		for (i = count - 1; i >= 0; --i) {
 			cthd_trip_point &trip_point = trip_points[i];
-			trip_point.thd_trip_cdev_state_reset();
+			trip_point.thd_trip_cdev_state_reset(force);
 		}
 	}
 }
