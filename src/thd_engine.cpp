@@ -118,7 +118,7 @@ void cthd_engine::thd_engine_thread() {
 			pthread_mutex_unlock(&thd_engine_mutex);
 			thz_last_temp_ind_time = tm;
 		}
-		if (uevent_fd >= 0 && poll_fds[uevent_fd].revents & POLLIN) {
+		if (uevent_fd >= 0 && (poll_fds[uevent_fd].revents & POLLIN)) {
 			// Kobj uevent
 			if (kobj_uevent.check_for_event()) {
 				time_t tm;
@@ -139,7 +139,7 @@ void cthd_engine::thd_engine_thread() {
 				thz_last_uevent_time = tm;
 			}
 		}
-		if (wakeup_fd >= 0 && poll_fds[wakeup_fd].revents & POLLIN) {
+		if (wakeup_fd >= 0 && (poll_fds[wakeup_fd].revents & POLLIN)) {
 			message_capsul_t msg;
 
 			thd_log_debug("wakeup fd event\n");
