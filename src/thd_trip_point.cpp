@@ -94,6 +94,9 @@ bool cthd_trip_point::thd_trip_point_check(int id, unsigned int read_temp,
 
 	*reset = false;
 
+	if (type == INVALID_TRIP_TYPE)
+		return false;
+
 	if (depend_cdev && read_temp >= temp) {
 		int _state = depend_cdev->get_curr_state();
 		int valid = 0;

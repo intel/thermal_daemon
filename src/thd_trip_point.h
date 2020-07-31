@@ -151,6 +151,48 @@ public:
 		return cdevs.size();
 	}
 
+
+	int is_target_valid(int &target_state) {
+		target_state = 0;
+		for (unsigned int i = 0; i < cdevs.size(); ++i) {
+			trip_pt_cdev_t &cdev = cdevs[i];
+
+			if (cdev.target_state_valid) {
+				thd_log_debug("matched %d\n", cdev.target_state);
+				target_state = cdev.target_state;
+				return THD_SUCCESS;
+			}
+		}
+
+		return THD_ERROR;
+	}
+
+	int set_target_invalid() {
+		for (unsigned int i = 0; i < cdevs.size(); ++i) {
+			trip_pt_cdev_t &cdev = cdevs[i];
+			cdev.target_state_valid = 0;
+			return THD_SUCCESS;
+		}
+		return THD_ERROR;
+	}
+
+	int set_first_target(int state) {
+		for (unsigned int i = 0; i < cdevs.size(); ++i) {
+			trip_pt_cdev_t &cdev = cdevs[i];
+			cdev.target_state_valid = 1;
+			cdev.target_state = state;
+			return THD_SUCCESS;
+		}
+		return THD_ERROR;
+	}
+
+	cthd_cdev* get_first_cdev() {
+		if (!cdevs.size())
+			return NULL;
+
+		return cdevs[0].cdev;
+	}
+
 	void set_dependency(std::string cdev, std::string state_str);
 
 #ifndef ANDROID
