@@ -74,7 +74,10 @@ void cthd_sysfs_cdev_rapl::set_curr_state(int state, int control) {
 
 			// If it is the first time to activate this device, set the enabled flag
 			// and set the time window.
-			rapl_update_time_window(def_rapl_time_window);
+			if (pl0_min_window)
+				rapl_update_time_window(pl0_min_window);
+			else
+				rapl_update_time_window(def_rapl_time_window);
 
 			// Set enable flag only if it was disabled
 			if (!power_on_enable_status)
@@ -123,24 +126,28 @@ int cthd_sysfs_cdev_rapl::get_max_state() {
 int cthd_sysfs_cdev_rapl::rapl_sysfs_valid()
 {
 	std::stringstream temp_str;
-	int found = 0;
+	int found_long_term = 0;
 	int i;
 
 	// The primary control is powercap rapl long_term control
 	// If absent we can't use rapl cooling device
 	for (i = 0; i < rapl_no_time_windows; ++i) {
+		temp_str.str(std::string());
 		temp_str << "constraint_" << i << "_name";
 		if (cdev_sysfs.exists(temp_str.str())) {
 			std::string type_str;
 			cdev_sysfs.read(temp_str.str(), type_str);
 			if (type_str == "long_term") {
 				constraint_index = i;
-				found = 1;
+				found_long_term = 1;
+			}
+			if (type_str == "short_term") {
+				pl2_index = i;
 			}
 		}
 	}
 
-	if (!found) {
+	if (!found_long_term) {
 		thd_log_info("powercap RAPL no long term time window\n");
 		return THD_ERROR;
 	}
@@ -207,6 +214,27 @@ int cthd_sysfs_cdev_rapl::rapl_update_pl1(int pl1)
 	return THD_SUCCESS;
 }
 
+int cthd_sysfs_cdev_rapl::rapl_update_pl2(int pl2)
+{
+	std::stringstream temp_power_str;
+	int ret;
+
+	if (pl2_index == -1) {
+		thd_log_warn("Asked to set PL2 but couldn't find a PL2 device\n");
+		return THD_ERROR;
+	}
+	temp_power_str << "constraint_" << pl2_index << "_power_limit_uw";
+	ret = cdev_sysfs.write(temp_power_str.str(), pl2);
+	if (ret <= 0) {
+		thd_log_info(
+				"pkg_power: powercap RAPL max power limit failed to write PL2 %d \n",
+				pl2);
+		return ret;
+	}
+
+	return THD_SUCCESS;
+}
+
 int cthd_sysfs_cdev_rapl::rapl_read_time_window()
 {
 	std::stringstream temp_time_str;
@@ -265,6 +293,40 @@ int cthd_sysfs_cdev_rapl::rapl_read_enable_status()
 
 }
 
+void cthd_sysfs_cdev_rapl::set_tcc(int tcc) {
+	csys_fs sysfs("/sys/bus/pci/devices/0000:00:04.0/");
+
+	if (!sysfs.exists("tcc_offset_degree_celsius"))
+		return;
+
+	sysfs.write("tcc_offset_degree_celsius", tcc);
+}
+
+void cthd_sysfs_cdev_rapl::set_adaptive_target(struct adaptive_target target) {
+	int argument = std::stoi(target.argument, NULL);
+	if (target.code == "PL1MAX") {
+		min_state = pl0_max_pwr = argument * 1000;
+		if (curr_state > min_state)
+			set_curr_state(min_state, 1);
+	} else if (target.code == "PL1MIN") {
+		max_state = pl0_min_pwr = argument * 1000;
+		if (curr_state < max_state)
+			set_curr_state(max_state, 1);
+	} else if (target.code == "PL1STEP") {
+		pl0_step_pwr = argument * 1000;
+		set_inc_value(-pl0_step_pwr * 2);
+		set_dec_value(-pl0_step_pwr);
+	} else if (target.code == "PL1TimeWindow") {
+		pl0_min_window = argument * 1000;
+	} else if (target.code == "PL1PowerLimit") {
+		set_curr_state(argument * 1000, 1);
+	} else if (target.code == "PL2PowerLimit") {
+		rapl_update_pl2(argument * 1000);
+	} else if (target.code == "TccOffset") {
+		set_tcc(argument);
+	}
+}
+
 int cthd_sysfs_cdev_rapl::update() {
 	std::stringstream temp_str;
 	int constraint_phy_max;
@@ -274,12 +336,7 @@ int cthd_sysfs_cdev_rapl::update() {
 	if (rapl_sysfs_valid())
 		return THD_ERROR;
 
-	// Since this base class is also used by DRAM rapl, avoid reading PPCC as
-	// there are no power limits defined by DPTF based systems for any other
-	// domain other than package-0
-	cdev_sysfs.read("name", domain_name);
-	if (domain_name == "package-0")
-		ppcc = read_ppcc_power_limits();
+	ppcc = read_ppcc_power_limits();
 
 	if (ppcc) {
 		// This is a DPTF compatible platform, which defined
@@ -293,6 +350,9 @@ int cthd_sysfs_cdev_rapl::update() {
 		max_state = pl0_min_pwr;
 
 		rapl_update_pl1(pl0_max_pwr);
+
+		if (pl0_max_window > pl0_min_window)
+			rapl_update_time_window(pl0_max_window);
 
 		// To be efficient to control from the current power instead of PPCC max.
 		thd_engine->rapl_power_meter.rapl_start_measure_power();
@@ -354,6 +414,7 @@ int cthd_sysfs_cdev_rapl::update() {
 	power_on_enable_status = rapl_read_enable_status();
 
 	thd_log_debug("power_on_enable_status: %d\n", power_on_enable_status);
+	thd_log_debug("power_on_constraint_0_time_window: %d\n", power_on_constraint_0_time_window);
 
 	thd_log_debug("RAPL max limit %d increment: %d\n", max_state, inc_dec_val);
 
@@ -367,7 +428,7 @@ bool cthd_sysfs_cdev_rapl::read_ppcc_power_limits() {
 	csys_fs sys_fs;
 	ppcc_t *ppcc;
 
-	ppcc = thd_engine->parser.get_ppcc_param();
+	ppcc = thd_engine->get_ppcc_param(device_name);
 	if (ppcc) {
 		int def_max_power;
 
@@ -375,6 +436,8 @@ bool cthd_sysfs_cdev_rapl::read_ppcc_power_limits() {
 		pl0_max_pwr = ppcc->power_limit_max * 1000;
 		pl0_min_pwr = ppcc->power_limit_min * 1000;
 		pl0_min_window = ppcc->time_wind_min * 1000;
+		pl0_min_window = ppcc->time_wind_min * 1000;
+		pl0_max_window = ppcc->time_wind_max * 1000;
 		pl0_step_pwr = ppcc->step_size * 1000;
 
 		if (pl0_max_pwr <= pl0_min_pwr) {
@@ -418,12 +481,17 @@ bool cthd_sysfs_cdev_rapl::read_ppcc_power_limits() {
 			return false;
 	}
 
+	if (sys_fs.exists("power_limit_0_tmax_us")) {
+		if (sys_fs.read("power_limit_0_tmax_us", &pl0_max_window) <= 0)
+			return false;
+	}
+
 	if (sys_fs.exists("power_limit_0_step_uw")) {
 		if (sys_fs.read("power_limit_0_step_uw", &pl0_step_pwr) <= 0)
 			return false;
 	}
 
-	if (pl0_max_pwr && pl0_min_pwr && pl0_min_window && pl0_step_pwr) {
+	if (pl0_max_pwr && pl0_min_pwr && pl0_min_window && pl0_step_pwr && pl0_max_window) {
 		int def_max_power;
 
 		if (pl0_max_pwr <= pl0_min_pwr) {

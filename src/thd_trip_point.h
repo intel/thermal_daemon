@@ -111,7 +111,11 @@ public:
 			int target_state =
 			TRIP_PT_INVALID_TARGET_STATE, pid_param_t *pid_param = NULL);
 
-	void thd_trip_cdev_state_reset();
+	void delete_cdevs() {
+		cdevs.clear();
+	}
+
+	void thd_trip_cdev_state_reset(int force = 0);
 	int thd_trip_point_value() {
 		return temp;
 	}
@@ -145,6 +149,48 @@ public:
 	}
 	unsigned int get_cdev_count() {
 		return cdevs.size();
+	}
+
+
+	int is_target_valid(int &target_state) {
+		target_state = 0;
+		for (unsigned int i = 0; i < cdevs.size(); ++i) {
+			trip_pt_cdev_t &cdev = cdevs[i];
+
+			if (cdev.target_state_valid) {
+				thd_log_debug("matched %d\n", cdev.target_state);
+				target_state = cdev.target_state;
+				return THD_SUCCESS;
+			}
+		}
+
+		return THD_ERROR;
+	}
+
+	int set_target_invalid() {
+		for (unsigned int i = 0; i < cdevs.size(); ++i) {
+			trip_pt_cdev_t &cdev = cdevs[i];
+			cdev.target_state_valid = 0;
+			return THD_SUCCESS;
+		}
+		return THD_ERROR;
+	}
+
+	int set_first_target(int state) {
+		for (unsigned int i = 0; i < cdevs.size(); ++i) {
+			trip_pt_cdev_t &cdev = cdevs[i];
+			cdev.target_state_valid = 1;
+			cdev.target_state = state;
+			return THD_SUCCESS;
+		}
+		return THD_ERROR;
+	}
+
+	cthd_cdev* get_first_cdev() {
+		if (!cdevs.size())
+			return NULL;
+
+		return cdevs[0].cdev;
 	}
 
 	void set_dependency(std::string cdev, std::string state_str);
@@ -212,9 +258,6 @@ public:
 };
 
 static inline bool trip_sort(cthd_trip_point trip1, cthd_trip_point trip2) {
-	if (trip1.get_trip_type() != trip2.get_trip_type())
-		return false;
-
 	return (trip1.get_trip_temp() < trip2.get_trip_temp());
 }
 #endif

@@ -31,6 +31,9 @@ Install
 	yum install dbus-glib-devel
 	yum install libxml2-devel
 	yum install gtk-doc
+	yum install upower-devel
+	yum install xz-devel
+	yum install libevdev-devel
 
 Replace yum with dnf for later Fedora versions.
 
@@ -65,6 +68,9 @@ Building on Ubuntu
 	sudo apt-get install libdbus-glib-1-dev
 	sudo apt-get install libxml2-dev
 	sudo apt-get install gtk-doc-tools
+	sudo apt-get install libupower-glib-dev
+	sudo apt-get install liblzma-dev
+	sudo apt-get install libevdev-dev
 
 2
 Build
@@ -101,6 +107,23 @@ For build, follow the same procedure as Fedora.
 -------------------------------------------
 
 Releases
+
+Release 2.3
+- Merged changes from mjg59 for adaptive
+- Requires Linux kernel version 5.8 or later
+- By default tries --adaptive and fallback to old style
+- Atleast some level of success to use adaptive option on:
+(not expected to be on par with Windows DPTF)
+Dell XPS 13 9360
+Dell XPS 13 9370
+Dell XPS 13 9380
+Dell XPS 13 7390 2-in-1
+Dell Insperion_7386
+HP Spectre x360 Convertible 15-ch0xx
+HP ZBook 15 G5
+Lenovo Thinkpad T480
+
+- thermald will not run on Lenovo platforms with lap mode sysfs entry
 
 Release 2.2
 - Ignore PPCC power limits when max and min power is same

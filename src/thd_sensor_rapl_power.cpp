@@ -1,7 +1,7 @@
 /*
- * cthd_cdev_rapl_dram.h: thermal cooling class interface
- *	using RAPL DRAM
- * Copyright (C) 2014 Intel Corporation. All rights reserved.
+ * thd_sensor_rapl_power.cpp: Power Sensor for RAPL
+ *
+ * Copyright (C) 2020 Intel Corporation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License version
@@ -22,21 +22,28 @@
  *
  */
 
-#ifndef THD_CDEV_RAPL_DRAM_H_
-#define THD_CDEV_RAPL_DRAM_H_
+#include <dirent.h>
 
-#include "thd_cdev_rapl.h"
+#include "thd_sensor_rapl_power.h"
+#include "thd_engine.h"
 
-class cthd_sysfs_cdev_rapl_dram: public cthd_sysfs_cdev_rapl {
-private:
+cthd_sensor_rapl_power::cthd_sensor_rapl_power(int index) :
+		cthd_sensor(index, "", "rapl_pkg_power", SENSOR_TYPE_RAW) {
 
-public:
-	cthd_sysfs_cdev_rapl_dram(unsigned int _index, int _package) :
-			cthd_sysfs_cdev_rapl(_index, _package) {
-		device_name = "TMEM.D0";
-	}
+	update_path("/sys/class/powercap/intel-rapl");
+}
 
-	virtual int update();
-};
+unsigned int cthd_sensor_rapl_power::read_temperature() {
+	csys_fs sysfs;
+	std::string buffer;
 
-#endif /* THD_CDEV_RAPL_DRAM_H_ */
+	thd_engine->rapl_power_meter.rapl_start_measure_power();
+
+	unsigned int pkg_power = thd_engine->rapl_power_meter.rapl_action_get_power(
+			PACKAGE);
+
+	pkg_power = (pkg_power / 1000);
+	thd_log_debug("Sensor %s :power %u \n", type_str.c_str(), pkg_power);
+
+	return pkg_power;
+}

@@ -122,6 +122,7 @@ typedef struct {
 } cooling_dev_t;
 
 typedef struct {
+	std::string name;
 	int valid;
 	int power_limit_min;
 	int power_limit_max;
@@ -197,7 +198,7 @@ public:
 	void dump_thermal_conf();
 	bool platform_matched();
 	int get_polling_interval();
-	ppcc_t *get_ppcc_param();
+	ppcc_t *get_ppcc_param(std::string name);
 	int zone_count() {
 		return thermal_info_list[matched_thermal_info_index].zones.size();
 	}

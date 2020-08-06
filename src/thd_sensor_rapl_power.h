@@ -1,7 +1,7 @@
 /*
- * cthd_cdev_rapl_dram.h: thermal cooling class interface
- *	using RAPL DRAM
- * Copyright (C) 2014 Intel Corporation. All rights reserved.
+ * thd_sensor_rapl_power.h: Power Sensor for rapl
+ *
+ * Copyright (C) 2020 Intel Corporation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License version
@@ -22,21 +22,16 @@
  *
  */
 
-#ifndef THD_CDEV_RAPL_DRAM_H_
-#define THD_CDEV_RAPL_DRAM_H_
+#ifndef THD_SENSOR_RAPL_POWER_H
+#define THD_SENSOR_RAPL_POWER_H
 
-#include "thd_cdev_rapl.h"
+#include "thd_sensor.h"
 
-class cthd_sysfs_cdev_rapl_dram: public cthd_sysfs_cdev_rapl {
+class cthd_sensor_rapl_power: public cthd_sensor {
 private:
-
 public:
-	cthd_sysfs_cdev_rapl_dram(unsigned int _index, int _package) :
-			cthd_sysfs_cdev_rapl(_index, _package) {
-		device_name = "TMEM.D0";
-	}
-
-	virtual int update();
+	cthd_sensor_rapl_power(int index);
+	unsigned int read_temperature();
 };
 
-#endif /* THD_CDEV_RAPL_DRAM_H_ */
+#endif

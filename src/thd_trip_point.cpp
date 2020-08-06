@@ -94,6 +94,9 @@ bool cthd_trip_point::thd_trip_point_check(int id, unsigned int read_temp,
 
 	*reset = false;
 
+	if (type == INVALID_TRIP_TYPE)
+		return false;
+
 	if (depend_cdev && read_temp >= temp) {
 		int _state = depend_cdev->get_curr_state();
 		int valid = 0;
@@ -242,7 +245,7 @@ bool cthd_trip_point::thd_trip_point_check(int id, unsigned int read_temp,
 				time_t tm;
 				time(&tm);
 				if ((tm - cdevs[i].last_op_time) < cdevs[i].sampling_priod) {
-					thd_log_info("Too early to act zone:%d index %d tm %jd\n",
+					thd_log_debug("Too early to act zone:%d index %d tm %jd\n",
 							zone_id, cdev->thd_cdev_get_index(),
 							(intmax_t)tm - cdevs[i].last_op_time);
 					break;
@@ -348,13 +351,14 @@ int cthd_trip_point::thd_trip_point_add_cdev_index(int _index, int influence) {
 	}
 }
 
-void cthd_trip_point::thd_trip_cdev_state_reset() {
-	thd_log_info("thd_trip_cdev_state_reset \n");
+void cthd_trip_point::thd_trip_cdev_state_reset(int force) {
+	thd_log_debug("thd_trip_cdev_state_reset \n");
 	for (int i = cdevs.size() - 1; i >= 0; --i) {
 		cthd_cdev *cdev = cdevs[i].cdev;
-		thd_log_info("thd_trip_cdev_state_reset index %d:%s\n",
+		thd_log_debug("thd_trip_cdev_state_reset index %d:%s\n",
 				cdev->thd_cdev_get_index(), cdev->get_cdev_type().c_str());
-		if (cdev->in_min_state()) {
+
+		if (!force && cdev->in_min_state()) {
 			thd_log_debug("Need to switch to next cdev \n");
 			// No scope of control with this cdev
 			continue;

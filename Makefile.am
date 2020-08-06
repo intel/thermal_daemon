@@ -9,6 +9,8 @@ AM_CFLAGS = ${DBUS_CFLAGS}
 AM_CXXFLAGS = \
 	${DBUS_CFLAGS} \
 	$(XML_CFLAGS) \
+	$(UPOWER_CFLAGS) \
+	$(EVDEV_CFLAGS) \
 	-DTDRUNDIR=\"$(tdrundir)\" \
 	-DTDCONFDIR=\"$(tdconfdir)\" \
 	$(CXXFLAGS) \
@@ -33,7 +35,10 @@ thermald_LDADD = \
 	$(LIBNL_LIBS) \
 	$(LIBM) \
 	$(LIBDL) \
-	$(XML_LIBS)
+	$(XML_LIBS) \
+	$(LZMA_LIBS) \
+	$(UPOWER_LIBS) \
+	$(EVDEV_LIBS)
 
 BUILT_SOURCES = \
 	thd_dbus_interface.h
@@ -45,6 +50,7 @@ thermald_SOURCES = \
 	src/thd_cdev.cpp \
 	src/thd_cdev_therm_sys_fs.cpp \
 	src/thd_engine_default.cpp \
+	src/thd_engine_adaptive.cpp \
 	src/thd_sys_fs.cpp \
 	src/thd_trip_point.cpp \
 	src/thd_zone.cpp \
@@ -75,7 +81,9 @@ thermald_SOURCES = \
 	src/thd_sensor_kbl_amdgpu_thermal.cpp \
 	src/thd_zone_kbl_g_mcp.cpp \
 	src/thd_sensor_kbl_g_mcp.cpp \
-	src/thd_zone_kbl_amdgpu.cpp
+	src/thd_zone_kbl_amdgpu.cpp \
+	src/thd_sensor_rapl_power.cpp \
+	src/thd_zone_rapl_power.cpp
 
 man5_MANS = man/thermal-conf.xml.5
 man8_MANS = man/thermald.8

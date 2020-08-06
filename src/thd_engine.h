@@ -82,6 +82,8 @@ protected:
 	int current_sensor_index;
 	bool parse_thermal_zone_success;
 	bool parse_thermal_cdev_success;
+	std::string uuid;
+	bool parser_disabled;
 
 private:
 
@@ -94,6 +96,7 @@ private:
 	bool status;
 	time_t thz_last_uevent_time;
 	time_t thz_last_temp_ind_time;
+	time_t thz_last_update_event_time;
 	bool terminate;
 	int genuine_intel;
 	int has_invariant_tsc;
@@ -135,7 +138,7 @@ public:
 	cthd_parse parser;
 	cthd_rapl_power_meter rapl_power_meter;
 
-	cthd_engine();
+	cthd_engine(std::string _uuid);
 	virtual ~cthd_engine();
 	void set_control_mode(control_mode_t mode) {
 		control_mode = mode;
@@ -144,7 +147,7 @@ public:
 		return control_mode;
 	}
 	void thd_engine_thread();
-	int thd_engine_start(bool ignore_cpuid_check);
+	virtual int thd_engine_start(bool ignore_cpuid_check);
 	int thd_engine_stop();
 	int check_cpu_id();
 
@@ -175,6 +178,7 @@ public:
 	void thd_read_default_thermal_zones();
 	void thd_read_default_cooling_devices();
 
+	virtual void update_engine_state() {};
 	virtual int read_thermal_sensors() {
 		return 0;
 	}
@@ -227,6 +231,7 @@ public:
 	std::string get_config_file() {
 		return config_file;
 	}
+	virtual ppcc_t *get_ppcc_param(std::string name);
 	cthd_zone *search_zone(std::string name);
 	cthd_cdev *search_cdev(std::string name);
 	cthd_sensor *search_sensor(std::string name);

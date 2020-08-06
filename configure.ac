@@ -1,7 +1,7 @@
 AC_PREREQ(1.0)
 
 m4_define([td_major_version], [2])
-m4_define([td_minor_version], [2])
+m4_define([td_minor_version], [3-pre-release])
 m4_define([td_version],
           [td_major_version.td_minor_version])
 
@@ -75,6 +75,11 @@ AC_SUBST(GLIB_LIBS)
 PKG_CHECK_MODULES(XML, libxml-2.0 >= 2.4)
 
 AC_PATH_PROG([GDBUS_CODEGEN],[gdbus-codegen])
+PKG_CHECK_MODULES(LZMA, liblzma)
+
+PKG_CHECK_MODULES(UPOWER, upower-glib)
+
+PKG_CHECK_MODULES(EVDEV, libevdev)
 
 AC_PROG_CC
 AC_PROG_CPP

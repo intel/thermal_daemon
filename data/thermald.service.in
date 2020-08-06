@@ -6,7 +6,7 @@ ConditionVirtualization=no
 Type=dbus
 SuccessExitStatus=1
 BusName=org.freedesktop.thermald
-ExecStart=@sbindir@/thermald --systemd --dbus-enable
+ExecStart=@sbindir@/thermald --systemd --dbus-enable --adaptive
 
 [Install]
 WantedBy=multi-user.target

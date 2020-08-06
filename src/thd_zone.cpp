@@ -42,6 +42,9 @@ cthd_zone::cthd_zone(int _index, std::string control_path, sensor_relate_t rel) 
 }
 
 cthd_zone::~cthd_zone() {
+	for (unsigned int i = 0; i < trip_points.size(); ++i) {
+		trip_points[i].delete_cdevs();
+	}
 	trip_points.clear();
 	sensors.clear();
 }
@@ -56,7 +59,7 @@ void cthd_zone::thermal_zone_temp_change(int id, unsigned int temp, int pref) {
 		trip_point.thd_trip_point_check(id, temp, pref, &reset);
 		// Force all cooling devices to min state
 		if (reset) {
-			zone_reset();
+			zone_reset(0);
 			break;
 		}
 	}
@@ -105,36 +108,21 @@ int cthd_zone::read_user_set_psv_temp() {
 void cthd_zone::sort_and_update_poll_trip() {
 	thd_log_debug("sort_and_update_poll_trip: trip_points_size =%zu\n",
 			trip_points.size());
+
+	for (unsigned int i = 0; i < trip_points.size(); ++i) {
+		if (trip_points[i].get_trip_type() == POLLING) {
+			thd_log_debug("polling trip already present\n");
+			trip_points.erase(trip_points.begin() + i);
+			break;
+		}
+	}
+
 	if (trip_points.size()) {
 		unsigned int polling_trip = 0;
 
 		std::sort(trip_points.begin(), trip_points.end(), trip_sort);
-		thd_log_info("Sorted trip dump zone index:%d type:%s:\n", index,
-				type_str.c_str());
-		for (unsigned int i = 0; i < trip_points.size(); ++i) {
-			trip_points[i].trip_dump();
-		}
-
 		if (trip_points.size())
 			polling_trip = trip_points[0].get_trip_temp();
-
-		int poll_trip_present = 0;
-		int poll_trip_index = 0;
-		for (unsigned int i = 0; i < trip_points.size(); ++i) {
-			if (trip_points[i].get_trip_type() == POLLING) {
-				thd_log_debug("polling trip already present\n");
-				poll_trip_present = 1;
-				poll_trip_index = i;
-			}
-			if (trip_points[i].get_trip_type() == PASSIVE && polling_trip > trip_points[i].get_trip_temp())
-				polling_trip = trip_points[i].get_trip_temp();
-			thd_log_info("trip type: %d temp: %d \n",
-					trip_points[i].get_trip_type(),
-					trip_points[i].get_trip_temp());
-		}
-
-		if (!polling_trip)
-			return;
 
 		unsigned int poll_offset = polling_trip * def_async_trip_offset_pct
 				/ 100;
@@ -151,14 +139,10 @@ void cthd_zone::sort_and_update_poll_trip() {
 			sensor->set_threshold(0, polling_trip);
 			// If the poll trip is already present then simply update
 			// the trip, instead of creating a new one.
-			if (poll_trip_present) {
-				trip_points[poll_trip_index].update_trip_temp(polling_trip);
-			} else {
-				cthd_trip_point trip_pt_polling(trip_points.size(), POLLING,
-						polling_trip, 0, index, sensor->get_index());
-				trip_pt_polling.thd_trip_point_set_control_type(PARALLEL);
-				trip_points.push_back(trip_pt_polling);
-			}
+			cthd_trip_point trip_pt_polling(trip_points.size(), POLLING,
+					polling_trip, 0, index, sensor->get_index());
+			trip_pt_polling.thd_trip_point_set_control_type(PARALLEL);
+			trip_points.push_back(trip_pt_polling);
 		}
 	}
 }
@@ -216,14 +200,14 @@ void cthd_zone::zone_temperature_notification(int type, int data) {
 	read_zone_temp();
 }
 
-void cthd_zone::zone_reset() {
+void cthd_zone::zone_reset(int force) {
 	int i, count;
 
 	if (zone_active) {
 		count = trip_points.size();
 		for (i = count - 1; i >= 0; --i) {
 			cthd_trip_point &trip_point = trip_points[i];
-			trip_point.thd_trip_cdev_state_reset();
+			trip_point.thd_trip_cdev_state_reset(force);
 		}
 	}
 }
@@ -300,7 +284,13 @@ int cthd_zone::update_psv_temperature(int psv_temp) {
 	return THD_SUCCESS;
 }
 
-void cthd_zone::add_trip(cthd_trip_point &trip) {
+void cthd_zone::add_trip(cthd_trip_point &trip, int force) {
+	if (force) {
+		trip_points.push_back(trip);
+		sort_and_update_poll_trip();
+		return;
+	}
+
 	bool add = true;
 	for (unsigned int j = 0; j < trip_points.size(); ++j) {
 		if (trip_points[j].get_trip_type() == trip.get_trip_type()) {

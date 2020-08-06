@@ -197,7 +197,8 @@ int cthd_cdev::thd_cdev_set_state(int set_point, int target_temp,
 	}
 
 	time(&tm);
-	thd_log_info(
+
+	thd_log_debug(
 			">>thd_cdev_set_state temperature %d:%d index:%d state:%d :zone:%d trip_id:%d target_state_valid:%d target_value :%d force:%d\n",
 			target_temp, temperature, index, state, zone_id, trip_id,
 			target_state_valid, target_value, force);
@@ -250,7 +251,7 @@ int cthd_cdev::thd_cdev_set_state(int set_point, int target_temp,
 				&& cmp_current_state(
 						map_target_state(target_state_valid, target_value))
 						<= 0) {
-			thd_log_info("Already more constraint\n");
+			thd_log_debug("Already more constraint\n");
 			return THD_SUCCESS;
 		}
 
@@ -296,7 +297,7 @@ int cthd_cdev::thd_cdev_set_state(int set_point, int target_temp,
 				// lower control is still active.
 				if (!erased)
 				{
-					thd_log_info(
+					thd_log_debug(
 							"Currently active limit by [%d: %d %d %d]: ignore\n",
 							zone_id, trip_id, target_state_valid, target_value);
 					return THD_SUCCESS;

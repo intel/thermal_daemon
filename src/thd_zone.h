@@ -77,7 +77,7 @@ public:
 	void zone_temperature_notification(int type, int data);
 	int zone_update();
 	virtual void update_zone_preference();
-	void zone_reset();
+	void zone_reset(int force = 0);
 
 	virtual int read_trip_points() = 0;
 	virtual int read_cdev_trip_points() = 0;
@@ -87,7 +87,7 @@ public:
 		return index;
 	}
 
-	void add_trip(cthd_trip_point &trip);
+	void add_trip(cthd_trip_point &trip, int force = 0);
 	void update_trip_temp(cthd_trip_point &trip);
 	void update_highest_trip_temp(cthd_trip_point &trip);
 
@@ -108,7 +108,7 @@ public:
 	}
 
 	void zone_cdev_set_binded() {
-		thd_log_info("zone %s bounded \n", type_str.c_str());
+		thd_log_debug("zone %s bounded \n", type_str.c_str());
 		zone_cdev_binded_status = true;
 	}
 
@@ -173,6 +173,16 @@ public:
 			return &trip_points[index];
 		else
 			return NULL;
+	}
+
+	void trip_delete_all() {
+		if (!trip_points.size())
+			return;
+
+		for (unsigned int i = 0; i < trip_points.size(); ++i) {
+			trip_points[i].delete_cdevs();
+		}
+		trip_points.clear();
 	}
 
 	void zone_dump() {

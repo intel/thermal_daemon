@@ -33,16 +33,19 @@ protected:
 	int phy_max;
 	int package_id;
 	int constraint_index;
+	int pl2_index;
 	bool dynamic_phy_max_enable;
 	int pl0_max_pwr;
 	int pl0_min_pwr;
 	int pl0_min_window;
+	int pl0_max_window;
 	int pl0_step_pwr;
 	bool bios_locked;
 	bool constrained;
 	int power_on_constraint_0_pwr;
 	int power_on_constraint_0_time_window;
 	int power_on_enable_status;
+	std::string device_name;
 	virtual bool read_ppcc_power_limits();
 
 private:
@@ -50,6 +53,7 @@ private:
 	int rapl_read_pl1();
 	int rapl_read_pl1_max();
 	int rapl_update_pl1(int pl1);
+	int rapl_update_pl2(int pl2);	
 	int rapl_read_time_window();
 	int rapl_update_time_window(int time_window);
 	int rapl_read_enable_status();
@@ -68,19 +72,20 @@ public:
 			cthd_cdev(_index,
 					"/sys/devices/virtual/powercap/intel-rapl/intel-rapl:0/"), phy_max(
 					0), package_id(package), constraint_index(
-					0), dynamic_phy_max_enable(
+					0), pl2_index(-1), dynamic_phy_max_enable(
 					false), pl0_max_pwr(0), pl0_min_pwr(0), pl0_min_window(
-					0), pl0_step_pwr(
+					0), pl0_max_window(0), pl0_step_pwr(
 					0), bios_locked(false), constrained(
 					false), power_on_constraint_0_pwr(0), power_on_constraint_0_time_window(
-					0), power_on_enable_status(0)
+					0), power_on_enable_status(0), device_name("TCPU.D0")
 	{
 	}
 	cthd_sysfs_cdev_rapl(unsigned int _index, int package,
 			std::string contol_path) :
 			cthd_cdev(_index, contol_path), phy_max(0), package_id(
 					package), constraint_index(
-					0), dynamic_phy_max_enable(false), pl0_max_pwr(
+					0), pl2_index(
+					-1), dynamic_phy_max_enable(false), pl0_max_pwr(
 					0), pl0_min_pwr(
 					0), pl0_min_window(0), pl0_step_pwr(0), bios_locked(
 					false), constrained(
@@ -95,6 +100,8 @@ public:
 	virtual int get_max_state();
 	virtual int update();
 	virtual void set_curr_state_raw(int state, int arg);
+	void set_tcc(int tcc);
+	void set_adaptive_target(struct adaptive_target target);
 	void thd_cdev_set_min_state_param(int arg);
 	int get_phy_max_state() {
 		return phy_max;
