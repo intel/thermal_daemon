@@ -30,14 +30,14 @@ Install
 	yum install glib-devel
 	yum install dbus-glib-devel
 	yum install libxml2-devel
+	yum install gtk-doc
 
 Replace yum with dnf for later Fedora versions.
 
 2
 Build
 
-	./autogen.sh
-	 ./configure prefix=/
+	./autogen.sh prefix=/
 	make
 	sudo make install
 
@@ -64,6 +64,7 @@ Building on Ubuntu
 	sudo apt-get install libdbus-1-dev
 	sudo apt-get install libdbus-glib-1-dev
 	sudo apt-get install libxml2-dev
+	sudo apt-get install gtk-doc-tools
 
 2
 Build
@@ -93,6 +94,7 @@ Install
 	zypper in dbus-1-glib-devel
 	zypper in libxml2-devel
 	zypper in automake autoconf-archive
+	zypper in gtk-doc
 
 For build, follow the same procedure as Fedora.
 
