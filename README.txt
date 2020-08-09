@@ -75,10 +75,10 @@ Building on Ubuntu
 2
 Build
 
-	./autogen.sh
-	 ./configure prefix=/
+	./autogen.sh prefix=/
 	make
 	sudo make install
+
 (It will give error for systemd configuration, but ignore)
 
 3.
