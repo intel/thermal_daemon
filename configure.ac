@@ -95,7 +95,6 @@ for flag in \
     -Wall \
     -Wclobbered \
     -Wempty-body \
-    -Werror \
     -Wformat \
     -Wignored-qualifiers \
     -Wmissing-field-initializers \
@@ -110,6 +109,9 @@ for flag in \
                           [CXXFLAGS="$CXXFLAGS ${flag}"])
 done
 ], [AC_MSG_ERROR([AX_CHECK_COMPILE_FLAG not found, you'll need to install autoconf-archive])])
+
+AC_ARG_ENABLE(werror, AS_HELP_STRING([--disable-werror], [Disable -Werror]))
+AS_IF([test "x$enable_werror" != "xno"], [CXXFLAGS="$CXXFLAGS -Werror"])
 
 AC_CONFIG_FILES([Makefile
                  docs/Makefile
