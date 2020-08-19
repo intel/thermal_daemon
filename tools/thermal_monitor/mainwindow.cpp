@@ -27,7 +27,7 @@
 #define SAMPLE_STORE_SIZE 100
 #define DEFAULT_LOGFILE_NAME "log.txt"
 #define CUSTOMPLOT_YAXIS_RANGE 120
-#define VERSION_NUMBER "1.1"
+#define VERSION_NUMBER "1.2"
 
 MainWindow::MainWindow(ThermaldInterface *thermaldInterface) : QMainWindow(),
     temp_samples(SAMPLE_STORE_SIZE),
@@ -45,7 +45,6 @@ MainWindow::MainWindow(ThermaldInterface *thermaldInterface) : QMainWindow(),
     colors.append(Qt::blue);
     colors.append(Qt::cyan);
     colors.append(Qt::magenta);
-    colors.append(Qt::yellow);
     colors.append(Qt::black);
     colors.append(QColor(200,200,00));
     colors.append(QColor(220,20,60));
@@ -58,6 +57,7 @@ MainWindow::MainWindow(ThermaldInterface *thermaldInterface) : QMainWindow(),
     colors.append(QColor(255,153,18));
     colors.append(QColor(255,69,0));
     colors.append(Qt::gray);
+    colors.append(Qt::yellow);
 
     loadSettings();
 
@@ -111,7 +111,7 @@ void MainWindow::setupPlotWidget()
     m_plotWidget->yAxis->setRange(0, CUSTOMPLOT_YAXIS_RANGE);
     m_plotWidget->legend->setVisible(true);
 
-    pen.setWidth(1);
+    pen.setWidth(5);
 
     currentTempsensorIndex = 0;
     int active_zone = 0;
@@ -488,7 +488,7 @@ void MainWindow::showAboutDialog()
     QString str;
     str = QString("<h3>Thermal Monitor %1</h3>"
                   "<p>GUI for Linux thermal daemon (thermald)</p>"
-                  "<p>Copyright (c) 2015, Intel Corporation</p>")
+                  "<p>Copyright (c) 2020, Intel Corporation</p>")
             .arg(QString(VERSION_NUMBER));
     QMessageBox::about(this, "About Thermal Monitor", str);
 }
