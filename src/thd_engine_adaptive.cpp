@@ -438,6 +438,7 @@ int cthd_engine_adaptive::parse_ppcc(char *name, char *buf, int len) {
 	ppcc.time_wind_min = *(uint64_t*) (buf + 52);
 	ppcc.time_wind_max = *(uint64_t*) (buf + 64);
 	ppcc.step_size = *(uint64_t*) (buf + 76);
+	ppcc.valid = 1;
 
 	ppccs.push_back(ppcc);
 
