@@ -87,7 +87,7 @@ public:
 					0), pl2_index(
 					-1), dynamic_phy_max_enable(false), pl0_max_pwr(
 					0), pl0_min_pwr(
-					0), pl0_min_window(0), pl0_step_pwr(0), bios_locked(
+					0), pl0_min_window(0), pl0_max_window(0), pl0_step_pwr(0), bios_locked(
 					false), constrained(
 					false), power_on_constraint_0_pwr(0), power_on_constraint_0_time_window(
 					0), power_on_enable_status(0)
