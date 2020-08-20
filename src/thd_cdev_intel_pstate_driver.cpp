@@ -96,6 +96,19 @@ int cthd_intel_p_state_cdev::map_target_state(int target_valid, int target_state
 
 int cthd_intel_p_state_cdev::update() {
 	std::stringstream tc_state_dev;
+	std::stringstream status_attr;
+
+	status_attr << "/status";
+	if (cdev_sysfs.exists(status_attr.str())) {
+		std::string status_str;
+		int ret;
+
+		ret = cdev_sysfs.read(status_attr.str(), status_str);
+		if (ret >= 0 && status_str != "active") {
+			thd_log_info("intel pstate is not in active mode\n");
+			return THD_ERROR;
+		}
+	}
 
 	tc_state_dev << "/max_perf_pct";
 	if (cdev_sysfs.exists(tc_state_dev.str())) {
