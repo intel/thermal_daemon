@@ -167,22 +167,24 @@ public:
 		return THD_ERROR;
 	}
 
-	int set_target_invalid() {
-		for (unsigned int i = 0; i < cdevs.size(); ++i) {
-			trip_pt_cdev_t &cdev = cdevs[i];
+	int set_first_target_invalid() {
+		if (cdevs.size()) {
+			trip_pt_cdev_t &cdev = cdevs[0];
 			cdev.target_state_valid = 0;
 			return THD_SUCCESS;
 		}
+
 		return THD_ERROR;
 	}
 
 	int set_first_target(int state) {
-		for (unsigned int i = 0; i < cdevs.size(); ++i) {
-			trip_pt_cdev_t &cdev = cdevs[i];
+		if (cdevs.size()) {
+			trip_pt_cdev_t &cdev = cdevs[0];
 			cdev.target_state_valid = 1;
 			cdev.target_state = state;
 			return THD_SUCCESS;
 		}
+
 		return THD_ERROR;
 	}
 

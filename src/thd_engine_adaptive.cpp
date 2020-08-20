@@ -1149,7 +1149,7 @@ void cthd_engine_adaptive::set_int3400_target(struct adaptive_target target) {
 						if (j == count - 1) {
 							// This is the last "MAX" trip
 							// So make the target state invalid and temperature + 1 C
-							trip->set_target_invalid();
+							trip->set_first_target_invalid();
 							trip->update_trip_temp(
 									trip->get_trip_temp() + 1000);
 						} else {
@@ -1162,7 +1162,7 @@ void cthd_engine_adaptive::set_int3400_target(struct adaptive_target target) {
 							cthd_cdev *cdev = next_trip->get_first_cdev();
 							if (!cdev) {
 								// Something wrong make the current target invalid
-								trip->set_target_invalid();
+								trip->set_first_target_invalid();
 								trip->update_trip_temp(
 										trip->get_trip_temp() + 1000);
 								continue;
@@ -1184,7 +1184,7 @@ void cthd_engine_adaptive::set_int3400_target(struct adaptive_target target) {
 							} else {
 								// It has different source and target so
 								// So make the target state invalid and temperature + 1 C
-								trip->set_target_invalid();
+								trip->set_first_target_invalid();
 								trip->update_trip_temp(
 										trip->get_trip_temp() + 1000);
 							}
