@@ -1366,6 +1366,7 @@ int cthd_engine_adaptive::thd_engine_start(bool ignore_cpuid_check) {
 
 	if (parse_gddv(buf, size)) {
 		thd_log_debug("Unable to parse GDDV");
+		delete[] buf;
 		return THD_ERROR;
 	}
 
@@ -1394,6 +1395,7 @@ int cthd_engine_adaptive::thd_engine_start(bool ignore_cpuid_check) {
 				thd_log_info("fallback id:%d\n", i);
 				fallback_id = i;
 			} else {
+				delete[] buf;
 				return THD_ERROR;
 			}
 		}
