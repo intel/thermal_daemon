@@ -563,6 +563,9 @@ int cthd_engine_adaptive::parse_gddv(char *buf, int size) {
 	int offset = 0;
 	struct header *header;
 
+	if (size < (int) sizeof(struct header))
+		return THD_ERROR;
+
 	header = (struct header*) buf;
 
 	if (header->signature != ESIFDV_HEADER_SIGNATURE)
