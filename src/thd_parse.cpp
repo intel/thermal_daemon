@@ -547,6 +547,7 @@ int cthd_parse::parse_new_platform_info(xmlNode * a_node, xmlDoc *doc,
 	char *tmp_value;
 
 	info_ptr->default_preference = PREF_ENERGY_CONSERVE;
+	info_ptr->polling_interval = 0;
 
 	for (cur_node = a_node; cur_node; cur_node = cur_node->next) {
 		if (cur_node->type == XML_ELEMENT_NODE) {
