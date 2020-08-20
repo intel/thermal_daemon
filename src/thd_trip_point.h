@@ -87,6 +87,7 @@ private:
 	cthd_cdev *depend_cdev;
 	int depend_cdev_state;
 	trip_point_cdev_depend_rel_t depend_cdev_state_rel;
+	int crit_trip_count;
 
 	bool check_duplicate(cthd_cdev *cdev, int *index) {
 		for (unsigned int i = 0; i < cdevs.size(); ++i) {
@@ -100,6 +101,8 @@ private:
 
 public:
 	static const int default_influence = 0;
+	static const int consecutive_critical_events = 4;
+
 	cthd_trip_point(int _index, trip_point_type_t _type, unsigned int _temp,
 			unsigned int _hyst, int _zone_id, int _sensor_id,
 			trip_control_type_t _control_type = PARALLEL);

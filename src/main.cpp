@@ -74,6 +74,7 @@ int thd_poll_interval = 4; //in seconds
 bool thd_ignore_default_control = false;
 bool workaround_enabled = false;
 bool disable_active_power = false;
+bool ignore_critical = false;
 
 // check cpuid
 static gboolean ignore_cpuid_check = false;
@@ -223,6 +224,9 @@ int main(int argc, char *argv[]) {
 			{ "disable-active-power", 0, 0, G_OPTION_ARG_NONE,
 						&disable_active_power, N_(
 						"Disable active power settings to reduce thermal impact"), NULL },
+			{ "ignore-critical-trip", 0, 0, G_OPTION_ARG_NONE,
+						&ignore_critical, N_(
+						"Ignore critical trips for reboot"), NULL },
 			{ NULL, 0, 0,
 					G_OPTION_ARG_NONE, NULL, NULL, NULL } };
 

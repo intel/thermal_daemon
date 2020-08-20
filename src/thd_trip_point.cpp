@@ -35,7 +35,7 @@ int _temp, unsigned int _hyst, int _zone_id, int _sensor_id,
 		index(_index), type(_type), temp(_temp), hyst(_hyst), control_type(
 				_control_type), zone_id(_zone_id), sensor_id(_sensor_id), trip_on(
 				false), poll_on(false), depend_cdev(NULL), depend_cdev_state(0), depend_cdev_state_rel(
-				EQUAL) {
+				EQUAL), crit_trip_count(0) {
 	thd_log_debug("Add trip pt %d:%d:0x%x:%d:%d\n", type, zone_id, sensor_id,
 			temp, hyst);
 }
@@ -144,8 +144,13 @@ bool cthd_trip_point::thd_trip_point_check(int id, unsigned int read_temp,
 	if (type == CRITICAL) {
 		int ret = -1;
 
-		if (read_temp >= temp) {
+		if (!ignore_critical && read_temp >= temp) {
 			thd_log_warn("critical temp reached \n");
+			if (crit_trip_count < consecutive_critical_events) {
+				++crit_trip_count;
+				return true;
+			}
+			crit_trip_count = 0;
 			sync();
 #ifdef ANDROID
 			ret = property_set("sys.powerctl", "shutdown,thermal");
@@ -160,14 +165,22 @@ bool cthd_trip_point::thd_trip_point_check(int id, unsigned int read_temp,
 
 			return true;
 		}
+		crit_trip_count = 0;
 	}
 	if (type == HOT) {
-		if (read_temp >= temp) {
+		if (!ignore_critical && read_temp >= temp) {
+			thd_log_warn("Hot temp reached \n");
+			if (crit_trip_count < consecutive_critical_events) {
+				++crit_trip_count;
+				return true;
+			}
+			crit_trip_count = 0;
 			thd_log_warn("Hot temp reached \n");
 			csys_fs power("/sys/power/");
 			power.write("state", "mem");
 			return true;
 		}
+		crit_trip_count = 0;
 	}
 
 	if (type == POLLING && sensor_id != DEFAULT_SENSOR_ID) {
