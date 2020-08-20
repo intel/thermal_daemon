@@ -640,7 +640,7 @@ int cthd_engine_adaptive::parse_gddv(char *buf, int size) {
 				point = strtok(NULL, "/");
 			}
 		}
-		if (type && strcmp(type, "ppcc") == 0) {
+		if (name && type && strcmp(type, "ppcc") == 0) {
 			parse_ppcc(name, val, vallength);
 		}
 
