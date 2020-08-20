@@ -712,6 +712,7 @@ int cthd_engine_default::read_cooling_devices() {
 		++current_cdev_index;
 	} else {
 		delete rapl_dev;
+		rapl_dev = NULL;
 	}
 
 	// Add RAPL mmio cooling device
@@ -726,7 +727,8 @@ int cthd_engine_default::read_cooling_devices() {
 			++current_cdev_index;
 
 			// Prefer MMIO access over MSR access for B0D4
-			rapl_dev->set_cdev_alias("");
+			if (rapl_dev)
+				rapl_dev->set_cdev_alias("");
 			rapl_mmio_dev->set_cdev_alias("B0D4");
 		} else {
 			delete rapl_mmio_dev;
