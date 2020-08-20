@@ -1360,6 +1360,7 @@ int cthd_engine_adaptive::thd_engine_start(bool ignore_cpuid_check) {
 	if (sysfs.read("bus/platform/devices/INT3400:00/data_vault", buf, size)
 			< int(size)) {
 		thd_log_debug("Unable to read GDDV data vault\n");
+		delete[] buf;
 		return THD_ERROR;
 	}
 
