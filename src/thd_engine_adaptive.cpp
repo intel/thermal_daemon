@@ -183,7 +183,7 @@ void cthd_engine_adaptive::dump_apat()
 	thd_log_info("..apat dump begin.. \n");
 	for (unsigned int i = 0; i < targets.size(); ++i) {
 		thd_log_info(
-				"target_id:%lu name:%s participant:%s domain:%d code:%s argument:%s\n",
+				"target_id:%" PRIu64 " name:%s participant:%s domain:%d code:%s argument:%s\n",
 				targets[i].target_id, targets[i].name.c_str(),
 				targets[i].participant.c_str(), (int)targets[i].domain,
 				targets[i].code.c_str(), targets[i].argument.c_str());
