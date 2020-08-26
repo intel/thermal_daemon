@@ -59,6 +59,12 @@ struct header {
 	uint32_t flags;
 } __attribute__ ((packed));
 
+class _gddv_exception: public std::exception {
+	virtual const char* what() const throw () {
+		return "GDDV parsing failed";
+	}
+} gddv_exception;
+
 cthd_engine_adaptive::~cthd_engine_adaptive() {
 }
 
@@ -71,7 +77,8 @@ uint64_t cthd_engine_adaptive::get_uint64(char *object, int *offset) {
 	int type = *(uint32_t*) (object + *offset);
 
 	if (type != 4) {
-		thd_log_fatal("Found object of type %d, expecting 4\n", type);
+		thd_log_warn("Found object of type %d, expecting 4\n", type);
+		throw gddv_exception;
 	}
 	*offset += 4;
 
@@ -87,7 +94,8 @@ char* cthd_engine_adaptive::get_string(char *object, int *offset) {
 	char *value;
 
 	if (type != 8) {
-		thd_log_fatal("Found object of type %d, expecting 8\n", type);
+		thd_log_warn("Found object of type %d, expecting 8\n", type);
+		throw gddv_exception;
 	}
 	*offset += 4;
 
@@ -158,8 +166,10 @@ int cthd_engine_adaptive::parse_apat(char *apat, int len) {
 	int offset = 0;
 	uint64_t version = get_uint64(apat, &offset);
 
-	if (version != 2)
-		thd_log_fatal("Found unsupported APAT version %d\n", (int) version);
+	if (version != 2) {
+		thd_log_warn("Found unsupported APAT version %d\n", (int) version);
+		throw gddv_exception;
+	}
 
 	while (offset < len) {
 		struct adaptive_target target;
@@ -202,7 +212,8 @@ int cthd_engine_adaptive::parse_apct(char *apct, int len) {
 
 			uint64_t target = get_uint64(apct, &offset);
 			if (int(target) == -1) {
-				thd_log_fatal("Invalid APCT target\n");
+				thd_log_warn("Invalid APCT target\n");
+				throw gddv_exception;
 			}
 
 			for (i = 0; i < 10; i++) {
@@ -221,7 +232,8 @@ int cthd_engine_adaptive::parse_apct(char *apct, int len) {
 				condition.target = target;
 
 				if (offset >= len) {
-					thd_log_fatal("Read off end of buffer in APCT parsing\n");
+					thd_log_warn("Read off end of buffer in APCT parsing\n");
+					throw gddv_exception;
 				}
 
 				condition.condition = adaptive_condition(
@@ -251,7 +263,8 @@ int cthd_engine_adaptive::parse_apct(char *apct, int len) {
 
 			uint64_t target = get_uint64(apct, &offset);
 			if (int(target) == -1) {
-				thd_log_fatal("Invalid APCT target");
+				thd_log_warn("Invalid APCT target");
+				throw gddv_exception;
 			}
 
 			uint64_t count = get_uint64(apct, &offset);
@@ -271,7 +284,8 @@ int cthd_engine_adaptive::parse_apct(char *apct, int len) {
 				condition.target = target;
 
 				if (offset >= len) {
-					thd_log_fatal("Read off end of buffer in parsing APCT\n");
+					thd_log_warn("Read off end of buffer in parsing APCT\n");
+					throw gddv_exception;
 				}
 
 				condition.condition = adaptive_condition(
@@ -300,7 +314,8 @@ int cthd_engine_adaptive::parse_apct(char *apct, int len) {
 			conditions.push_back(condition_set);
 		}
 	} else {
-		thd_log_fatal("Unsupported APCT version %d\n", (int) version);
+		thd_log_warn("Unsupported APCT version %d\n", (int) version);
+		throw gddv_exception;
 	}
 	return 0;
 }
@@ -463,8 +478,10 @@ int cthd_engine_adaptive::parse_psvt(char *name, char *buf, int len) {
 	int version = get_uint64(buf, &offset);
 	struct psvt psvt;
 
-	if (version != 2)
-		thd_log_fatal("Found unsupported PSVT version %d\n", (int) version);
+	if (version != 2) {
+		thd_log_warn("Found unsupported PSVT version %d\n", (int) version);
+		throw gddv_exception;
+	}
 
 	if (name == NULL)
 		psvt.name = "Default";
@@ -528,21 +545,25 @@ int cthd_engine_adaptive::handle_compressed_gddv(char *buf, int size) {
 	unsigned char *decompressed = (unsigned char*) malloc(output_size);
 	lzma_stream strm = LZMA_STREAM_INIT;
 
-	if (!decompressed)
-		thd_log_fatal("Failed to allocate buffer for decompressed output\n");
+	if (!decompressed) {
+		thd_log_warn("Failed to allocate buffer for decompressed output\n");
+		throw gddv_exception;
+	}
 	ret = lzma_auto_decoder(&strm, 64 * 1024 * 1024, 0);
-	if (ret)
-		thd_log_fatal("Failed to initialize LZMA decoder: %d\n", ret);
-
+	if (ret) {
+		thd_log_warn("Failed to initialize LZMA decoder: %d\n", ret);
+		throw gddv_exception;
+	}
 	strm.next_out = decompressed;
 	strm.avail_out = output_size;
 	strm.next_in = (const unsigned char*) (buf);
 	strm.avail_in = size;
 	ret = lzma_code(&strm, LZMA_FINISH);
 	lzma_end(&strm);
-	if (ret && ret != LZMA_STREAM_END)
-		thd_log_fatal("Failed to decompress GDDV data: %d\n", ret);
-
+	if (ret && ret != LZMA_STREAM_END) {
+		thd_log_warn("Failed to decompress GDDV data: %d\n", ret);
+		throw gddv_exception;
+	}
 	parse_gddv((char*) decompressed, output_size);
 	free(decompressed);
 
@@ -569,9 +590,10 @@ int cthd_engine_adaptive::parse_gddv(char *buf, int size) {
 
 	header = (struct header*) buf;
 
-	if (header->signature != ESIFDV_HEADER_SIGNATURE)
-		thd_log_fatal("Unexpected GDDV signature 0x%x\n", header->signature);
-
+	if (header->signature != ESIFDV_HEADER_SIGNATURE) {
+		thd_log_warn("Unexpected GDDV signature 0x%x\n", header->signature);
+		throw gddv_exception;
+	}
 	if (ESIFHDR_GET_MAJOR(header->version) != 1
 			&& ESIFHDR_GET_MAJOR(header->version) != 2)
 		return THD_ERROR;
@@ -1365,9 +1387,15 @@ int cthd_engine_adaptive::thd_engine_start(bool ignore_cpuid_check) {
 		return THD_ERROR;
 	}
 
-	if (parse_gddv(buf, size)) {
-		thd_log_debug("Unable to parse GDDV");
-		delete[] buf;
+	try {
+		if (parse_gddv(buf, size)) {
+			thd_log_debug("Unable to parse GDDV");
+			delete[] buf;
+			return THD_ERROR;
+		}
+	} catch (std::exception &e) {
+		thd_log_warn("%s\n", e.what());
+		delete [] buf;
 		return THD_ERROR;
 	}
 
