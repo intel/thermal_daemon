@@ -478,7 +478,7 @@ int cthd_engine_adaptive::parse_psvt(char *name, char *buf, int len) {
 	int version = get_uint64(buf, &offset);
 	struct psvt psvt;
 
-	if (version != 2) {
+	if (version > 2) {
 		thd_log_warn("Found unsupported PSVT version %d\n", (int) version);
 		throw gddv_exception;
 	}
