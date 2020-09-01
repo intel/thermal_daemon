@@ -698,7 +698,11 @@ static supported_ids_t id_table[] = {
 };
 
 std::vector<std::string> blocklist_paths {
-	"/devices/platform/thinkpad_acpi/dytc_lapmode",
+	/* Some Lenovo machines have in-firmware thermal management,
+	 * avoid having two entities trying to manage things.
+	 * We may want to change this to dytc_perfmode once that is
+	 * widely available. */
+	"/sys/devices/platform/thinkpad_acpi/dytc_lapmode",
 };
 #endif
 
