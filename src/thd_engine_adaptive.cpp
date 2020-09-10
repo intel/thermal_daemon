@@ -698,13 +698,6 @@ int cthd_engine_adaptive::parse_gddv(char *buf, int size) {
 		delete[] (val);
 	}
 
-	merge_appc();
-
-	dump_ppcc();
-	dump_psvt();
-	dump_apat();
-	dump_apct();
-
 	return 0;
 }
 
@@ -1398,6 +1391,13 @@ int cthd_engine_adaptive::thd_engine_start(bool ignore_cpuid_check) {
 			delete[] buf;
 			return THD_ERROR;
 		}
+
+		merge_appc();
+
+		dump_ppcc();
+		dump_psvt();
+		dump_apat();
+		dump_apct();
 	} catch (std::exception &e) {
 		thd_log_warn("%s\n", e.what());
 		delete [] buf;
