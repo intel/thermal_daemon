@@ -169,7 +169,8 @@ protected:
 	int parse_ppcc(char *name, char *ppcc, int len);
 	int parse_psvt(char *name, char *psvt, int len);
 	int handle_compressed_gddv(char *buf, int size);
-	int parse_gddv(char *buf, int size);
+	int parse_gddv_key(char *buf, int size, int *end_offset);
+	int parse_gddv(char *buf, int size, int *end_offset);
 	struct psvt* find_psvt(std::string name);
 	int install_passive(struct psv *psv);
 	void set_trip(std::string device, std::string argument);

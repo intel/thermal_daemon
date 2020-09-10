@@ -52,11 +52,33 @@
 #include "thd_cdev_modem.h"
 #endif
 
+/* From esif_lilb_datavault.h */
+#define ESIFDV_NAME_LEN				32			// Max DataVault Name (Cache Name) Length (not including NUL)
+#define ESIFDV_DESC_LEN				64			// Max DataVault Description Length (not including NUL)
+
+#define SHA256_HASH_BYTES				32
+
 struct header {
 	uint16_t signature;
 	uint16_t headersize;
 	uint32_t version;
-	uint32_t flags;
+
+	union {
+		/* Added in V1 */
+		struct {
+			uint32_t flags;
+		} v1;
+
+		/* Added in V2 */
+		struct {
+			uint32_t flags;
+			char     segmentid[ESIFDV_NAME_LEN];
+			char     comment[ESIFDV_DESC_LEN];
+			uint8_t  payload_hash[SHA256_HASH_BYTES];
+			uint32_t payload_size;
+			uint32_t payload_class;
+		} v2;
+	};
 } __attribute__ ((packed));
 
 class _gddv_exception: public std::exception {
@@ -544,37 +566,6 @@ void cthd_engine_adaptive::dump_psvt() {
 	thd_log_info("psvt dump end\n");
 }
 
-int cthd_engine_adaptive::handle_compressed_gddv(char *buf, int size) {
-	uint64_t output_size = *(uint64_t*) (buf + 5);
-	lzma_ret ret;
-	unsigned char *decompressed = (unsigned char*) malloc(output_size);
-	lzma_stream strm = LZMA_STREAM_INIT;
-
-	if (!decompressed) {
-		thd_log_warn("Failed to allocate buffer for decompressed output\n");
-		throw gddv_exception;
-	}
-	ret = lzma_auto_decoder(&strm, 64 * 1024 * 1024, 0);
-	if (ret) {
-		thd_log_warn("Failed to initialize LZMA decoder: %d\n", ret);
-		throw gddv_exception;
-	}
-	strm.next_out = decompressed;
-	strm.avail_out = output_size;
-	strm.next_in = (const unsigned char*) (buf);
-	strm.avail_in = size;
-	ret = lzma_code(&strm, LZMA_FINISH);
-	lzma_end(&strm);
-	if (ret && ret != LZMA_STREAM_END) {
-		thd_log_warn("Failed to decompress GDDV data: %d\n", ret);
-		throw gddv_exception;
-	}
-	parse_gddv((char*) decompressed, output_size);
-	free(decompressed);
-
-	return THD_SUCCESS;
-}
-
 // From Common/esif_sdk_iface_esif.h:
 #define ESIF_SERVICE_CONFIG_COMPRESSED  0x40000000/* Payload is Compressed */
 // From Common/esif_sdk.h
@@ -586,7 +577,136 @@ int cthd_engine_adaptive::handle_compressed_gddv(char *buf, int size) {
 #define ESIFDV_HEADER_SIGNATURE			0x1FE5
 #define ESIFDV_ITEM_KEYS_REV0_SIGNATURE	0xA0D8
 
-int cthd_engine_adaptive::parse_gddv(char *buf, int size) {
+int cthd_engine_adaptive::handle_compressed_gddv(char *buf, int size) {
+	struct header *header = (struct header*) buf;
+	uint64_t payload_output_size;
+	uint64_t output_size;
+	lzma_ret ret;
+	int res;
+	unsigned char *decompressed;
+	lzma_stream strm = LZMA_STREAM_INIT;
+
+	payload_output_size = *(uint64_t*) (buf + header->headersize + 5);
+	output_size = header->headersize + payload_output_size;
+	decompressed = (unsigned char*) malloc(output_size);
+
+	if (!decompressed) {
+		thd_log_warn("Failed to allocate buffer for decompressed output\n");
+		throw gddv_exception;
+	}
+	ret = lzma_auto_decoder(&strm, 64 * 1024 * 1024, 0);
+	if (ret) {
+		thd_log_warn("Failed to initialize LZMA decoder: %d\n", ret);
+		free(decompressed);
+		throw gddv_exception;
+	}
+	strm.next_out = decompressed + header->headersize;
+	strm.avail_out = output_size;
+	strm.next_in = (const unsigned char*) (buf + header->headersize);
+	strm.avail_in = size;
+	ret = lzma_code(&strm, LZMA_FINISH);
+	lzma_end(&strm);
+	if (ret && ret != LZMA_STREAM_END) {
+		thd_log_warn("Failed to decompress GDDV data: %d\n", ret);
+		free(decompressed);
+		throw gddv_exception;
+	}
+
+	/* Copy and update header.
+	 * This will contain one or more nested repositories usually. */
+	memcpy (decompressed, buf, header->headersize);
+	header = (struct header*) decompressed;
+	header->v2.flags &= ~ESIF_SERVICE_CONFIG_COMPRESSED;
+	header->v2.payload_size = payload_output_size;
+
+	res = parse_gddv((char*) decompressed, output_size, NULL);
+	free(decompressed);
+
+	return res;
+}
+
+int cthd_engine_adaptive::parse_gddv_key(char *buf, int size, int *end_offset) {
+	int offset = 0;
+	uint32_t keyflags;
+	uint32_t keylength;
+	uint32_t valtype;
+	uint32_t vallength;
+	char *key;
+	char *val;
+	char *str;
+	char *name = NULL;
+	char *type = NULL;
+	char *point = NULL;
+	char *ns = NULL;
+
+	memcpy(&keyflags, buf + offset, sizeof(keyflags));
+	offset += sizeof(keyflags);
+	memcpy(&keylength, buf + offset, sizeof(keylength));
+	offset += sizeof(keylength);
+	key = new char[keylength];
+	memcpy(key, buf + offset, keylength);
+	offset += keylength;
+	memcpy(&valtype, buf + offset, sizeof(valtype));
+	offset += sizeof(valtype);
+	memcpy(&vallength, buf + offset, sizeof(vallength));
+	offset += sizeof(vallength);
+	val = new char[vallength];
+	memcpy(val, buf + offset, vallength);
+	offset += vallength;
+
+	if (end_offset)
+		*end_offset = offset;
+
+	str = strtok(key, "/");
+	if (!str) {
+		delete[] (key);
+		delete[] (val);
+
+		thd_log_debug("Ignoring key %s\n", key);
+		/* Ignore */
+		return THD_SUCCESS;
+	}
+	if (strcmp(str, "participants") == 0) {
+		name = strtok(NULL, "/");
+		type = strtok(NULL, "/");
+		point = strtok(NULL, "/");
+	} else if (strcmp(str, "shared") == 0) {
+		ns = strtok(NULL, "/");
+		type = strtok(NULL, "/");
+		if (strcmp(ns, "tables") == 0) {
+			point = strtok(NULL, "/");
+		}
+	}
+	if (name && type && strcmp(type, "ppcc") == 0) {
+		parse_ppcc(name, val, vallength);
+	}
+
+	if (type && strcmp(type, "psvt") == 0) {
+		if (point == NULL)
+			parse_psvt(name, val, vallength);
+		else
+			parse_psvt(point, val, vallength);
+	}
+
+	if (type && strcmp(type, "appc") == 0) {
+		parse_appc(val, vallength);
+	}
+
+	if (type && strcmp(type, "apct") == 0) {
+		parse_apct(val, vallength);
+	}
+
+	if (type && strcmp(type, "apat") == 0) {
+		parse_apat(val, vallength);
+	}
+
+	delete[] (key);
+	delete[] (val);
+
+	return THD_SUCCESS;
+}
+
+int cthd_engine_adaptive::parse_gddv(char *buf, int size, int *end_offset) {
 	int offset = 0;
 	struct header *header;
 
@@ -605,98 +725,65 @@ int cthd_engine_adaptive::parse_gddv(char *buf, int size) {
 
 	offset = header->headersize;
 
-	thd_log_debug("header version[%d] size[%d] header_size[%d]\n",
-			ESIFHDR_GET_MAJOR(header->version), size, header->headersize);
+	thd_log_debug("header version[%d] size[%d] header_size[%d] flags[%08X]\n",
+			ESIFHDR_GET_MAJOR(header->version), size, header->headersize, header->v1.flags);
 
 	if (ESIFHDR_GET_MAJOR(header->version) == 2) {
-		if (header->flags == ESIF_SERVICE_CONFIG_COMPRESSED) {
+		char name[ESIFDV_NAME_LEN + 1] = { 0 };
+		char comment[ESIFDV_DESC_LEN + 1] = { 0 };
+
+		if (header->v2.flags == ESIF_SERVICE_CONFIG_COMPRESSED) {
 			thd_log_debug("Uncompress GDDV payload\n");
-			return handle_compressed_gddv(buf + offset, size - offset);
+			return handle_compressed_gddv(buf, size);
 		}
+
+		strncpy(name, header->v2.segmentid, sizeof(name) - 1);
+		strncpy(comment, header->v2.comment, sizeof(comment) - 1);
+
+		thd_log_debug("DV name: %s\n", name);
+		thd_log_debug("DV comment: %s\n", comment);
+
+		thd_log_debug("Got payload of size %d (data length: %d)\n", size, header->v2.payload_size);
+		size = header->v2.payload_size;
 	}
 
 	while ((offset + header->headersize) < size) {
-		uint32_t keyflags;
-		uint32_t keylength;
-		uint32_t valtype;
-		uint32_t vallength;
-		char *key;
-		char *val;
-		char *str;
-		char *name = NULL;
-		char *type = NULL;
-		char *point = NULL;
-		char *ns = NULL;
+		int res;
+		int end_offset = 0;
 
 		if (ESIFHDR_GET_MAJOR(header->version) == 2) {
 			unsigned short signature;
 
 			signature = *(unsigned short *) (buf + offset);
-			if (signature != ESIFDV_ITEM_KEYS_REV0_SIGNATURE) {
-				thd_log_info("REV0 key signature not found\n");
+			if (signature == ESIFDV_ITEM_KEYS_REV0_SIGNATURE) {
+				offset += sizeof(unsigned short);
+				res = parse_gddv_key(buf + offset, size - offset, &end_offset);
+				if (res != THD_SUCCESS)
+					return res;
+				offset += end_offset;
+			} else if (signature == ESIFDV_HEADER_SIGNATURE) {
+				thd_log_info("Got subobject in buf %p at %d\n", buf, offset);
+				res = parse_gddv(buf + offset, size - offset, &end_offset);
+				if (res != THD_SUCCESS)
+					return res;
+
+				/* Parse recursively */
+				offset += end_offset;
+				thd_log_info("Subobject ended at %d of %d\n", offset, size);
+			} else {
+				thd_log_info("No known signature found 0x%04X\n", *(unsigned short *) (buf + offset));
 				return THD_ERROR;
 			}
-			offset += sizeof(unsigned short);
+		} else {
+			res = parse_gddv_key(buf + offset, size - offset, &end_offset);
+			if (res != THD_SUCCESS)
+				return res;
+			offset += end_offset;
 		}
-
-		memcpy(&keyflags, buf + offset, sizeof(keyflags));
-		offset += sizeof(keyflags);
-		memcpy(&keylength, buf + offset, sizeof(keylength));
-		offset += sizeof(keylength);
-		key = new char[keylength];
-		memcpy(key, buf + offset, keylength);
-		offset += keylength;
-		memcpy(&valtype, buf + offset, sizeof(valtype));
-		offset += sizeof(valtype);
-		memcpy(&vallength, buf + offset, sizeof(vallength));
-		offset += sizeof(vallength);
-		val = new char[vallength];
-		memcpy(val, buf + offset, vallength);
-		offset += vallength;
-
-		str = strtok(key, "/");
-		if (!str) {
-			delete[] (key);
-			delete[] (val);
-			continue;
-		}
-		if (strcmp(str, "participants") == 0) {
-			name = strtok(NULL, "/");
-			type = strtok(NULL, "/");
-			point = strtok(NULL, "/");
-		} else if (strcmp(str, "shared") == 0) {
-			ns = strtok(NULL, "/");
-			type = strtok(NULL, "/");
-			if (strcmp(ns, "tables") == 0) {
-				point = strtok(NULL, "/");
-			}
-		}
-		if (name && type && strcmp(type, "ppcc") == 0) {
-			parse_ppcc(name, val, vallength);
-		}
-
-		if (type && strcmp(type, "psvt") == 0) {
-			if (point == NULL)
-				parse_psvt(name, val, vallength);
-			else
-				parse_psvt(point, val, vallength);
-		}
-
-		if (type && strcmp(type, "appc") == 0) {
-			parse_appc(val, vallength);
-		}
-
-		if (type && strcmp(type, "apct") == 0) {
-			parse_apct(val, vallength);
-		}
-
-		if (type && strcmp(type, "apat") == 0) {
-			parse_apat(val, vallength);
-		}
-
-		delete[] (key);
-		delete[] (val);
 	}
+
+	if (end_offset)
+		*end_offset = offset;
 
 	return 0;
 }
@@ -1386,7 +1473,7 @@ int cthd_engine_adaptive::thd_engine_start(bool ignore_cpuid_check) {
 	}
 
 	try {
-		if (parse_gddv(buf, size)) {
+		if (parse_gddv(buf, size, NULL)) {
 			thd_log_debug("Unable to parse GDDV");
 			delete[] buf;
 			return THD_ERROR;
