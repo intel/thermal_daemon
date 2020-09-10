@@ -402,6 +402,11 @@ void cthd_engine_adaptive::dump_apct() {
 
 			if (condition_set[j].condition < ARRAY_SIZE(condition_names)) {
 				cond_name = condition_names[condition_set[j].condition];
+			} else if (condition_set[j].condition >= 0x1000 && condition_set[j].condition < 0x10000) {
+				std::stringstream msg;
+
+				msg << "Oem" << (condition_set[j].condition - 0x1000 + 6);
+				cond_name = msg.str();
 			} else {
 				std::stringstream msg;
 
