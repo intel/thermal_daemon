@@ -811,6 +811,8 @@ int cthd_engine_adaptive::verify_condition(struct condition condition) {
 		return 0;
 	if (condition.condition == Platform_type)
 		return 0;
+	if (condition.condition == Power_slider)
+		return 0;
 
 	cond_name = condition_names[MIN(MAX(0, condition.condition), G_N_ELEMENTS(condition_names) - 1)];
 	thd_log_error("Unsupported condition %d (%s)\n", condition.condition, cond_name);
@@ -988,6 +990,15 @@ int cthd_engine_adaptive::evaluate_platform_type_condition(
 	return compare_condition(condition, value);
 }
 
+int cthd_engine_adaptive::evaluate_power_slider_condition(
+		struct condition condition) {
+
+	// We don't have a power slider currently, just set it to 75 which
+	// equals "Better Performance" (using 100 would be more aggressive).
+
+	return compare_condition(condition, 75);
+}
+
 int cthd_engine_adaptive::evaluate_ac_condition(struct condition condition) {
 	int value = 0;
 	bool on_battery = up_client_get_on_battery(upower_client);
@@ -1031,6 +1042,10 @@ int cthd_engine_adaptive::evaluate_condition(struct condition condition) {
 
 	if (condition.condition == Platform_type) {
 		ret = evaluate_platform_type_condition(condition);
+	}
+
+	if (condition.condition == Power_slider) {
+		ret = evaluate_power_slider_condition(condition);
 	}
 
 	if (ret) {
