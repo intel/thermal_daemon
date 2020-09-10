@@ -789,6 +789,8 @@ int cthd_engine_adaptive::parse_gddv(char *buf, int size, int *end_offset) {
 }
 
 int cthd_engine_adaptive::verify_condition(struct condition condition) {
+	const char *cond_name;
+
 	if (condition.condition >= Oem0 && condition.condition <= Oem5)
 		return 0;
 	if (condition.condition >= adaptive_condition(0x1000)
@@ -810,7 +812,8 @@ int cthd_engine_adaptive::verify_condition(struct condition condition) {
 	if (condition.condition == Platform_type)
 		return 0;
 
-	thd_log_error("Unsupported condition %d\n", condition.condition);
+	cond_name = condition_names[MIN(MAX(0, condition.condition), G_N_ELEMENTS(condition_names) - 1)];
+	thd_log_error("Unsupported condition %d (%s)\n", condition.condition, cond_name);
 	return THD_ERROR;
 }
 
