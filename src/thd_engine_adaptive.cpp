@@ -912,7 +912,7 @@ int cthd_engine_adaptive::evaluate_oem_condition(struct condition condition) {
 	int oem_condition = -1;
 
 	if (condition.condition >= Oem0 && condition.condition <= Oem5)
-		oem_condition = (int) condition.condition - 19;
+		oem_condition = (int) condition.condition - Oem0;
 	else if (condition.condition >= (adaptive_condition) 0x1000
 			&& condition.condition < (adaptive_condition) 0x10000)
 		oem_condition = (int) condition.condition - 0x1000 + 6;
