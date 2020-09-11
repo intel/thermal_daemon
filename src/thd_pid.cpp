@@ -32,17 +32,23 @@ cthd_pid::cthd_pid() {
 	target_temp = 0;
 }
 
-int cthd_pid::pid_output(unsigned int curr_temp) {
+int cthd_pid::pid_output(unsigned int curr_temp, int initial_value) {
 	double output;
 	double d_err = 0;
+	int error = curr_temp - target_temp;
 
 	time_t now;
 	time(&now);
-	if (last_time == 0)
+	if (last_time == 0) {
 		last_time = now;
+
+		/* Initialize integrative component (err_sum) so that current
+		 * output is the initial_value.
+		 * d_err must be assumed to be zero for this */
+		err_sum = (initial_value - kp * error) / ki;
+	}
 	time_t timeChange = (now - last_time);
 
-	int error = curr_temp - target_temp;
 	thd_log_debug("pid_output error %d %g:%g\n", error, kp, kp * error);
 	err_sum += (error * timeChange);
 	if (timeChange)

@@ -49,7 +49,7 @@ public:
 		ki = _ki;
 		kd = _kd;
 	}
-	int pid_output(unsigned int curr_temp);
+	int pid_output(unsigned int curr_temp, int initial_value = 0);
 	void set_target_temp(unsigned int temp) {
 		target_temp = temp;
 	}
