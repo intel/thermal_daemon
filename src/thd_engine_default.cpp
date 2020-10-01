@@ -816,6 +816,7 @@ cthd_engine *thd_engine;
 
 int thd_engine_create_default_engine(bool ignore_cpuid_check,
 		bool exclusive_control, const char *conf_file) {
+	int res;
 	thd_engine = new cthd_engine_default();
 	if (exclusive_control)
 		thd_engine->set_control_mode(EXCLUSIVE);
@@ -825,12 +826,15 @@ int thd_engine_create_default_engine(bool ignore_cpuid_check,
 	if (conf_file)
 		thd_engine->set_config_file(conf_file);
 
-	if (thd_engine->thd_engine_start(ignore_cpuid_check) != THD_SUCCESS) {
-		thd_log_error("THD engine start failed\n");
-		return THD_ERROR;
+	res = thd_engine->thd_engine_start(ignore_cpuid_check);
+	if (res != THD_SUCCESS) {
+		if (res == THD_FATAL_ERROR)
+			thd_log_error("THD engine start failed\n");
+		else
+			thd_log_msg("THD engine start failed\n");
 	}
 
-	return THD_SUCCESS;
+	return res;
 }
 
 void cthd_engine_default::workarounds()
