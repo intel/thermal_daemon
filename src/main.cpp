@@ -51,6 +51,8 @@
 #define TD_DIST_VERSION PACKAGE_VERSION
 #endif
 
+#define EXIT_UNSUPPORTED 2
+
 extern int thd_dbus_server_init(void (*exit_handler)(int));
 
 // Lock file
@@ -351,7 +353,11 @@ int main(int argc, char *argv[]) {
 	if (ret != THD_SUCCESS) {
 		clean_up_lockfile();
 		closelog();
-		exit(EXIT_FAILURE);
+
+		if (ret == THD_ERROR)
+			exit(EXIT_UNSUPPORTED);
+		else
+			exit(EXIT_FAILURE);
 	}
 
 	// Start service requests on the D-Bus

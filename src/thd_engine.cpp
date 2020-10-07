@@ -186,7 +186,7 @@ int cthd_engine::thd_engine_start(bool ignore_cpuid_check) {
 				thd_log_msg("Unsupported cpu model, using thermal-conf.xml only \n");
 			} else {
 				thd_log_msg("Unsupported cpu model, use thermal-conf.xml file or run with --ignore-cpuid-check \n");
-				return THD_FATAL_ERROR;
+				return THD_ERROR;
 			}
 		}
 	}
