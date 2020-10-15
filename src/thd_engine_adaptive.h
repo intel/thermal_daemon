@@ -169,7 +169,8 @@ protected:
 	int parse_ppcc(char *name, char *ppcc, int len);
 	int parse_psvt(char *name, char *psvt, int len);
 	int handle_compressed_gddv(char *buf, int size);
-	int parse_gddv(char *buf, int size);
+	int parse_gddv_key(char *buf, int size, int *end_offset);
+	int parse_gddv(char *buf, int size, int *end_offset);
 	struct psvt* find_psvt(std::string name);
 	int install_passive(struct psv *psv);
 	void set_trip(std::string device, std::string argument);
@@ -184,6 +185,7 @@ protected:
 	int evaluate_lid_condition(struct condition condition);
 	int evaluate_workload_condition(struct condition condition);
 	int evaluate_platform_type_condition(struct condition condition);
+	int evaluate_power_slider_condition(struct condition condition);
 	int evaluate_condition(struct condition condition);
 	int evaluate_condition_set(std::vector<struct condition> condition_set);
 	int evaluate_conditions();
