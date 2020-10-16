@@ -910,7 +910,7 @@ int cthd_engine_adaptive::compare_time(struct condition condition) {
 }
 
 int cthd_engine_adaptive::evaluate_oem_condition(struct condition condition) {
-	csys_fs sysfs("/sys/bus/platform/devices/INT3400:00/");
+	csys_fs sysfs(int3400_base_path.c_str());
 	int oem_condition = -1;
 
 	if (condition.condition >= Oem0 && condition.condition <= Oem5)
@@ -1459,19 +1459,27 @@ void cthd_engine_adaptive::setup_input_devices() {
 
 int cthd_engine_adaptive::thd_engine_start(bool ignore_cpuid_check) {
 	char *buf;
-	csys_fs sysfs("/sys/");
+	csys_fs sysfs("");
 	size_t size;
 
 	parser_disabled = true;
 	force_mmio_rapl = true;
 
-	if (sysfs.read("bus/platform/devices/INT3400:00/firmware_node/path",
+	if (sysfs.exists("/sys/bus/platform/devices/INT3400:00")) {
+		int3400_base_path = "/sys/bus/platform/devices/INT3400:00/";
+	} else if (sysfs.exists("/sys/bus/platform/devices/INTC1040:00")) {
+		int3400_base_path = "/sys/bus/platform/devices/INTC1040:00/";
+	} else {
+		return THD_ERROR;
+	}
+
+	if (sysfs.read(int3400_base_path + "firmware_node/path",
 			int3400_path) < 0) {
 		thd_log_debug("Unable to locate INT3400 firmware path\n");
 		return THD_ERROR;
 	}
 
-	size = sysfs.size("bus/platform/devices/INT3400:00/data_vault");
+	size = sysfs.size(int3400_base_path + "data_vault");
 	if (size == 0) {
 		thd_log_debug("Unable to open GDDV data vault\n");
 		return THD_ERROR;
@@ -1483,7 +1491,7 @@ int cthd_engine_adaptive::thd_engine_start(bool ignore_cpuid_check) {
 		return THD_FATAL_ERROR;
 	}
 
-	if (sysfs.read("bus/platform/devices/INT3400:00/data_vault", buf, size)
+	if (sysfs.read(int3400_base_path + "data_vault", buf, size)
 			< int(size)) {
 		thd_log_debug("Unable to read GDDV data vault\n");
 		delete[] buf;
