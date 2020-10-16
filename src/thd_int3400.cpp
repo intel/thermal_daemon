@@ -23,17 +23,28 @@
  */
 
 #include "thd_int3400.h"
+#include "thd_cdev_gen_sysfs.h"
 #include <iostream>
 #include <fstream>
 #include <iostream>
 #include <sstream>
 
-cthd_INT3400::cthd_INT3400(std::string _uuid) : uuid(_uuid) {
+cthd_INT3400::cthd_INT3400(std::string _uuid) : uuid(_uuid), base_path("") {
+	csys_fs cdev_sysfs("");
+
+	if (cdev_sysfs.exists("/sys/bus/acpi/devices/INT3400:00/physical_node/uuids")) {
+		base_path = "/sys/bus/acpi/devices/INT3400:00/physical_node/uuids/";
+	} else if (cdev_sysfs.exists("/sys/bus/acpi/devices/INTC1040:00/physical_node/uuids")) {
+		base_path = "/sys/bus/acpi/devices/INTC1040:00/physical_node/uuids/";
+	}
+	thd_log_info("INT3400 Base path is %s\n", base_path.c_str());
 }
 
 int cthd_INT3400::match_supported_uuid() {
-	std::string filename =
-			"/sys/bus/acpi/devices/INT3400:00/physical_node/uuids/available_uuids";
+	if (base_path == "")
+		return THD_ERROR;
+
+	std::string filename = base_path + "available_uuids";
 
 	std::ifstream ifs(filename.c_str(), std::ifstream::in);
 	if (ifs.good()) {
@@ -50,8 +61,10 @@ int cthd_INT3400::match_supported_uuid() {
 }
 
 void cthd_INT3400::set_default_uuid(void) {
-	std::string filename =
-			"/sys/bus/acpi/devices/INT3400:00/physical_node/uuids/current_uuid";
+	if (base_path == "")
+		return;
+
+	std::string filename = base_path + "current_uuid";
 
 	std::ofstream ofs(filename.c_str(), std::ofstream::out);
 	if (ofs.good()) {
