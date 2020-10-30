@@ -1,6 +1,8 @@
 #ifndef THD_ADAPTIVE_TYPES_H_
 #define THD_ADAPTIVE_TYPES_H_
 
+#include <stdint.h>
+
 struct adaptive_target {
 	uint64_t target_id;
 	std::string name;
