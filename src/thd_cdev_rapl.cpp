@@ -455,6 +455,15 @@ bool cthd_sysfs_cdev_rapl::read_ppcc_power_limits() {
 		return true;
 	}
 
+	std::string domain_name;
+
+	// Since this base class is also used by DRAM rapl, avoid reading PPCC as
+	// there are no power limits defined by DPTF based systems for any other
+	// domain other than package-0
+	cdev_sysfs.read("name", domain_name);
+	if (domain_name != "package-0")
+		return false;
+
 	if (sys_fs.exists("/sys/bus/pci/devices/0000:00:04.0/power_limits/"))
 		sys_fs.update_path("/sys/bus/pci/devices/0000:00:04.0/power_limits/");
 	else if (sys_fs.exists("/sys/bus/pci/devices/0000:00:0b.0/power_limits/"))
