@@ -129,6 +129,13 @@ typedef struct {
 	int time_wind_min;
 	int time_wind_max;
 	int step_size;
+
+	int limit_1_valid;
+	int power_limit_1_min;
+	int power_limit_1_max;
+	int time_wind_1_min;
+	int time_wind_1_max;
+	int step_1_size;
 } ppcc_t;
 
 typedef struct {

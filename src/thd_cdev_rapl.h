@@ -40,6 +40,12 @@ protected:
 	int pl0_min_window;
 	int pl0_max_window;
 	int pl0_step_pwr;
+	int pl1_max_pwr;
+	int pl1_min_pwr;
+	int pl1_min_window;
+	int pl1_max_window;
+	int pl1_step_pwr;
+	int pl1_valid;
 	bool bios_locked;
 	bool constrained;
 	int power_on_constraint_0_pwr;
@@ -53,9 +59,11 @@ private:
 	int rapl_read_pl1();
 	int rapl_read_pl1_max();
 	int rapl_update_pl1(int pl1);
-	int rapl_update_pl2(int pl2);	
+	int rapl_read_pl2();
+	int rapl_update_pl2(int pl2);
 	int rapl_read_time_window();
 	int rapl_update_time_window(int time_window);
+	int rapl_update_pl2_time_window(int time_window);
 	int rapl_read_enable_status();
 	int rapl_update_enable_status(int enable);
 
