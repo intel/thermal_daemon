@@ -619,6 +619,7 @@ int cthd_parse::parse_new_platform(xmlNode * a_node, xmlDoc *doc,
 				info.zones.clear();
 				info.polling_interval = 0;
 				info.ppcc.valid = 0;
+				info.ppcc.limit_1_valid = 0;
 				parse_new_platform_info(cur_node->children, doc, &info);
 				thermal_info_list.push_back(info);
 			}

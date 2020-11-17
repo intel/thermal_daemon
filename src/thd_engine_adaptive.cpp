@@ -482,6 +482,21 @@ int cthd_engine_adaptive::parse_ppcc(char *name, char *buf, int len) {
 	ppcc.step_size = *(uint64_t*) (buf + 76);
 	ppcc.valid = 1;
 
+	if (len < 156)
+		return 0;
+
+	thd_log_info("Processing ppcc limit 2, length %d\n", len);
+	int start = 76 + 12;
+	ppcc.power_limit_1_min = *(uint64_t*) (buf + start + 12);
+	ppcc.power_limit_1_max = *(uint64_t*) (buf + start + 24);
+	ppcc.time_wind_1_min = *(uint64_t*) (buf + start + 36);
+	ppcc.time_wind_1_max = *(uint64_t*) (buf + start + 48);
+	ppcc.step_1_size = *(uint64_t*) (buf + start + 60);
+
+	if (ppcc.power_limit_1_max && ppcc.power_limit_1_min && ppcc.time_wind_1_min
+			&& ppcc.time_wind_1_max && ppcc.step_1_size)
+		ppcc.limit_1_valid = 1;
+
 	ppccs.push_back(ppcc);
 
 	return 0;
@@ -492,10 +507,15 @@ void cthd_engine_adaptive::dump_ppcc()
 	thd_log_info("..ppcc dump begin.. \n");
 	for (unsigned int i = 0; i < ppccs.size(); ++i) {
 		thd_log_info(
-				"Name:%s power_limit_max:%d power_limit_min:%d step_size:%d time_win_max:%d time_win_min:%d\n",
+				"Name:%s Limit:0 power_limit_max:%d power_limit_min:%d step_size:%d time_win_max:%d time_win_min:%d\n",
 				ppccs[i].name.c_str(), ppccs[i].power_limit_max,
 				ppccs[i].power_limit_min, ppccs[i].step_size,
 				ppccs[i].time_wind_max, ppccs[i].time_wind_min);
+		thd_log_info(
+				"Name:%s Limit:1 power_limit_max:%d power_limit_min:%d step_size:%d time_win_max:%d time_win_min:%d\n",
+				ppccs[i].name.c_str(), ppccs[i].power_limit_1_max,
+				ppccs[i].power_limit_1_min, ppccs[i].step_1_size,
+				ppccs[i].time_wind_1_max, ppccs[i].time_wind_1_min);
 	}
 	thd_log_info("ppcc dump end\n");
 }
