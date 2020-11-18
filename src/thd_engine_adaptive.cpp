@@ -1367,11 +1367,13 @@ void cthd_engine_adaptive::execute_target(struct adaptive_target target) {
 	else
 		name = target.participant.substr(pos + 1);
 	cdev = search_cdev(name);
+	thd_log_info("looking for cdev %s\n", name.c_str());
 	if (!cdev) {
+		thd_log_info("cdev %s not found\n", name.c_str());
 		if (target.participant == int3400_path) {
 			set_int3400_target(target);
+			return;
 		}
-		return;
 	}
 
 	if (target.code == "PSVT") {
