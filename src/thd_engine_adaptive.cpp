@@ -1391,7 +1391,8 @@ void cthd_engine_adaptive::execute_target(struct adaptive_target target) {
 		return;
 	}
 	thd_log_info("target:%s %d\n", target.code.c_str(), argument);
-	cdev->set_adaptive_target(target);
+	if (cdev)
+		cdev->set_adaptive_target(target);
 }
 
 void cthd_engine_adaptive::exec_fallback_target(int target){
