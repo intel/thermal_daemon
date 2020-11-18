@@ -90,7 +90,7 @@ AC_C_INLINE
 AC_TYPE_SIZE_T
 
 m4_ifdef([AX_CHECK_COMPILE_FLAG], [
-# Check for flag support.
+# Check for -Werror flag support.
 for flag in \
     -Wall \
     -Wclobbered \
@@ -108,6 +108,10 @@ for flag in \
     AX_CHECK_COMPILE_FLAG([-Werror ${flag}],
                           [CXXFLAGS="$CXXFLAGS ${flag}"])
 done
+
+# Check for c++0x support.
+AX_CHECK_COMPILE_FLAG([-std=c++0x],
+                      [CXXFLAGS="$CXXFLAGS -std=c++0x"])
 ], [AC_MSG_ERROR([AX_CHECK_COMPILE_FLAG not found, you'll need to install autoconf-archive])])
 
 AC_ARG_ENABLE(werror, AS_HELP_STRING([--disable-werror], [Disable -Werror]))

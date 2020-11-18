@@ -25,6 +25,7 @@
 #include <arpa/inet.h>
 #include <dirent.h>
 #include <errno.h>
+#include <inttypes.h>
 #include <lzma.h>
 #include <linux/input.h>
 #include <sys/types.h>
