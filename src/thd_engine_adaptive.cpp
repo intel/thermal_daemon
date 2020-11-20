@@ -1345,10 +1345,21 @@ void cthd_engine_adaptive::set_int3400_target(struct adaptive_target target) {
 		}
 
 		thd_log_info("\n\n ZONE DUMP BEGIN\n");
+		int new_zone_count = 0;
 		for (unsigned int i = 0; i < zones.size(); ++i) {
 			zones[i]->zone_dump();
+			if (zones[i]->zone_active_status())
+				++new_zone_count;
 		}
 		thd_log_info("\n\n ZONE DUMP END\n");
+		if (!new_zone_count) {
+			thd_log_warn("Adaptive policy couldn't create any zones\n");
+			thd_log_warn("Possibly some sensors in the PSVT are missing\n");
+			thd_log_warn("Restart in non adaptive mode via systemd\n");
+			csys_fs sysfs("/tmp/ignore_adaptive");
+			sysfs.create();
+			exit(EXIT_FAILURE);
+		}
 
 	}
 	if (target.code == "PSV") {
@@ -1367,6 +1378,13 @@ void cthd_engine_adaptive::execute_target(struct adaptive_target target) {
 	else
 		name = target.participant.substr(pos + 1);
 	cdev = search_cdev(name);
+	if (!cdev) {
+		if (!name.compare(0, 4, "TCPU")) {
+			name = "B0D4";
+			cdev = search_cdev(name);
+		}
+	}
+
 	thd_log_info("looking for cdev %s\n", name.c_str());
 	if (!cdev) {
 		thd_log_info("cdev %s not found\n", name.c_str());
@@ -1486,6 +1504,11 @@ int cthd_engine_adaptive::thd_engine_start(bool ignore_cpuid_check) {
 	csys_fs sysfs("");
 	size_t size;
 
+	csys_fs _sysfs("/tmp/ignore_adaptive");
+	if (_sysfs.exists()) {
+		return THD_ERROR;
+	}
+
 	parser_disabled = true;
 	force_mmio_rapl = true;
 
@@ -1539,6 +1562,11 @@ int cthd_engine_adaptive::thd_engine_start(bool ignore_cpuid_check) {
 		thd_log_warn("%s\n", e.what());
 		delete [] buf;
 		return THD_FATAL_ERROR;
+	}
+
+	if (!conditions.size()) {
+		thd_log_info("No adaptive conditions present\n");
+		return THD_ERROR;
 	}
 
 	setup_input_devices();
