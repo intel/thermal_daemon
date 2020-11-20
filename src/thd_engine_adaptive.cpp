@@ -1504,6 +1504,12 @@ int cthd_engine_adaptive::thd_engine_start(bool ignore_cpuid_check) {
 	csys_fs sysfs("");
 	size_t size;
 
+	check_cpu_id();
+	if (!processor_id_match()) {
+		thd_log_msg("Unsupported cpu model or platform\n");
+		exit(EXIT_SUCCESS);
+	}
+
 	csys_fs _sysfs("/tmp/ignore_adaptive");
 	if (_sysfs.exists()) {
 		return THD_ERROR;
