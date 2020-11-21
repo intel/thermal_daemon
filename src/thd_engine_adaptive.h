@@ -158,6 +158,8 @@ protected:
 	int policy_active;
 	int fallback_id;
 	std::string int3400_base_path;
+	int passive_def_only;
+	int passive_def_processed;
 
 	int get_type(char *object, int *offset);
 	uint64_t get_uint64(char *object, int *offset);
@@ -199,11 +201,14 @@ protected:
 	void dump_apct();
 	void dump_ppcc();
 	void dump_psvt();
+	struct psvt *find_def_psvt();
+
 public:
 	cthd_engine_adaptive() :
 			cthd_engine_default("63BE270F-1C11-48FD-A6F7-3AF253FF3E2D"), upower_client(
-					NULL), tablet_dev(NULL), current_condition_set(0xffff), policy_active(
-					0), fallback_id(-1), int3400_base_path("") {
+			NULL), tablet_dev(NULL), current_condition_set(0xffff), policy_active(
+					0), fallback_id(-1), int3400_base_path(""), passive_def_only(
+					0), passive_def_processed(0) {
 	}
 
 	~cthd_engine_adaptive();

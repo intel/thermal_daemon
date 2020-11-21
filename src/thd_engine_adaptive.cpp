@@ -587,6 +587,16 @@ void cthd_engine_adaptive::dump_psvt() {
 	thd_log_info("psvt dump end\n");
 }
 
+struct psvt* cthd_engine_adaptive::find_def_psvt() {
+	for (unsigned int i = 0; i < psvts.size(); ++i) {
+		if (psvts[i].name == "IETM.D0") {
+			return &psvts[i];
+		}
+	}
+
+	return NULL;
+}
+
 // From Common/esif_sdk_iface_esif.h:
 #define ESIF_SERVICE_CONFIG_COMPRESSED  0x40000000/* Payload is Compressed */
 // From Common/esif_sdk.h
@@ -1423,6 +1433,42 @@ void cthd_engine_adaptive::exec_fallback_target(int target){
 }
 
 void cthd_engine_adaptive::update_engine_state() {
+
+	if (passive_def_only) {
+		if (!passive_def_processed) {
+			thd_log_info("IETM_D0 processed\n");
+			passive_def_processed = 1;
+
+			for (unsigned int i = 0; i < zones.size(); ++i) {
+				cthd_zone *_zone = zones[i];
+				_zone->zone_reset(1);
+				_zone->trip_delete_all();
+
+				if (_zone && _zone->zone_active_status())
+					_zone->set_zone_inactive();
+			}
+
+			struct psvt *psvt = find_def_psvt();
+			if (!psvt)
+				return;
+
+			std::vector<struct psv> psvs = psvt->psvs;
+
+			thd_log_info("Name :%s\n", psvt->name.c_str());
+			for (unsigned int j = 0; j < psvs.size(); ++j) {
+				install_passive(&psvs[j]);
+			}
+
+			thd_log_info("\n\n ZONE DUMP BEGIN\n");
+			for (unsigned int i = 0; i < zones.size(); ++i) {
+				zones[i]->zone_dump();
+			}
+			thd_log_info("\n\n ZONE DUMP END\n");
+		}
+
+		return;
+	}
+
 	int target = evaluate_conditions();
 	if (target == -1) {
 		if (fallback_id >= 0 && !policy_active) {
@@ -1572,7 +1618,14 @@ int cthd_engine_adaptive::thd_engine_start(bool ignore_cpuid_check) {
 
 	if (!conditions.size()) {
 		thd_log_info("No adaptive conditions present\n");
-		return THD_ERROR;
+
+		struct psvt *psvt = find_def_psvt();
+
+		if (psvt) {
+			thd_log_info("IETM.D0 found\n");
+			passive_def_only = 1;
+		}
+		return cthd_engine::thd_engine_start(ignore_cpuid_check);
 	}
 
 	setup_input_devices();
