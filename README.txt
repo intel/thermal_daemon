@@ -111,6 +111,12 @@ For build, follow the same procedure as Fedora.
 
 Releases
 
+Release 2.4
+- Support for Rocket Lake and Commet Lake CPU model
+- Tiger Lake DPTF tables support
+- CPU stuck at low frequency on two models (issue 280)
+- Changes related to PID and exit codes
+
 Release 2.3
 - Merged changes from mjg59 for adaptive
 - Requires Linux kernel version 5.8 or later
