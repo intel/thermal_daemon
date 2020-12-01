@@ -111,6 +111,9 @@ For build, follow the same procedure as Fedora.
 
 Releases
 
+Release 2.4.1
+- Minor change for Dell XPS 13 with Tiger Lake.
+
 Release 2.4
 - Support for Rocket Lake and Commet Lake CPU model
 - Tiger Lake DPTF tables support
