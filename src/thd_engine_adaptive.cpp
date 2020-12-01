@@ -1165,9 +1165,16 @@ int cthd_engine_adaptive::install_passive(struct psv *psv) {
 	cthd_cdev *cdev = search_cdev(psv_cdev);
 
 	if (!cdev) {
-		thd_log_warn("Unable to find a cooling device for %s\n",
+		if (!psv_cdev.compare(0, 4, "TCPU")) {
+			psv_cdev= "B0D4";
+			cdev = search_cdev(psv_cdev);
+		}
+
+		if (!cdev) {
+			thd_log_warn("Unable to find a cooling device for %s\n",
 				psv_cdev.c_str());
-		return THD_ERROR;
+			return THD_ERROR;
+		}
 	}
 
 	cthd_sensor *sensor = search_sensor(psv_zone);
