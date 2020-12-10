@@ -497,6 +497,8 @@ int cthd_engine_adaptive::parse_ppcc(char *name, char *buf, int len) {
 	if (ppcc.power_limit_1_max && ppcc.power_limit_1_min && ppcc.time_wind_1_min
 			&& ppcc.time_wind_1_max && ppcc.step_1_size)
 		ppcc.limit_1_valid = 1;
+	else
+		ppcc.limit_1_valid = 0;
 
 	ppccs.push_back(ppcc);
 
