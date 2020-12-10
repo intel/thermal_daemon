@@ -692,10 +692,11 @@ int cthd_engine_adaptive::parse_gddv_key(char *buf, int size, int *end_offset) {
 
 	str = strtok(key, "/");
 	if (!str) {
+		thd_log_debug("Ignoring key %s\n", key);
+
 		delete[] (key);
 		delete[] (val);
 
-		thd_log_debug("Ignoring key %s\n", key);
 		/* Ignore */
 		return THD_SUCCESS;
 	}
