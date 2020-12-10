@@ -1454,7 +1454,7 @@ void cthd_engine_adaptive::update_engine_state() {
 				_zone->zone_reset(1);
 				_zone->trip_delete_all();
 
-				if (_zone && _zone->zone_active_status())
+				if (_zone->zone_active_status())
 					_zone->set_zone_inactive();
 			}
 
