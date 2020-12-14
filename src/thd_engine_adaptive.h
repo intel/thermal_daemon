@@ -119,9 +119,9 @@ struct psv {
 };
 
 struct condition {
-	enum adaptive_condition condition;
+	uint64_t condition;
 	std::string device;
-	enum adaptive_comparison comparison;
+	uint64_t comparison;
 	int argument;
 	enum adaptive_operation operation;
 	enum adaptive_comparison time_comparison;

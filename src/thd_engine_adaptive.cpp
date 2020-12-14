@@ -849,7 +849,7 @@ int cthd_engine_adaptive::verify_condition(struct condition condition) {
 		return 0;
 
 	cond_name = condition_names[MIN(MAX(0, condition.condition), G_N_ELEMENTS(condition_names) - 1)];
-	thd_log_error("Unsupported condition %d (%s)\n", condition.condition, cond_name);
+	thd_log_error("Unsupported condition %" PRIu64 " (%s)\n", condition.condition, cond_name);
 	return THD_ERROR;
 }
 
@@ -883,11 +883,11 @@ int cthd_engine_adaptive::compare_condition(struct condition condition,
 						cond_name.c_str(), comp_str.c_str(), value);
 			} else {
 				thd_log_debug(
-						"compare condition [%s] comparison [%d] value [%d]\n",
+						"compare condition [%s] comparison [%" PRIu64 "] value [%d]\n",
 						cond_name.c_str(), condition.comparison, value);
 			}
 		} else {
-			thd_log_debug("compare condition %d value %d\n",
+			thd_log_debug("compare condition %" PRIu64 " value %d\n",
 					condition.comparison, value);
 		}
 	}
@@ -1049,7 +1049,7 @@ int cthd_engine_adaptive::evaluate_condition(struct condition condition) {
 	if (condition.condition == Default)
 		return THD_SUCCESS;
 
-	thd_log_debug("evaluate condition.condition %d\n", condition.condition);
+	thd_log_debug("evaluate condition.condition %" PRIu64 "\n", condition.condition);
 
 	if ((condition.condition >= Oem0 && condition.condition <= Oem5)
 			|| (condition.condition >= (adaptive_condition) 0x1000
