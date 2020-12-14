@@ -497,6 +497,8 @@ int cthd_engine_adaptive::parse_ppcc(char *name, char *buf, int len) {
 	if (ppcc.power_limit_1_max && ppcc.power_limit_1_min && ppcc.time_wind_1_min
 			&& ppcc.time_wind_1_max && ppcc.step_1_size)
 		ppcc.limit_1_valid = 1;
+	else
+		ppcc.limit_1_valid = 0;
 
 	ppccs.push_back(ppcc);
 
@@ -690,10 +692,11 @@ int cthd_engine_adaptive::parse_gddv_key(char *buf, int size, int *end_offset) {
 
 	str = strtok(key, "/");
 	if (!str) {
+		thd_log_debug("Ignoring key %s\n", key);
+
 		delete[] (key);
 		delete[] (val);
 
-		thd_log_debug("Ignoring key %s\n", key);
 		/* Ignore */
 		return THD_SUCCESS;
 	}
@@ -1451,7 +1454,7 @@ void cthd_engine_adaptive::update_engine_state() {
 				_zone->zone_reset(1);
 				_zone->trip_delete_all();
 
-				if (_zone && _zone->zone_active_status())
+				if (_zone->zone_active_status())
 					_zone->set_zone_inactive();
 			}
 
