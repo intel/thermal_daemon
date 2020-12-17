@@ -144,7 +144,7 @@ int cthd_engine_default::read_thermal_sensors() {
 								name_path.c_str());
 						continue;
 					}
-					if (name != "coretemp")
+					if (name != "coretemp" && name != "k10temp")
 						continue;
 
 					int cnt = 0;
@@ -427,7 +427,7 @@ int cthd_engine_default::read_thermal_zones() {
 						}
 						thd_log_info("%s->%s\n", name_path.c_str(),
 								name.c_str());
-						if (name != "coretemp")
+						if (name != "coretemp" && name != "k10temp")
 							continue;
 
 						cthd_zone_cpu *zone = new cthd_zone_cpu(index,

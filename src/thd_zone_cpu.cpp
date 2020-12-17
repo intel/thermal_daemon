@@ -87,9 +87,10 @@ int cthd_zone_cpu::init() {
 			found = true;
 		}
 	}
+
 	if (!found) {
 		thd_log_error("DTS temperature path not found \n");
-		return THD_ERROR;
+		max_temp = critical_temp = 0;
 	}
 
 	if (critical_temp == 0)
