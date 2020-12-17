@@ -51,7 +51,8 @@ cthd_engine::cthd_engine(std::string _uuid) :
 				false), parse_thermal_cdev_success(false), uuid(_uuid), parser_disabled(false), poll_timeout_msec(
 				-1), wakeup_fd(-1), uevent_fd(-1), control_mode(COMPLEMENTRY), write_pipe_fd(
 				0), preference(0), status(true), thz_last_uevent_time(0), thz_last_temp_ind_time(
-				0), thz_last_update_event_time(0), terminate(false), genuine_intel(0), has_invariant_tsc(0), has_aperf(
+				0), thz_last_update_event_time(0), terminate(false), genuine_intel(0), authentic_amd(0), has_invariant_tsc(
+				0), has_aperf(
 				0), proc_list_matched(false), poll_interval_sec(0), poll_sensor_mask(
 				0), fast_poll_sensor_mask(0), saved_poll_interval(0), poll_fd_cnt(0), rt_kernel(false), parser_init_done(false) {
 	thd_engine = pthread_t();
@@ -675,6 +676,7 @@ void cthd_engine::thd_engine_reload_zones() {
 // Add any tested platform ids in this table
 #ifndef ANDROID
 static supported_ids_t id_table[] = {
+		/* Intel */
 		{ 6, 0x2a }, // Sandybridge
 		{ 6, 0x3a }, // IvyBridge
 		{ 6, 0x3c }, // Haswell
@@ -697,6 +699,17 @@ static supported_ids_t id_table[] = {
 		{ 6, 0xa5 }, // Cometlake
 		{ 6, 0xa6 }, // Cometlake_L
 		{ 6, 0xa7 }, // Rocketlake
+
+		/* AMD */
+		{ 23, 0x01 }, // Zen
+		{ 23, 0x11 },
+		{ 23, 0x18 },
+		{ 23, 0x20 },
+		{ 23, 0x08 }, // Zen+
+		{ 23, 0x31 }, // Zen 2
+		{ 23, 0x60 },
+		{ 23, 0x71 },
+		{ 23, 0x90 },
 		{ 0, 0 } // Last Invalid entry
 };
 
@@ -715,6 +728,7 @@ int cthd_engine::check_cpu_id() {
 	unsigned int ebx, ecx, edx, max_level;
 	unsigned int fms, family, model, stepping;
 	genuine_intel = 0;
+	authentic_amd = 0;
 	int i = 0;
 	bool valid = false;
 
@@ -724,7 +738,9 @@ int cthd_engine::check_cpu_id() {
 	__cpuid(0, max_level, ebx, ecx, edx);
 	if (ebx == 0x756e6547 && edx == 0x49656e69 && ecx == 0x6c65746e)
 		genuine_intel = 1;
-	if (genuine_intel == 0) {
+	else if (ebx == 0x68747541 && ecx == 0x444d4163 && edx == 0x69746e65)
+		authentic_amd = 1;
+	if (genuine_intel == 0 && authentic_amd == 0) {
 		// Simply return without further capability check
 		return THD_SUCCESS;
 	}
@@ -734,6 +750,8 @@ int cthd_engine::check_cpu_id() {
 	stepping = fms & 0xf;
 	if (family == 6 || family == 0xf)
 		model += ((fms >> 16) & 0xf) << 4;
+	if (family == 0xf)
+		family += ((fms >> 20) & 0xff);
 
 	thd_log_msg(
 			"%u CPUID levels; family:model:stepping 0x%x:%x:%x (%u:%u:%u)\n",

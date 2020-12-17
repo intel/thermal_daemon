@@ -99,6 +99,7 @@ private:
 	time_t thz_last_update_event_time;
 	bool terminate;
 	int genuine_intel;
+	int authentic_amd;
 	int has_invariant_tsc;
 	int has_aperf;
 	bool proc_list_matched;
