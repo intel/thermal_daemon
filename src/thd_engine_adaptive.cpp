@@ -1190,9 +1190,9 @@ int cthd_engine_adaptive::install_passive(struct psv *psv) {
 	int target_state = 0;
 
 	if (psv->limit.length()) {
-		if (psv->limit == "MAX") {
+		if (!strncasecmp(psv->limit.c_str(),"MAX", 3)) {
 			target_state = TRIP_PT_INVALID_TARGET_STATE;
-		} else if (psv->limit == "MIN") {
+		} else if (!strncasecmp(psv->limit.c_str(),"MIN", 3)) {
 			target_state = 0;
 		} else {
 			std::istringstream buffer(psv->limit);
