@@ -111,6 +111,9 @@ For build, follow the same procedure as Fedora.
 
 Releases
 
+Release 2.4.2
+- Issue with Dell Latitude 7400. Fix for issue #291
+
 Release 2.4.1
 - Minor change for Dell XPS 13 with Tiger Lake.
 
