@@ -1261,7 +1261,13 @@ void cthd_engine_adaptive::set_int3400_target(struct adaptive_target target) {
 
 		psvt = find_psvt(target.argument);
 		if (!psvt) {
-			return;
+			thd_log_warn("int3400 target %s not found\n", target.argument.c_str());
+			thd_log_warn("Loading default IETM:D0\n");
+			psvt = find_psvt("IETM.D0");
+			if (!psvt) {
+				thd_log_warn("Even IETM:D0 not found\n");
+				return;
+			}
 		}
 
 		for (int i = 0; i < (int)psvt->psvs.size(); i++) {
