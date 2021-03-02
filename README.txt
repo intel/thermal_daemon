@@ -111,6 +111,9 @@ For build, follow the same procedure as Fedora.
 
 Releases
 
+Release 2.4.3
+- Allow --ingore-cpuid-check to use with --adaptive option
+
 Release 2.4.2
 - Issue with Dell Latitude 7400. Fix for issue #291
 
