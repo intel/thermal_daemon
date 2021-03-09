@@ -111,6 +111,9 @@ For build, follow the same procedure as Fedora.
 
 Releases
 
+Release 2.4.4
+- Address low performance with Dell Latitude 5420
+
 Release 2.4.3
 - Allow --ingore-cpuid-check to use with --adaptive option
 
