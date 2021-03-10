@@ -1150,8 +1150,21 @@ int cthd_engine_adaptive::install_passive(struct psv *psv) {
 
 	cthd_zone *zone = search_zone(psv_zone);
 	if (!zone) {
-		thd_log_warn("Unable to find a zone for %s\n", psv_zone.c_str());
-		return THD_ERROR;
+		if (!psv_zone.compare(0, 4, "B0D4")) {
+			psv_zone= "TCPU";
+			zone = search_zone(psv_zone);
+		}
+
+		if (!zone) {
+			if (!psv_zone.compare(0, 4, "TCPU")) {
+				psv_zone= "B0D4";
+				zone = search_zone(psv_zone);
+			}
+			if (!zone) {
+				thd_log_warn("Unable to find a zone for %s\n", psv_zone.c_str());
+				return THD_ERROR;
+			}
+		}
 	}
 
 	std::string psv_cdev;
