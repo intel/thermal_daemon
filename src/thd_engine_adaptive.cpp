@@ -1264,33 +1264,15 @@ void cthd_engine_adaptive::set_int3400_target(struct adaptive_target target) {
 			return;
 		}
 
-		for (int i = 0; i < (int)psvt->psvs.size(); i++) {
-			struct psv *psv = &psvt->psvs[i];
-			std::string psv_zone;
-
-			size_t pos = psv->target.find_last_of(".");
-			if (pos == std::string::npos)
-				psv_zone = psv->target;
-			else
-				psv_zone = psv->target.substr(pos + 1);
-
-			while (psv_zone.back() == '_') {
-				psv_zone.pop_back();
-			}
-
-			cthd_zone *zone = search_zone(psv_zone);
-			if (zone) {
-				zone->zone_reset(1);
-				zone->trip_delete_all();
-			}
-		}
-
 		for (unsigned int i = 0; i < zones.size(); ++i) {
 			cthd_zone *_zone = zones[i];
 
 			// This is only for debug to plot power, so keep
 			if (_zone && _zone->get_zone_type() == "rapl_pkg_power")
 				continue;
+
+			_zone->zone_reset(1);
+			_zone->trip_delete_all();
 
 			if (_zone && _zone->zone_active_status())
 				_zone->set_zone_inactive();
