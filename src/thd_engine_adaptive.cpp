@@ -848,8 +848,12 @@ int cthd_engine_adaptive::verify_condition(struct condition condition) {
 	if (condition.condition == Power_slider)
 		return 0;
 
-	cond_name = condition_names[MIN(MAX(0, condition.condition), G_N_ELEMENTS(condition_names) - 1)];
+	if ( condition.condition >=  ARRAY_SIZE(condition_names))
+		cond_name = "UKNKNOWN";
+	else
+		cond_name = condition_names[condition.condition];
 	thd_log_error("Unsupported condition %" PRIu64 " (%s)\n", condition.condition, cond_name);
+
 	return THD_ERROR;
 }
 
