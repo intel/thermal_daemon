@@ -54,7 +54,7 @@ typedef enum {
 	FAST_POLL_DISABLE,
 } message_name_t;
 
-// This defines whether the thermal control is entirey done by
+// This defines whether the thermal control is entirely done by
 // this daemon or it just complements, what is done in kernel
 typedef enum {
 	COMPLEMENTRY, EXCLUSIVE,

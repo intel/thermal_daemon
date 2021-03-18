@@ -231,7 +231,7 @@ int main(int argc, char *argv[]) {
 
 	is_privileged_user = (getuid() == 0) || (getuid() == AID_SYSTEM);
 	if (!is_privileged_user && !test_mode) {
-		thd_log_error("You do not have correct permissions to run thermal dameon!\n");
+		thd_log_error("You do not have correct permissions to run thermal daemon!\n");
 		exit(1);
 	}
 

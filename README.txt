@@ -130,7 +130,7 @@ Release 2.3
 - Merged changes from mjg59 for adaptive
 - Requires Linux kernel version 5.8 or later
 - By default tries --adaptive and fallback to old style
-- Atleast some level of success to use adaptive option on:
+- At least some level of success to use adaptive option on:
 (not expected to be on par with Windows DPTF)
 Dell XPS 13 9360
 Dell XPS 13 9370
@@ -304,7 +304,7 @@ Release 1.03
 - Added P state turbo on/off
 
 Release 1.02
-- Allow user to change the max temperarure via dbus message
+- Allow user to change the max temperature via dbus message
 - Allow user to change the cooling method order via an XML configuration
 - Upstart fixes
 - Valgrind and zero warnings on build
@@ -368,7 +368,7 @@ on slope and angular increments to dynamically adjust set point
 
 
 Version 0.2
-- Define XML interface to set configuration data. Refere to thermal-conf.xml. This allows to override buggy Bios thermal comfiguration and also allows to extend the capability.
+- Define XML interface to set configuration data. Refer to thermal-conf.xml. This allows to override buggy Bios thermal comfiguration and also allows to extend the capability.
 - Use platform DMI UUID to index into configuration data. If there is no UUID match, falls back to thermal sysfs
 - Terminate interface
 - Takes over control from kernel thermal processing
@@ -380,7 +380,7 @@ Version 0.1
 - Defines a C++ classes for zones, cooling devices, trip points, thermal engine
 - Methods can be overridden in a custom class to modify default behaviour
 - Read thermal zone and cooling devices, trip points etc,
-- Read temprature via netlink notification or via polling configurable via command line
+- Read temperature via netlink notification or via polling configurable via command line
 - Once a trip point is crossed, activate the associate cooling devices. Start with min tstate to max tstate for each cooling device.
 - Based on active or passive settings it decides the cooling devices
 

@@ -141,7 +141,7 @@ bool ThermaldInterface::initialize()
                 }
             }
         }
-        // Store the actual number of trips, as opposed to the theoritical maximum
+        // Store the actual number of trips, as opposed to the theoretical maximum
         zones[i].trip_count = zones[i].trips.count();
 
         // Store the first valid trip temp for the zone

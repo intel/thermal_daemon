@@ -2417,7 +2417,7 @@ protected:
   // property members:
   bool mAutoSqueeze;
   
-  // non-property memebers:
+  // non-property members:
   QVector<DataType> mData;
   int mPreallocSize;
   int mPreallocIteration;
@@ -2772,7 +2772,7 @@ void QCPDataContainer<DataType>::remove(double sortKeyFrom, double sortKeyTo)
   
   Removes a single data point at \a sortKey. If the position is not known with absolute (binary)
   precision, consider using \ref remove(double sortKeyFrom, double sortKeyTo) with a small
-  fuzziness interval around the suspected position, depeding on the precision with which the
+  fuzziness interval around the suspected position, depending on the precision with which the
   (sort-)key is known.
   
   \see removeBefore, removeAfter, clear
@@ -4412,7 +4412,7 @@ public:
     there for an image of the presets.
   */
   enum GradientPreset { gpGrayscale  ///< Continuous lightness from black to white (suited for non-biased data representation)
-                        ,gpHot       ///< Continuous lightness from black over firey colors to white (suited for non-biased data representation)
+                        ,gpHot       ///< Continuous lightness from black over fiery colors to white (suited for non-biased data representation)
                         ,gpCold      ///< Continuous lightness from black over icey colors to white (suited for non-biased data representation)
                         ,gpNight     ///< Continuous lightness from black over weak blueish colors to white (suited for non-biased data representation)
                         ,gpCandy     ///< Blue over pink to white

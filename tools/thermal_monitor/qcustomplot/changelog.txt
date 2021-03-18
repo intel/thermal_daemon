@@ -125,7 +125,7 @@ Other:
     - Fixed bug that allowed scatter-only graphs to be selected by clicking the non-existent line between scatters
     - Fixed crash when trying to select a scatter-only QCPGraph whose only points in the visible key range are at identical key coordinates and vertically off-screen, with adaptive sampling enabled
     - Fixed pdf export of QCPColorMap with enabled interpolation (didn't appear interpolated in pdf)
-    - Reduced QCPColorMap jitter of internal cell boundaries for small sized maps when viewed with high zoom, by applying oversampling factors dependant on map size
+    - Reduced QCPColorMap jitter of internal cell boundaries for small sized maps when viewed with high zoom, by applying oversampling factors dependent on map size
     - Fixed bug of QCPColorMap::fill() not causing the buffered internal image map to be updated, and thus the change didn't become visible immediately
     - Axis labels with size set in pixels (setPixelSize) instead of points now correctly calculate the exponent's font size if beautifully typeset powers are enabled
     - Fixed QCPColorMap appearing at the wrong position for logarithmic axes and color map spanning larger ranges
@@ -435,7 +435,7 @@ Other:
   - QCPAxis::setLabelColor and setTickLabelColor
   - QCustomPlot::setTitleColor
   - QCustomPlot now emits beforeReplot and afterReplot signals. Note that it is safe to make two customPlots mutually call eachothers replot functions
-    in one of these slots, it will not cause an infinite loop. (usefull for synchronizing axes ranges between two customPlots, because setRange alone doesn't replot)
+    in one of these slots, it will not cause an infinite loop. (useful for synchronizing axes ranges between two customPlots, because setRange alone doesn't replot)
   - If the Qt version is 4.7 or greater, the tick label strings in date-time-mode now support sub-second accuracy (e.g. with format like "hh:mm:ss.zzz").
 
   Bugfixes:

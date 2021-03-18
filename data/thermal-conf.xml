@@ -98,7 +98,7 @@ use "man thermal-conf.xml" for details
 					<!-- max/passive/active
 						If a MAX type is specified, then
 						daemon will use PID control
-						to aggresively throttle to avoid
+						to aggressively throttle to avoid
 						reaching this temp.
 					 -->
 					<type>max</type>

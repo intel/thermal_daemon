@@ -340,7 +340,7 @@ void cthd_cdev_modem::update_throttling_state() {
 	conn = dbus_bus_get(DBUS_BUS_SYSTEM, &error);
 
 	if (dbus_error_is_set(&error)) {
-		thd_log_error("Error :%s", error.message);
+		thd_log_error("Error: %s", error.message);
 		dbus_error_free(&error);
 		return;
 	}
@@ -398,7 +398,7 @@ void cthd_cdev_modem::set_curr_state(int state, int arg) {
 	conn = dbus_bus_get(DBUS_BUS_SYSTEM, &error);
 
 	if (dbus_error_is_set(&error)) {
-		thd_log_error("Erro : %s", error.message);
+		thd_log_error("Error : %s", error.message);
 		dbus_error_free(&error);
 		return;
 	}

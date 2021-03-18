@@ -97,7 +97,7 @@ int cthd_parse::parser_init(std::string config_file) {
 		xml_config_file = config_file.c_str();
 	}
 
-	/* We have not tested existance yet in this case. */
+	/* We have not tested existence yet in this case. */
 	if (!auto_config) {
 		std::ifstream conf(xml_config_file);
 		if (!conf.is_open()) {
