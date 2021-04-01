@@ -4,7 +4,7 @@ Setup
 - One window: while true; do cat /sys/class/powercap/intel-rapl/intel-rapl\:0/constraint_0_power_limit_uw;sleep 1; done
 - Other window: sudo turbostat --show PkgWatt
 
-1. Singe step
+1. Single step
 
 File Name: thermal_conf.xml.1
 
@@ -240,7 +240,7 @@ PkgWatt
 25000000
 
 
-1.2.2 Not upto min
+1.2.2 Not up to min
 The trip recovers before.
 
 25000000

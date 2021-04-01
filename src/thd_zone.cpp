@@ -1,5 +1,5 @@
 /*
- * thd_zone.cpp: thermal zone class implentation
+ * thd_zone.cpp: thermal zone class implementation
  *
  * Copyright (C) 2012 Intel Corporation. All rights reserved.
  *
