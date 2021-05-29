@@ -111,6 +111,10 @@ For build, follow the same procedure as Fedora.
 
 Releases
 
+Release 2.4.5
+- Address low performance with Dell Latitude 5420
+with the latest BIOS
+
 Release 2.4.4
 - Address low performance with Dell Latitude 5420
 
