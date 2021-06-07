@@ -97,7 +97,7 @@ public:
 					0), pl0_min_window(0), pl0_max_window(0), pl0_step_pwr(0), bios_locked(
 					false), constrained(
 					false), power_on_constraint_0_pwr(0), power_on_constraint_0_time_window(
-					0), power_on_enable_status(0)
+					0), power_on_enable_status(0), device_name("TCPU.D0")
 	{
 	}
 
