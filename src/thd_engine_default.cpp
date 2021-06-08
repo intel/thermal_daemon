@@ -735,7 +735,7 @@ int cthd_engine_default::read_cooling_devices() {
 				rapl_dev->rapl_update_enable_status(0);
 
 				target.code = "PL1MAX";
-				target.argument = "100000";
+				target.argument = "200000";
 				rapl_dev->set_adaptive_target(target);
 			}
 			rapl_mmio_dev->set_cdev_alias("B0D4");
