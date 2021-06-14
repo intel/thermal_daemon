@@ -697,6 +697,8 @@ static supported_ids_t id_table[] = {
 		{ 6, 0xa5 }, // Cometlake
 		{ 6, 0xa6 }, // Cometlake_L
 		{ 6, 0xa7 }, // Rocketlake
+		{ 6, 0x97 }, // Alderlake
+		{ 6, 0x9a }, // Alderlake
 		{ 0, 0 } // Last Invalid entry
 };
 
