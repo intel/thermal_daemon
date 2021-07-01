@@ -67,7 +67,7 @@ grep . /sys/class/powercap/intel-rapl/intel-rapl\:0/* > powercap_msr_after.txt
 grep . /sys/class/powercap/intel-rapl-mmio/intel-rapl-mmio\:0/* > powercap_mmio_after.txt
 
 echo "Executing stress-ng"
-stress-ng ---cpu 16 --io 4 --vm 2 --vm-bytes 128M --fork 4 --timeout 300s&
+stress-ng --cpu -1 --io 4 --vm 2 --vm-bytes 128M --fork 4 --timeout 300s&
 turbostat --show Core,CPU,Busy%,Bzy_MHz,TSC_MHz -o turbostat.out&
 sleep 305
 
@@ -77,7 +77,7 @@ systemctl start thermald
 
 cd ..
 echo -n "Creating archive:"
-echo $folder_name.tar.bz2
-tar cvfj $folder_name.tar.bz2 $folder_name
+echo $folder_name.tar.gz
+tar cvfz $folder_name.tar.gz $folder_name
 echo -n "Attach archive to debug:"
-echo $folder_name.tar.bz2
+echo $folder_name.tar.gz
