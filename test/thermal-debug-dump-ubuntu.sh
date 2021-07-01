@@ -77,7 +77,7 @@ systemctl start thermald
 
 cd ..
 echo -n "Creating archive:"
-echo $folder_name.tar.bz2
-tar cvfj $folder_name.tar.bz2 $folder_name
+echo $folder_name.tar.gz
+tar cvfz $folder_name.tar.gz $folder_name
 echo -n "Attach archive to debug:"
-echo $folder_name.tar.bz2
+echo $folder_name.tar.gz
