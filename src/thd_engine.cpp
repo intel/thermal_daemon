@@ -699,6 +699,7 @@ static supported_ids_t id_table[] = {
 		{ 6, 0xa7 }, // Rocketlake
 		{ 6, 0x97 }, // Alderlake
 		{ 6, 0x9a }, // Alderlake
+		{ 6, 0x9c }, // Jasper Lake
 		{ 0, 0 } // Last Invalid entry
 };
 
