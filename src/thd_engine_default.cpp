@@ -728,7 +728,7 @@ int cthd_engine_default::read_cooling_devices() {
 
 			// Prefer MMIO access over MSR access for B0D4
 			if (rapl_dev) {
-				struct adaptive_target target;
+				struct adaptive_target target = {};
 
 				rapl_dev->set_cdev_alias("");
 				thd_log_info("Disable rapl-msr interface and use rapl-mmio\n");
