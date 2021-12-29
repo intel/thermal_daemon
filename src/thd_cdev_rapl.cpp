@@ -334,7 +334,14 @@ void cthd_sysfs_cdev_rapl::set_tcc(int tcc) {
 void cthd_sysfs_cdev_rapl::set_adaptive_target(struct adaptive_target target) {
 	int argument = std::stoi(target.argument, NULL);
 	if (target.code == "PL1MAX") {
+		int pl1_rapl;
+
 		min_state = pl0_max_pwr = argument * 1000;
+
+		pl1_rapl = rapl_read_pl1();
+		if (curr_state > pl1_rapl)
+			set_curr_state(pl1_rapl, 1);
+
 		if (curr_state > min_state)
 			set_curr_state(min_state, 1);
 	} else if (target.code == "PL1MIN") {
