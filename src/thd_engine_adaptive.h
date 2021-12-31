@@ -26,8 +26,10 @@
 #ifndef THD_ENGINE_ADAPTIVE_H_
 #define THD_ENGINE_ADAPTIVE_H_
 
+#ifndef ANDROID
 #include <libevdev/libevdev.h>
 #include <upower.h>
+#endif
 
 #include "thd_engine_default.h"
 #include "thd_cpu_default_binding.h"
@@ -152,8 +154,10 @@ protected:
 	std::vector<struct adaptive_target> targets;
 	std::vector<struct psvt> psvts;
 	std::string int3400_path;
+#ifndef ANDROID
 	UpClient *upower_client;
 	struct libevdev *tablet_dev;
+#endif
 	int current_condition_set;
 	int policy_active;
 	int fallback_id;
@@ -195,7 +199,9 @@ protected:
 	int evaluate_condition_set(std::vector<struct condition> condition_set);
 	int evaluate_conditions();
 	void execute_target(struct adaptive_target target);
+#ifndef ANDROID
 	void setup_input_devices();
+#endif
 	int find_agressive_target();
 	void exec_fallback_target(int target);
 	void dump_apat();
@@ -205,12 +211,21 @@ protected:
 	struct psvt *find_def_psvt();
 
 public:
+#ifndef ANDROID
 	cthd_engine_adaptive() :
 			cthd_engine_default("63BE270F-1C11-48FD-A6F7-3AF253FF3E2D"), upower_client(
 			NULL), tablet_dev(NULL), current_condition_set(0xffff), policy_active(
 					0), fallback_id(-1), int3400_base_path(""), passive_def_only(
 					0), passive_def_processed(0) {
 	}
+#else
+	cthd_engine_adaptive() :
+			cthd_engine_default("63BE270F-1C11-48FD-A6F7-3AF253FF3E2D"),
+			 current_condition_set(0xffff), policy_active(
+					0), fallback_id(-1), int3400_base_path(""), passive_def_only(
+					0), passive_def_processed(0) {
+	}
+#endif
 
 	~cthd_engine_adaptive();
 	ppcc_t* get_ppcc_param(std::string name);

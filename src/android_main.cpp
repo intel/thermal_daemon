@@ -28,9 +28,12 @@
 #include "thermald.h"
 #include "thd_preference.h"
 #include "thd_engine.h"
+#include "thd_engine_adaptive.h"
 #include "thd_engine_default.h"
 #include "thd_parse.h"
 #include <sys/file.h>
+
+#define EXIT_UNSUPPORTED 2
 
 // getdtablesize() is removed from bionic/libc in LPDK*/
 // use POSIX alternative available. Otherwise fail
@@ -174,8 +177,10 @@ int main(int argc, char *argv[]) {
 	bool is_privileged_user = false;
 	char *conf_file = NULL;
 	bool ignore_cpuid_check = false;
+	bool adaptive = false;
+	int ret;
 
-	const char* const short_options = "hvnp:detc:";
+	const char* const short_options = "hvnp:detc:ia";
 	static struct option long_options[] = {
 			{ "help", no_argument, 0, 'h' },
 			{ "version", no_argument, 0, 'v' },
@@ -186,6 +191,7 @@ int main(int argc, char *argv[]) {
 			{ "config-file", required_argument, 0, 'c' },
 			{ "ignore-cpuid-check", no_argument, 0, 'i'},
 			{ "ignore-default-control", no_argument, 0, 'd'},
+			{ "adaptive", no_argument, 0, 'a'},
 			{ NULL, 0, NULL, 0 } };
 
 	if (argc > 1) {
@@ -220,6 +226,9 @@ int main(int argc, char *argv[]) {
 			case 'd':
 				thd_ignore_default_control = true;
 				break;
+			case 'a':
+				adaptive = true;
+				break;
 			case -1:
 			case 0:
 				break;
@@ -252,10 +261,24 @@ int main(int argc, char *argv[]) {
 	thd_log_info(
 			"Linux Thermal Daemon is starting mode %d : poll_interval %d :ex_control %d\n",
 			no_daemon, thd_poll_interval, exclusive_control);
-
-	if (thd_engine_create_default_engine(ignore_cpuid_check, exclusive_control,
-			conf_file) != THD_SUCCESS) {
-		exit(EXIT_FAILURE);
+	if (adaptive) {
+		ignore_cpuid_check= true;
+		ret = thd_engine_create_adaptive_engine((bool) ignore_cpuid_check);
+		if (ret != THD_SUCCESS) {
+			thd_log_info("--adaptive option failed on this platform\n");
+			thd_log_info("Ignoring --adaptive option\n");
+			ret = thd_engine_create_default_engine((bool) ignore_cpuid_check,
+						       (bool) exclusive_control, conf_file);
+		}
+	} else {
+		ret = thd_engine_create_default_engine((bool) ignore_cpuid_check,
+					       (bool) exclusive_control, conf_file);
+	}
+	if (ret != THD_SUCCESS) {
+		if (ret == THD_ERROR)
+			exit(EXIT_UNSUPPORTED);
+		else
+			exit(EXIT_FAILURE);
 	}
 
 #ifdef VALGRIND_TEST

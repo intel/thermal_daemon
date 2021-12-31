@@ -39,7 +39,10 @@ LOCAL_SRC_FILES := \
 		src/thd_sensor_kbl_g_mcp.cpp \
 		src/thd_zone_kbl_amdgpu.cpp \
 		src/thd_sensor_rapl_power.cpp \
-		src/thd_zone_rapl_power.cpp
+		src/thd_zone_rapl_power.cpp \
+		src/thd_engine_adaptive.cpp \
+		src/thd_lzma_dec.cpp \
+		src/LzmaDec.c
 
 LOCAL_C_INCLUDES += external/libxml2/include
 
@@ -49,6 +52,7 @@ LOCAL_CFLAGS := \
 		-DTDRUNDIR='"/data/vendor/thermal-daemon"' \
 		-DTDCONFDIR='"/system/vendor/etc/thermal-daemon"' \
 		-Wno-unused-parameter \
+		-fexceptions\
 		-Wall \
 		-Werror \
 
