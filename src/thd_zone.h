@@ -174,7 +174,36 @@ public:
 		else
 			return NULL;
 	}
+#ifdef ANDROID
+	void trip_delete_all() {
+		if (!trip_points.size())
+			return;
 
+		for (unsigned int i = 0; i < trip_points.size(); ++i) {
+			trip_point_type_t trip_type = trip_points[i].get_trip_type();
+			if (trip_type==HOT|| trip_type==HOT || trip_type==MAX )
+			{
+				thd_log_info("keep cdev trip_point %d temp=%d\n", i, trip_points[i].get_trip_temp());
+			}
+			else
+				trip_points[i].delete_cdevs();
+		}
+		std::vector<cthd_trip_point>::iterator it;
+		for (it=trip_points.begin(); it!=trip_points.end(); )
+		{
+			trip_point_type_t trip_type = it->get_trip_type();
+			if (trip_type==HOT|| trip_type==CRITICAL || trip_type==MAX  )
+			{
+				thd_log_info("keep trip_point  temp=%d\n",  it->get_trip_temp());
+				++it;
+			}
+			else {
+				thd_log_info("remove trip_point  temp=%d\n",  it->get_trip_temp());
+				it=trip_points.erase(it);
+			}
+		}
+	}
+#else
 	void trip_delete_all() {
 		if (!trip_points.size())
 			return;
@@ -184,6 +213,7 @@ public:
 		}
 		trip_points.clear();
 	}
+#endif
 
 	void zone_dump() {
 		if (!zone_active)
