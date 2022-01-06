@@ -48,12 +48,15 @@ static void *cthd_engine_thread(void *arg);
 
 cthd_engine::cthd_engine(std::string _uuid) :
 		current_cdev_index(0), current_zone_index(0), current_sensor_index(0), parse_thermal_zone_success(
-				false), parse_thermal_cdev_success(false), uuid(_uuid), parser_disabled(false), poll_timeout_msec(
-				-1), wakeup_fd(-1), uevent_fd(-1), control_mode(COMPLEMENTRY), write_pipe_fd(
+				false), parse_thermal_cdev_success(false), uuid(_uuid), parser_disabled(
+				false), adaptive_mode(false), poll_timeout_msec(-1), wakeup_fd(
+				-1), uevent_fd(-1), control_mode(COMPLEMENTRY), write_pipe_fd(
 				0), preference(0), status(true), thz_last_uevent_time(0), thz_last_temp_ind_time(
-				0), thz_last_update_event_time(0), terminate(false), genuine_intel(0), has_invariant_tsc(0), has_aperf(
-				0), proc_list_matched(false), poll_interval_sec(0), poll_sensor_mask(
-				0), fast_poll_sensor_mask(0), saved_poll_interval(0), poll_fd_cnt(0), rt_kernel(false), parser_init_done(false) {
+				0), thz_last_update_event_time(0), terminate(false), genuine_intel(
+				0), has_invariant_tsc(0), has_aperf(0), proc_list_matched(
+				false), poll_interval_sec(0), poll_sensor_mask(0), fast_poll_sensor_mask(
+				0), saved_poll_interval(0), poll_fd_cnt(0), rt_kernel(false), parser_init_done(
+				false) {
 	thd_engine = pthread_t();
 	thd_attr = pthread_attr_t();
 
@@ -171,9 +174,11 @@ bool cthd_engine::set_preference(const int pref) {
 	return true;
 }
 
-int cthd_engine::thd_engine_start(bool ignore_cpuid_check) {
+int cthd_engine::thd_engine_start(bool ignore_cpuid_check, bool adaptive) {
 	int ret;
 	int wake_fds[2];
+
+	adaptive_mode = adaptive;
 
 	if (ignore_cpuid_check) {
 		thd_log_debug("Ignore CPU ID check for MSRs \n");

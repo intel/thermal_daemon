@@ -84,6 +84,7 @@ protected:
 	bool parse_thermal_cdev_success;
 	std::string uuid;
 	bool parser_disabled;
+	bool adaptive_mode;
 
 private:
 
@@ -147,7 +148,7 @@ public:
 		return control_mode;
 	}
 	void thd_engine_thread();
-	virtual int thd_engine_start(bool ignore_cpuid_check);
+	virtual int thd_engine_start(bool ignore_cpuid_check, bool adaptive = false);
 	int thd_engine_stop();
 	int check_cpu_id();
 

@@ -214,7 +214,7 @@ public:
 
 	~cthd_engine_adaptive();
 	ppcc_t* get_ppcc_param(std::string name);
-	int thd_engine_start(bool ignore_cpuid_check);
+	int thd_engine_start(bool ignore_cpuid_check, bool adaptive);
 	void update_engine_state();
 };
 
