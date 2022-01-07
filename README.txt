@@ -111,6 +111,12 @@ For build, follow the same procedure as Fedora.
 
 Releases
 
+Release 2.4.7
+- Fix AC/DC power limit issue in some HP TigerLake systems
+- Regression fix for RAPL MSR usage in xml config file
+- Added Japer Lake and Alder Lake CPU models
+- Debug scripts for log collection to upload
+
 Release 2.4.6
 - Fix for Ubuntu bug 1930422
 
