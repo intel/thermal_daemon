@@ -869,6 +869,27 @@ void cthd_engine_default::workarounds()
 
 void cthd_engine_default::workaround_rapl_mmio_power(void)
 {
+	if (!workaround_enabled)
+		return;
+
+	cthd_cdev *cdev = search_cdev("rapl_controller_mmio");
+	if (cdev) {
+		/* RAPL MMIO is enabled and getting used. No need to disable */
+		return;
+	} else {
+		csys_fs _sysfs("/sys/devices/virtual/powercap/intel-rapl-mmio/intel-rapl-mmio:0/");
+
+		if (_sysfs.exists()) {
+			std::stringstream temp_str;
+
+			temp_str << "enabled";
+			if (_sysfs.write(temp_str.str(), 0) > 0)
+				return;
+
+			thd_log_debug("Failed to write to RAPL MMIO\n");
+		}
+	}
+
 #ifndef ANDROID
 	int map_fd;
 	void *rapl_mem;
@@ -879,9 +900,6 @@ void cthd_engine_default::workaround_rapl_mmio_power(void)
 	unsigned int fms, family, model;
 
 	csys_fs sys_fs;
-
-	if (!workaround_enabled)
-		return;
 
 	ecx = edx = 0;
 	__cpuid(1, fms, ebx, ecx, edx);
