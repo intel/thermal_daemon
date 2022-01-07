@@ -101,11 +101,16 @@ Specify thermal-conf.xml path and ignore default thermal-conf.xml.
 .B \-\-ignore-default-control
 Ignore default CPU temperature control. Strictly follow thermal-conf.xml or thermal-conf.xml.auto.
 .B \-\-workaround-enabled
-Enable special workarounds. This is currently used for /dev/mem based power control.
+Enable special workarounds for RAPL MMIO power limit and TCC offset every 30 seconds. This helps
+to disable RAPL MMIO when not used and adjust TCC offset in certain Lenovo laptops.
 .B \-\-disable-active-power
-Disable active power management. This will not set active power limits.
+Disable active power management. This will not set active power limits using RAPL MMIO. This
+may result in constrained performance, if the system boots up with lower power limits.
 .B \-\-adaptive
 Use DPTF adaptive tables when present. This will ignore thermald config via xml files.
+.B \-\-ignore-critical-trip
+If the configuration defined a critical temperature point, which is too low, this option
+will avoid shutting down the system on reaching this temperature limit.
 
 .SH SEE ALSO
 thermal-conf.xml(5)
