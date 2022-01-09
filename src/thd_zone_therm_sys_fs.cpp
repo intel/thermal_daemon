@@ -138,7 +138,7 @@ int cthd_sysfs_zone::read_trip_points() {
 		thd_log_debug("trip type :%d\n", trip_type);
 		thd_log_debug("wr_mode :%d\n", wr_mode);
 
-		if (sensor && temp > 0 && trip_type != INVALID_TRIP_TYPE && !wr_mode) {
+		if (sensor && temp > 0 && trip_type != INVALID_TRIP_TYPE) {
 
 			cthd_trip_point trip_pt(trip_point_cnt, trip_type, temp, hyst,
 					index, sensor->get_index());
