@@ -121,6 +121,9 @@ int cthd_sysfs_zone::read_trip_points() {
 		else
 			trip_type = INVALID_TRIP_TYPE;
 
+		if (temp < 0)
+			temp = INT32_MAX;
+
 		sensor = thd_engine->search_sensor(type_str);
 		if (sensor && (mode & S_IWUSR)) {
 			sensor->set_async_capable(true);
