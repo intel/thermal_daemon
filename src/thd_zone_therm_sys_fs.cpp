@@ -138,11 +138,24 @@ int cthd_sysfs_zone::read_trip_points() {
 			++trip_point_cnt;
 		}
 	}
-	thd_log_debug("read_trip_points Added %d trips \n", trip_point_cnt);
-	if (trip_point_cnt == 0)
-		return THD_ERROR;
-	else
-		return THD_SUCCESS;
+
+	thd_log_debug("read_trip_points Added from sysfs %d trips \n", trip_point_cnt);
+
+	if (!trip_point_cnt) {
+		cthd_sensor *sensor;
+
+		sensor = thd_engine->search_sensor(type_str);
+		if (!sensor)
+			return THD_ERROR;
+
+		cthd_trip_point trip_pt(0, PASSIVE, INT32_MAX, 0, index, sensor->get_index());
+		trip_pt.thd_trip_point_set_control_type(SEQUENTIAL);
+		trip_points.push_back(trip_pt);
+		++trip_point_cnt;
+		thd_log_debug("Added one default trip\n");
+	}
+
+	return THD_SUCCESS;
 }
 
 int cthd_sysfs_zone::read_cdev_trip_points() {
