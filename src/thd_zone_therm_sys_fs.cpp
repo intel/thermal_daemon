@@ -96,8 +96,8 @@ int cthd_sysfs_zone::read_trip_points() {
 			mode = zone_sysfs.get_mode(temp_stream.str());
 			zone_sysfs.read(temp_stream.str(), _temp_str);
 			std::istringstream(_temp_str) >> temp;
-			thd_log_debug("read_trip_points %s:%s temp:%d\n",
-					temp_stream.str().c_str(), _temp_str.c_str(), temp);
+			thd_log_debug("read_trip_points %s:%s \n",
+					temp_stream.str().c_str(), _temp_str.c_str());
 		}
 
 		hist_stream << trip_sysfs.str() << i << "_hyst";
@@ -131,12 +131,6 @@ int cthd_sysfs_zone::read_trip_points() {
 			initial_trip_values.push_back(temp);
 		} else
 			initial_trip_values.push_back(-1);
-
-		if (!sensor)
-			thd_log_debug("No sensor found with this name:%s\n", type_str.c_str());
-
-		thd_log_debug("trip type :%d\n", trip_type);
-		thd_log_debug("wr_mode :%d\n", wr_mode);
 
 		if (sensor && temp > 0 && trip_type != INVALID_TRIP_TYPE && !wr_mode) {
 
