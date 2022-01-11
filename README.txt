@@ -111,6 +111,9 @@ For build, follow the same procedure as Fedora.
 
 Releases
 
+Release 2.4.8
+-Fix Ideapad thermal shutdown issue #328
+
 Release 2.4.7
 - Fix AC/DC power limit issue in some HP TigerLake systems
 - Regression fix for RAPL MSR usage in xml config file
