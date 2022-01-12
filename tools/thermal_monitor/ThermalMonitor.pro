@@ -14,9 +14,10 @@ CONFIG(release): DEFINES += QT_NO_DEBUG_OUTPUT
 TARGET = ThermalMonitor
 TEMPLATE = app
 
+LIBS += -lqcustomplot
+
 SOURCES += main.cpp\
         mainwindow.cpp \
-    qcustomplot/qcustomplot.cpp \
     thermaldinterface.cpp \
     pollingdialog.cpp \
     sensorsdialog.cpp \
@@ -24,7 +25,6 @@ SOURCES += main.cpp\
     tripsdialog.cpp
 
 HEADERS  += mainwindow.h \
-    qcustomplot/qcustomplot.h \
     thermaldinterface.h \
     pollingdialog.h \
     sensorsdialog.h \

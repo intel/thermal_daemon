@@ -19,7 +19,7 @@
 #include <QVector>
 #include <QLabel>
 #include <string>
-#include "qcustomplot/qcustomplot.h"
+#include <qcustomplot.h>
 #include "thermaldinterface.h"
 
 typedef struct {
