@@ -31,27 +31,37 @@ thermald \- start Linux thermal daemon
 
 .SH DESCRIPTION
 .B thermald
-is a Linux daemon used to prevent the overheating of platforms. This daemon monitors
-temperature and applies compensation using available cooling methods.
+is a Linux daemon used to prevent the overheating of platforms. This daemon
+monitors temperature and applies compensation using available cooling methods.
 
-By default, it monitors CPU temperature using available CPU digital temperature sensors and maintains CPU temperature under control, before HW takes aggressive correction action.
+By default, it monitors CPU temperature using available CPU digital
+temperature sensors and maintains CPU temperature under control, before
+HW takes aggressive correction action.
 
-Thermal daemon looks for thermal sensors and thermal cooling drivers in the Linux thermal sysfs (/sys/class/thermal) and builds a
-list of sensors and cooling drivers. Each of the thermal sensors can optionally be binded to a cooling drivers by the in kernel
-drivers. In this case the Linux kernel thermal core can directly take actions based on the temperature trip points, for each sensor
-and associated cooling device. For example a trip temperature X in a sensor can be associates a cooling driver Y. So when
-the sensor temperature = X, the cooling driver "Y" is activated.
+Thermal daemon looks for thermal sensors and thermal cooling drivers in the
+Linux thermal sysfs (/sys/class/thermal) and builds a list of sensors and
+cooling drivers. Each of the thermal sensors can optionally be binded to a
+cooling driver by the in kernel drivers. In this case the Linux kernel
+thermal core can directly take actions based on the temperature trip points,
+for each sensor and associated cooling device. For example a trip temperature
+X in a sensor can be associates a cooling driver Y. So when the sensor
+temperature = X, the cooling driver "Y" is activated.
 
-Thermal daemon allows one to change this relationship or add new one via a thermal configuration file (thermal-conf.xml). This
-file is automatically created (thermal-conf.xml.auto) and used, if the platform has ACPI thermal relationship table.
-If not this needs to be manually configured.
+Thermal daemon allows one to change this relationship or add new one via a
+thermal configuration file (thermal-conf.xml). This file is automatically
+created (thermal-conf.xml.auto) and used, if the platform has ACPI thermal
+relationship table.  If not this needs to be manually configured.
 
 For manual configuration refer to the manual page of the thermal-conf.xml.
 
-In some newer platforms the auto creation of the config file is done by a companion tool "dptfxtract". This tool can be downloaded from
-"https://github.com/intel/dptfxtract". It is suggested as parts of the install process, run dptfxtract.
+In some newer platforms the auto creation of the config file is done by a
+companion tool "dptfxtract". This tool can be downloaded from
+"https://github.com/intel/dptfxtract". It is suggested as parts of the
+install process, run dptfxtract.
 
-There can be multiple configuration files. User can select a configuration file via -config-file option to override the default selection. The default selection picks one of the file in the following order:
+There can be multiple configuration files. User can select a configuration
+file via -config-file option to override the default selection. The default
+selection picks one of the file in the following order:
 
 - /etc/thermald/thermal-conf.xml.auto
 
@@ -61,9 +71,10 @@ There can be multiple configuration files. User can select a configuration file 
 
 (*Assuming configure prefix=/ is used during build.)
 
-There is another companion tool "ThermalMonitor", which presents a graphical front end. This allows the monitoring of sensors and changing of thermal trips to give the user more control. The source code of "ThermalMonitor" is a part of the thermald github source, in the tools folder.
-
-
+There is another companion tool "ThermalMonitor", which presents a graphical
+front end. This allows the monitoring of sensors and changing of thermal
+trips to give the user more control. The source code of "ThermalMonitor" is
+a part of the thermald github source, in the tools folder.
 .SH OPTIONS
 .TP
 .B \-h, \-\-help
@@ -83,7 +94,8 @@ log severity: debug level and up: Max logging.
 .TP
 .B \-\-poll-interval
 Poll interval in seconds: Poll for zone temperature changes.
-To disable polling, set to zero. Polling can only be disabled, if available temperature sensors can notify temperature change asynchronously.
+To disable polling, set to zero. Polling can only be disabled, if available
+temperature sensors can notify temperature change asynchronously.
 .TP
 .B \-\-dbus-enable
 Enable Dbus.
@@ -99,23 +111,26 @@ Ignore cpuid check for supported CPU models.
 Specify thermal-conf.xml path and ignore default thermal-conf.xml.
 .TP
 .B \-\-ignore-default-control
-Ignore default CPU temperature control. Strictly follow thermal-conf.xml or thermal-conf.xml.auto.
+Ignore default CPU temperature control. Strictly follow thermal-conf.xml or
+thermal-conf.xml.auto.
 .TP
 .B \-\-workaround-enabled
-Enable special workarounds for RAPL MMIO power limit and TCC offset every 30 seconds. This helps
-to disable RAPL MMIO when not used and adjust TCC offset in certain Lenovo laptops.
+Enable special workarounds for RAPL MMIO power limit and TCC offset every 30
+seconds. This helps to disable RAPL MMIO when not used and adjust TCC offset
+in certain Lenovo laptops.
 .TP
 .B \-\-disable-active-power
-Disable active power management. This will not set active power limits using RAPL MMIO. This
-may result in constrained performance, if the system boots up with lower power limits.
+Disable active power management. This will not set active power limits using
+RAPL MMIO. This may result in constrained performance, if the system boots
+up with lower power limits.
 .TP
 .B \-\-adaptive
-Use DPTF adaptive tables when present. This will ignore thermald config via xml files.
+Use DPTF adaptive tables when present. This will ignore thermald config via
+xml files.
 .TP
 .B \-\-ignore-critical-trip
-If the configuration defined a critical temperature point, which is too low, this option
-will avoid shutting down the system on reaching this temperature limit.
-.TP
-
+If the configuration defined a critical temperature point, which is too low,
+this option will avoid shutting down the system on reaching this temperature
+limit.
 .SH SEE ALSO
 thermal-conf.xml(5)
