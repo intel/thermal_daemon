@@ -36,7 +36,7 @@ int main(int argc, char *argv[])
     if (!thermaldInterface.initialize()) {
         QMessageBox::critical(0, "Can't establish link with thermal daemon.",
                               "Make sure that thermal daemon started with --dbus-enable option\n"
-                              "and that you're in the 'power' group.");
+                              "and that you're in the power management group ('power', 'powerdev' etc).");
         return 1;
     }
 

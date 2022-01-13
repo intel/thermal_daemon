@@ -10,13 +10,13 @@
                 <allow receive_sender="org.freedesktop.thermald"/>
         </policy>
 
-        <!-- Only allow members of the power group to communicate
+        <!-- Only allow members of the @dbusservicepowergrp@ group to communicate
              with the daemon -->
         <policy context="default">
                 <deny send_destination="org.freedesktop.thermald"/>
                 <allow receive_sender="org.freedesktop.thermald"/>
         </policy>
-        <policy group="power">
+        <policy group="@dbusservicepowergrp@">
                 <allow send_destination="org.freedesktop.thermald"/>
                 <allow receive_sender="org.freedesktop.thermald"/>
         </policy>

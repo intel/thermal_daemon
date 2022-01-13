@@ -26,8 +26,9 @@ Open Qt Creator, click File->Open File or Project, browse the project files to o
 
 Running the project
 -------------------
-To communicate with thermald via dbus, the user has to be member of "power" group.
-So make sure that there is group called "power" in the system and add your user id to this group.
+To communicate with thermald via dbus, the user has to be member of a group able to manage power.
+So make sure that there is a power related group the system and add your user id to this group.
+On some sytems this group will be called "power" and on others it may be called "powerdev".
 
 Building the Thermal Monitor with make
 --------------------------------------
