@@ -106,7 +106,7 @@ bool ThermaldInterface::initialize()
     if (z_count.isValid()) {
         zone_count = z_count;
     } else {
-        qCritical() << "error from" << iface->interface() << "=" << cdev_count.error();
+        qCritical() << "error from" << iface->interface() << "=" << z_count.error();
         return false;
     }
 
