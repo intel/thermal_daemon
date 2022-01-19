@@ -89,6 +89,7 @@ class _gddv_exception: public std::exception {
 } gddv_exception;
 
 cthd_engine_adaptive::~cthd_engine_adaptive() {
+	g_clear_object (&upower_client);
 }
 
 int cthd_engine_adaptive::get_type(char *object, int *offset) {
