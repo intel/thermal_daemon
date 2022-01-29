@@ -218,7 +218,7 @@ int main(int argc, char *argv[]) {
 			{ "config-file", 0, 0, G_OPTION_ARG_STRING, &conf_file, N_(
 					"configuration file"), NULL },
 			{ "ignore-default-control", 0, 0, G_OPTION_ARG_NONE, &ignore_default_control, N_(
-							"Ignore default CPU temperature control."
+							"Ignore default CPU temperature control. "
 							"Strictly follow thermal-conf.xml"), NULL },
 			{ "workaround-enabled", 0, 0, G_OPTION_ARG_NONE,
 						&workaround_enabled, N_(
