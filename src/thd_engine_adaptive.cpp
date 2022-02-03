@@ -1684,7 +1684,7 @@ int cthd_engine_adaptive::thd_engine_start(bool ignore_cpuid_check, bool adaptiv
 	return cthd_engine::thd_engine_start(ignore_cpuid_check, adaptive);
 }
 
-int thd_engine_create_adaptive_engine(bool ignore_cpuid_check) {
+int thd_engine_create_adaptive_engine(bool ignore_cpuid_check, bool test_mode) {
 	thd_engine = new cthd_engine_adaptive();
 
 	thd_engine->set_poll_interval(thd_poll_interval);
@@ -1692,6 +1692,12 @@ int thd_engine_create_adaptive_engine(bool ignore_cpuid_check) {
 	// Initialize thermald objects
 	if (thd_engine->thd_engine_start(ignore_cpuid_check, true) != THD_SUCCESS) {
 		thd_log_info("THD engine start failed\n");
+		if (test_mode) {
+			thd_log_warn("This platform doesn't support adaptive mode\n");
+			thd_log_warn("It is possible that manufacturer doesn't support DPTF tables or\n");
+			thd_log_warn("didn't provide tables, which can be parsed in open source.\n");
+			exit(0);
+		}
 		return THD_ERROR;
 	}
 

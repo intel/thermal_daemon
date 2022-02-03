@@ -339,7 +339,7 @@ int main(int argc, char *argv[]) {
 	}
 
 	if (adaptive) {
-		ret = thd_engine_create_adaptive_engine((bool) ignore_cpuid_check);
+		ret = thd_engine_create_adaptive_engine((bool) ignore_cpuid_check, (bool) test_mode);
 		if (ret != THD_SUCCESS) {
 			thd_log_info("--adaptive option failed on this platform\n");
 			thd_log_info("Ignoring --adaptive option\n");

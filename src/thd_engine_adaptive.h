@@ -218,5 +218,5 @@ public:
 	void update_engine_state();
 };
 
-int thd_engine_create_adaptive_engine(bool ignore_cpuid_check);
+int thd_engine_create_adaptive_engine(bool ignore_cpuid_check, bool test_mode);
 #endif /* THD_ENGINE_ADAPTIVE_H_ */
