@@ -1032,6 +1032,11 @@ int cthd_engine_adaptive::evaluate_platform_type_condition(
 	int value = 1;
 
 	if (tablet_dev) {
+		struct input_event ev;
+
+		while (libevdev_has_event_pending(tablet_dev))
+			libevdev_next_event(tablet_dev, LIBEVDEV_READ_FLAG_NORMAL, &ev);
+
 		int tablet = libevdev_get_event_value(tablet_dev, EV_SW,
 				SW_TABLET_MODE);
 		if (tablet)
