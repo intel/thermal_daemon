@@ -1551,7 +1551,7 @@ void cthd_engine_adaptive::setup_input_devices() {
 		int fd = -1;
 
 		snprintf(fname, sizeof(fname), "/dev/input/%s", namelist[i]->d_name);
-		fd = open(fname, O_RDONLY);
+		fd = open(fname, O_RDONLY | O_NONBLOCK | O_CLOEXEC);
 		if (fd < 0)
 			continue;
 		ret = libevdev_new_from_fd(fd, &tablet_dev);
