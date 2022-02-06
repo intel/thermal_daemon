@@ -164,6 +164,7 @@ protected:
 
 	int power_slider;
 
+	void destroy_dynamic_sources();
 	int get_type(char *object, int *offset);
 	uint64_t get_uint64(char *object, int *offset);
 	char* get_string(char *object, int *offset);

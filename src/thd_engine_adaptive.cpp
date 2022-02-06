@@ -88,9 +88,19 @@ class _gddv_exception: public std::exception {
 	}
 } gddv_exception;
 
+void cthd_engine_adaptive::destroy_dynamic_sources() {
+	g_clear_object(&upower_client);
+	g_clear_object(&power_profiles_daemon);
+
+	if (tablet_dev) {
+		close(libevdev_get_fd(tablet_dev));
+		libevdev_free(tablet_dev);
+		tablet_dev = NULL;
+	}
+}
+
 cthd_engine_adaptive::~cthd_engine_adaptive() {
-	g_clear_object (&upower_client);
-	g_clear_object (&power_profiles_daemon);
+	destroy_dynamic_sources();
 }
 
 int cthd_engine_adaptive::get_type(char *object, int *offset) {
@@ -1687,10 +1697,7 @@ int cthd_engine_adaptive::thd_engine_start(bool ignore_cpuid_check, bool adaptiv
 			thd_log_info("Also unable to evaluate any conditions\n");
 			thd_log_info("Falling back to use configuration with the highest power\n");
 
-			if (tablet_dev)
-				libevdev_free(tablet_dev);
-
-			// Looks like there is no free call for up_client_new()
+			destroy_dynamic_sources();
 
 			int i = find_agressive_target();
 			thd_log_info("target:%d\n", i);
