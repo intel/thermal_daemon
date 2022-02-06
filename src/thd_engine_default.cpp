@@ -841,7 +841,15 @@ int thd_engine_create_default_engine(bool ignore_cpuid_check,
 	if (conf_file)
 		thd_engine->set_config_file(conf_file);
 
-	res = thd_engine->thd_engine_start(ignore_cpuid_check);
+	res = thd_engine->thd_engine_init(ignore_cpuid_check);
+	if (res != THD_SUCCESS) {
+		if (res == THD_FATAL_ERROR)
+			thd_log_error("THD engine init failed\n");
+		else
+			thd_log_msg("THD engine init failed\n");
+	}
+
+	res = thd_engine->thd_engine_start();
 	if (res != THD_SUCCESS) {
 		if (res == THD_FATAL_ERROR)
 			thd_log_error("THD engine start failed\n");

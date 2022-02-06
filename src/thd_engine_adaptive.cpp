@@ -1595,11 +1595,14 @@ static void power_profiles_changed_cb(cthd_engine_adaptive *engine)
 	engine->update_power_slider();
 }
 
-int cthd_engine_adaptive::thd_engine_start(bool ignore_cpuid_check, bool adaptive) {
-	g_autoptr(GDBusConnection) bus = NULL;
-	char *buf;
+int cthd_engine_adaptive::thd_engine_init(bool ignore_cpuid_check, bool adaptive) {
 	csys_fs sysfs("");
+	char *buf;
 	size_t size;
+	int res;
+
+	parser_disabled = true;
+	force_mmio_rapl = true;
 
 	if (!ignore_cpuid_check) {
 		check_cpu_id();
@@ -1614,9 +1617,6 @@ int cthd_engine_adaptive::thd_engine_start(bool ignore_cpuid_check, bool adaptiv
 		return THD_ERROR;
 	}
 
-	parser_disabled = true;
-	force_mmio_rapl = true;
-
 	if (sysfs.exists("/sys/bus/platform/devices/INT3400:00")) {
 		int3400_base_path = "/sys/bus/platform/devices/INT3400:00/";
 	} else if (sysfs.exists("/sys/bus/platform/devices/INTC1040:00")) {
@@ -1626,6 +1626,12 @@ int cthd_engine_adaptive::thd_engine_start(bool ignore_cpuid_check, bool adaptiv
 	} else {
 		return THD_ERROR;
 	}
+
+	/* Read the sensors/zones */
+	res = cthd_engine::thd_engine_init(ignore_cpuid_check, adaptive);
+	if (res != THD_SUCCESS)
+		return res;
+
 
 	if (sysfs.read(int3400_base_path + "firmware_node/path",
 			int3400_path) < 0) {
@@ -1665,6 +1671,8 @@ int cthd_engine_adaptive::thd_engine_start(bool ignore_cpuid_check, bool adaptiv
 		dump_psvt();
 		dump_apat();
 		dump_apct();
+
+		delete [] buf;
 	} catch (std::exception &e) {
 		thd_log_warn("%s\n", e.what());
 		delete [] buf;
@@ -1680,8 +1688,17 @@ int cthd_engine_adaptive::thd_engine_start(bool ignore_cpuid_check, bool adaptiv
 			thd_log_info("IETM.D0 found\n");
 			passive_def_only = 1;
 		}
-		return cthd_engine::thd_engine_start(ignore_cpuid_check);
+		return THD_SUCCESS;
 	}
+
+	return THD_SUCCESS;
+}
+
+int cthd_engine_adaptive::thd_engine_start() {
+	g_autoptr(GDBusConnection) bus = NULL;
+
+	if (passive_def_only)
+		return cthd_engine::thd_engine_start();
 
 	setup_input_devices();
 
@@ -1705,7 +1722,6 @@ int cthd_engine_adaptive::thd_engine_start(bool ignore_cpuid_check, bool adaptiv
 				thd_log_info("fallback id:%d\n", i);
 				fallback_id = i;
 			} else {
-				delete[] buf;
 				return THD_ERROR;
 			}
 		}
@@ -1738,7 +1754,7 @@ int cthd_engine_adaptive::thd_engine_start(bool ignore_cpuid_check, bool adaptiv
 	evaluate_conditions();
 	thd_log_info("adaptive engine reached end");
 
-	return cthd_engine::thd_engine_start(ignore_cpuid_check, adaptive);
+	return cthd_engine::thd_engine_start();
 }
 
 int thd_engine_create_adaptive_engine(bool ignore_cpuid_check, bool test_mode) {
@@ -1747,7 +1763,12 @@ int thd_engine_create_adaptive_engine(bool ignore_cpuid_check, bool test_mode) {
 	thd_engine->set_poll_interval(thd_poll_interval);
 
 	// Initialize thermald objects
-	if (thd_engine->thd_engine_start(ignore_cpuid_check, true) != THD_SUCCESS) {
+	if (thd_engine->thd_engine_init(ignore_cpuid_check, true) != THD_SUCCESS) {
+		thd_log_info("THD engine init failed\n");
+		return THD_ERROR;
+	}
+
+	if (thd_engine->thd_engine_start() != THD_SUCCESS) {
 		thd_log_info("THD engine start failed\n");
 		if (test_mode) {
 			thd_log_warn("This platform doesn't support adaptive mode\n");

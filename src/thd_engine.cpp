@@ -174,9 +174,8 @@ bool cthd_engine::set_preference(const int pref) {
 	return true;
 }
 
-int cthd_engine::thd_engine_start(bool ignore_cpuid_check, bool adaptive) {
+int cthd_engine::thd_engine_init(bool ignore_cpuid_check, bool adaptive) {
 	int ret;
-	int wake_fds[2];
 
 	adaptive_mode = adaptive;
 
@@ -195,6 +194,34 @@ int cthd_engine::thd_engine_start(bool ignore_cpuid_check, bool adaptive) {
 			}
 		}
 	}
+
+	ret = read_thermal_sensors();
+	if (ret != THD_SUCCESS) {
+		thd_log_error("Thermal sysfs Error in reading sensors\n");
+		// This is a fatal error and daemon will exit
+		return THD_FATAL_ERROR;
+	}
+
+	ret = read_cooling_devices();
+	if (ret != THD_SUCCESS) {
+		thd_log_error("Thermal sysfs Error in reading cooling devs\n");
+		// This is a fatal error and daemon will exit
+		return THD_FATAL_ERROR;
+	}
+
+	ret = read_thermal_zones();
+	if (ret != THD_SUCCESS) {
+		thd_log_error("No thermal sensors found\n");
+		// This is a fatal error and daemon will exit
+		return THD_FATAL_ERROR;
+	}
+
+	return THD_SUCCESS;
+}
+
+int cthd_engine::thd_engine_start() {
+	int ret;
+	int wake_fds[2];
 
 	check_for_rt_kernel();
 
@@ -226,27 +253,6 @@ int cthd_engine::thd_engine_start(bool ignore_cpuid_check, bool adaptive) {
 	if (poll_interval_sec) {
 		thd_log_msg("Polling mode is enabled: %d\n", poll_interval_sec);
 		poll_timeout_msec = poll_interval_sec * 1000;
-	}
-
-	ret = read_thermal_sensors();
-	if (ret != THD_SUCCESS) {
-		thd_log_error("Thermal sysfs Error in reading sensors\n");
-		// This is a fatal error and daemon will exit
-		return THD_FATAL_ERROR;
-	}
-
-	ret = read_cooling_devices();
-	if (ret != THD_SUCCESS) {
-		thd_log_error("Thermal sysfs Error in reading cooling devs\n");
-		// This is a fatal error and daemon will exit
-		return THD_FATAL_ERROR;
-	}
-
-	ret = read_thermal_zones();
-	if (ret != THD_SUCCESS) {
-		thd_log_error("No thermal sensors found\n");
-		// This is a fatal error and daemon will exit
-		return THD_FATAL_ERROR;
 	}
 
 	if (parser.platform_matched()) {
