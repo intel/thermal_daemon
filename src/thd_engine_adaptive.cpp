@@ -95,7 +95,17 @@ void cthd_engine_adaptive::destroy_dynamic_sources() {
 	if (tablet_dev) {
 		close(libevdev_get_fd(tablet_dev));
 		libevdev_free(tablet_dev);
+
+		if (lid_dev == tablet_dev)
+			lid_dev = NULL;
 		tablet_dev = NULL;
+	}
+
+	if (lid_dev) {
+		close(libevdev_get_fd(lid_dev));
+		libevdev_free(lid_dev);
+
+		lid_dev = NULL;
 	}
 }
 
@@ -849,7 +859,7 @@ int cthd_engine_adaptive::verify_condition(struct condition condition) {
 			|| condition.condition == (adaptive_condition) 0) {
 		return 0;
 	}
-	if (condition.condition == Lid_state && upower_client != NULL)
+	if (condition.condition == Lid_state && lid_dev != NULL)
 		return 0;
 	if (condition.condition == Power_source && upower_client != NULL)
 		return 0;
@@ -1011,11 +1021,16 @@ int cthd_engine_adaptive::evaluate_temperature_condition(
 
 int cthd_engine_adaptive::evaluate_lid_condition(struct condition condition) {
 	int value = 0;
-	bool lid_closed = up_client_get_lid_is_closed(upower_client);
 
-	if (!lid_closed)
-		value = 1;
+	if (lid_dev) {
+		struct input_event ev;
 
+		while (libevdev_has_event_pending(lid_dev))
+			libevdev_next_event(lid_dev, LIBEVDEV_READ_FLAG_NORMAL, &ev);
+
+		int lid_closed = libevdev_get_event_value(lid_dev, EV_SW, SW_LID);
+		value = !lid_closed;
+	}
 	return compare_condition(condition, value);
 }
 
@@ -1548,10 +1563,9 @@ void cthd_engine_adaptive::setup_input_devices() {
 	struct dirent **namelist;
 	int i, ndev, ret;
 
-	tablet_dev = NULL;
-
 	ndev = scandir("/dev/input", &namelist, is_event_device, versionsort);
 	for (i = 0; i < ndev; i++) {
+		struct libevdev *dev = NULL;
 		char fname[267];
 		int fd = -1;
 
@@ -1559,16 +1573,21 @@ void cthd_engine_adaptive::setup_input_devices() {
 		fd = open(fname, O_RDONLY | O_NONBLOCK | O_CLOEXEC);
 		if (fd < 0)
 			continue;
-		ret = libevdev_new_from_fd(fd, &tablet_dev);
+		ret = libevdev_new_from_fd(fd, &dev);
 		if (ret) {
 			close(fd);
 			continue;
 		}
-		if (libevdev_has_event_code(tablet_dev, EV_SW, SW_TABLET_MODE))
-			return;
-		libevdev_free(tablet_dev);
-		tablet_dev = NULL;
-		close(fd);
+
+		if (!tablet_dev && libevdev_has_event_code(dev, EV_SW, SW_TABLET_MODE))
+			tablet_dev = dev;
+		if (!lid_dev &&  libevdev_has_event_code(dev, EV_SW, SW_LID))
+			lid_dev = dev;
+
+		if (lid_dev != dev && tablet_dev != dev) {
+			libevdev_free(dev);
+			close(fd);
+		}
 	}
 }
 

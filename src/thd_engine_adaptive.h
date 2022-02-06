@@ -155,6 +155,7 @@ protected:
 	UpClient *upower_client;
 	GDBusProxy *power_profiles_daemon;
 	struct libevdev *tablet_dev;
+	struct libevdev *lid_dev;
 	int current_condition_set;
 	int policy_active;
 	int fallback_id;
