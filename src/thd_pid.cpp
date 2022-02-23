@@ -45,7 +45,10 @@ int cthd_pid::pid_output(unsigned int curr_temp, int initial_value) {
 		/* Initialize integrative component (err_sum) so that current
 		 * output is the initial_value.
 		 * d_err must be assumed to be zero for this */
-		err_sum = (initial_value - kp * error) / ki;
+		if (ki)
+			err_sum = (initial_value - kp * error) / ki;
+		else
+			err_sum = 0;
 	}
 	time_t timeChange = (now - last_time);
 
