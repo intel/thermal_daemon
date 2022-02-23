@@ -766,7 +766,7 @@ int cthd_engine_adaptive::parse_gddv(char *buf, int size, int *end_offset) {
 		char name[ESIFDV_NAME_LEN + 1] = { 0 };
 		char comment[ESIFDV_DESC_LEN + 1] = { 0 };
 
-		if (header->v2.flags == ESIF_SERVICE_CONFIG_COMPRESSED) {
+		if (header->v2.flags & ESIF_SERVICE_CONFIG_COMPRESSED) {
 			thd_log_debug("Uncompress GDDV payload\n");
 			return handle_compressed_gddv(buf, size);
 		}
