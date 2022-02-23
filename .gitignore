@@ -39,3 +39,8 @@ thd_dbus_interface.h
 *thermald.service
 .dirstamp
 version.xml
+.qmake.stash
+moc_*.cpp
+moc_*.h
+ui_*.h
+ThermalMonitor
