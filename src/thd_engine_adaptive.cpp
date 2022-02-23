@@ -1351,13 +1351,13 @@ void cthd_engine_adaptive::set_int3400_target(struct adaptive_target target) {
 			cthd_zone *_zone = zones[i];
 
 			// This is only for debug to plot power, so keep
-			if (_zone && _zone->get_zone_type() == "rapl_pkg_power")
+			if (_zone->get_zone_type() == "rapl_pkg_power")
 				continue;
 
 			_zone->zone_reset(1);
 			_zone->trip_delete_all();
 
-			if (_zone && _zone->zone_active_status())
+			if (_zone->zone_active_status())
 				_zone->set_zone_inactive();
 		}
 
