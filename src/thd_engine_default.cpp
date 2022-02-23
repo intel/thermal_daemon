@@ -830,6 +830,9 @@ int thd_engine_create_default_engine(bool ignore_cpuid_check,
 		bool exclusive_control, const char *conf_file) {
 	int res;
 	thd_engine = new cthd_engine_default();
+	if (!thd_engine)
+		return THD_ERROR;
+
 	if (exclusive_control)
 		thd_engine->set_control_mode(EXCLUSIVE);
 
