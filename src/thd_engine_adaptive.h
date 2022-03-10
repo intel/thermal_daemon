@@ -155,6 +155,7 @@ protected:
 	UpClient *upower_client;
 	GDBusProxy *power_profiles_daemon;
 	struct libevdev *tablet_dev;
+	struct libevdev *lid_dev;
 	int current_condition_set;
 	int policy_active;
 	int fallback_id;
@@ -164,6 +165,7 @@ protected:
 
 	int power_slider;
 
+	void destroy_dynamic_sources();
 	int get_type(char *object, int *offset);
 	uint64_t get_uint64(char *object, int *offset);
 	char* get_string(char *object, int *offset);
@@ -217,7 +219,8 @@ public:
 
 	~cthd_engine_adaptive();
 	ppcc_t* get_ppcc_param(std::string name);
-	int thd_engine_start(bool ignore_cpuid_check, bool adaptive);
+	int thd_engine_init(bool ignore_cpuid_check, bool adaptive);
+	int thd_engine_start();
 	void update_engine_state();
 	void update_power_slider();
 };

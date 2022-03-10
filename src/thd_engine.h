@@ -148,7 +148,8 @@ public:
 		return control_mode;
 	}
 	void thd_engine_thread();
-	virtual int thd_engine_start(bool ignore_cpuid_check, bool adaptive = false);
+	virtual int thd_engine_init(bool ignore_cpuid_check, bool adaptive = false);
+	virtual int thd_engine_start();
 	int thd_engine_stop();
 	int check_cpu_id();
 
