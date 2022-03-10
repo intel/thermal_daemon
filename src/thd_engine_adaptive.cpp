@@ -89,6 +89,8 @@ class _gddv_exception: public std::exception {
 } gddv_exception;
 
 cthd_engine_adaptive::~cthd_engine_adaptive() {
+	g_clear_object (&upower_client);
+	g_clear_object (&power_profiles_daemon);
 }
 
 int cthd_engine_adaptive::get_type(char *object, int *offset) {
@@ -1031,10 +1033,7 @@ int cthd_engine_adaptive::evaluate_platform_type_condition(
 int cthd_engine_adaptive::evaluate_power_slider_condition(
 		struct condition condition) {
 
-	// We don't have a power slider currently, just set it to 75 which
-	// equals "Better Performance" (using 100 would be more aggressive).
-
-	return compare_condition(condition, 75);
+	return compare_condition(condition, power_slider);
 }
 
 int cthd_engine_adaptive::evaluate_ac_condition(struct condition condition) {
@@ -1558,7 +1557,36 @@ void cthd_engine_adaptive::setup_input_devices() {
 	}
 }
 
+void cthd_engine_adaptive::update_power_slider()
+{
+	g_autoptr(GVariant) active_profile_v = NULL;
+
+	active_profile_v = g_dbus_proxy_get_cached_property (power_profiles_daemon, "ActiveProfile");
+	if (active_profile_v && g_variant_is_of_type (active_profile_v, G_VARIANT_TYPE_STRING)) {
+		const char *active_profile = g_variant_get_string (active_profile_v, NULL);
+
+		if (strcmp (active_profile, "power-saver") == 0)
+			power_slider = 25; /* battery saver */
+		else if (strcmp (active_profile, "balanced") == 0)
+			power_slider = 75; /* better performance */
+		else if (strcmp (active_profile, "performance") == 0)
+			power_slider = 100; /* best performance */
+		else
+			power_slider = 75;
+	} else {
+		power_slider = 75;
+	}
+
+	thd_log_info("Power slider is now set to %d\n", power_slider);
+}
+
+static void power_profiles_changed_cb(cthd_engine_adaptive *engine)
+{
+	engine->update_power_slider();
+}
+
 int cthd_engine_adaptive::thd_engine_start(bool ignore_cpuid_check, bool adaptive) {
+	g_autoptr(GDBusConnection) bus = NULL;
 	char *buf;
 	csys_fs sysfs("");
 	size_t size;
@@ -1677,6 +1705,28 @@ int cthd_engine_adaptive::thd_engine_start(bool ignore_cpuid_check, bool adaptiv
 	}
 
 	set_control_mode(EXCLUSIVE);
+
+	bus = g_bus_get_sync (G_BUS_TYPE_SYSTEM, NULL, NULL);
+	if (bus) {
+		power_profiles_daemon = g_dbus_proxy_new_sync (bus,
+							       G_DBUS_PROXY_FLAGS_DO_NOT_AUTO_START,
+							       NULL,
+							       "net.hadess.PowerProfiles",
+							       "/net/hadess/PowerProfiles",
+							       "net.hadess.PowerProfiles",
+							       NULL,
+							       NULL);
+
+		if (power_profiles_daemon) {
+			g_signal_connect_swapped (power_profiles_daemon,
+						  "g-properties-changed",
+						  (GCallback) power_profiles_changed_cb,
+						  this);
+			power_profiles_changed_cb(this);
+		} else {
+			thd_log_info("Could not setup DBus watch for power-profiles-daemon");
+		}
+	}
 
 	evaluate_conditions();
 	thd_log_info("adaptive engine reached end");
