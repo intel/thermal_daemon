@@ -1151,6 +1151,8 @@ int cthd_engine_adaptive::evaluate_conditions() {
 
 			current_condition_set = i;
 			target = conditions[i][0].target;
+			thd_log_info("Condition Set matched:%d target:%d\n", i, target);
+
 			break;
 		}
 	}
@@ -1423,6 +1425,8 @@ void cthd_engine_adaptive::execute_target(struct adaptive_target target) {
 	cthd_cdev *cdev;
 	std::string name;
 	int argument;
+
+	thd_log_info("Target Name:%s\n", target.name.c_str());
 
 	size_t pos = target.participant.find_last_of(".");
 	if (pos == std::string::npos)
@@ -1776,7 +1780,7 @@ int cthd_engine_adaptive::thd_engine_start() {
 	}
 
 	evaluate_conditions();
-	thd_log_info("adaptive engine reached end");
+	thd_log_info("adaptive engine reached end\n");
 
 	return cthd_engine::thd_engine_start();
 }
