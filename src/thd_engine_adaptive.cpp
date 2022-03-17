@@ -1538,6 +1538,9 @@ int cthd_engine_adaptive::find_agressive_target() {
 	for (int i = 0; i < (int) targets.size(); i++) {
 		int argument;
 
+		if (targets[i].code != "PL1MAX" && targets[i].code != "PL1PowerLimit")
+			continue;
+
 		try {
 			argument = std::stoi(targets[i].argument, NULL);
 		}
@@ -1548,11 +1551,9 @@ int cthd_engine_adaptive::find_agressive_target() {
 		}
 		thd_log_info("target:%s %d\n", targets[i].code.c_str(), argument);
 
-		if (targets[i].code == "PL1MAX") {
-			if (max_pl1_max < argument) {
-				max_pl1_max = argument;
-				max_target_id = i;
-			}
+		if (max_pl1_max < argument) {
+			max_pl1_max = argument;
+			max_target_id = i;
 		}
 	}
 
