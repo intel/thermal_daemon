@@ -63,6 +63,9 @@ int cthd_INT3400::match_supported_uuid() {
 }
 
 void cthd_INT3400::set_default_uuid(void) {
+	if (set_policy_osc() == THD_SUCCESS)
+		return;
+
 	if (base_path == "")
 		return;
 
@@ -73,4 +76,35 @@ void cthd_INT3400::set_default_uuid(void) {
 		thd_log_info("Set Default UUID: %s\n", uuid.c_str());
 		ofs << uuid;
 	}
+}
+
+int cthd_INT3400::set_policy_osc(void) {
+	if (base_path == "")
+		return THD_ERROR;
+
+	std::string filename = base_path + "available_uuids";
+
+	std::ifstream ifs(filename.c_str(), std::ifstream::in);
+	if (ifs.good()) {
+		std::string line;
+		if (std::getline(ifs, line)) {
+			thd_log_debug("available uuids: %s\n", line.c_str());
+			if (line == "UNKNOWN") {
+				std::string _filename = base_path + "current_uuid";
+
+				std::ofstream ofs(_filename.c_str(), std::ofstream::out);
+				if (ofs.good()) {
+					std::string _uuid = "42A441D6-AE6A-462b-A84B-4A8CE79027D3";
+
+					thd_log_info("Set Default UUID: %s\n", _uuid.c_str());
+					ofs << _uuid;
+				}
+
+				return THD_SUCCESS;
+			}
+		}
+		ifs.close();
+	}
+
+	return THD_ERROR;
 }

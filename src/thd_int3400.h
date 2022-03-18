@@ -33,6 +33,7 @@ class cthd_INT3400 {
 private:
 	std::string uuid;
 	std::string base_path;
+	int set_policy_osc(void);
 public:
 	cthd_INT3400(std::string _uuid);
 	int match_supported_uuid(void);

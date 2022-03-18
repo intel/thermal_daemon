@@ -275,6 +275,7 @@ int cthd_engine_adaptive::parse_apct(char *apct, int len) {
 				condition.state = 0;
 				condition.state_entry_time = 0;
 				condition.target = target;
+				condition.ignore_condition = 0;
 
 				if (offset >= len) {
 					thd_log_warn("Read off end of buffer in APCT parsing\n");
@@ -998,6 +999,9 @@ int cthd_engine_adaptive::evaluate_temperature_condition(
 		struct condition condition) {
 	std::string sensor_name;
 
+	if (condition.ignore_condition)
+		return THD_ERROR;
+
 	size_t pos = condition.device.find_last_of(".");
 	if (pos == std::string::npos)
 		sensor_name = condition.device;
@@ -1008,6 +1012,7 @@ int cthd_engine_adaptive::evaluate_temperature_condition(
 	if (!sensor) {
 		thd_log_warn("Unable to find a sensor for %s\n",
 				condition.device.c_str());
+		condition.ignore_condition = 1;
 		return THD_ERROR;
 	}
 
@@ -1151,6 +1156,8 @@ int cthd_engine_adaptive::evaluate_conditions() {
 
 			current_condition_set = i;
 			target = conditions[i][0].target;
+			thd_log_info("Condition Set matched:%d target:%d\n", i, target);
+
 			break;
 		}
 	}
@@ -1412,7 +1419,7 @@ void cthd_engine_adaptive::set_int3400_target(struct adaptive_target target) {
 			sysfs.create();
 			exit(EXIT_FAILURE);
 		}
-
+		passive_installed = 1;
 	}
 	if (target.code == "PSV") {
 		set_trip(target.participant, target.argument);
@@ -1423,6 +1430,8 @@ void cthd_engine_adaptive::execute_target(struct adaptive_target target) {
 	cthd_cdev *cdev;
 	std::string name;
 	int argument;
+
+	thd_log_info("Target Name:%s\n", target.name.c_str());
 
 	size_t pos = target.participant.find_last_of(".");
 	if (pos == std::string::npos)
@@ -1476,8 +1485,18 @@ void cthd_engine_adaptive::exec_fallback_target(int target){
 
 void cthd_engine_adaptive::update_engine_state() {
 
-	if (passive_def_only) {
+	if (passive_def_only || !passive_installed) {
 		if (!passive_def_processed) {
+
+			if (!passive_def_only && !passive_installed) {
+				thd_log_warn(
+						"Manufacturer didn't provide adequate support to run in\n");
+				thd_log_warn(
+						"optimized configuration on Linux with open source\n");
+				thd_log_warn(
+						"You may want to disable thermald on this system if you see issue\n");
+			}
+
 			thd_log_info("IETM_D0 processed\n");
 			passive_def_processed = 1;
 
@@ -1506,9 +1525,10 @@ void cthd_engine_adaptive::update_engine_state() {
 				zones[i]->zone_dump();
 			}
 			thd_log_info("\n\n ZONE DUMP END\n");
+			passive_installed = 1;
 		}
-
-		return;
+		if (passive_def_only)
+			return;
 	}
 
 	int target = evaluate_conditions();
@@ -1534,6 +1554,9 @@ int cthd_engine_adaptive::find_agressive_target() {
 	for (int i = 0; i < (int) targets.size(); i++) {
 		int argument;
 
+		if (targets[i].code != "PL1MAX" && targets[i].code != "PL1PowerLimit")
+			continue;
+
 		try {
 			argument = std::stoi(targets[i].argument, NULL);
 		}
@@ -1544,11 +1567,9 @@ int cthd_engine_adaptive::find_agressive_target() {
 		}
 		thd_log_info("target:%s %d\n", targets[i].code.c_str(), argument);
 
-		if (targets[i].code == "PL1MAX") {
-			if (max_pl1_max < argument) {
-				max_pl1_max = argument;
-				max_target_id = i;
-			}
+		if (max_pl1_max < argument) {
+			max_pl1_max = argument;
+			max_target_id = i;
 		}
 	}
 
@@ -1776,7 +1797,7 @@ int cthd_engine_adaptive::thd_engine_start() {
 	}
 
 	evaluate_conditions();
-	thd_log_info("adaptive engine reached end");
+	thd_log_info("adaptive engine reached end\n");
 
 	return cthd_engine::thd_engine_start();
 }
