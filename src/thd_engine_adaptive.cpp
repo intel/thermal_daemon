@@ -1487,6 +1487,16 @@ void cthd_engine_adaptive::update_engine_state() {
 
 	if (passive_def_only || !passive_installed) {
 		if (!passive_def_processed) {
+
+			if (!passive_def_only && !passive_installed) {
+				thd_log_warn(
+						"Manufacturer didn't provide adequate support to run in\n");
+				thd_log_warn(
+						"optimized configuration on Linux with open source\n");
+				thd_log_warn(
+						"You may want to disable thermald on this system if you see issue\n");
+			}
+
 			thd_log_info("IETM_D0 processed\n");
 			passive_def_processed = 1;
 
