@@ -111,6 +111,16 @@ For build, follow the same procedure as Fedora.
 
 Releases
 
+Release 2.4.9
+- Fix performance issues for Dell Latitude 5421
+- Fix performance issues for Dell Latitude 7320/7420
+(Depend on kernel patch "thermal: int340x: Update OS policy capability handshake")
+- Adaptive improvements from Benzea
+- Thermal Monitor fixes and cosmetic updates
+- Documentation updates from Colin King
+- Static analysis fixes from Benzea
+- Fix test for compressed data vaults
+
 Release 2.4.8
 -Fix Ideapad thermal shutdown issue #328
 

@@ -1,7 +1,7 @@
 AC_PREREQ(1.0)
 
 m4_define([td_major_version], [2])
-m4_define([td_minor_version], [4.8])
+m4_define([td_minor_version], [4.9])
 m4_define([td_version],
           [td_major_version.td_minor_version])
 
