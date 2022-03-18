@@ -275,6 +275,7 @@ int cthd_engine_adaptive::parse_apct(char *apct, int len) {
 				condition.state = 0;
 				condition.state_entry_time = 0;
 				condition.target = target;
+				condition.ignore_condition = 0;
 
 				if (offset >= len) {
 					thd_log_warn("Read off end of buffer in APCT parsing\n");
@@ -998,6 +999,9 @@ int cthd_engine_adaptive::evaluate_temperature_condition(
 		struct condition condition) {
 	std::string sensor_name;
 
+	if (condition.ignore_condition)
+		return THD_ERROR;
+
 	size_t pos = condition.device.find_last_of(".");
 	if (pos == std::string::npos)
 		sensor_name = condition.device;
@@ -1008,6 +1012,7 @@ int cthd_engine_adaptive::evaluate_temperature_condition(
 	if (!sensor) {
 		thd_log_warn("Unable to find a sensor for %s\n",
 				condition.device.c_str());
+		condition.ignore_condition = 1;
 		return THD_ERROR;
 	}
 

@@ -129,6 +129,7 @@ struct condition {
 	int target;
 	int state;
 	int state_entry_time;
+	int ignore_condition;
 };
 
 struct custom_condition {
