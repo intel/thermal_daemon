@@ -1419,7 +1419,7 @@ void cthd_engine_adaptive::set_int3400_target(struct adaptive_target target) {
 			sysfs.create();
 			exit(EXIT_FAILURE);
 		}
-
+		passive_installed = 1;
 	}
 	if (target.code == "PSV") {
 		set_trip(target.participant, target.argument);
@@ -1485,7 +1485,7 @@ void cthd_engine_adaptive::exec_fallback_target(int target){
 
 void cthd_engine_adaptive::update_engine_state() {
 
-	if (passive_def_only) {
+	if (passive_def_only || !passive_installed) {
 		if (!passive_def_processed) {
 			thd_log_info("IETM_D0 processed\n");
 			passive_def_processed = 1;
@@ -1515,9 +1515,10 @@ void cthd_engine_adaptive::update_engine_state() {
 				zones[i]->zone_dump();
 			}
 			thd_log_info("\n\n ZONE DUMP END\n");
+			passive_installed = 1;
 		}
-
-		return;
+		if (passive_def_only)
+			return;
 	}
 
 	int target = evaluate_conditions();
