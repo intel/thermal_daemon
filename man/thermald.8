@@ -128,6 +128,14 @@ up with lower power limits.
 Use DPTF adaptive tables when present. This will ignore thermald config via
 xml files.
 .TP
+.B \-\-test-mode
+Force use adaptive mode and exit if not supported, instead of restarting in
+non adaptive mode. This option is primarily for developers.
+.TP
+.B \-\-systemd
+Assume that thermald is started by systemd. This will prevent running as
+daemon irrespective of --no-daemon option.
+.TP
 .B \-\-ignore-critical-trip
 If the configuration defined a critical temperature point, which is too low,
 this option will avoid shutting down the system on reaching this temperature
