@@ -38,6 +38,9 @@ typedef struct {
 	int trip;
 	int target_state_valid;
 	int target_value;
+	int _min_state;
+	int _max_state;
+	int _min_max_valid;
 } zone_trip_limits_t;
 
 #define ZONE_TRIP_LIMIT_COUNT	12
@@ -79,9 +82,10 @@ private:
 		return _pow;
 	}
 	int thd_cdev_exponential_controller(int set_point, int target_temp,
-			int temperature, int state, int arg);
-	int thd_clamp_state_min(int _state);
-	int thd_clamp_state_max(int _state);
+			int temperature, int state, int arg, int temp_min_state = 0,
+			int temp_max_state = 0);
+	int thd_clamp_state_min(int _state, int temp_min_state = 0);
+	int thd_clamp_state_max(int _state, int temp_max_state = 0);
 public:
 	static const int default_debounce_interval = 2; // In seconds
 	cthd_cdev(unsigned int _index, std::string control_path) :
@@ -96,9 +100,10 @@ public:
 	virtual ~cthd_cdev() {
 	}
 	virtual int thd_cdev_set_state(int set_point, int target_temp,
-			int temperature, int hard_target, int state,
-			int zone_id, int trip_id, int target_state_valid, int target_value,
-			pid_param_t *pid_param, cthd_pid& pid, bool force);
+			int temperature, int hard_target, int state, int zone_id,
+			int trip_id, int target_state_valid, int target_value,
+			pid_param_t *pid_param, cthd_pid &pid, bool force,
+			int min_max_valid, int _min_state, int _max_state);
 
 	virtual int thd_cdev_set_min_state(int zone_id, int trip_id);
 
