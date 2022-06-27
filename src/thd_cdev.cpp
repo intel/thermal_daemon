@@ -39,50 +39,78 @@
 #include "thd_cdev.h"
 #include "thd_engine.h"
 
-int cthd_cdev::thd_clamp_state_min(int _state)
+// Clamp to cdev min state or trip specific min if valid
+int cthd_cdev::thd_clamp_state_min(int _state, int temp_min_state)
 {
-	if ((min_state < max_state && _state < min_state)
-			|| (min_state > max_state && _state > min_state))
-		return min_state;
+	int _min_state = min_state;
+
+	if (_min_state > max_state) {
+		if (temp_min_state && temp_min_state < _min_state)
+			_min_state = temp_min_state;
+	} else {
+		if (temp_min_state && temp_min_state > _min_state)
+			_min_state = temp_min_state;
+	}
+
+	thd_log_debug("def_min_state:%d curr_min_state:%d\n", min_state,
+			_min_state);
+
+	if ((_min_state < max_state && _state < _min_state)
+			|| (_min_state > max_state && _state > _min_state))
+		return _min_state;
 	else
 		return _state;
 }
 
-int cthd_cdev::thd_clamp_state_max(int _state)
+// Clamp to cdev max state or trip specific max if valid
+int cthd_cdev::thd_clamp_state_max(int _state, int temp_max_state)
 {
-	if ((min_state < max_state && _state > max_state)
-			|| (min_state > max_state && _state < max_state))
-		return max_state;
+	int _max_state = max_state;
+
+	if (min_state > _max_state) {
+		if (temp_max_state && temp_max_state > _max_state)
+			_max_state = temp_max_state;
+	} else {
+		if (temp_max_state && temp_max_state < _max_state)
+			_max_state = temp_max_state;
+	}
+
+	thd_log_debug("def_max_state:%d temp_max_state:%d curr_max_state:%d\n",
+			max_state, temp_max_state, _max_state);
+
+	if ((min_state < _max_state && _state > _max_state)
+			|| (min_state > _max_state && _state < _max_state))
+		return _max_state;
 	else
 		return _state;
 }
 
 int cthd_cdev::thd_cdev_exponential_controller(int set_point, int target_temp,
-		int temperature, int state, int zone_id) {
+		int temperature, int state, int zone_id, int temp_min_state, int temp_max_state) {
 
 	int control = state;
-	int curr_state, max_state, _state;
+	int _curr_state, _max_state, _state;
 
-	max_state = get_max_state();
+	_max_state = get_max_state();
 
 	if (state) {
 		// Get the latest state, which for some devices read the state from the hardware
-		curr_state = get_curr_state(true);
+		_curr_state = get_curr_state(true);
 		// Clamp the current state to min_state, as we start from min to max for
 		// activation of a cooling device
-		curr_state = thd_clamp_state_min(curr_state);
+		_curr_state = thd_clamp_state_min(_curr_state, temp_min_state);
 		thd_log_debug("thd_cdev_set_%d:curr state %d max state %d\n", index,
-				curr_state, max_state);
+				_curr_state, _max_state);
 
 		if (inc_val)
-			_state = curr_state + inc_val;
+			_state = _curr_state + inc_val;
 		else
-			_state = curr_state + inc_dec_val;
+			_state = _curr_state + inc_dec_val;
 
 		if (trend_increase) {
 			// This means this is a repeat call for activation
 			if (curr_pow == 0)
-				base_pow_state = curr_state;
+				base_pow_state = _curr_state;
 			++curr_pow;
 
 			if (inc_val)
@@ -90,25 +118,32 @@ int cthd_cdev::thd_cdev_exponential_controller(int set_point, int target_temp,
 			else
 				_state = base_pow_state + int_2_pow(curr_pow) * inc_dec_val;
 
-			thd_log_info(
-					"cdev index:%d consecutive call, increment exponentially state %d (min %d max %d)\n",
-					index, _state, min_state, max_state);
+			// Check for the overflow exhaust the valid range
+			if (((inc_val < 0) && (base_pow_state < _state))
+					|| ((inc_val > 0) && (base_pow_state > _state)))
+				_state = max_state;
 
-			// Make sure that the state is not beyond max_state
-			_state = thd_clamp_state_max(_state);
+			thd_log_info(
+					"cdev index:%d consecutive call, increment exponentially state %d (min %d max %d) (%d:%d)\n",
+					index, _state, min_state, _max_state, base_pow_state, curr_pow);
+
 		} else {
 			curr_pow = 0;
 		}
+
+		// Make sure that the state is not beyond max_state
+		_state = thd_clamp_state_max(_state, temp_max_state);
+
 		trend_increase = true;
 		thd_log_debug("op->device:%s %d\n", type_str.c_str(), _state);
 		set_curr_state(_state, control);
 	} else {
 		// Get the latest state, which is not the latest from the hardware but last set state to the device
-		curr_state = get_curr_state();
-		curr_state = thd_clamp_state_max(curr_state);
+		_curr_state = get_curr_state();
+		_curr_state = thd_clamp_state_max(curr_state);
 
 		thd_log_debug("thd_cdev_set_%d:curr state %d max state %d\n", index,
-				curr_state, max_state);
+				curr_state, _max_state);
 
 		curr_pow = 0;
 		trend_increase = false;
@@ -116,9 +151,9 @@ int cthd_cdev::thd_cdev_exponential_controller(int set_point, int target_temp,
 		if (auto_down_adjust == false) {
 
 			if (dec_val)
-				_state = curr_state - dec_val;
+				_state = _curr_state - dec_val;
 			else
-				_state = curr_state - inc_dec_val;
+				_state = _curr_state - inc_dec_val;
 
 			// Make sure that it is not beyond min_state
 			_state = thd_clamp_state_min(_state);
@@ -149,6 +184,16 @@ static bool sort_clamp_values_asc(zone_trip_limits_t limit_1,
 static bool sort_clamp_values_dec(zone_trip_limits_t limit_1,
 		zone_trip_limits_t limit_2) {
 	return (limit_1.target_value > limit_2.target_value);
+}
+
+static bool sort_min_max_values_asc(zone_trip_limits_t limit_1,
+		zone_trip_limits_t limit_2) {
+	return (limit_1._min_state < limit_2._min_state);
+}
+
+static bool sort_min_max_values_dec(zone_trip_limits_t limit_1,
+		zone_trip_limits_t limit_2) {
+	return (limit_1._max_state > limit_2._max_state);
 }
 
 /*
@@ -183,8 +228,9 @@ static bool sort_clamp_values_dec(zone_trip_limits_t limit_1,
 
 int cthd_cdev::thd_cdev_set_state(int set_point, int target_temp,
 		int temperature, int hard_target, int state, int zone_id, int trip_id,
-		int target_state_valid, int target_value,
-		pid_param_t *pid_param, cthd_pid& pid, bool force) {
+		int target_state_valid, int target_value, pid_param_t *pid_param,
+		cthd_pid &pid, bool force, int min_max_valid, int _min_state,
+		int _max_state) {
 
 	time_t tm;
 	int ret;
@@ -199,9 +245,9 @@ int cthd_cdev::thd_cdev_set_state(int set_point, int target_temp,
 	time(&tm);
 
 	thd_log_debug(
-			">>thd_cdev_set_state temperature %d:%d index:%d state:%d :zone:%d trip_id:%d target_state_valid:%d target_value :%d force:%d\n",
+			">>thd_cdev_set_state temperature %d:%d index:%d state:%d :zone:%d trip_id:%d target_state_valid:%d target_value :%d force:%d min_state:%d max_state:%d\n",
 			target_temp, temperature, index, state, zone_id, trip_id,
-			target_state_valid, target_value, force);
+			target_state_valid, target_value, force, _min_state, _max_state);
 
 	if (state) {
 		bool found = false;
@@ -226,9 +272,29 @@ int cthd_cdev::thd_cdev_set_state(int set_point, int target_temp,
 			limit.trip = trip_id;
 			limit.target_state_valid = target_state_valid;
 			limit.target_value = target_value;
-			thd_log_info("Added zone %d trip %d clamp_valid %d clamp %d\n",
+
+			// Cap the trip min max limits to actual cooling device trips
+			// Here min_state and max_state are for cooling device and
+			// _min_state and _max_state are defined for per trip
+			// in thermal table
+			if (min_max_valid) {
+				if (_min_state == TRIP_PT_INVALID_TARGET_STATE || !_min_state)
+					_min_state = min_state;
+
+				if (_max_state == TRIP_PT_INVALID_TARGET_STATE || !_max_state)
+					_max_state = max_state;
+			} else {
+				_max_state = 0;
+				_min_state = 0;
+			}
+
+			limit._max_state = _max_state;
+			limit._min_state = _min_state;
+			limit._min_max_valid = min_max_valid;
+
+			thd_log_info("Added zone %d trip %d clamp_valid %d clamp %d _min:%d _max:%d\n",
 					limit.zone, limit.trip, limit.target_state_valid,
-					limit.target_value);
+					limit.target_value, limit._min_state, limit._max_state);
 			zone_trip_limits.push_back(limit);
 
 			if (target_state_valid) {
@@ -240,6 +306,21 @@ int cthd_cdev::thd_cdev_set_state(int set_point, int target_temp,
 							sort_clamp_values_dec);
 				}
 			}
+
+			// Target state and min_max_valid or mutually exclusive
+			// in thermal tables. So no need to consolidate min/max with
+			// target
+			// The table will be ordered so that most restrictive is the
+			// first entry
+			if (min_max_valid) {
+				if (min_state < max_state) {
+					std::sort(zone_trip_limits.begin(), zone_trip_limits.end(),
+							sort_min_max_values_dec);
+				} else {
+					std::sort(zone_trip_limits.begin(), zone_trip_limits.end(),
+							sort_min_max_values_asc);
+				}
+			}
 		}
 
 		zone_trip_limits_t limit;
@@ -247,6 +328,12 @@ int cthd_cdev::thd_cdev_set_state(int set_point, int target_temp,
 		limit = zone_trip_limits[zone_trip_limits.size() - 1];
 		target_value = limit.target_value;
 		target_state_valid = limit.target_state_valid;
+
+		target_value = limit.target_value;
+		min_max_valid = limit._min_max_valid;
+		_max_state = limit._max_state;
+		_min_state = limit._min_state;
+
 		if (!first_entry && target_state_valid
 				&& cmp_current_state(
 						map_target_state(target_state_valid, target_value))
@@ -394,7 +481,7 @@ int cthd_cdev::thd_cdev_set_state(int set_point, int target_temp,
 		ret = THD_SUCCESS;
 	} else {
 		ret = thd_cdev_exponential_controller(set_point, target_temp,
-				temperature, state, zone_id);
+				temperature, state, zone_id, _min_state, _max_state);
 	}
 	if (curr_state == get_max_state()) {
 		control_end();
@@ -407,7 +494,7 @@ int cthd_cdev::thd_cdev_set_min_state(int zone_id, int trip_id) {
 	trend_increase = false;
 	cthd_pid unused;
 	thd_cdev_set_state(0, 0, 0, 0, 0, zone_id, trip_id, 1, min_state, NULL,
-			unused, true);
+			unused, true, 0, 0, 0);
 
 	return THD_SUCCESS;
 }
