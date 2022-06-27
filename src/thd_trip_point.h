@@ -62,6 +62,9 @@ typedef struct {
 	int target_state;
 	pid_param_t pid_param;
 	cthd_pid pid;
+	int min_max_valid;
+	int min_state;
+	int max_state;
 } trip_pt_cdev_t;
 
 #define DEFAULT_SENSOR_ID	0xFFFF
@@ -112,7 +115,8 @@ public:
 	void thd_trip_point_add_cdev(cthd_cdev &cdev, int influence,
 			int sampling_period = 0, int target_state_valid = 0,
 			int target_state =
-			TRIP_PT_INVALID_TARGET_STATE, pid_param_t *pid_param = NULL);
+			TRIP_PT_INVALID_TARGET_STATE, pid_param_t *pid_param = NULL,
+			int min_max_valid = 0, int min_state = 0, int max_state = 0);
 
 	void delete_cdevs() {
 		cdevs.clear();
@@ -254,10 +258,16 @@ public:
 			else
 				thd_log_info("\t target_state:not defined\n");
 
+			thd_log_info("min_max %d\n", cdevs[i].min_max_valid);
+
 			if (cdevs[i].pid_param.valid)
 				thd_log_info("\t pid: kp=%g ki=%g kd=%g\n",
 						cdevs[i].pid_param.kp, cdevs[i].pid_param.ki,
 						cdevs[i].pid_param.kd);
+			if (cdevs[i].min_max_valid) {
+				thd_log_info("\t min_state:%d\n", cdevs[i].min_state);
+				thd_log_info("\t max_state:%d\n", cdevs[i].max_state);
+			}
 		}
 	}
 };

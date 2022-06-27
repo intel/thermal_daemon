@@ -1317,7 +1317,7 @@ int cthd_engine_adaptive::install_passive(struct psv *psv) {
 					psv->sample_period / 10,
 					target_state ? 1 : 0,
 					target_state,
-					NULL);
+					NULL, 0, 0, 0);
 	zone->add_trip(trip_pt, 1);
 	zone->zone_cdev_set_binded();
 	zone->set_zone_active();
