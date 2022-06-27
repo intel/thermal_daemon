@@ -198,7 +198,10 @@ protected:
 	int parse_gddv_key(char *buf, int size, int *end_offset);
 	int parse_gddv(char *buf, int size, int *end_offset);
 	struct psvt* find_psvt(std::string name);
+	struct itmt* find_itmt(std::string name);
+	int set_itmt_target(struct adaptive_target target);
 	int install_passive(struct psv *psv);
+	int install_itmt(struct itmt_entry *itmt_entry);
 	void psvt_consolidate();
 	void set_trip(std::string device, std::string argument);
 	void set_int3400_target(struct adaptive_target target);
