@@ -622,6 +622,52 @@ struct psvt* cthd_engine_adaptive::find_def_psvt() {
 	return NULL;
 }
 
+int cthd_engine_adaptive::parse_itmt(char *name, char *buf, int len) {
+	int offset = 0;
+	int version = get_uint64(buf, &offset);
+	struct itmt itmt;
+
+	thd_log_debug(" ITMT version %d %s\n", (int) version, name);
+
+	if (name == NULL)
+		itmt.name = "Default";
+	else
+		itmt.name = name;
+
+	while (offset < len) {
+		struct itmt_entry itmt_entry;
+
+		itmt_entry.target = get_string(buf, &offset);
+		itmt_entry.trip_point = get_uint64(buf, &offset);
+		itmt_entry.pl1_min = get_string(buf, &offset);
+		itmt_entry.pl1_max = get_string(buf, &offset);
+		itmt_entry.unused = get_string(buf, &offset);
+		offset += 12;
+
+		itmt.itmt_entries.push_back(itmt_entry);
+	}
+
+	itmts.push_back(itmt);
+
+	return 0;
+}
+
+void cthd_engine_adaptive::dump_itmt() {
+	thd_log_info("..itmt dump begin.. \n");
+	for (unsigned int i = 0; i < itmts.size(); ++i) {
+		std::vector<struct itmt_entry> itmt = itmts[i].itmt_entries;
+
+		thd_log_info("Name :%s\n", itmts[i].name.c_str());
+		for (unsigned int j = 0; j < itmt.size(); ++j) {
+			thd_log_info("\t target:%s  trip_temp:%d pl1_min:%s pl1.max:%s\n",
+					itmt[j].target.c_str(),
+					DECI_KELVIN_TO_CELSIUS(itmt[j].trip_point),
+					itmt[j].pl1_min.c_str(), itmt[j].pl1_max.c_str());
+		}
+	}
+	thd_log_info("itmt dump end\n");
+}
+
 // From Common/esif_sdk_iface_esif.h:
 #define ESIF_SERVICE_CONFIG_COMPRESSED  0x40000000/* Payload is Compressed */
 // From Common/esif_sdk.h
@@ -755,6 +801,13 @@ int cthd_engine_adaptive::parse_gddv_key(char *buf, int size, int *end_offset) {
 
 	if (type && strcmp(type, "apat") == 0) {
 		parse_apat(val, vallength);
+	}
+
+	if (type && strcmp(type, "itmt") == 0) {
+		if (point == NULL)
+			parse_itmt(name, val, vallength);
+		else
+			parse_itmt(point, val, vallength);
 	}
 
 	delete[] (key);
@@ -1714,6 +1767,7 @@ int cthd_engine_adaptive::thd_engine_init(bool ignore_cpuid_check, bool adaptive
 
 		dump_ppcc();
 		dump_psvt();
+		dump_itmt();
 		dump_apat();
 		dump_apct();
 

@@ -145,6 +145,19 @@ struct psvt {
 	std::vector<struct psv> psvs;
 };
 
+struct itmt_entry {
+	std::string target;
+	int trip_point;
+	std::string pl1_min;
+	std::string pl1_max;
+	std::string unused;
+};
+
+struct itmt {
+	std::string name;
+	std::vector<struct itmt_entry> itmt_entries;
+};
+
 class cthd_engine_adaptive: public cthd_engine_default {
 protected:
 	std::vector<ppcc_t> ppccs;
@@ -152,6 +165,7 @@ protected:
 	std::vector<struct custom_condition> custom_conditions;
 	std::vector<struct adaptive_target> targets;
 	std::vector<struct psvt> psvts;
+	std::vector<struct itmt> itmts;
 	std::string int3400_path;
 	UpClient *upower_client;
 	GDBusProxy *power_profiles_daemon;
@@ -179,6 +193,7 @@ protected:
 	int parse_apct(char *apct, int len);
 	int parse_ppcc(char *name, char *ppcc, int len);
 	int parse_psvt(char *name, char *psvt, int len);
+	int parse_itmt(char *name, char *itmt, int len);
 	int handle_compressed_gddv(char *buf, int size);
 	int parse_gddv_key(char *buf, int size, int *end_offset);
 	int parse_gddv(char *buf, int size, int *end_offset);
@@ -209,6 +224,7 @@ protected:
 	void dump_apct();
 	void dump_ppcc();
 	void dump_psvt();
+	void dump_itmt();
 	struct psvt *find_def_psvt();
 
 public:
