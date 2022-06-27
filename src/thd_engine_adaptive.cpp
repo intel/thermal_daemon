@@ -1228,6 +1228,16 @@ struct psvt* cthd_engine_adaptive::find_psvt(std::string name) {
 	return NULL;
 }
 
+struct itmt* cthd_engine_adaptive::find_itmt(std::string name) {
+	for (int i = 0; i < (int) itmts.size(); i++) {
+		if (!strcasecmp(itmts[i].name.c_str(), name.c_str())) {
+			return &itmts[i];
+		}
+	}
+
+	return NULL;
+}
+
 int cthd_engine_adaptive::install_passive(struct psv *psv) {
 	std::string psv_zone;
 
@@ -1426,9 +1436,144 @@ void cthd_engine_adaptive::psvt_consolidate()
 	}
 }
 
+#define DEFAULT_SAMPLE_TIME_SEC		5
+
+int cthd_engine_adaptive::install_itmt(struct itmt_entry *itmt_entry) {
+	std::string itmt_zone;
+
+	size_t pos = itmt_entry->target.find_last_of(".");
+	if (pos == std::string::npos)
+		itmt_zone = itmt_entry->target;
+	else
+		itmt_zone = itmt_entry->target.substr(pos + 1);
+
+	while (itmt_zone.back() == '_') {
+		itmt_zone.pop_back();
+	}
+
+	cthd_zone *zone = search_zone(itmt_zone);
+	if (!zone) {
+		if (!itmt_zone.compare(0, 4, "B0D4")) {
+			itmt_zone = "TCPU";
+			zone = search_zone(itmt_zone);
+		}
+
+		if (!zone) {
+			if (!itmt_zone.compare(0, 4, "TCPU")) {
+				itmt_zone = "B0D4";
+				zone = search_zone(itmt_zone);
+			}
+			if (!zone) {
+				thd_log_warn("Unable to find a zone for %s\n",
+						itmt_zone.c_str());
+				return THD_ERROR;
+			}
+		}
+	}
+
+	cthd_cdev *cdev = search_cdev("rapl_controller_mmio");
+
+	if (!cdev) {
+		return THD_ERROR;
+	}
+
+	cthd_sensor *sensor = search_sensor(itmt_zone);
+	if (!sensor) {
+		thd_log_warn("Unable to find a sensor for %s\n", itmt_zone.c_str());
+		return THD_ERROR;
+	}
+
+	int temp = (itmt_entry->trip_point - 2732) * 100;
+	int min_state = 0, max_state = 0;
+
+	if (itmt_entry->pl1_max.length()) {
+		if (!strncasecmp(itmt_entry->pl1_max.c_str(), "MAX", 3)) {
+			max_state = TRIP_PT_INVALID_TARGET_STATE;
+		} else if (!strncasecmp(itmt_entry->pl1_max.c_str(), "MIN", 3)) {
+			max_state = 0;
+		} else {
+			std::istringstream buffer(itmt_entry->pl1_max);
+			buffer >> max_state;
+			max_state *= 1000;
+		}
+	}
+
+	if (itmt_entry->pl1_min.length()) {
+		if (!strncasecmp(itmt_entry->pl1_min.c_str(), "MAX", 3)) {
+			min_state = TRIP_PT_INVALID_TARGET_STATE;
+		} else if (!strncasecmp(itmt_entry->pl1_min.c_str(), "MIN", 3)) {
+			min_state = 0;
+		} else {
+			std::istringstream buffer(itmt_entry->pl1_min);
+			buffer >> min_state;
+			min_state *= 1000;
+		}
+	}
+
+	cthd_trip_point trip_pt(zone->get_trip_count(), PASSIVE, temp, 0,
+			zone->get_zone_index(), sensor->get_index(), SEQUENTIAL);
+
+	trip_pt.thd_trip_point_add_cdev(*cdev, cthd_trip_point::default_influence,
+	DEFAULT_SAMPLE_TIME_SEC, 0, 0,
+	NULL, 1, max_state, min_state);
+
+	zone->add_trip(trip_pt, 1);
+	zone->zone_cdev_set_binded();
+	zone->set_zone_active();
+
+	return 0;
+}
+
+int cthd_engine_adaptive::set_itmt_target(struct adaptive_target target) {
+	struct itmt *itmt;
+
+	thd_log_info("set_int3400 ITMT target %s\n", target.argument.c_str());
+
+	itmt = find_itmt(target.argument);
+	if (!itmt) {
+		return THD_ERROR;
+	}
+
+	for (unsigned int i = 0; i < zones.size(); ++i) {
+		cthd_zone *_zone = zones[i];
+
+		// This is only for debug to plot power, so keep
+		if (_zone->get_zone_type() == "rapl_pkg_power")
+			continue;
+
+		_zone->zone_reset(1);
+		_zone->trip_delete_all();
+
+		if (_zone->zone_active_status())
+			_zone->set_zone_inactive();
+	}
+
+	for (int i = 0; i < (int) itmt->itmt_entries.size(); i++) {
+		install_itmt(&itmt->itmt_entries[i]);
+	}
+
+	thd_log_info("\n\n ZONE DUMP BEGIN\n");
+	int new_zone_count = 0;
+	for (unsigned int i = 0; i < zones.size(); ++i) {
+		zones[i]->zone_dump();
+		if (zones[i]->zone_active_status())
+			++new_zone_count;
+	}
+	thd_log_info("\n\n ZONE DUMP END\n");
+
+	return THD_SUCCESS;
+
+}
+
 void cthd_engine_adaptive::set_int3400_target(struct adaptive_target target) {
-	struct psvt *psvt;
+
+	if (target.code == "ITMT") {
+		if (set_itmt_target(target) == THD_SUCCESS)
+			return;
+	}
 	if (target.code == "PSVT") {
+		struct psvt *psvt;
+
 		thd_log_info("set_int3400 target %s\n", target.argument.c_str());
 
 		psvt = find_psvt(target.argument);
