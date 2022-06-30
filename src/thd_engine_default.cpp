@@ -22,6 +22,7 @@
  *
  */
 
+#include <cstring>
 #include <dirent.h>
 #include <errno.h>
 #include <sys/types.h>
@@ -94,7 +95,6 @@ int cthd_engine_default::read_thermal_sensors() {
 	int index;
 	DIR *dir;
 	struct dirent *entry;
-	int sensor_mask = 0x0f;
 	cthd_sensor *sensor;
 	const std::string base_path[] = { "/sys/devices/platform/",
 			"/sys/class/hwmon/" };
@@ -147,22 +147,30 @@ int cthd_engine_default::read_thermal_sensors() {
 					if (name != "coretemp")
 						continue;
 
-					int cnt = 0;
-					unsigned int mask = 0x1;
-					do {
-						if (sensor_mask & mask) {
-							std::stringstream temp_input_str;
-							std::string path = base_path[i] + entry->d_name
-									+ "/";
-							csys_fs dts_sysfs(path.c_str());
-							temp_input_str << "temp" << cnt << "_input";
-							if (dts_sysfs.exists(temp_input_str.str())) {
+					std::string temp_dir_path = base_path[i] + entry->d_name
+							+ "/";
+					DIR *temp_dir = nullptr;
+					struct dirent *temp_dir_entry = nullptr;
+					int len_temp_dir_entry = 0;
+					int len_input = strlen("_input");
+
+					if ((temp_dir = opendir(temp_dir_path.c_str())) != NULL) {
+						while ((temp_dir_entry = readdir(temp_dir)) != NULL) {
+							len_temp_dir_entry = strlen(temp_dir_entry->d_name);
+							if ((len_temp_dir_entry >= len_input
+									&& !strcmp(
+											temp_dir_entry->d_name
+													+ len_temp_dir_entry
+													- len_input, "_input"))
+									&& (!strncmp(temp_dir_entry->d_name, "temp",
+											strlen("temp")))) {
+
 								cthd_sensor *sensor = new cthd_sensor(index,
-										base_path[i] + entry->d_name + "/"
-												+ temp_input_str.str(), "hwmon",
-										SENSOR_TYPE_RAW);
+										temp_dir_path + temp_dir_entry->d_name,
+										"hwmon", SENSOR_TYPE_RAW);
 								if (sensor->sensor_update() != THD_SUCCESS) {
 									delete sensor;
+									closedir(temp_dir);
 									closedir(dir);
 									return THD_ERROR;
 								}
@@ -170,9 +178,8 @@ int cthd_engine_default::read_thermal_sensors() {
 								++index;
 							}
 						}
-						mask = (mask << 1);
-						cnt++;
-					} while (mask != 0);
+						closedir(temp_dir);
+					}
 				}
 			}
 			closedir(dir);
