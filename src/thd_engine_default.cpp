@@ -165,6 +165,7 @@ int cthd_engine_default::read_thermal_sensors() {
 										"hwmon", SENSOR_TYPE_RAW);
 								if (sensor->sensor_update() != THD_SUCCESS) {
 									delete sensor;
+									closedir(temp_dir);
 									closedir(dir);
 									return THD_ERROR;
 								}
