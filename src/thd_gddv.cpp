@@ -648,6 +648,114 @@ void cthd_gddv::dump_itmt() {
 	thd_log_info("itmt dump end\n");
 }
 
+void cthd_gddv::parse_idsp(char *name, char *start, int length) {
+	int len, i = 0;
+	unsigned char *str = (unsigned char*) start;
+
+	while (i < length) {
+		char idsp[64];
+		std::string idsp_str;
+
+		// The minimum length for a IDSP should be atleast 28
+		// including headers and values
+		if ((length - i) < 28)
+			return;
+
+		if (*str != 7)
+			break;
+
+		str += 4; // Get to Length field
+		i += 4;
+
+		len = *(int*) str;
+		str += 8; // Get to actual contents
+		i += 8;
+
+		snprintf(idsp, sizeof(idsp),
+				"%02x%02x%02x%02x-%02x%02x-%02x%02x-%02x%02x-%02x%02x%02x%02x%02x%02x\n",
+				str[3], str[2], str[1], str[0], str[5], str[4], str[7], str[6],
+				str[8], str[9], str[10], str[11], str[12], str[13], str[14],
+				str[15]);
+
+		idsp_str = idsp;
+		std::transform(idsp_str.begin(), idsp_str.end(), idsp_str.begin(),
+				::toupper);
+		idsps.push_back(idsp_str);
+
+		str += len;
+		i += len;
+	}
+}
+
+void cthd_gddv::dump_idsps() {
+	thd_log_info("..idsp dump begin.. \n");
+	for (unsigned int i = 0; i < idsps.size(); ++i) {
+		thd_log_info("idsp :%s\n", idsps[i].c_str());
+	}
+	thd_log_info("idsp dump end\n");
+}
+
+int cthd_gddv::search_idsp(std::string name)
+{
+	for (unsigned int i = 0; i < idsps.size(); ++i) {
+		if (!idsps[i].compare(0, 36, name))
+			return THD_SUCCESS;
+	}
+
+	return THD_ERROR;
+}
+
+void cthd_gddv::parse_trip_point(char *name, char *type, char *val, int len)
+{
+	struct trippoint trip;
+
+	trip.name = name;
+	trip.type_str = type;
+	if (!trip.type_str.compare(0, 2, "_c"))
+		trip.type = CRITICAL;
+	else if (!trip.type_str.compare(0, 2, "_p"))
+		trip.type = PASSIVE;
+	else if (!trip.type_str.compare(0, 2, "_h"))
+		trip.type = HOT;
+	else if (!trip.type_str.compare(0, 2, "_a"))
+		trip.type = ACTIVE;
+	else
+		trip.type = INVALID_TRIP_TYPE;
+	trip.temp = DECI_KELVIN_TO_CELSIUS(*(int *)val);
+	trippoints.push_back(trip);
+}
+
+void cthd_gddv::dump_trips() {
+	thd_log_info("..trippoint dump begin.. \n");
+	for (unsigned int i = 0; i < trippoints.size(); ++i) {
+		thd_log_info("name:%s type_str:%s type:%d temp:%d\n",
+				trippoints[i].name.c_str(), trippoints[i].type_str.c_str(),
+				trippoints[i].type, trippoints[i].temp);
+	}
+	thd_log_info("trippoint dump end\n");
+}
+
+int cthd_gddv::get_trip_temp(std::string name, trip_point_type_t type) {
+	std::string search_name = name + ".D0";
+	for (unsigned int i = 0; i < trippoints.size(); ++i) {
+		if (!trippoints[i].name.compare(search_name)
+				&& trippoints[i].type == type)
+			return trippoints[i].temp;
+	}
+
+	return THD_ERROR;
+}
+
+int cthd_gddv::parse_trt(char *trt, int len)
+{
+	int offset = 0;
+
+	while (offset < len) {
+	}
+
+	return THD_SUCCESS;
+}
+
 // From Common/esif_sdk_iface_esif.h:
 #define ESIF_SERVICE_CONFIG_COMPRESSED  0x40000000/* Payload is Compressed */
 // From Common/esif_sdk.h
@@ -788,6 +896,18 @@ int cthd_gddv::parse_gddv_key(char *buf, int size, int *end_offset) {
 			parse_itmt(name, val, vallength);
 		else
 			parse_itmt(point, val, vallength);
+	}
+
+	if (name && type && strcmp(type, "idsp") == 0) {
+		parse_idsp(name, val, vallength);
+	}
+
+	if (name && type && point && strcmp(type, "trippoint") == 0) {
+		parse_trip_point(name, point, val, vallength);
+	}
+
+	if (type && strcmp(type, "trt") == 0) {
+		parse_trt(val, vallength);
 	}
 
 	delete[] (key);
@@ -1363,6 +1483,8 @@ int cthd_gddv::gddv_init(void) {
 		dump_itmt();
 		dump_apat();
 		dump_apct();
+		dump_idsps();
+		dump_trips();
 
 		delete [] buf;
 	} catch (std::exception &e) {

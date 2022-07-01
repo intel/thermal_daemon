@@ -30,6 +30,7 @@
 #include <upower.h>
 
 #include "thd_engine.h"
+#include "thd_trt_art_reader.h"
 
 enum adaptive_condition {
 	Default = 0x01,
@@ -153,12 +154,22 @@ struct itmt {
 	std::vector<struct itmt_entry> itmt_entries;
 };
 
+struct trippoint {
+	std::string name;
+	std::string type_str;
+	trip_point_type_t type;
+	int temp;
+};
+
 class cthd_gddv {
 private:
 	std::vector<ppcc_t> ppccs;
 	std::vector<struct custom_condition> custom_conditions;
+	std::vector<rel_object_t> rel_list;
 	std::vector<struct psvt> psvts;
 	std::vector<struct itmt> itmts;
+	std::vector<std::string> idsps;
+	std::vector<struct trippoint> trippoints;
 	std::string int3400_path;
 	UpClient *upower_client;
 	GDBusProxy *power_profiles_daemon;
@@ -181,6 +192,9 @@ private:
 	int parse_ppcc(char *name, char *ppcc, int len);
 	int parse_psvt(char *name, char *psvt, int len);
 	int parse_itmt(char *name, char *itmt, int len);
+	int parse_trt(char *trt, int len);
+	void parse_idsp(char *name, char *idsp, int len);
+	void parse_trip_point(char *name, char *type, char *val, int len);
 	int handle_compressed_gddv(char *buf, int size);
 	int parse_gddv_key(char *buf, int size, int *end_offset);
 	int parse_gddv(char *buf, int size, int *end_offset);
@@ -202,7 +216,11 @@ private:
 	void dump_ppcc();
 	void dump_psvt();
 	void dump_itmt();
+	void dump_idsps();
+	void dump_trips();
 	void setup_input_devices();
+	int get_trip_temp(std::string name, trip_point_type_t type);
+
 public:
 	cthd_gddv() :
 			upower_client(
@@ -225,6 +243,8 @@ public:
 	struct psvt* find_psvt(std::string name);
 	struct itmt* find_itmt(std::string name);
 	struct psvt* find_def_psvt();
+	int search_idsp(std::string name);
+
 };
 
 #endif /* THD_GDDV_H_ */
