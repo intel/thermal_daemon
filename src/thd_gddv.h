@@ -149,6 +149,17 @@ struct itmt_entry {
 	std::string unused;
 };
 
+struct trt_entry {
+	std::string source;
+	std::string dest;
+	int priority;
+	int sample_rate;
+	int resd0;
+	int resd1;
+	int resd2;
+	int resd3;
+};
+
 struct itmt {
 	std::string name;
 	std::vector<struct itmt_entry> itmt_entries;

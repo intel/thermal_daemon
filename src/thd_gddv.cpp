@@ -746,11 +746,30 @@ int cthd_gddv::get_trip_temp(std::string name, trip_point_type_t type) {
 	return THD_ERROR;
 }
 
-int cthd_gddv::parse_trt(char *trt, int len)
+int cthd_gddv::parse_trt(char *buf, int len)
 {
 	int offset = 0;
 
+	thd_log_debug("TRT len:%d\n", len);
+
+	if (len > 0) {
+		thd_log_info(
+				"_TRT not implemented. Report this for implementation with the thermald log using --loglevel=debug\n");
+	}
+
 	while (offset < len) {
+		struct trt_entry entry;
+
+		entry.source = get_string(buf, &offset);
+		entry.dest = get_string(buf, &offset);
+		entry.priority = get_uint64(buf, &offset);
+		entry.sample_rate = get_uint64(buf, &offset);
+		entry.resd0 = get_uint64(buf, &offset);
+		entry.resd1 = get_uint64(buf, &offset);
+		entry.resd2 = get_uint64(buf, &offset);
+		entry.resd3 = get_uint64(buf, &offset);
+		thd_log_info("trt source:%s dest:%s prio:%d sample_rate:%d\n",
+				entry.source.c_str(), entry.dest.c_str(), entry.priority, entry.sample_rate);
 	}
 
 	return THD_SUCCESS;
@@ -906,7 +925,7 @@ int cthd_gddv::parse_gddv_key(char *buf, int size, int *end_offset) {
 		parse_trip_point(name, point, val, vallength);
 	}
 
-	if (type && strcmp(type, "trt") == 0) {
+	if (type && strcmp(type, "_trt") == 0) {
 		parse_trt(val, vallength);
 	}
 
