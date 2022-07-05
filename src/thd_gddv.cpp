@@ -1185,7 +1185,7 @@ int cthd_gddv::evaluate_temperature_condition(
 
 	cthd_sensor *sensor = thd_engine->search_sensor(sensor_name);
 	if (!sensor) {
-		thd_log_warn("Unable to find a sensor for %s\n",
+		thd_log_info("Unable to find a sensor for %s\n",
 				condition.device.c_str());
 		condition.ignore_condition = 1;
 		return THD_ERROR;
