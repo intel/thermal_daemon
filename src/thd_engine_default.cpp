@@ -80,17 +80,6 @@ static cooling_dev_t cpu_def_cooling_devices[] = {
 cthd_engine_default::~cthd_engine_default() {
 }
 
-int cthd_engine_default::debug_mode_on(void) {
-	static const char *debug_mode = TDRUNDIR
-	"/debug_mode";
-	struct stat s;
-
-	if (stat(debug_mode, &s))
-		return 0;
-
-	return 1;
-}
-
 int cthd_engine_default::read_thermal_sensors() {
 	int index;
 	DIR *dir;

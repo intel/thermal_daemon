@@ -286,6 +286,7 @@ public:
 
 	int parser_init();
 	void parser_deinit();
+	int debug_mode_on(void);
 };
 
 #endif /* THD_ENGINE_H_ */
