@@ -562,11 +562,6 @@ int cthd_engine_adaptive::thd_engine_init(bool ignore_cpuid_check,
 		return THD_ERROR;
 	}
 
-	/* Read the sensors/zones */
-	res = cthd_engine::thd_engine_init(ignore_cpuid_check, adaptive);
-	if (res != THD_SUCCESS)
-		return res;
-
 	if (sysfs.read(int3400_base_path + "firmware_node/path", int3400_path)
 			< 0) {
 		thd_log_debug("Unable to locate INT3400 firmware path\n");
@@ -607,6 +602,11 @@ int cthd_engine_adaptive::thd_engine_init(bool ignore_cpuid_check,
 		}
 		return THD_SUCCESS;
 	}
+
+	/* Read the sensors/zones */
+	res = cthd_engine::thd_engine_init(ignore_cpuid_check, adaptive);
+	if (res != THD_SUCCESS)
+		return res;
 
 	return THD_SUCCESS;
 }
