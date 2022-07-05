@@ -234,6 +234,9 @@ public:
 		return config_file;
 	}
 	virtual ppcc_t *get_ppcc_param(std::string name);
+	virtual int search_idsp(std::string name) {
+		return THD_ERROR;
+	}
 	cthd_zone *search_zone(std::string name);
 	cthd_cdev *search_cdev(std::string name);
 	cthd_sensor *search_sensor(std::string name);
