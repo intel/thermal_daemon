@@ -467,6 +467,9 @@ void cthd_gddv::dump_apct() {
 }
 
 ppcc_t* cthd_gddv::get_ppcc_param(std::string name) {
+	if (name != "TCPU.D0")
+		return NULL;
+
 	for (int i = 0; i < (int) ppccs.size(); i++) {
 		if (ppccs[i].name == name)
 			return &ppccs[i];

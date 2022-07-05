@@ -69,6 +69,12 @@ public:
 	ppcc_t* get_ppcc_param(std::string name) {
 		return gddv.get_ppcc_param(name);
 	}
+
+	int search_idsp(std::string name)
+	{
+		return gddv.search_idsp(name);
+	}
+
 	int thd_engine_init(bool ignore_cpuid_check, bool adaptive);
 	int thd_engine_start();
 	void update_engine_state();
