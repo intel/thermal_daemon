@@ -1286,3 +1286,15 @@ void cthd_engine::parser_deinit() {
 		parser_init_done = false;
 	}
 }
+
+int cthd_engine::debug_mode_on(void) {
+	static const char *debug_mode = TDRUNDIR
+	"/debug_mode";
+	struct stat s;
+
+	if (stat(debug_mode, &s))
+		return 0;
+
+	return 1;
+}
+
