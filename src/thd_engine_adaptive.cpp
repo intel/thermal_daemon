@@ -321,53 +321,7 @@ int cthd_engine_adaptive::set_itmt_target(struct adaptive_target target) {
 		return THD_ERROR;
 	}
 
-	for (unsigned int i = 0; i < zones.size(); ++i) {
-		cthd_zone *_zone = zones[i];
-
-		// This is only for debug to plot power, so keep
-		if (_zone->get_zone_type() == "rapl_pkg_power")
-			continue;
-
-		_zone->zone_reset(1);
-		_zone->trip_delete_all();
-
-		if (_zone->zone_active_status())
-			_zone->set_zone_inactive();
-	}
-
-	for (int i = 0; i < (int) itmt->itmt_entries.size(); i++) {
-		install_itmt(&itmt->itmt_entries[i]);
-	}
-
-	thd_log_info("\n\n ZONE DUMP BEGIN\n");
-	int new_zone_count = 0;
-	for (unsigned int i = 0; i < zones.size(); ++i) {
-		zones[i]->zone_dump();
-		if (zones[i]->zone_active_status())
-			++new_zone_count;
-	}
-	thd_log_info("\n\n ZONE DUMP END\n");
-
-	return THD_SUCCESS;
-
-}
-
-void cthd_engine_adaptive::set_int3400_target(struct adaptive_target target) {
-
-	if (target.code == "ITMT") {
-		if (set_itmt_target(target) == THD_SUCCESS)
-			return;
-	}
-	if (target.code == "PSVT") {
-		struct psvt *psvt;
-
-		thd_log_info("set_int3400 target %s\n", target.argument.c_str());
-
-		psvt = gddv.find_psvt(target.argument);
-		if (!psvt) {
-			return;
-		}
-
+	if (!int3400_installed) {
 		for (unsigned int i = 0; i < zones.size(); ++i) {
 			cthd_zone *_zone = zones[i];
 
@@ -381,31 +335,78 @@ void cthd_engine_adaptive::set_int3400_target(struct adaptive_target target) {
 			if (_zone->zone_active_status())
 				_zone->set_zone_inactive();
 		}
+	}
+
+	for (int i = 0; i < (int) itmt->itmt_entries.size(); i++) {
+		install_itmt(&itmt->itmt_entries[i]);
+	}
+
+	return THD_SUCCESS;
+
+}
+
+void cthd_engine_adaptive::set_int3400_target(struct adaptive_target target) {
+
+	if (target.code == "ITMT") {
+		if (set_itmt_target(target) == THD_SUCCESS) {
+			int3400_installed = 1;
+			passive_installed = 1;
+		}
+	}
+
+	if (target.code == "PSVT") {
+		struct psvt *psvt;
+
+		thd_log_info("set_int3400 target %s\n", target.argument.c_str());
+
+		psvt = gddv.find_psvt(target.argument);
+		if (!psvt) {
+			return;
+		}
+
+		if (!int3400_installed) {
+			for (unsigned int i = 0; i < zones.size(); ++i) {
+				cthd_zone *_zone = zones[i];
+
+				// This is only for debug to plot power, so keep
+				if (_zone->get_zone_type() == "rapl_pkg_power")
+					continue;
+
+				_zone->zone_reset(1);
+				_zone->trip_delete_all();
+
+				if (_zone->zone_active_status())
+					_zone->set_zone_inactive();
+			}
+		}
 
 		for (int i = 0; i < (int) psvt->psvs.size(); i++) {
 			install_passive(&psvt->psvs[i]);
 		}
-
-		psvt_consolidate();
-
-		thd_log_info("\n\n ZONE DUMP BEGIN\n");
-		int new_zone_count = 0;
-		for (unsigned int i = 0; i < zones.size(); ++i) {
-			zones[i]->zone_dump();
-			if (zones[i]->zone_active_status())
-				++new_zone_count;
-		}
-		thd_log_info("\n\n ZONE DUMP END\n");
-		if (!new_zone_count) {
-			thd_log_warn("Adaptive policy couldn't create any zones\n");
-			thd_log_warn("Possibly some sensors in the PSVT are missing\n");
-			thd_log_warn("Restart in non adaptive mode via systemd\n");
-			csys_fs sysfs("/tmp/ignore_adaptive");
-			sysfs.create();
-			exit(EXIT_FAILURE);
-		}
 		passive_installed = 1;
+		int3400_installed = 1;
 	}
+
+	psvt_consolidate();
+
+	thd_log_info("\n\n ZONE DUMP BEGIN\n");
+	int new_zone_count = 0;
+	for (unsigned int i = 0; i < zones.size(); ++i) {
+		zones[i]->zone_dump();
+		if (zones[i]->zone_active_status())
+			++new_zone_count;
+	}
+	thd_log_info("\n\n ZONE DUMP END\n");
+
+	if (!new_zone_count) {
+		thd_log_warn("Adaptive policy couldn't create any zones\n");
+		thd_log_warn("Possibly some sensors in the PSVT are missing\n");
+		thd_log_warn("Restart in non adaptive mode via systemd\n");
+		csys_fs sysfs("/tmp/ignore_adaptive");
+		sysfs.create();
+		exit(EXIT_FAILURE);
+	}
+
 	if (target.code == "PSV") {
 		set_trip(target.participant, target.argument);
 	}
@@ -495,6 +496,7 @@ void cthd_engine_adaptive::execute_target(struct adaptive_target target) {
 
 void cthd_engine_adaptive::exec_fallback_target(int target) {
 	thd_log_debug("exec_fallback_target %d\n", target);
+	int3400_installed = 0;
 	for (int i = 0; i < (int) gddv.targets.size(); i++) {
 		if (gddv.targets[i].target_id != (uint64_t) target)
 			continue;
@@ -519,6 +521,9 @@ void cthd_engine_adaptive::update_engine_state() {
 		}
 		return;
 	}
+
+	int3400_installed = 0;
+
 	for (int i = 0; i < (int) gddv.targets.size(); i++) {
 		if (gddv.targets[i].target_id != (uint64_t) target)
 			continue;
