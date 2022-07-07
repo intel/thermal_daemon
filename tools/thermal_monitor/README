@@ -38,3 +38,5 @@ qmake ThermalMonitor.pro
 
 After the makefile has been created, use 'make' to build the project.  The object files and executable will be in the same directory as the source code, a different location than when using Qt Creator.  Use 'make clean' to clean up everything except the executable.
 
+Dependency on qcustomplot
+To build you need to download qcustomplot-devel or libqcustomplot-dev depending on your distribution.
