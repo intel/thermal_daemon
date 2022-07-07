@@ -45,6 +45,7 @@ protected:
 	int passive_def_processed;
 	int passive_installed;
 	int power_slider;
+	int int3400_installed;
 
 	int set_itmt_target(struct adaptive_target target);
 	int install_passive(struct psv *psv);
@@ -61,7 +62,7 @@ public:
 			cthd_engine_default("63BE270F-1C11-48FD-A6F7-3AF253FF3E2D"), policy_active(
 					0), fallback_id(-1), int3400_path(""), int3400_base_path(
 					""), passive_def_only(0), passive_def_processed(0), passive_installed(
-					0), power_slider(75) {
+					0), power_slider(75), int3400_installed(0) {
 	}
 
 	~cthd_engine_adaptive() {
