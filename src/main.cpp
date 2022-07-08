@@ -252,8 +252,12 @@ int main(int argc, char *argv[]) {
 
 	g_option_context_set_summary(opt_ctx,
 
-	"Thermal daemon monitors temperature sensors and decides the best action "
-			"based on the temperature readings and user preferences.");
+	"Thermal daemon monitors temperature sensors and decides the best action\n"
+			"based on the temperature readings and user preferences.\n\n"
+	"Copyright (c) 2022, Intel Corporation\n"
+	"This program comes with ABSOLUTELY NO WARRANTY.\n"
+	"This work is licensed under GPL v2.\n"
+	"Refer to https://github.com/intel/thermal_daemon/blob/master/COPYING.");
 
 	success = g_option_context_parse(opt_ctx, &argc, &argv, NULL);
 	g_option_context_free(opt_ctx);
