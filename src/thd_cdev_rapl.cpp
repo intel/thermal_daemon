@@ -504,6 +504,18 @@ bool cthd_sysfs_cdev_rapl::read_ppcc_power_limits() {
 
 		thd_log_info("ppcc limits max:%u min:%u  min_win:%u step:%u\n",
 				pl0_max_pwr, pl0_min_pwr, pl0_min_window, pl0_step_pwr);
+
+		int policy_matched;
+
+		policy_matched = thd_engine->search_idsp("63BE270F-1C11-48FD-A6F7-3AF253FF3E2D");
+		if (policy_matched != THD_SUCCESS)
+			policy_matched = thd_engine->search_idsp("9E04115A-AE87-4D1C-9500-0F3E340BFE75");
+
+		if (policy_matched == THD_SUCCESS) {
+			thd_log_info("IDSP policy matched, so trusting PPCC limits\n");
+			return true;
+		}
+
 		def_max_power = rapl_read_pl1_max();
 		if (def_max_power > pl0_max_pwr)
 			thd_log_warn("ppcc limits is less than def PL1 max power :%d check thermal-conf.xml.auto\n", def_max_power);

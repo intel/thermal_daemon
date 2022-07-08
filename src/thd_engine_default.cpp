@@ -80,17 +80,6 @@ static cooling_dev_t cpu_def_cooling_devices[] = {
 cthd_engine_default::~cthd_engine_default() {
 }
 
-int cthd_engine_default::debug_mode_on(void) {
-	static const char *debug_mode = TDRUNDIR
-	"/debug_mode";
-	struct stat s;
-
-	if (stat(debug_mode, &s))
-		return 0;
-
-	return 1;
-}
-
 int cthd_engine_default::read_thermal_sensors() {
 	int index;
 	DIR *dir;
@@ -987,29 +976,9 @@ void cthd_engine_default::workaround_tcc_offset(void)
 			tcc_offset_checked = 1;
 		}
 	} else {
-		csys_fs msr_sysfs;
-		int ret;
-
-		if(msr_sysfs.exists("/dev/cpu/0/msr")) {
-			unsigned long long val = 0;
-
-			ret = msr_sysfs.read("/dev/cpu/0/msr", 0x1a2, (char *)&val, sizeof(val));
-			if (ret > 0) {
-				int tcc;
-
-				tcc = (val >> 24) & 0xff;
-				if (tcc > 10) {
-					val &= ~(0xff << 24);
-					val |= (0x05 << 24);
-					msr_sysfs.write("/dev/cpu/0/msr", 0x1a2, val);
-					tcc_offset_checked = 1;
-				} else {
-					if (!tcc_offset_checked)
-						tcc_offset_low = 1;
-					tcc_offset_checked = 1;
-				}
-			}
-		}
+		thd_log_info("Kernel update is required to update TCC\n");
+		tcc_offset_checked = 1;
+		tcc_offset_low = 1;
 	}
 #endif
 }

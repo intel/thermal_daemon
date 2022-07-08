@@ -281,11 +281,12 @@ bool cthd_trip_point::thd_trip_point_check(int id, unsigned int read_temp,
 			if (cdevs[i].target_state == TRIP_PT_INVALID_TARGET_STATE)
 				cdevs[i].target_state = cdev->get_min_state();
 
-			ret = cdev->thd_cdev_set_state(temp, temp, read_temp, (type == MAX), 1, zone_id,
-					index, cdevs[i].target_state_valid,
+			ret = cdev->thd_cdev_set_state(temp, temp, read_temp, (type == MAX),
+					1, zone_id, index, cdevs[i].target_state_valid,
 					cdev->map_target_state(cdevs[i].target_state_valid,
 							cdevs[i].target_state), &cdevs[i].pid_param,
-					cdevs[i].pid, false);
+					cdevs[i].pid, false, cdevs[i].min_max_valid,
+					cdevs[i].min_state, cdevs[i].max_state);
 			if (control_type == SEQUENTIAL && ret == THD_SUCCESS) {
 				// Only one cdev activation
 				break;
@@ -310,11 +311,12 @@ bool cthd_trip_point::thd_trip_point_check(int id, unsigned int read_temp,
 			if (cdevs[i].target_state == TRIP_PT_INVALID_TARGET_STATE)
 				cdevs[i].target_state = cdev->get_min_state();
 
-			cdev->thd_cdev_set_state(temp, temp, read_temp, (type == MAX), 0, zone_id, index,
-					cdevs[i].target_state_valid,
+			cdev->thd_cdev_set_state(temp, temp, read_temp, (type == MAX), 0,
+					zone_id, index, cdevs[i].target_state_valid,
 					cdev->map_target_state(cdevs[i].target_state_valid,
 							cdevs[i].target_state), &cdevs[i].pid_param,
-					cdevs[i].pid, false);
+					cdevs[i].pid, false, cdevs[i].min_max_valid,
+					cdevs[i].min_state, cdevs[i].max_state);
 
 				if (control_type == SEQUENTIAL) {
 					// Only one cdev activation
@@ -328,7 +330,8 @@ bool cthd_trip_point::thd_trip_point_check(int id, unsigned int read_temp,
 
 void cthd_trip_point::thd_trip_point_add_cdev(cthd_cdev &cdev, int influence,
 		int sampling_period, int target_state_valid, int target_state,
-		pid_param_t *pid_param) {
+		pid_param_t *pid_param, int min_max_valid, int min_state,
+		int max_state) {
 	trip_pt_cdev_t thd_cdev;
 	thd_cdev.cdev = &cdev;
 	thd_cdev.influence = influence;
@@ -336,6 +339,14 @@ void cthd_trip_point::thd_trip_point_add_cdev(cthd_cdev &cdev, int influence,
 	thd_cdev.last_op_time = 0;
 	thd_cdev.target_state_valid = target_state_valid;
 	thd_cdev.target_state = target_state;
+
+	thd_cdev.min_max_valid = min_max_valid;
+
+	thd_log_info("min:%d max:%d\n", min_state, max_state);
+	if (min_max_valid) {
+		thd_cdev.min_state = min_state;
+		thd_cdev.max_state = max_state;
+	}
 	if (pid_param && pid_param->valid) {
 		thd_log_info("pid valid %f:%f:%f\n", pid_param->kp, pid_param->ki,
 				pid_param->kd);

@@ -27,6 +27,7 @@
 
 #include "thd_engine.h"
 #include "thd_cpu_default_binding.h"
+#include "thd_gddv.h"
 
 class cthd_engine_default: public cthd_engine {
 private:
@@ -47,6 +48,8 @@ protected:
 	bool force_mmio_rapl;
 public:
 	static const int power_clamp_reduction_percent = 5;
+	cthd_gddv gddv;
+
 #ifndef ANDROID
 	cthd_engine_default() :
 			cthd_engine("42A441D6-AE6A-462b-A84B-4A8CE79027D3"),
@@ -74,7 +77,6 @@ public:
 	int read_cooling_devices();
 	int read_thermal_sensors();
 	void workarounds();
-	int debug_mode_on(void);
 };
 
 int thd_engine_create_default_engine(bool ignore_cpuid_check,
