@@ -116,6 +116,9 @@ void MainWindow::setupPlotWidget()
     currentTempsensorIndex = 0;
     int active_zone = 0;
     for (uint zone = 0; zone < m_thermaldInterface->getZoneCount(); zone++) {
+        // Trips is indexed by zone. We need to make sure there is a tips item
+        // (even if empty) for each zone.
+        trips.append(QVector<QCPItemLine *>());
 
         zoneInformationType *zone_info = m_thermaldInterface->getZone(zone);
         if (!zone_info)
@@ -180,7 +183,7 @@ void MainWindow::setupPlotWidget()
                 }
                 these_trips.append(line);
             }
-            trips.append(these_trips);
+            trips.last().swap(these_trips);
         }
     }
 
