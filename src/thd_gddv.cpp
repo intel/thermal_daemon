@@ -1296,6 +1296,12 @@ int cthd_gddv::evaluate_condition(struct condition condition) {
 		ret = evaluate_power_slider_condition(condition);
 	}
 
+	if (condition.condition == Motion) {
+		thd_log_debug("Match motion == 0 :%d\n", condition.argument);
+		if (condition.argument == 0)
+			ret = THD_SUCCESS;
+	}
+
 	if (ret) {
 		if (condition.time && condition.state_entry_time == 0) {
 			condition.state_entry_time = time(NULL);
