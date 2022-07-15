@@ -37,8 +37,8 @@
  * if the thermal-conf.xml defines parameters.
  */
 
+#include <glib-unix.h>
 #include <syslog.h>
-#include <signal.h>
 #include "thermald.h"
 #include "thd_preference.h"
 #include "thd_engine.h"
@@ -53,7 +53,7 @@
 
 #define EXIT_UNSUPPORTED 2
 
-extern int thd_dbus_server_init(void (*exit_handler)(int));
+extern int thd_dbus_server_init(gboolean (*exit_handler)(void));
 
 // Lock file
 static int lock_file_handle = -1;
@@ -159,7 +159,7 @@ bool check_thermald_running() {
 }
 
 // SIGTERM & SIGINT handler
-void sig_int_handler(int signum) {
+gboolean sig_int_handler(void) {
 	if (thd_engine)
 		thd_engine->thd_engine_terminate();
 	sleep(1);
@@ -168,6 +168,8 @@ void sig_int_handler(int signum) {
 	delete thd_engine;
 	clean_up_lockfile();
 	exit(EXIT_SUCCESS);
+
+	return FALSE;
 }
 
 // main function
@@ -311,8 +313,8 @@ int main(int argc, char *argv[]) {
 	}
 
 	if (!thd_daemonize) {
-		signal(SIGINT, sig_int_handler);
-		signal(SIGTERM, sig_int_handler);
+		g_unix_signal_add (SIGINT, G_SOURCE_FUNC (sig_int_handler), NULL);
+		g_unix_signal_add (SIGTERM, G_SOURCE_FUNC (sig_int_handler), NULL);
 	}
 
 	// Initialize the GType/GObject system

@@ -188,11 +188,11 @@ gboolean thd_dbus_interface_get_current_preference(PrefObject *obj,
 	return TRUE;
 }
 
-void (*thd_dbus_exit_callback)(int);
+gboolean (*thd_dbus_exit_callback)(void);
 gboolean thd_dbus_interface_terminate(PrefObject *obj, GError **error) {
 	thd_engine->thd_engine_terminate();
 	if (thd_dbus_exit_callback)
-		thd_dbus_exit_callback(0);
+		thd_dbus_exit_callback();
 
 	return TRUE;
 }
@@ -578,7 +578,7 @@ gboolean thd_dbus_interface_get_sensor_temperature(PrefObject *obj, int index,
 }
 
 // Setup dbus server
-int thd_dbus_server_init(void (*exit_handler)(int)) {
+int thd_dbus_server_init(gboolean (*exit_handler)(void)) {
 	DBusGConnection *bus;
 	DBusGProxy *bus_proxy;
 	GError *error = NULL;
