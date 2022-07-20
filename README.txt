@@ -111,6 +111,10 @@ For build, follow the same procedure as Fedora.
 
 Releases
 
+Release 2.5
+- Support of new thermal table for Alder Lake
+- Add Raptor Lake in the list
+
 Release 2.4.9
 - Fix performance issues for Dell Latitude 5421
 - Fix performance issues for Dell Latitude 7320/7420
