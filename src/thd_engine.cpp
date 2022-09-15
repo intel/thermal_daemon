@@ -713,6 +713,7 @@ static supported_ids_t id_table[] = {
 		{ 6, 0x9a }, // Alderlake
 		{ 6, 0xb7 }, // Raptorlake
 		{ 6, 0xba }, // Raptorlake
+		{ 6, 0xbf }, // Raptorlake S
 		{ 0, 0 } // Last Invalid entry
 };
 
