@@ -308,6 +308,7 @@ int cthd_gddv::parse_apct(char *apct, int len) {
 				condition.state = 0;
 				condition.state_entry_time = 0;
 				condition.target = target;
+				condition.ignore_condition = 0;
 
 				if (offset >= len) {
 					thd_log_warn("Read off end of buffer in parsing APCT\n");
