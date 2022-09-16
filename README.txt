@@ -44,6 +44,11 @@ Build
 	make
 	sudo make install
 
+The prefix value depends on the distribution version.
+This can be "/" or "/usr". So please check existing
+path of thermald install, if present to update and
+add appropriate prefix.
+
 3
 - start service
 	sudo systemctl start thermald.service
