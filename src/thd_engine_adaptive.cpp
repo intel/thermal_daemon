@@ -271,38 +271,56 @@ int cthd_engine_adaptive::install_itmt(struct itmt_entry *itmt_entry) {
 	}
 
 	int temp = (itmt_entry->trip_point - 2732) * 100;
-	int min_state = 0, max_state = 0;
+	int _min_state = 0, _max_state = 0;
 
 	if (itmt_entry->pl1_max.length()) {
 		if (!strncasecmp(itmt_entry->pl1_max.c_str(), "MAX", 3)) {
-			max_state = TRIP_PT_INVALID_TARGET_STATE;
+			_max_state = TRIP_PT_INVALID_TARGET_STATE;
 		} else if (!strncasecmp(itmt_entry->pl1_max.c_str(), "MIN", 3)) {
-			max_state = 0;
+			_max_state = 0;
 		} else {
 			std::istringstream buffer(itmt_entry->pl1_max);
-			buffer >> max_state;
-			max_state *= 1000;
+			buffer >> _max_state;
+			_max_state *= 1000;
 		}
 	}
 
 	if (itmt_entry->pl1_min.length()) {
 		if (!strncasecmp(itmt_entry->pl1_min.c_str(), "MAX", 3)) {
-			min_state = TRIP_PT_INVALID_TARGET_STATE;
+			_min_state = TRIP_PT_INVALID_TARGET_STATE;
 		} else if (!strncasecmp(itmt_entry->pl1_min.c_str(), "MIN", 3)) {
-			min_state = 0;
+			_min_state = 0;
 		} else {
 			std::istringstream buffer(itmt_entry->pl1_min);
-			buffer >> min_state;
-			min_state *= 1000;
+			buffer >> _min_state;
+			_min_state *= 1000;
 		}
 	}
 
 	cthd_trip_point trip_pt(zone->get_trip_count(), PASSIVE, temp, 0,
 			zone->get_zone_index(), sensor->get_index(), SEQUENTIAL);
 
+	/*
+	 * Why the min = max and max=min in the below
+	 * thd_trip_point_add_cdev?
+	 *
+	 * Thermald min_state is where no cooling is active
+	 * Thermald max_state is where max cooling is applied
+	 *
+	 * If you check one ITMT table entriy:
+	 *  target:\_SB_.PC00.LPCB.ECDV.CHRG  trip_temp:45 pl1_min:28000 pl1.max:MAX
+	 *
+	 * This means that when exceeding 45 set the PL1 to 28W,
+	 * Below 45 PL1 is set to maximum (full power)
+	 *
+	 * That means that untrottled case is PL1_MAX
+	 * Throttled case is PL1_MIN
+	 * Which is opposite of the argument order in the
+	 * thd_trip_point_add_cdev()
+	 */
 	trip_pt.thd_trip_point_add_cdev(*cdev, cthd_trip_point::default_influence,
 	DEFAULT_SAMPLE_TIME_SEC, 0, 0,
-	NULL, 1, max_state, min_state);
+	NULL, 1, _max_state, _min_state);
 
 	zone->add_trip(trip_pt, 1);
 	zone->zone_cdev_set_binded();
@@ -447,7 +465,7 @@ void cthd_engine_adaptive::install_passive_default() {
 	passive_installed = 1;
 }
 
-void cthd_engine_adaptive::execute_target(struct adaptive_target target) {
+void cthd_engine_adaptive::execute_target(struct adaptive_target &target) {
 	cthd_cdev *cdev;
 	std::string name;
 	int argument;
@@ -590,6 +608,8 @@ int cthd_engine_adaptive::thd_engine_init(bool ignore_cpuid_check,
 		delete[] buf;
 		return THD_FATAL_ERROR;
 	}
+
+	delete[] buf;
 
 	res = gddv.gddv_init();
 	if (res != THD_SUCCESS) {

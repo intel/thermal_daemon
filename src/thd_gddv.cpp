@@ -295,7 +295,7 @@ int cthd_gddv::parse_apct(char *apct, int len) {
 
 			uint64_t count = get_uint64(apct, &offset);
 			for (i = 0; i < int(count); i++) {
-				struct condition condition;
+				struct condition condition = {};
 
 				condition.condition = adaptive_condition(0);
 				condition.device = "";
