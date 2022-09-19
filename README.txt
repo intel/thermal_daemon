@@ -116,6 +116,10 @@ For build, follow the same procedure as Fedora.
 
 Releases
 
+Release 2.5.1
+- Static analysis fixes
+- Missing init, which causes skipping of conditions in a Dell system
+
 Release 2.5
 - Support of new thermal table for Alder Lake
 - Add Raptor Lake in the list
