@@ -235,7 +235,7 @@ private:
 public:
 	cthd_gddv() :
 			upower_client(
-			NULL), tablet_dev(NULL), int3400_base_path(""), power_slider(75), current_condition_set(
+			NULL), power_profiles_daemon(NULL), tablet_dev(NULL), lid_dev(NULL), int3400_base_path(""), power_slider(75), current_condition_set(
 					0xffff) {
 	}
 

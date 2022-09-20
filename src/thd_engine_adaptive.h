@@ -54,7 +54,7 @@ protected:
 	void set_trip(std::string device, std::string argument);
 	void set_int3400_target(struct adaptive_target target);
 	void exec_fallback_target(int target);
-	void execute_target(struct adaptive_target target);
+	void execute_target(struct adaptive_target &target);
 	void install_passive_default();
 
 public:

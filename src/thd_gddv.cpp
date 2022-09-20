@@ -295,7 +295,7 @@ int cthd_gddv::parse_apct(char *apct, int len) {
 
 			uint64_t count = get_uint64(apct, &offset);
 			for (i = 0; i < int(count); i++) {
-				struct condition condition;
+				struct condition condition = {};
 
 				condition.condition = adaptive_condition(0);
 				condition.device = "";
@@ -308,6 +308,7 @@ int cthd_gddv::parse_apct(char *apct, int len) {
 				condition.state = 0;
 				condition.state_entry_time = 0;
 				condition.target = target;
+				condition.ignore_condition = 0;
 
 				if (offset >= len) {
 					thd_log_warn("Read off end of buffer in parsing APCT\n");
@@ -1293,6 +1294,12 @@ int cthd_gddv::evaluate_condition(struct condition condition) {
 
 	if (condition.condition == Power_slider) {
 		ret = evaluate_power_slider_condition(condition);
+	}
+
+	if (condition.condition == Motion) {
+		thd_log_debug("Match motion == 0 :%d\n", condition.argument);
+		if (condition.argument == 0)
+			ret = THD_SUCCESS;
 	}
 
 	if (ret) {

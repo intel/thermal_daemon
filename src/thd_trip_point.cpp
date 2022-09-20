@@ -332,7 +332,7 @@ void cthd_trip_point::thd_trip_point_add_cdev(cthd_cdev &cdev, int influence,
 		int sampling_period, int target_state_valid, int target_state,
 		pid_param_t *pid_param, int min_max_valid, int min_state,
 		int max_state) {
-	trip_pt_cdev_t thd_cdev;
+	trip_pt_cdev_t thd_cdev = {};
 	thd_cdev.cdev = &cdev;
 	thd_cdev.influence = influence;
 	thd_cdev.sampling_priod = sampling_period;
@@ -361,7 +361,7 @@ void cthd_trip_point::thd_trip_point_add_cdev(cthd_cdev &cdev, int influence,
 int cthd_trip_point::thd_trip_point_add_cdev_index(int _index, int influence) {
 	cthd_cdev *cdev = thd_engine->thd_get_cdev_at_index(_index);
 	if (cdev) {
-		trip_pt_cdev_t thd_cdev;
+		trip_pt_cdev_t thd_cdev = {};
 		thd_cdev.cdev = cdev;
 		thd_cdev.influence = influence;
 		thd_cdev.sampling_priod = 0;

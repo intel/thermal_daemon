@@ -140,10 +140,10 @@ int cthd_cdev::thd_cdev_exponential_controller(int set_point, int target_temp,
 	} else {
 		// Get the latest state, which is not the latest from the hardware but last set state to the device
 		_curr_state = get_curr_state();
-		_curr_state = thd_clamp_state_max(curr_state);
+		_curr_state = thd_clamp_state_max(_curr_state);
 
 		thd_log_debug("thd_cdev_set_%d:curr state %d max state %d\n", index,
-				curr_state, _max_state);
+				_curr_state, _max_state);
 
 		curr_pow = 0;
 		trend_increase = false;
@@ -326,11 +326,9 @@ int cthd_cdev::thd_cdev_set_state(int set_point, int target_temp,
 		zone_trip_limits_t limit;
 
 		limit = zone_trip_limits[zone_trip_limits.size() - 1];
-		target_value = limit.target_value;
 		target_state_valid = limit.target_state_valid;
 
 		target_value = limit.target_value;
-		min_max_valid = limit._min_max_valid;
 		_max_state = limit._max_state;
 		_min_state = limit._min_state;
 

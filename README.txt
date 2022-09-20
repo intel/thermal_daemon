@@ -44,6 +44,11 @@ Build
 	make
 	sudo make install
 
+The prefix value depends on the distribution version.
+This can be "/" or "/usr". So please check existing
+path of thermald install, if present to update and
+add appropriate prefix.
+
 3
 - start service
 	sudo systemctl start thermald.service
@@ -110,6 +115,10 @@ For build, follow the same procedure as Fedora.
 -------------------------------------------
 
 Releases
+
+Release 2.5.1
+- Static analysis fixes
+- Missing init, which causes skipping of conditions in a Dell system
 
 Release 2.5
 - Support of new thermal table for Alder Lake

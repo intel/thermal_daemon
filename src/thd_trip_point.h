@@ -69,7 +69,7 @@ typedef struct {
 
 #define DEFAULT_SENSOR_ID	0xFFFF
 
-static bool trip_cdev_sort(trip_pt_cdev_t cdev1, trip_pt_cdev_t cdev2) {
+static bool trip_cdev_sort(trip_pt_cdev_t &cdev1, trip_pt_cdev_t &cdev2) {
 	return (cdev1.influence > cdev2.influence);
 }
 
@@ -213,7 +213,7 @@ public:
 	}
 #endif
 
-	void trip_cdev_add(trip_pt_cdev_t trip_cdev) {
+	void trip_cdev_add(trip_pt_cdev_t &trip_cdev) {
 		int index;
 		if (check_duplicate(trip_cdev.cdev, &index)) {
 			cdevs[index].influence = trip_cdev.influence;
