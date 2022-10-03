@@ -307,7 +307,7 @@ int cthd_engine_adaptive::install_itmt(struct itmt_entry *itmt_entry) {
 	 * Thermald min_state is where no cooling is active
 	 * Thermald max_state is where max cooling is applied
 	 *
-	 * If you check one ITMT table entriy:
+	 * If you check one ITMT table entry:
 	 *  target:\_SB_.PC00.LPCB.ECDV.CHRG  trip_temp:45 pl1_min:28000 pl1.max:MAX
 	 *
 	 * This means that when exceeding 45 set the PL1 to 28W,
