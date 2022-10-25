@@ -113,4 +113,8 @@ extern bool thd_ignore_default_control;
 extern bool workaround_enabled;
 extern bool disable_active_power;
 extern bool ignore_critical;
+
+int hfi_init(void);
+void hfi_exit(void);
+
 #endif

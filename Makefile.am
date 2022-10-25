@@ -14,7 +14,8 @@ AM_CXXFLAGS = \
 	-DTDRUNDIR=\"$(tdrundir)\" \
 	-DTDCONFDIR=\"$(tdconfdir)\" \
 	$(CXXFLAGS) \
-	-I src
+	-I src \
+	-I/usr/include/libnl3
 
 EXTRA_DIST=Makefile.glib \
 	thermald.pc.in
@@ -38,7 +39,8 @@ thermald_LDADD = \
 	$(XML_LIBS) \
 	$(LZMA_LIBS) \
 	$(UPOWER_LIBS) \
-	$(EVDEV_LIBS)
+	$(EVDEV_LIBS) \
+	-lnl-genl-3 -lnl-3
 
 BUILT_SOURCES = \
 	thd_dbus_interface.h
@@ -84,7 +86,8 @@ thermald_SOURCES = \
 	src/thd_zone_kbl_amdgpu.cpp \
 	src/thd_sensor_rapl_power.cpp \
 	src/thd_zone_rapl_power.cpp \
-	src/thd_gddv.cpp
+	src/thd_gddv.cpp \
+	src/hfi_proc.cpp
 
 man5_MANS = man/thermal-conf.xml.5
 man8_MANS = man/thermald.8

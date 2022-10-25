@@ -305,6 +305,7 @@ int cthd_engine::thd_engine_start() {
 	pthread_attr_setdetachstate(&thd_attr, PTHREAD_CREATE_DETACHED);
 	ret = pthread_create(&thd_engine, &thd_attr, cthd_engine_thread,
 			(void*) this);
+	hfi_init();
 #else
 	{
 		pid_t childpid;
