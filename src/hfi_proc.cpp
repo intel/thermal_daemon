@@ -1,12 +1,11 @@
 /*
  * Thermald HFI user space handler
  *
+ * Copyright (C) 2022 Intel Corporation. All rights reserved.
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
  * published by the Free Software Foundation.
- *
- * Alternatively, this software may be distributed under the terms of BSD
- * license.
  *
  * This file incorporates work covered by the following copyright and
  * permission notice:
