@@ -810,6 +810,10 @@ void cthd_parse::dump_thermal_conf() {
 					thermal_info_list[i].cooling_devs[l].max_state);
 			thd_log_info("\t\tStep: %d\n",
 					thermal_info_list[i].cooling_devs[l].inc_dec_step);
+			thd_log_info("\t\tReadBack: %d\n",
+					thermal_info_list[i].cooling_devs[l].read_back);
+			thd_log_info("\t\tDebouncePeriod: %d\n",
+					thermal_info_list[i].cooling_devs[l].debounce_interval);
 			thd_log_info("\t\tAutoDownControl: %d\n",
 					thermal_info_list[i].cooling_devs[l].auto_down_control);
 			if (thermal_info_list[i].cooling_devs[l].pid_enable) {
