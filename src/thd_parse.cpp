@@ -178,6 +178,7 @@ int cthd_parse::parse_new_trip_cdev(xmlNode * a_node, xmlDoc *doc,
 				} else if(!strcasecmp((const char*) cur_node->name,
 						"PidControl")) {
 					pid_control_t pid_params;
+
 					parse_pid_values(cur_node->children, doc, &pid_params);
 					trip_cdev->pid_param.kp = pid_params.Kp;
 					trip_cdev->pid_param.ki = pid_params.Ki;
@@ -292,6 +293,10 @@ int cthd_parse::parse_pid_values(xmlNode * a_node, xmlDoc *doc,
 		pid_control_t *pid_ptr) {
 	xmlNode *cur_node = NULL;
 	char *tmp_value;
+
+	pid_ptr->Kp = 0.0005;
+	pid_ptr->Ki = 0.0001;
+	pid_ptr->Kd = 0.0001;
 
 	for (cur_node = a_node; cur_node; cur_node = cur_node->next) {
 		if (cur_node->type == XML_ELEMENT_NODE) {
