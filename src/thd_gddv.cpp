@@ -626,7 +626,20 @@ int cthd_gddv::parse_itmt(char *name, char *buf, int len) {
 		itmt_entry.pl1_min = get_string(buf, &offset);
 		itmt_entry.pl1_max = get_string(buf, &offset);
 		itmt_entry.unused = get_string(buf, &offset);
-		offset += 12;
+		if (version == 2) {
+			// Ref DPTF/Sources/Manager/DataManager.cpp DataManager::loadItmtTableObject()
+			std::string dummy_str;
+			unsigned long long dummy1,dummy2, dummy3;
+
+			// There are three additional fields
+			dummy1 = get_uint64(buf, &offset);
+			dummy_str = get_string(buf, &offset);
+			dummy2 = get_uint64(buf, &offset);
+			dummy3 = get_uint64(buf, &offset);
+			thd_log_debug("ignore dummy_str:%s %llu %llu %llu\n", dummy_str.c_str(), dummy1, dummy2, dummy3);
+		} else {
+			offset += 12;
+		}
 
 		itmt.itmt_entries.push_back(itmt_entry);
 	}
