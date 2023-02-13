@@ -239,12 +239,17 @@ private:
 	int get_trip_temp(std::string name, trip_point_type_t type);
 
 public:
+#ifndef ANDROID	
 	cthd_gddv() :
 			upower_client(
 			NULL), power_profiles_daemon(NULL), tablet_dev(NULL), lid_dev(NULL), int3400_base_path(""), power_slider(75), current_condition_set(
 					0xffff) {
 	}
-
+#else
+	cthd_gddv() :
+			int3400_base_path(""), current_condition_set(0xffff) {
+	}
+#endif
 	~cthd_gddv();
 
 	std::vector<std::vector<struct condition>> conditions;
