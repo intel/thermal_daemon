@@ -71,13 +71,13 @@ class _gddv_exception: public std::exception {
 } gddv_exception;
 
 void cthd_gddv::destroy_dynamic_sources() {
+#ifndef ANDROID
 	if (upower_client)
 		g_clear_object(&upower_client);
 
 	if (power_profiles_daemon)
 		g_clear_object(&power_profiles_daemon);
 
-#ifndef ANDROID
 	if (tablet_dev) {
 		close(libevdev_get_fd(tablet_dev));
 		libevdev_free(tablet_dev);
@@ -818,7 +818,7 @@ int cthd_gddv::parse_trt(char *buf, int len)
 
 #ifdef ANDROID
 
-int cthd_engine_adaptive::handle_compressed_gddv(char *buf, int size) {
+int cthd_gddv::handle_compressed_gddv(char *buf, int size) {
 	struct header *header = (struct header*) buf;
 	uint64_t payload_output_size;
 	uint64_t output_size;
@@ -1276,7 +1276,7 @@ int cthd_gddv::evaluate_temperature_condition(
 }
 
 #ifdef ANDROID
-int cthd_engine_adaptive::evaluate_lid_condition(struct condition condition) {
+int cthd_gddv::evaluate_lid_condition(struct condition condition) {
         int value = 1;
 
         return compare_condition(condition, value);
@@ -1313,7 +1313,7 @@ int cthd_gddv::evaluate_workload_condition(
  * Tablet(2)
  * Other/Invalid(0)
  * */
-int cthd_engine_adaptive::evaluate_platform_type_condition(
+int cthd_gddv::evaluate_platform_type_condition(
                 struct condition condition) {
         int value = 2;//Tablet
 
@@ -1352,7 +1352,7 @@ int cthd_gddv::evaluate_power_slider_condition(
  DC(1)
  Short Term DC(2)
  * */
-int cthd_engine_adaptive::evaluate_ac_condition(struct condition condition) {
+int cthd_gddv::evaluate_ac_condition(struct condition condition) {
         csys_fs cdev_sysfs("/sys/class/power_supply/AC/online");
         std::string buffer;
         int status = 0;
@@ -1518,6 +1518,7 @@ int cthd_gddv::find_agressive_target() {
 	return max_target_id;
 }
 
+#ifndef ANDROID
 void cthd_gddv::update_power_slider()
 {
 	g_autoptr(GVariant) active_profile_v = NULL;
@@ -1545,6 +1546,7 @@ static void power_profiles_changed_cb(cthd_gddv *gddv)
 {
 	gddv->update_power_slider();
 }
+#endif
 
 #ifndef ANDROID
 static int is_event_device(const struct dirent *dir) {
@@ -1658,7 +1660,7 @@ int cthd_gddv::gddv_init(void) {
 		thd_log_info("Unable to connect to upower\n");
 		/* But continue to work */
 	}
-#endif
+
 	g_autoptr(GDBusConnection) bus = NULL;
 
 	bus = g_bus_get_sync (G_BUS_TYPE_SYSTEM, NULL, NULL);
@@ -1682,6 +1684,7 @@ int cthd_gddv::gddv_init(void) {
 			thd_log_info("Could not setup DBus watch for power-profiles-daemon");
 		}
 	}
+#endif
 
 	return THD_SUCCESS;
 }

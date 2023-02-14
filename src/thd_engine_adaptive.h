@@ -68,8 +68,7 @@ public:
 	}
 #else
 	cthd_engine_adaptive() :
-			cthd_engine_default("63BE270F-1C11-48FD-A6F7-3AF253FF3E2D"),
-			 current_condition_set(0xffff), policy_active(
+			cthd_engine_default("63BE270F-1C11-48FD-A6F7-3AF253FF3E2D"), policy_active(
 					0), fallback_id(-1), int3400_base_path(""), passive_def_only(
 					0), passive_def_processed(0) {
 	}
