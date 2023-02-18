@@ -548,6 +548,11 @@ void cthd_engine_adaptive::update_engine_state() {
 		execute_target(gddv.targets[i]);
 	}
 	policy_active = 1;
+
+	if (!int3400_installed) {
+		thd_log_info("Adaptive target doesn't have PSVT or ITMT target\n");
+		install_passive_default();
+	}
 }
 
 int cthd_engine_adaptive::thd_engine_init(bool ignore_cpuid_check,
