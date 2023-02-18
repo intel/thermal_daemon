@@ -535,18 +535,31 @@ void cthd_engine_adaptive::update_engine_state() {
 		if (fallback_id >= 0 && !policy_active) {
 			exec_fallback_target(gddv.targets[fallback_id].target_id);
 			policy_active = 1;
-		}
+		} else {
+			install_passive_default();
+                }
 		return;
 	}
 
+	if (target == last_exec_target)
+		return;
+
 	int3400_installed = 0;
+	passive_installed = 0;
 
 	for (int i = 0; i < (int) gddv.targets.size(); i++) {
 		if (gddv.targets[i].target_id != (uint64_t) target)
 			continue;
+
 		execute_target(gddv.targets[i]);
+		last_exec_target = target;
 	}
 	policy_active = 1;
+
+	if (!int3400_installed) {
+		thd_log_info("Adaptive target doesn't have PSVT or ITMT target\n");
+		install_passive_default();
+	}
 }
 
 int cthd_engine_adaptive::thd_engine_init(bool ignore_cpuid_check,

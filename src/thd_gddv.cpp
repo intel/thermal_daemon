@@ -1456,9 +1456,10 @@ int cthd_gddv::evaluate_conditions(int policy_active) {
 	for (int i = 0; i < (int) conditions.size(); i++) {
 		thd_log_debug("evaluate condition set %d\n", i);
 		if (evaluate_condition_set(conditions[i]) == THD_SUCCESS) {
-			 if (policy_active && i == current_condition_set)
-			                         break;
-
+			if (policy_active && i == current_condition_set) {
+				target = conditions[current_condition_set][0].target;
+				break;
+			}
 			current_condition_set = i;
 			target = conditions[i][0].target;
 			thd_log_info("Condition Set matched:%d target:%d\n", i, target);
