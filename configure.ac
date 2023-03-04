@@ -21,7 +21,7 @@ AC_ARG_WITH(dbus-sys-dir, AS_HELP_STRING([--with-dbus-sys-dir=DIR], [where D-BUS
 if test -n "$with_dbus_sys_dir" ; then
     DBUS_SYS_DIR="$with_dbus_sys_dir"
 else
-    DBUS_SYS_DIR="/etc/dbus-1/system.d"
+    DBUS_SYS_DIR="/usr/share/dbus-1/system.d"
 fi
 AC_SUBST(DBUS_SYS_DIR)
 

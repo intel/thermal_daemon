@@ -46,7 +46,7 @@ make %{?_smp_mflags}
 
 %files
 %{_sbindir}/thermald
-%config(noreplace) %{_sysconfdir}/dbus-1/system.d/org.freedesktop.thermald.conf
+%{_datadir}/dbus-1/system.d/org.freedesktop.thermald.conf
 %{_datadir}/dbus-1/system-services/org.freedesktop.thermald.service
 %config(noreplace) %{_sysconfdir}/thermald/thermal-conf.xml
 %config(noreplace) %{_sysconfdir}/thermald/thermal-cpu-cdev-order.xml
