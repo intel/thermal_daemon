@@ -116,6 +116,10 @@ For build, follow the same procedure as Fedora.
 
 Releases
 
+Release 2.5.2
+- Support Alder Lake N
+- Support ITMT version 2, which is used in some Raptor Lake systems
+
 Release 2.5.1
 - Static analysis fixes
 - Missing init, which causes skipping of conditions in a Dell system

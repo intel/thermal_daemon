@@ -613,6 +613,11 @@ int cthd_gddv::parse_itmt(char *name, char *buf, int len) {
 
 	thd_log_debug(" ITMT version %d %s\n", (int) version, name);
 
+	if (version > 2) {
+		thd_log_info("Unsupported ITMT version\n");
+		return THD_ERROR;
+	}
+
 	if (name == NULL)
 		itmt.name = "Default";
 	else

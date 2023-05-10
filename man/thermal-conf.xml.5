@@ -434,3 +434,94 @@ different temperatures.
   </Platform>
 </ThermalConfiguration>
 .EE
+.PP
+Example 7: Use RAPL power limits to control.
+.sp 1
+.EX
+<?xml version="1.0"?>
+<!-- BEGIN -->
+<ThermalConfiguration>
+<Platform>
+	<Name> TEST </Name>
+	<ProductName>Example_RAPL_Power </ProductName>
+	<Preference>QUIET</Preference>
+	<PPCC>
+		<!--
+		Specify the Maximum/Minimum RAPL power limit for the
+		platform. The limits are in milli watts.
+		The step size to reduce/increase for each sampling interval
+		Time window in miili seconds.
+		-->
+		<PowerLimitIndex>0</PowerLimitIndex>
+		<PowerLimitMaximum>15000</PowerLimitMaximum>
+		<PowerLimitMinimum>2000</PowerLimitMinimum>
+		<TimeWindowMinimum>20</TimeWindowMinimum>
+		<TimeWindowMaximum>30</TimeWindowMaximum>
+		<StepSize>1000</StepSize>
+	</PPCC>
+	<ThermalZones>
+		<ThermalZone>
+			<Type>TestZone</Type>
+			<TripPoints>
+				<TripPoint>
+					<SensorType>SEN3</SensorType>
+					<Temperature>50000</Temperature>
+					<Type>Passive</Type>
+					<CoolingDevice>
+						<Type>B0D4</Type>
+						<SamplingPeriod>3</SamplingPeriod>
+						<TargetState>2147483647</TargetState>
+							<!--
+							This setting means that when SEN3 reaches 50C, set the RAPL
+							max power limit to whatever the maximum power limit of the
+							platform.
+							-->
+					</CoolingDevice>
+				</TripPoint>
+				<TripPoint>
+					<SensorType>SEN3</SensorType>
+					<Temperature>52000</Temperature>
+					<Type>Passive</Type>
+					<CoolingDevice>
+						<Type>B0D4</Type>
+						<SamplingPeriod>3</SamplingPeriod>
+						<TargetState>8500000</TargetState>
+							<!--
+							This setting means that when SEN3 reaches 52C, set the RAPL
+							max power limit to 8.5W.
+							-->
+					</CoolingDevice>
+				</TripPoint>
+				<TripPoint>
+					<SensorType>SEN3</SensorType>
+					<Temperature>60000</Temperature>
+					<Type>Passive</Type>
+					<CoolingDevice>
+						<Type>B0D4</Type>
+						<SamplingPeriod>3</SamplingPeriod>
+						<TargetState>4500000</TargetState>
+							<!--
+							This setting means that when SEN3 reaches 60C, set the RAPL
+							max power limit to 4.5W.
+							-->
+					</CoolingDevice>
+				</TripPoint>
+				<TripPoint>
+					<SensorType>SEN3</SensorType>
+					<Temperature>65000</Temperature>
+					<Type>Passive</Type>
+					<CoolingDevice>
+						<Type>B0D4</Type>
+						<SamplingPeriod>3</SamplingPeriod>
+							<!--
+							This setting means that when SEN3 reaches 65C, set the RAPL
+							max power limit to minimum power limit for the platform.
+							-->
+					</CoolingDevice>
+				</TripPoint>
+			</TripPoints>
+		</ThermalZone>
+	</ThermalZones>
+</Platform>
+</ThermalConfiguration>
+.EE
