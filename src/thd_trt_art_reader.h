@@ -42,10 +42,15 @@ struct rel_object_t {
 	std::string target_sensor;
 	std::vector<void *> trt_objects;
 	std::vector<void *> art_objects;
+	std::vector<void *> psvt_objects;
+	int temperature;
+	int step;
 
-	rel_object_t(std::string name) {
+	rel_object_t(std::string name, int _temperature = 0, int _step = 0) {
 		target_device = name;
 		target_sensor = name;
+		temperature = _temperature;
+		step = _step;
 	}
 };
 
@@ -78,6 +83,9 @@ private:
 	unsigned char *art_data;
 	unsigned int art_count;
 
+	unsigned char *psvt_data;
+	unsigned int psvt_count;
+
 	int read_trt();
 	void dump_trt();
 	void create_platform_conf();
@@ -85,11 +93,16 @@ private:
 	void create_thermal_zones();
 	void create_thermal_zone(std::string type);
 	void add_passive_trip_point(rel_object_t &rel_obj);
+	void add_psvt_trip_point(rel_object_t &rel_obj);
 	void add_active_trip_point(rel_object_t &rel_obj);
 	void parse_target_devices();
 
 	int read_art();
 	void dump_art();
+
+	int read_psvt();
+	int process_psvt(std::string file_name);
+	void dump_psvt();
 
 public:
 	std::string indentation;
