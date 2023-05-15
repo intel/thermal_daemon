@@ -143,6 +143,80 @@ cthd_acpi_rel::cthd_acpi_rel() :
 				0), art_data(NULL), art_count(0) {
 
 }
+
+int cthd_acpi_rel::process_psvt(std::string file_name) {
+	cthd_INT3400 int3400 ("9E04115A-AE87-4D1C-9500-0F3E340BFE75");
+	std::string prefix;
+	int ret;
+
+	PRINT_DEBUG("Trying presence of PSVT\n");
+
+	if (int3400.match_supported_uuid () != THD_SUCCESS) {
+		thd_log_info ("Passive 2 UUID is not present, hence ignore PSVT, as it may have junk!!\n");
+		return THD_ERROR;
+	}
+
+	ret = read_psvt ();
+	if (ret)
+		return ret;
+
+	dump_psvt ();
+
+	conf_file.open (file_name.c_str ());
+	if (!conf_file.is_open ()) {
+		PRINT_ERROR("failed to open output file [%s]\n", file_name.c_str ());
+		return THD_ERROR;
+	}
+
+	conf_file << xml_hdr.c_str ();
+	conf_file << conf_begin.c_str ();
+
+	prefix = indentation = "\t";
+
+	conf_file << indentation.c_str () << "<Platform>" << "\n";
+
+	create_platform_conf ();
+	create_platform_pref (0);
+
+	prefix = indentation;
+	conf_file << prefix.c_str () << "<ThermalZones>" << "\n";
+
+	// Read PSVT
+	parse_target_devices ();
+
+	indentation += "\t";
+
+	for (unsigned long i = 0; i < rel_list.size (); ++i) {
+
+		PRINT_DEBUG("Add target target, i::%lu.\n", i);
+
+		if (rel_list[i].target_device == "") {
+			PRINT_ERROR("Empty target, skipping ..\n");
+			continue;
+		}
+		conf_file << prefix.c_str () << "\t" << "<ThermalZone>" << "\n";
+
+		subtitute_string (SOURCE_DEV, rel_list[i].target_device);
+		conf_file << prefix.c_str () << "\t\t" << "<Type>" << rel_list[i].target_device.c_str ()
+				<< "</Type>" << "\n";
+		conf_file << prefix.c_str () << "\t\t" << "<TripPoints>" << "\n";
+		add_psvt_trip_point (rel_list[i]);
+		conf_file << prefix.c_str () << "\t\t" << "</TripPoints>" << "\n";
+
+		conf_file << prefix.c_str () << "\t" << "</ThermalZone>" << "\n";	//
+	}
+	conf_file << prefix.c_str () << "</ThermalZones>" << "\n";
+
+	conf_file << prefix.c_str () << "</Platform>" << "\n";
+
+	conf_file << conf_end.c_str ();
+	conf_file.close ();
+
+	delete[] psvt_data;
+
+	return THD_SUCCESS;
+}
+
 int cthd_acpi_rel::generate_conf(std::string file_name) {
 	int trt_status;
 	string prefix;
@@ -163,13 +237,13 @@ int cthd_acpi_rel::generate_conf(std::string file_name) {
 	trt_status = read_trt();
 	if (trt_status < 0 && art_status < 0) {
 		PRINT_ERROR("TRT/ART read failed\n");
-		return -1;
+		return process_psvt(file_name);
 	}
 
 	if (int3400.match_supported_uuid() != THD_SUCCESS) {
 		thd_log_info("Passive 1 UUID is not present, hence ignore _TRT, as it may have junk!!\n");
-		ret = -1;
-		goto cleanup;
+		thd_log_info("Try Passive 2\n");
+		return process_psvt(file_name);
 	}
 
 	conf_file.open(file_name.c_str());
@@ -200,6 +274,53 @@ int cthd_acpi_rel::generate_conf(std::string file_name) {
 		delete[] art_data;
 
 	return ret;
+}
+
+int cthd_acpi_rel::read_psvt() {
+	unsigned long length, count;
+	int fd, ret;
+
+	fd = open (rel_cdev.c_str (), O_RDWR);
+	if (fd < 0) {
+		PRINT_ERROR("failed to open %s \n", rel_cdev.c_str ());
+		return -1;
+	}
+
+	ret = ioctl (fd, ACPI_THERMAL_GET_PSVT_COUNT, &count);
+	if (ret < 0) {
+		PRINT_ERROR(" failed to GET COUNT on %s\n", rel_cdev.c_str ());
+		close (fd);
+		return -1;
+	}
+	PRINT_DEBUG("PSVT count %lu ...\n", count);
+
+	ret = ioctl (fd, ACPI_THERMAL_GET_PSVT_LEN, &length);
+	if (ret < 0 || !length) {
+		PRINT_ERROR(" failed to GET LEN on %s\n", rel_cdev.c_str ());
+		close (fd);
+		return -1;
+	}
+	PRINT_DEBUG("PSVT length %lu ...\n", length);
+
+	psvt_data = (unsigned char*) new char[length];
+	if (!psvt_data) {
+		PRINT_ERROR("cannot allocate buffer %lu to read PSVT\n", length);
+		close (fd);
+		return -1;
+	}
+
+	ret = ioctl (fd, ACPI_THERMAL_GET_PSVT, psvt_data);
+	if (ret < 0) {
+		PRINT_ERROR(" failed to GET PSVT on %s\n", rel_cdev.c_str ());
+		close (fd);
+		return -1;
+	}
+
+	psvt_count = count;
+
+	close (fd);
+
+	return 0;
 }
 
 int cthd_acpi_rel::read_art() {
@@ -293,6 +414,74 @@ int cthd_acpi_rel::read_trt() {
 	close(fd);
 
 	return 0;
+}
+
+#define ACPI_TYPE_STRING                0x02
+#define DECI_KELVIN_TO_CELSIUS(t)       ({                      \
+        int _t = (t);                                          \
+        ((_t-2732 >= 0) ? (_t-2732+5)/10 : (_t-2732-5)/10);     \
+})
+
+void cthd_acpi_rel::add_psvt_trip_point(rel_object_t &rel_obj) {
+	if (!rel_obj.psvt_objects.size ())
+		return;
+
+	PRINT_DEBUG("add_passive_trip_point\n");
+
+	string prefix = indentation + "\t";
+
+	for (unsigned int j = 0; j < rel_obj.psvt_objects.size (); ++j) {
+		union psvt_object *object = (union psvt_object*) rel_obj.psvt_objects[j];
+		string device_name = object->acpi_psvt_entry.source_device;
+		int limit_value = -1;
+
+		conf_file << prefix.c_str () << "<TripPoint>\n";
+
+		conf_file << prefix.c_str () << "\t" << "<SensorType>"
+				<< object->acpi_psvt_entry.target_device << "</SensorType>\n";
+
+		PRINT_DEBUG("object->acpi_psvt_entry.control_knob_type:%llu\n",
+					object->acpi_psvt_entry.control_knob_type);
+
+		if (object->acpi_psvt_entry.control_knob_type == ACPI_TYPE_STRING) {
+			if (!strncasecmp (object->acpi_psvt_entry.limit.string, "MAX", 3))
+				conf_file << prefix.c_str () << "\t" << "<Temperature>"
+						<< (DECI_KELVIN_TO_CELSIUS(object->acpi_psvt_entry.passive_temp) + 1) * 1000
+						<< "</Temperature>\n";
+
+			if (!strncasecmp (object->acpi_psvt_entry.limit.string, "MIN", 3))
+				conf_file << prefix.c_str () << "\t" << "<Temperature>"
+						<< (DECI_KELVIN_TO_CELSIUS(object->acpi_psvt_entry.passive_temp) * 1000)
+						<< "</Temperature>\n";
+		}
+		else {
+			limit_value = object->acpi_psvt_entry.limit.integer;
+			conf_file << prefix.c_str () << "\t" << "<Temperature>"
+					<< (DECI_KELVIN_TO_CELSIUS(object->acpi_psvt_entry.passive_temp) * 1000)
+					<< "</Temperature>\n";
+		}
+
+		conf_file << prefix.c_str () << "\t" << "<Type>" << "Passive" << "</Type>\n";
+
+		conf_file << prefix.c_str () << "\t" << "<CoolingDevice>\n";
+
+		subtitute_string (TARGET_DEV, device_name);
+
+		conf_file << prefix.c_str () << "\t\t" << "<type>" << device_name.c_str () << "</type>\n";
+
+		if (object->acpi_psvt_entry.sample_period)
+			conf_file << prefix.c_str () << "\t\t" << "<SamplingPeriod>"
+					<< (object->acpi_psvt_entry.sample_period / 10) << "</SamplingPeriod>\n";
+
+		if (limit_value > 0)
+			conf_file << prefix.c_str () << "\t\t" << "<TargetState>" << (limit_value * 1000)
+					<< "</TargetState>\n";
+
+		conf_file << prefix.c_str () << "\t" << "</CoolingDevice>\n";
+
+		conf_file << prefix.c_str () << "</TripPoint>\n";
+
+	}
 }
 
 void cthd_acpi_rel::add_passive_trip_point(rel_object_t &rel_obj) {
@@ -405,6 +594,7 @@ void cthd_acpi_rel::create_thermal_zone(string type) {
 void cthd_acpi_rel::parse_target_devices() {
 	union trt_object *trt = (union trt_object *) trt_data;
 	union art_object *art = (union art_object *) art_data;
+	union psvt_object *psvt = (union psvt_object *) psvt_data;
 
 	unsigned int i;
 
@@ -436,6 +626,27 @@ void cthd_acpi_rel::parse_target_devices() {
 			rel_list.push_back(rel_obj);
 		} else
 			find_iter->art_objects.push_back(&art[i]);
+	}
+
+	PRINT_DEBUG("parse target devices\n");
+
+	for (i = 0; i < psvt_count; i++) {
+		rel_object_t rel_obj(psvt[i].acpi_psvt_entry.target_device,
+				psvt[i].acpi_psvt_entry.passive_temp,
+				psvt[i].acpi_psvt_entry.step_size);
+
+		PRINT_DEBUG("parse target devices index :%d\n", i);
+
+		vector<rel_object_t>::iterator find_iter;
+
+		find_iter = find_if(rel_list.begin(), rel_list.end(),
+				object_finder(psvt[i].acpi_psvt_entry.target_device));
+
+		if (find_iter == rel_list.end()) {
+			rel_obj.psvt_objects.push_back(&psvt[i]);
+			rel_list.push_back(rel_obj);
+		} else
+			find_iter->psvt_objects.push_back(&psvt[i]);
 	}
 }
 
@@ -492,6 +703,28 @@ void cthd_acpi_rel::dump_trt() {
 		PRINT_DEBUG("TRT %d: INF %llu:\t", i, trt[i].acpi_trt_entry.influence);
 		PRINT_DEBUG("TRT %d: SMPL %llu:\n", i,
 				trt[i].acpi_trt_entry.sample_period);
+	}
+}
+
+void cthd_acpi_rel::dump_psvt() {
+
+	union psvt_object *trt = (union psvt_object*) psvt_data;
+	unsigned int i;
+
+	for (i = 0; i < psvt_count; i++) {
+
+		PRINT_DEBUG("PSVT %d\n", i);
+
+		PRINT_DEBUG("PSVT %d: SRC %s:\n", i, trt[i].acpi_psvt_entry.source_device);
+		PRINT_DEBUG("TRT %d: TGT %s:\n", i, trt[i].acpi_psvt_entry.target_device);
+		PRINT_DEBUG("TRT %d: SMPL %llu:\n", i, trt[i].acpi_psvt_entry.sample_period);
+		PRINT_DEBUG("TRT %d: temp %d:\n", i,
+					DECI_KELVIN_TO_CELSIUS(trt[i].acpi_psvt_entry.passive_temp));
+		PRINT_DEBUG("TRT %d: step %llu:\n", i, trt[i].acpi_psvt_entry.step_size);
+		if (trt[i].acpi_psvt_entry.control_knob_type == ACPI_TYPE_STRING)
+			PRINT_DEBUG("control limit:%s\n", trt[i].acpi_psvt_entry.limit.string);
+		else
+			PRINT_DEBUG("control_limit: %llu\n", trt[i].acpi_psvt_entry.limit.integer);
 	}
 }
 
