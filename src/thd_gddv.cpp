@@ -1487,6 +1487,8 @@ int cthd_gddv::gddv_init(void) {
 		int3400_base_path = "/sys/bus/platform/devices/INTC1041:00/";
 	} else if (sysfs.exists("/sys/bus/platform/devices/INTC10A0:00")) {
 		int3400_base_path = "/sys/bus/platform/devices/INTC10A0:00/";
+	} else if (sysfs.exists("/sys/bus/platform/devices/INTC1042:00")) {
+		int3400_base_path = "/sys/bus/platform/devices/INTC1042:00/";
 	} else {
 		return THD_ERROR;
 	}
