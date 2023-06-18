@@ -32,7 +32,7 @@ So make sure that there is group called "power" in the system and add your user 
 Building the Thermal Monitor with make
 --------------------------------------
 
-Normally Qt Creator handles the compilation of the project.  If you wish to use the command line to compile, then you first have to create a makefile.  Qmake will create the makefile for you based on the project file.  Qmake resided in /opt/Qt/5.4/gcc_64/bin on our system.  Invoke with:
+Normally Qt Creator handles the compilation of the project.  If you wish to use the command line to compile, then you first have to create a makefile.  Qmake will create the makefile for you based on the project file.  Invoke with:
 
 qmake ThermalMonitor.pro
 
