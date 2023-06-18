@@ -26,7 +26,7 @@
  */
 
 /* This implements main() function. This will parse command line options and
- * a new instance of cthd_engine object. By default it will create a engine
+ * a new instance of cthd_engine object. By default it will create an engine
  * which uses dts engine, which DTS sensor and use P states to control
  * temperature, without any configuration. Alternatively if the
  * thermal-conf.xml has exact UUID match then it can use the zones and

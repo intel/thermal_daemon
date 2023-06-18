@@ -210,7 +210,7 @@ Release 1.9.1
 Release 1.9
 - The major change in this version is the active power limits adjustment.
 This will be useful to improve performance on some newer platform. But
-this will will lead to increase in CPU and other temperatures. Hence this
+this will lead to increase in CPU and other temperatures. Hence this
 is important to run dptfxtract version 1.4.1 tool to get performance
 sensitive thermal limits (https://github.com/intel/dptfxtract/commits/v1.4.1).
 If the default configuration picked up by thermald is not optimal, user
@@ -225,8 +225,8 @@ secure boot must update to newer kernels.
 
 - TCC offset limits
 As reported in some forums that some platforms have issue with high TCC
-offset settings. Under some special condition this offset is adjusted.
-But currently needs msr module loaded to get MSR access
+offset settings. Under some special condition this offset is adjusted,
+but that currently needs msr module loaded to get MSR access
 from user space. I have submitted a patch to have this exported via sysfs
 for v5.4+ kernel.
 
@@ -414,7 +414,7 @@ on slope and angular increments to dynamically adjust set point
 
 
 Version 0.2
-- Define XML interface to set configuration data. Refer to thermal-conf.xml. This allows to override buggy Bios thermal comfiguration and also allows to extend the capability.
+- Define XML interface to set configuration data. Refer to thermal-conf.xml. This allows overriding buggy Bios thermal comfiguration and also allows extending the capability.
 - Use platform DMI UUID to index into configuration data. If there is no UUID match, falls back to thermal sysfs
 - Terminate interface
 - Takes over control from kernel thermal processing

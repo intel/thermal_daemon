@@ -63,7 +63,7 @@ bool ThermaldInterface::initialize()
         return false;
     }
 
-    // Read in all the the temperature sensor data from the thermal daemon
+    // Read in all the temperature sensor data from the thermal daemon
     for (uint i = 0; i < sensor_count; i++){
         sensorInformationType new_sensor;
 

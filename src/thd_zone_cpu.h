@@ -20,7 +20,7 @@
  *
  * Author Name <Srinivas.Pandruvada@linux.intel.com>
  *
- * This interface allows to override per zone read data from sysfs for
+ * This interface allows overriding per zone read data from sysfs for
  * buggy BIOS.
  */
 

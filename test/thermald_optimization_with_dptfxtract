@@ -49,12 +49,12 @@ DPTF Tables Extraction Utility
 Copyright (c) 2000 - 2019 Intel Corporation
 
 
-Output file file is /etc/thermald/thermal-conf.xml.0
-Output file file is /etc/thermald/thermal-conf.xml.1
-Output file file is /etc/thermald/thermal-conf.xml.2
-Output file file is /etc/thermald/thermal-conf.xml.3
-Output file file is /etc/thermald/thermal-conf.xml.4
-Output file file is /etc/thermald/thermal-conf.xml.auto
+Output file is /etc/thermald/thermal-conf.xml.0
+Output file is /etc/thermald/thermal-conf.xml.1
+Output file is /etc/thermald/thermal-conf.xml.2
+Output file is /etc/thermald/thermal-conf.xml.3
+Output file is /etc/thermald/thermal-conf.xml.4
+Output file is /etc/thermald/thermal-conf.xml.auto
 
 Step 6
 Check the kernel version, using " uname -a".
