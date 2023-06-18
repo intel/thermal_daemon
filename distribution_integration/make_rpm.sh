@@ -1,5 +1,5 @@
 #!/bin/bash
-BRANCH=$(git branch | grep '^*' | sed 's/^..\(.*\)/\1/')
+BRANCH=$(git branch | grep '^\*' | sed 's/^..\(.*\)/\1/')
 HASH=$(git rev-parse ${BRANCH})
 TAG=$(git describe --tags --abbrev=0)
 RELEASE=$(git describe --tags | cut -d- -f2 | tr - _)
