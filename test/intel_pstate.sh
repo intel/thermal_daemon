@@ -1,4 +1,4 @@
-!/bin/bash
+#!/bin/bash
 
 CONF_FILE="/var/run/thermald/thermal-conf.xml.auto"
 
