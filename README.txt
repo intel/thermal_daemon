@@ -65,17 +65,17 @@ add appropriate prefix.
 
 Building on Ubuntu
 1. Install
-	sudo apt-get install autoconf
-	sudo apt-get install autoconf-archive
-	sudo apt-get install g++
-	sudo apt-get install libglib2.0-dev
-	sudo apt-get install libdbus-1-dev
-	sudo apt-get install libdbus-glib-1-dev
-	sudo apt-get install libxml2-dev
-	sudo apt-get install gtk-doc-tools
-	sudo apt-get install libupower-glib-dev
-	sudo apt-get install liblzma-dev
-	sudo apt-get install libevdev-dev
+	sudo apt install autoconf
+	sudo apt install autoconf-archive
+	sudo apt install g++
+	sudo apt install libglib2.0-dev
+	sudo apt install libdbus-1-dev
+	sudo apt install libdbus-glib-1-dev
+	sudo apt install libxml2-dev
+	sudo apt install gtk-doc-tools
+	sudo apt install libupower-glib-dev
+	sudo apt install liblzma-dev
+	sudo apt install libevdev-dev
 
 2
 Build
