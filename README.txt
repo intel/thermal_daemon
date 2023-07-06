@@ -117,6 +117,9 @@ For build, follow the same procedure as Fedora.
 Releases
 
 Release 2.5.2
+- Support Meteor Lake
+
+Release 2.5.2
 - Support Alder Lake N
 - Support ITMT version 2, which is used in some Raptor Lake systems
 
