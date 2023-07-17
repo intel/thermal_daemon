@@ -679,7 +679,9 @@ int cthd_engine_adaptive::thd_engine_start() {
 
 	set_control_mode(EXCLUSIVE);
 
-	gddv.evaluate_conditions(policy_active);
+	if (gddv.evaluate_conditions(policy_active) == -1)
+		install_passive_default();
+
 	thd_log_info("adaptive engine reached end\n");
 
 	return cthd_engine::thd_engine_start();
