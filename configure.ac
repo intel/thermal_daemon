@@ -25,6 +25,14 @@ else
 fi
 AC_SUBST(DBUS_SYS_DIR)
 
+AC_ARG_WITH(dbus-power-group, AS_HELP_STRING([--with-dbus-power-group=GROUP], [group that is allowed to connect to D-BUS service]))
+if test -n "$with_dbus_power_group" ; then
+    DBUS_POWER_GROUP="$with_dbus_power_group"
+else
+    DBUS_POWER_GROUP="power"
+fi
+AC_SUBST(DBUS_POWER_GROUP)
+
 # paths
 AC_SUBST(tdbinary, "$sbindir/$PACKAGE", [Binary executable])
 AC_SUBST(tdconfdir, "$sysconfdir/$PACKAGE", [Configuration directory])
