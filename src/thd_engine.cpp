@@ -993,7 +993,7 @@ cthd_zone* cthd_engine::get_zone(std::string type) {
 }
 
 // Code copied from
-// https://rt.wiki.kernel.org/index.php/RT_PREEMPT_HOWTO#Runtime_detection_of_an_RT-PREEMPT_Kernel
+// https://web.archive.org/web/20130822155153/https://rt.wiki.kernel.org/index.php/RT_PREEMPT_HOWTO#Runtime_detection_of_an_RT-PREEMPT_Kernel
 void cthd_engine::check_for_rt_kernel() {
 	struct utsname _uname;
 	char *crit1 = NULL;

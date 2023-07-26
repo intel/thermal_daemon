@@ -20,7 +20,7 @@
  *
  * Author Name <Srinivas.Pandruvada@linux.intel.com>
  *
- * This implementation allows to use core temperature interface.
+ * This implementation allows using core temperature interface.
  */
 
 /* Implementation of DTS sensor Zone. This
@@ -106,7 +106,7 @@ int cthd_zone_cpu::init() {
 	}
 
 	// max_temperature is where the Fan would have been activated fully
-	// psv_temp is set more that that so that in case if Fan is not able to
+	// psv_temp is set more so that in the case if Fan is not able to
 	// control temperature, the passive temperature will be acted on
 	psv_temp = max_temp + ((critical_temp - max_temp) / 2);
 

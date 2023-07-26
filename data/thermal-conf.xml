@@ -71,7 +71,7 @@ use "man thermal-conf.xml" for details
 			<AsyncCapable>1</AsyncCapable>
 		</ThermalSensor>
 		<ThermalSensor>
-			<!-- Examle of a virtual sensor. This sensor
+			<!-- Example of a virtual sensor. This sensor
 				depends on other real sensor or
 				virtual sensor.
 				E.g. here the temp will be

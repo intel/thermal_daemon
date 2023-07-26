@@ -21,7 +21,7 @@
 .\"
 .\" Copyright (C) 2012 Intel Corporation. All rights reserved.
 .\"
-.TH thermal-conf.xml "5" "18 Dec 2018"
+.TH thermal-conf.xml "5" "Dec 18, 2018"
 
 .SH NAME
 thermal-conf.xml \- Configuration file for thermal daemon
@@ -52,8 +52,6 @@ more power and noise. A passive device uses performance throttling to control
 temperature. In addition to cooling devices present in the thermal sysfs, the
 following cooling devices are built into the thermald, which can be used as
 valid cooling device type:
-.TP
-.PP
 .IP \(bu 2
 rapl_controller
 .IP \(bu 2
@@ -67,8 +65,6 @@ The thermal sysfs under Linux (/sys/class/thermal) provides a way to represent
 per platform ACPI configuration. The kernel thermal governor uses this data to
 keep the platform thermals under control. But there are some limitations, which
 thermald tries to resolve. For example:
-.TP
-.PP
 .IP \(bu 2
 If the ACPI data is not optimized or buggy. In this case thermal-conf.xml
 can be used to correct the behavior without change in BIOS.
@@ -83,7 +79,6 @@ thermal-conf.xml can be used to bind a zone to an external cooling device.
 Specify thermal relationships. A zone can be influenced by multiple source
 devices with varying degrees. In this case thermal-conf.xml can be used to
 define the relative influence for apply compensation.
-.PP
 .SH FILE FORMAT
 The configuration file format conforms to XML specifications. A set of tags
 defined to define platform, sensors, zones, cooling devices and trip points.
@@ -190,7 +185,6 @@ defined to define platform, sensors, zones, cooling devices and trip points.
 </ThermalConfiguration>
 .EE
 .SH EXAMPLE CONFIGURATIONS
-.PP
 .B Example 1:
 This is a very simple configuration, to change the passive limit on the
 CPU. Instead of default, this new temperature 86C in the configuration is

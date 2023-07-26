@@ -59,7 +59,7 @@ typedef enum {
  * The _TRT and _ART table may refer to entry, for which we have
  * we need to tie to some control device, which is not enumerated
  * as a thermal cooling device. In this case, we substitute them
- * to a inbuilt standard name.
+ * to an inbuilt standard name.
  */
 static void associate_device(sub_type_t type, string &name) {
 	DIR *dir;
