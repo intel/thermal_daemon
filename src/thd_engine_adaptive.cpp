@@ -26,7 +26,6 @@
 #include <dirent.h>
 #include <errno.h>
 #include <inttypes.h>
-#include <lzma.h>
 #include <linux/input.h>
 #include <sys/types.h>
 #include "thd_engine_adaptive.h"
@@ -548,6 +547,11 @@ void cthd_engine_adaptive::update_engine_state() {
 		execute_target(gddv.targets[i]);
 	}
 	policy_active = 1;
+
+	if (!int3400_installed) {
+		thd_log_info("Adaptive target doesn't have PSVT or ITMT target\n");
+		install_passive_default();
+	}
 }
 
 int cthd_engine_adaptive::thd_engine_init(bool ignore_cpuid_check,
@@ -674,7 +678,9 @@ int cthd_engine_adaptive::thd_engine_start() {
 
 	set_control_mode(EXCLUSIVE);
 
-	gddv.evaluate_conditions(policy_active);
+	if (gddv.evaluate_conditions(policy_active) == -1)
+		install_passive_default();
+
 	thd_log_info("adaptive engine reached end\n");
 
 	return cthd_engine::thd_engine_start();

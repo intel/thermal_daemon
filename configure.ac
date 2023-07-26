@@ -1,7 +1,7 @@
 AC_PREREQ(1.0)
 
 m4_define([td_major_version], [2])
-m4_define([td_minor_version], [5.3])
+m4_define([td_minor_version], [5.4-pre])
 m4_define([td_version],
           [td_major_version.td_minor_version])
 
@@ -21,7 +21,7 @@ AC_ARG_WITH(dbus-sys-dir, AS_HELP_STRING([--with-dbus-sys-dir=DIR], [where D-BUS
 if test -n "$with_dbus_sys_dir" ; then
     DBUS_SYS_DIR="$with_dbus_sys_dir"
 else
-    DBUS_SYS_DIR="/etc/dbus-1/system.d"
+    DBUS_SYS_DIR="/usr/share/dbus-1/system.d"
 fi
 AC_SUBST(DBUS_SYS_DIR)
 

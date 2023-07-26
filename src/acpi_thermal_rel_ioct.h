@@ -33,6 +33,19 @@
 #define ACPI_THERMAL_GET_TRT	_IOR(ACPI_THERMAL_MAGIC, 5, unsigned long)
 #define ACPI_THERMAL_GET_ART	_IOR(ACPI_THERMAL_MAGIC, 6, unsigned long)
 
+/*
+ * ACPI_THERMAL_GET_PSVT_REV = Revision number
+ *   identifies limit type: 1=true proportional limit, 2=depth limit
+ * ACPI_THERMAL_GET_PSVT_COUNT = Number of PSVT entries
+ * ACPI_THERMAL_GET_PSVT_LEN = Total return data size (PSVT count x each
+ * PSVT entry size)
+ * ACPI_THERMAL_GET_PSVT = Get the data as an array of psvt_objects
+ */
+#define ACPI_THERMAL_GET_PSVT_REV _IOR(ACPI_THERMAL_MAGIC, 7, unsigned long)
+#define ACPI_THERMAL_GET_PSVT_LEN _IOR(ACPI_THERMAL_MAGIC, 8, unsigned long)
+#define ACPI_THERMAL_GET_PSVT_COUNT _IOR(ACPI_THERMAL_MAGIC, 9, unsigned long)
+#define ACPI_THERMAL_GET_PSVT	_IOR(ACPI_THERMAL_MAGIC, 10, unsigned long)
+
 #ifndef __KERNEL__
 #define u64 unsigned long long
 #endif
@@ -65,6 +78,30 @@ union trt_object {
 		u64 reserved[4];
 	} acpi_trt_entry;
 	u64 __data[8];
+};
+
+#define ACPI_LIMIT_STR_MAX_LEN	8
+#define ACPI_NR_PSVT_ELEMENTS	12
+
+union psvt_object {
+	struct {
+		char source_device[8];
+		char target_device[8];
+		u64 priority;
+		u64 sample_period;
+		u64 passive_temp;
+		u64 source_domain;
+		u64 control_knob;
+		union {
+			u64 integer;
+			char string[ACPI_LIMIT_STR_MAX_LEN];
+		} limit;
+		u64 step_size;
+		u64 limit_coeff;
+		u64 unlimit_coeff;
+		u64 control_knob_type;
+	} acpi_psvt_entry;
+	u64 __data[ACPI_NR_PSVT_ELEMENTS];
 };
 
 #ifdef __KERNEL__
