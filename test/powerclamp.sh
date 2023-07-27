@@ -17,7 +17,8 @@ echo 70000 > ${THD0_ZONE}/emul_temp
 echo "Emulate temp to"
 cat ${THD0_ZONE}/temp
 
-max_state=$(cat ${CDEV}/max_state)
+max_state=49
+#$(cat ${CDEV}/max_state)
 max_state=$(expr $max_state / 2)
 echo $max_state 
 COUNTER=0

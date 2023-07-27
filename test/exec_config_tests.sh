@@ -1,5 +1,7 @@
 #!/bin/bash
 
+echo "Make sure that intel_pstate is not started with --adaptive option"
+
 make
 
 insmod thermald_test_kern_module.ko
