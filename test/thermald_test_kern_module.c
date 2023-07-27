@@ -143,12 +143,12 @@ static struct thermald_cdev *create_test_cdev(int id)
 		return NULL;
 
 	snprintf(name, sizeof(name), "thd_cdev_%d", id);
+	cdev->max_state = 10;
 	cdev->cdev = thermal_cooling_device_register(name, cdev, &cdev_ops);
 	if (IS_ERR(cdev->cdev)) {
 		kfree(cdev);
 		return NULL;
 	}
-	cdev->max_state = 10;
 
 	return cdev;
 }
