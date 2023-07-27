@@ -54,7 +54,7 @@ while [  $COUNTER -lt 10 ]; do
 	sleep 5
 	let COUNTER=COUNTER+1 
 done
-if [ $cur_state -gt -1 ]; then
+if [ $cur_state -gt 0 ]; then
 	echo "powerclamp: Step 0: Test failed"
 	exit 1
 else
@@ -101,7 +101,7 @@ while [  $COUNTER -lt 10 ]; do
 	let COUNTER=COUNTER+1 
 done
 
-if [ $cur_state -gt -1 ]; then
+if [ $cur_state -gt 0 ]; then
 	echo "powerclamp: Step 2: Test failed"
 	exit 1
 else
