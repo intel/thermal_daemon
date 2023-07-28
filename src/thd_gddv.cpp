@@ -206,9 +206,6 @@ int cthd_gddv::parse_apat(char *apat, int len) {
 	while (offset < len) {
 		struct adaptive_target target;
 
-		if (offset >= len)
-			return THD_ERROR;
-
 		target.target_id = get_uint64(apat, &offset);
 		target.name = get_string(apat, &offset);
 		target.participant = get_string(apat, &offset);
