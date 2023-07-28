@@ -30,10 +30,6 @@
  *
  */
 void cthd_sysfs_cdev_rapl::set_curr_state(int state, int control) {
-
-	std::stringstream tc_state_dev;
-
-	std::stringstream state_str;
 	int new_state = state, ret;
 
 	if (bios_locked) {
@@ -364,7 +360,6 @@ void cthd_sysfs_cdev_rapl::set_adaptive_target(struct adaptive_target target) {
 }
 
 int cthd_sysfs_cdev_rapl::update() {
-	std::stringstream temp_str;
 	int constraint_phy_max;
 	bool ppcc = false;
 	std::string domain_name;
