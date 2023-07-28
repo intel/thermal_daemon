@@ -483,7 +483,6 @@ bool cthd_sysfs_cdev_rapl::read_ppcc_power_limits() {
 		pl0_max_pwr = ppcc->power_limit_max * 1000;
 		pl0_min_pwr = ppcc->power_limit_min * 1000;
 		pl0_min_window = ppcc->time_wind_min * 1000;
-		pl0_min_window = ppcc->time_wind_min * 1000;
 		pl0_max_window = ppcc->time_wind_max * 1000;
 		pl0_step_pwr = ppcc->step_size * 1000;
 
