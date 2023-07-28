@@ -906,8 +906,6 @@ void cthd_engine_default::workaround_rapl_mmio_power(void)
 	unsigned int ebx, ecx, edx;
 	unsigned int fms, family, model;
 
-	csys_fs sys_fs;
-
 	ecx = edx = 0;
 	__cpuid(1, fms, ebx, ecx, edx);
 	family = (fms >> 8) & 0xf;
