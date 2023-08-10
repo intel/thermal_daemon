@@ -181,7 +181,7 @@ public:
 
 		for (unsigned int i = 0; i < trip_points.size(); ++i) {
 			trip_point_type_t trip_type = trip_points[i].get_trip_type();
-			if (trip_type==HOT|| trip_type==HOT || trip_type==MAX )
+			if (trip_type==HOT|| trip_type==CRITICAL || trip_type==MAX )
 			{
 				thd_log_info("keep cdev trip_point %d temp=%d\n", i, trip_points[i].get_trip_temp());
 			}
