@@ -418,8 +418,12 @@ int cthd_sysfs_cdev_rapl::update() {
 
 		// Check if there is any sane max power limit set
 		if (phy_max < 0 || phy_max > rapl_max_sane_phy_max) {
-			thd_log_info("%s:powercap RAPL invalid max power limit range \n",
-					domain_name.c_str());
+			int ret = cdev_sysfs.read("name", domain_name);
+
+			if (!ret)
+				thd_log_info("%s:powercap RAPL invalid max power limit range \n",
+						domain_name.c_str());
+
 			thd_log_info("Calculate dynamically phy_max \n");
 
 			power_on_constraint_0_pwr = rapl_read_pl1();
