@@ -40,6 +40,8 @@ int cthd_gen_sysfs_cdev::update() {
 			return THD_ERROR;
 
 		ret = cdev_sysfs.write("", 0);
+		if (ret < 0)
+			return THD_ERROR;
 	}
 
 	return THD_SUCCESS;
