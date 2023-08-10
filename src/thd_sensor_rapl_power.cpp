@@ -34,9 +34,6 @@ cthd_sensor_rapl_power::cthd_sensor_rapl_power(int index) :
 }
 
 unsigned int cthd_sensor_rapl_power::read_temperature() {
-	csys_fs sysfs;
-	std::string buffer;
-
 	thd_engine->rapl_power_meter.rapl_start_measure_power();
 
 	unsigned int pkg_power = thd_engine->rapl_power_meter.rapl_action_get_power(

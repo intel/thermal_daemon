@@ -30,10 +30,6 @@
  *
  */
 void cthd_sysfs_cdev_rapl::set_curr_state(int state, int control) {
-
-	std::stringstream tc_state_dev;
-
-	std::stringstream state_str;
 	int new_state = state, ret;
 
 	if (bios_locked) {
@@ -364,7 +360,6 @@ void cthd_sysfs_cdev_rapl::set_adaptive_target(struct adaptive_target target) {
 }
 
 int cthd_sysfs_cdev_rapl::update() {
-	std::stringstream temp_str;
 	int constraint_phy_max;
 	bool ppcc = false;
 	std::string domain_name;
@@ -486,7 +481,6 @@ bool cthd_sysfs_cdev_rapl::read_ppcc_power_limits() {
 		thd_log_info("Reading PPCC from the thermal-conf.xml\n");
 		pl0_max_pwr = ppcc->power_limit_max * 1000;
 		pl0_min_pwr = ppcc->power_limit_min * 1000;
-		pl0_min_window = ppcc->time_wind_min * 1000;
 		pl0_min_window = ppcc->time_wind_min * 1000;
 		pl0_max_window = ppcc->time_wind_max * 1000;
 		pl0_step_pwr = ppcc->step_size * 1000;
