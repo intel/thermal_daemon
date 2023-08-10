@@ -308,8 +308,7 @@ bool cthd_engine_default::add_int340x_processor_dev(void)
 
 				if (critical && passive + 5 * 1000 >= critical) {
 					new_passive = critical - 15 * 1000;
-					if (new_passive < critical)
-						trip->thd_trip_update_set_point(new_passive);
+					trip->thd_trip_update_set_point(new_passive);
 				}
 
 				thd_log_info("Processor thermal device is present \n");
