@@ -226,7 +226,12 @@ int cthd_parse::parse_new_trip_point(xmlNode * a_node, xmlDoc *doc,
 				trip_cdev.target_state_valid = 0;
 				trip_cdev.target_state = 0;
 				trip_cdev.type.clear();
-				memset(&trip_cdev.pid_param, 0, sizeof(pid_param_t));
+
+				trip_cdev.pid_param.valid = 0;
+				trip_cdev.pid_param.kp = 0.0;
+				trip_cdev.pid_param.ki = 0.0;
+				trip_cdev.pid_param.kd = 0.0;
+
 				parse_new_trip_cdev(cur_node->children, doc, &trip_cdev);
 				trip_pt->cdev_trips.push_back(trip_cdev);
 			} else if (!strcasecmp((const char*) cur_node->name,
