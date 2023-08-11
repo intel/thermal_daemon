@@ -367,7 +367,6 @@ void cthd_engine_adaptive::set_int3400_target(struct adaptive_target target) {
 	if (target.code == "ITMT") {
 		if (set_itmt_target(target) == THD_SUCCESS) {
 			int3400_installed = 1;
-			passive_installed = 1;
 		}
 	}
 
@@ -400,7 +399,6 @@ void cthd_engine_adaptive::set_int3400_target(struct adaptive_target target) {
 		for (int i = 0; i < (int) psvt->psvs.size(); i++) {
 			install_passive(&psvt->psvs[i]);
 		}
-		passive_installed = 1;
 		int3400_installed = 1;
 	}
 
@@ -430,9 +428,6 @@ void cthd_engine_adaptive::set_int3400_target(struct adaptive_target target) {
 }
 
 void cthd_engine_adaptive::install_passive_default() {
-	if (passive_installed)
-		return;
-
 	thd_log_info("IETM_D0 processed\n");
 
 	for (unsigned int i = 0; i < zones.size(); ++i) {
@@ -461,7 +456,6 @@ void cthd_engine_adaptive::install_passive_default() {
 		zones[i]->zone_dump();
 	}
 	thd_log_info("\n\n ZONE DUMP END\n");
-	passive_installed = 1;
 }
 
 void cthd_engine_adaptive::execute_target(struct adaptive_target &target) {
@@ -521,32 +515,50 @@ void cthd_engine_adaptive::exec_fallback_target(int target) {
 	}
 }
 
+// Called every polling interval
 void cthd_engine_adaptive::update_engine_state() {
 
 	int target = -1;
 
+	// When This means that gddv doesn't have any conditions
+	// no need to do any processing
 	if (passive_def_only)
 		return;
 
 	if (fallback_id < 0)
-		target = gddv.evaluate_conditions(policy_active);
+		target = gddv.evaluate_conditions();
 
+	if (current_matched_target == target) {
+		thd_log_debug("No change in target\n");
+		return;
+	}
+
+	current_matched_target = target;
+
+	// No target matched
+	// It is possible that the target which matched last time didn't match
+	// because of conditions have changed.
+	// So in that case we have to install the default target.
+	// Return only when there is a fallback ID was identified during
+	// start after installing that target
 	if (target == -1) {
 		if (fallback_id >= 0 && !policy_active) {
 			exec_fallback_target(gddv.targets[fallback_id].target_id);
 			policy_active = 1;
+			return;
 		}
-		return;
 	}
 
 	int3400_installed = 0;
 
-	for (int i = 0; i < (int) gddv.targets.size(); i++) {
-		if (gddv.targets[i].target_id != (uint64_t) target)
-			continue;
-		execute_target(gddv.targets[i]);
+	if (target > 0) {
+		for (int i = 0; i < (int) gddv.targets.size(); i++) {
+			if (gddv.targets[i].target_id != (uint64_t) target)
+				continue;
+			execute_target(gddv.targets[i]);
+		}
+		policy_active = 1;
 	}
-	policy_active = 1;
 
 	if (!int3400_installed) {
 		thd_log_info("Adaptive target doesn't have PSVT or ITMT target\n");
@@ -644,14 +656,20 @@ int cthd_engine_adaptive::thd_engine_init(bool ignore_cpuid_check,
 
 int cthd_engine_adaptive::thd_engine_start() {
 	if (passive_def_only) {
+		// This means there are no conditions present
+		// This doesn't mean that there are conditions present but none matched.
 		install_passive_default();
 		return cthd_engine::thd_engine_start();
 	}
 
 	if (gddv.verify_conditions()) {
+		// This means that gddv has conditions which thermald can't support
+		// Doesn't mean that the conditions supported by thermald matches
+		// but can't satisfy any conditions as they don't match.
+		// That can be only found during execution of conditions.
 		thd_log_info(
 				"Some conditions are not supported, so check if any condition set can be matched\n");
-		int target = gddv.evaluate_conditions(policy_active);
+		int target = gddv.evaluate_conditions();
 		if (target == -1) {
 			thd_log_info("Also unable to evaluate any conditions\n");
 			thd_log_info(
@@ -678,7 +696,9 @@ int cthd_engine_adaptive::thd_engine_start() {
 
 	set_control_mode(EXCLUSIVE);
 
-	if (gddv.evaluate_conditions(policy_active) == -1)
+	// Check if any conditions can be satisfied at this time
+	// If not just install the default passive IETM.D0 table
+	if (gddv.evaluate_conditions() == -1)
 		install_passive_default();
 
 	thd_log_info("adaptive engine reached end\n");

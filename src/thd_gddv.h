@@ -192,7 +192,6 @@ private:
 #endif
 	std::string int3400_base_path;
 	int power_slider;
-	int current_condition_set;
 
 	void destroy_dynamic_sources();
 	int get_type(char *object, int *offset);
@@ -242,8 +241,7 @@ public:
 #ifndef ANDROID
 	cthd_gddv() :
 			upower_client(
-			NULL), power_profiles_daemon(NULL), tablet_dev(NULL), lid_dev(NULL), int3400_base_path(""), power_slider(75), current_condition_set(
-					0xffff) {
+			NULL), power_profiles_daemon(NULL), tablet_dev(NULL), lid_dev(NULL), int3400_base_path(""), power_slider(75) {
 	}
 #else
 	cthd_gddv() :
@@ -260,7 +258,7 @@ public:
 	int gddv_init(void);
 	void gddv_free(void);
 	int verify_conditions();
-	int evaluate_conditions(int policy_active);
+	int evaluate_conditions();
 	void update_power_slider();
 	int find_agressive_target();
 	struct psvt* find_psvt(std::string name);
