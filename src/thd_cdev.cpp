@@ -99,8 +99,9 @@ int cthd_cdev::thd_cdev_exponential_controller(int set_point, int target_temp,
 		// Clamp the current state to min_state, as we start from min to max for
 		// activation of a cooling device
 		_curr_state = thd_clamp_state_min(_curr_state, temp_min_state);
-		thd_log_debug("thd_cdev_set_%d:curr state %d max state %d\n", index,
-				_curr_state, _max_state);
+		thd_log_debug(
+				"thd_cdev_set_%d:curr state %d max state %d temp_min:%d temp_max:%d\n",
+				index, _curr_state, _max_state, temp_min_state, temp_max_state);
 
 		if (inc_val)
 			_state = _curr_state + inc_val;
@@ -313,7 +314,7 @@ int cthd_cdev::thd_cdev_set_state(int set_point, int target_temp,
 			// The table will be ordered so that most restrictive is the
 			// first entry
 			if (min_max_valid) {
-				if (min_state < max_state) {
+				if (min_state > max_state) {
 					std::sort(zone_trip_limits.begin(), zone_trip_limits.end(),
 							sort_min_max_values_dec);
 				} else {
