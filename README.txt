@@ -116,7 +116,11 @@ For build, follow the same procedure as Fedora.
 
 Releases
 
-Release 2.5.2
+Release 2.5.4
+- Android support
+- Workarounds for missing conditions/tables
+
+Release 2.5.3
 - Support Meteor Lake
 
 Release 2.5.2
