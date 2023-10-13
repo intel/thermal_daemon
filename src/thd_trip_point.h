@@ -195,12 +195,22 @@ public:
 		return THD_ERROR;
 	}
 
+	int get_first_sampling_period() {
+		if (cdevs.size()) {
+			trip_pt_cdev_t &cdev = cdevs[0];
+			return cdev.sampling_priod;
+		}
+
+		return THD_ERROR;
+	}
+
 	cthd_cdev* get_first_cdev() {
 		if (!cdevs.size())
 			return NULL;
 
 		return cdevs[0].cdev;
 	}
+
 
 	void set_dependency(std::string cdev, std::string state_str);
 

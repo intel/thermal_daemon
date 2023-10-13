@@ -178,11 +178,12 @@ void cthd_engine_adaptive::psvt_consolidate() {
 			thd_log_info("Single trip with a target state\n");
 
 			if (trip->is_target_valid(target_state) == THD_SUCCESS) {
+				int sample_period = trip->get_first_sampling_period();
 
 				cthd_trip_point trip_pt(1, PASSIVE, trip->get_trip_temp() + 1000, 0,
 						zone->get_zone_index(), trip->get_sensor_id(), SEQUENTIAL);
 
-				trip_pt.thd_trip_point_add_cdev(*trip->get_first_cdev(), cthd_trip_point::default_influence);
+				trip_pt.thd_trip_point_add_cdev(*trip->get_first_cdev(), cthd_trip_point::default_influence, sample_period);
 
 				zone->add_trip(trip_pt, 1);
 				continue;
