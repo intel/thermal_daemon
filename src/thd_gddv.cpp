@@ -1579,10 +1579,74 @@ void cthd_gddv::setup_input_devices() {
 }
 #endif
 
+// contains od -x output of sysfs data vault
+#define DATA_VAULT "/tmp/data_vault"
+
+size_t cthd_gddv::gddv_load(char **buffer)
+{
+	ssize_t line_size;
+	char *data_buffer;
+	char *line_buffer = NULL;
+	size_t line_buffer_size = 0;
+	size_t data_buffer_index = 0;
+
+	FILE *fp = fopen (DATA_VAULT, "r");
+	if (!fp)
+		return 0;
+
+	thd_log_info ("Found /tmp/data_vault\n");
+
+	data_buffer = new char[1024 * 4];
+	if (!data_buffer) {
+		return 0;
+	}
+
+	line_size = getline (&line_buffer, &line_buffer_size, fp);
+
+	while (line_size >= 0) {
+		char s[2] = " ";
+		char *token;
+
+		/* get the first token */
+		token = strtok (line_buffer, s);
+		if (!token) {
+			break;
+		}
+
+		while (token != NULL) {
+			token = strtok (NULL, s);
+			if (token) {
+				int byte;
+
+				sscanf (token, "%x", &byte);
+				data_buffer[data_buffer_index++] = byte & 0xff;
+				data_buffer[data_buffer_index++] = (byte & 0xff00) >> 8;
+			}
+		}
+		printf ("\n");
+
+		line_size = getline (&line_buffer, &line_buffer_size, fp);
+	}
+
+	free (line_buffer);
+
+	fclose (fp);
+
+	*buffer = data_buffer;
+
+	return data_buffer_index;
+}
+
 int cthd_gddv::gddv_init(void) {
 	csys_fs sysfs("");
 	char *buf;
 	size_t size;
+
+	size = gddv_load(&buf);
+	if (size > 0) {
+		thd_log_info("Loading data vault from a file\n");
+		goto skip_load;
+	}
 
 	if (sysfs.exists("/sys/bus/platform/devices/INT3400:00")) {
 		int3400_base_path = "/sys/bus/platform/devices/INT3400:00/";
@@ -1623,6 +1687,7 @@ int cthd_gddv::gddv_init(void) {
 		return THD_FATAL_ERROR;
 	}
 
+skip_load:
 	try {
 		if (parse_gddv(buf, size, NULL)) {
 			thd_log_debug("Unable to parse GDDV");
