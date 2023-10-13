@@ -167,6 +167,28 @@ void cthd_engine_adaptive::psvt_consolidate() {
 		cthd_zone *zone = zones[i];
 		unsigned int count = zone->get_trip_count();
 
+		// Special case for handling a single trip which has a defined
+		// target state. Add another trip + 1C so that control is applied
+		// till max state
+		// Count is 2, because there is a default poll trip
+		if (count == 2) {
+			cthd_trip_point *trip = zone->get_trip_at_index(0);
+			int target_state;
+
+			thd_log_info("Single trip with a target state\n");
+
+			if (trip->is_target_valid(target_state) == THD_SUCCESS) {
+
+				cthd_trip_point trip_pt(1, PASSIVE, trip->get_trip_temp() + 1000, 0,
+						zone->get_zone_index(), trip->get_sensor_id(), SEQUENTIAL);
+
+				trip_pt.thd_trip_point_add_cdev(*trip->get_first_cdev(), cthd_trip_point::default_influence);
+
+				zone->add_trip(trip_pt, 1);
+				continue;
+			}
+		}
+
 		for (unsigned int j = 0; j < count; ++j) {
 			cthd_trip_point *trip = zone->get_trip_at_index(j);
 			int target_state;
