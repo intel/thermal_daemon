@@ -37,6 +37,7 @@
  * if the thermal-conf.xml defines parameters.
  */
 
+#include <glib.h>
 #include <glib-unix.h>
 #include <syslog.h>
 #include "thermald.h"
@@ -84,6 +85,10 @@ static gboolean ignore_cpuid_check = false;
 gboolean exclusive_control = FALSE;
 
 static GMainLoop *g_main_loop;
+
+#ifdef GDBUS
+gint watcher_id = 0;
+#endif
 
 // g_log handler. All logs will be directed here
 void thd_logger(const gchar *log_domain, GLogLevelFlags log_level,
@@ -370,6 +375,10 @@ int main(int argc, char *argv[]) {
 	thd_log_debug("Start main loop\n");
 	g_main_loop_run(g_main_loop);
 	thd_log_warn("Oops g main loop exit..\n");
+
+#ifdef GDBUS
+	g_bus_unwatch_name (watcher_id);
+#endif
 
 	fprintf(stdout, "Exiting ..\n");
 	clean_up_lockfile();
