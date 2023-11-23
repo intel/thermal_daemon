@@ -30,17 +30,20 @@
 #include "thd_zone.h"
 #include "thd_trip_point.h"
 
-typedef struct {
+#include <gio/gio.h>
+#include <glib.h>
+#include <glib/gprintf.h>
+#include <glib-object.h>
+
+struct _PrefObject {
 	GObject parent;
-} PrefObject;
+};
 
-typedef struct {
-	GObjectClass parent;
-} PrefObjectClass;
-
-GType pref_object_get_type(void);
-#define MAX_DBUS_REPLY_STR_LEN	100
 #define PREF_TYPE_OBJECT (pref_object_get_type())
+G_DECLARE_FINAL_TYPE(PrefObject, pref_object, PREF, OBJECT, GObject)
+
+#define MAX_DBUS_REPLY_STR_LEN	100
+
 G_DEFINE_TYPE(PrefObject, pref_object, G_TYPE_OBJECT)
 
 gboolean thd_dbus_interface_terminate(PrefObject *obj, GError **error);
