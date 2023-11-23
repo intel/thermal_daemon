@@ -41,7 +41,8 @@ thermald_LDADD = \
 	$(EVDEV_LIBS)
 
 BUILT_SOURCES = \
-	thd_dbus_interface.h
+	thd_dbus_interface.h \
+	thermald-resource.c
 
 thermald_SOURCES = \
 	src/main.cpp \
@@ -84,12 +85,16 @@ thermald_SOURCES = \
 	src/thd_zone_kbl_amdgpu.cpp \
 	src/thd_sensor_rapl_power.cpp \
 	src/thd_zone_rapl_power.cpp \
-	src/thd_gddv.cpp
+	src/thd_gddv.cpp \
+	thermald-resource.c
 
 man5_MANS = man/thermal-conf.xml.5
 man8_MANS = man/thermald.8
 
 thd_dbus_interface.h: $(top_srcdir)/src/thd_dbus_interface.xml
 	$(AM_V_GEN) dbus-binding-tool --prefix=thd_dbus_interface --mode=glib-server --output=$@ $<
+
+thermald-resource.c: $(top_srcdir)/thermald-resource.gresource.xml
+	$(AM_V_GEN) glib-compile-resources --generate-source thermald-resource.gresource.xml
 
 CLEANFILES = $(BUILT_SOURCES)
