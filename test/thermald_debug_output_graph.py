@@ -146,14 +146,19 @@ def parse_temperature(log_file):
 
     log_fd = open(log_file, "r")
     data = log_fd.readlines()
+    next_line = 0
     for line in data:
+        next_line = next_line + 1
         x = re.search(".*wr:", line)
         if x:
-            print(line)
             tokens = line.split()
             tokens = tokens[7].split(":")
             str1 = tokens[1]
-            str1 = str(int(str1) / 1000000)
+            val = int(str1)
+            val = val / 1000000
+            if (val > 100):
+                continue;
+            str1 = str(val)
             temperature[0].append(str1)
             temperature_count[0] = temperature_count[0] + 1
             if max_range < temperature_count[0]:
@@ -164,6 +169,8 @@ def parse_temperature(log_file):
             x = re.search("Sensor.*:power", line)
 
         if x:
+            if "compare" in data[next_line]:
+                continue
             tokens = line.split()
             skip = 0
             i = 0
@@ -188,8 +195,10 @@ def parse_temperature(log_file):
 
     f_handle = open("temperature.csv", "w")
 
+    last_val= []
     string_buffer = "index, "
     for x in range(len(sensors)):
+        last_val.append(0)
         if x == len(sensors) - 1:
             string_buffer += sensors[x]
         else:
@@ -204,13 +213,14 @@ def parse_temperature(log_file):
         index = index + 1
         for x in range(len(sensors)):
             if y < temperature_count[x]:
+                last_val[x] = temperature[x][y]
                 if x == len(sensors) - 1:
                     string_buffer += temperature[x][y]
                 else:
                     string_buffer += temperature[x][y] + ", "
 
             else:
-                string_buffer += "0" + ", "
+                string_buffer += last_val[x] + ", "
 
         string_buffer += "\n"
         f_handle.write(string_buffer)
