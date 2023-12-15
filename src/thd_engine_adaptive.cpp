@@ -664,8 +664,9 @@ int cthd_engine_adaptive::thd_engine_init(bool ignore_cpuid_check,
 		if (psvt) {
 			thd_log_info("IETM.D0 found\n");
 			passive_def_only = 1;
+		} else {
+			return THD_SUCCESS;
 		}
-		return THD_SUCCESS;
 	}
 
 	/* Read the sensors/zones */
