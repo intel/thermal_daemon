@@ -21,11 +21,13 @@
 #include <linux/sysfs.h>
 #include <linux/thermal.h>
 
-#define SENSOR_COUNT	10
-#define CDEV_COUNT	10
+#define SENSOR_COUNT	12
+#define CDEV_COUNT	12
 
 struct thermald_sensor {
 	struct thermal_zone_device *tzone;
+	struct thermal_trip *trips;
+	int num_trips;
 };
 
 struct thermald_cdev {
@@ -45,29 +47,31 @@ static int sys_get_curr_temp(struct thermal_zone_device *tzd,
 	return 0;
 }
 
-static int sys_get_trip_temp(struct thermal_zone_device *tzd,
-                             int trip, int *temp)
-{
-	*temp = 40000;
-
-	return 0;
-}
-
-static int sys_get_trip_type(struct thermal_zone_device *thermal,
-                int trip, enum thermal_trip_type *type)
-{
-	*type = THERMAL_TRIP_PASSIVE;
-
-	return 0;
-}
-
 static struct thermal_zone_device_ops tzone_ops = {
 	.get_temp = sys_get_curr_temp,
-	.get_trip_temp = sys_get_trip_temp,
-	.get_trip_type = sys_get_trip_type,
 };
 
-static struct thermald_sensor *create_test_tzone(int id)
+static int init_trips(struct thermald_sensor *sensor)
+{
+	struct thermal_trip *trips;
+	int i, num_trips = 2;
+
+	trips = kzalloc(sizeof(*trips) * num_trips, GFP_KERNEL);
+	if (!trips)
+		return -ENOMEM;
+
+	for (i = 0; i < num_trips; ++i) {
+		trips[i].temperature = 40000;
+		trips[i].type = THERMAL_TRIP_PASSIVE;
+	}
+
+	sensor->trips = trips;
+	sensor->num_trips = num_trips;
+
+	return 0;
+}
+
+static struct thermald_sensor *create_test_tzone(int id, char *_name)
 {
 	struct thermald_sensor *sensor;
 	char name[20];
@@ -76,10 +80,18 @@ static struct thermald_sensor *create_test_tzone(int id)
 	if (!sensor)
 		return NULL;
 
-	snprintf(name, sizeof(name), "thd_test_%d", id);
-	sensor->tzone = thermal_zone_device_register(name, 1, 0, sensor,
-						     &tzone_ops,
-                                                     NULL, 0, 0);
+	init_trips(sensor);
+
+	if (!_name)
+		snprintf(name, sizeof(name), "thd_test_%d", id);
+	else
+		strncpy(name,  _name, sizeof(name) -1);
+
+	sensor->tzone = thermal_zone_device_register_with_trips(name,
+			sensor->trips, sensor->num_trips,
+			0, sensor, &tzone_ops,
+			NULL, 0, 0);
+
 	if (IS_ERR(sensor->tzone)) {
 		kfree(sensor);
 		return NULL;
@@ -93,6 +105,8 @@ static void destroy_test_tzone(struct thermald_sensor *sensor)
 	if (!sensor)
 		return;
 
+	if (sensor->num_trips)
+		kfree(sensor->trips);
 	thermal_zone_device_unregister(sensor->tzone);
 	kfree(sensor);
 }
@@ -133,7 +147,7 @@ static const struct thermal_cooling_device_ops cdev_ops = {
 	.set_cur_state = set_cur_state,
 };
 
-static struct thermald_cdev *create_test_cdev(int id)
+static struct thermald_cdev *create_test_cdev(int id, char *_name)
 {
 	struct thermald_cdev *cdev;
 	char name[20];
@@ -142,7 +156,10 @@ static struct thermald_cdev *create_test_cdev(int id)
 	if (!cdev)
 		return NULL;
 
-	snprintf(name, sizeof(name), "thd_cdev_%d", id);
+	if (!_name)
+		snprintf(name, sizeof(name), "thd_cdev_%d", id);
+	else
+		strncpy(name,  _name, sizeof(name) -1);
 	cdev->max_state = 10;
 	cdev->cdev = thermal_cooling_device_register(name, cdev, &cdev_ops);
 	if (IS_ERR(cdev->cdev)) {
@@ -226,12 +243,17 @@ static int __init thermald_init(void)
 		return ret;
 	}
 
-	for (i = 0; i < SENSOR_COUNT; ++i) {
-		sensors[i] = create_test_tzone(i);
+	for (i = 0; i < SENSOR_COUNT - 2; ++i) {
+		sensors[i] = create_test_tzone(i, NULL);
 	}
-	for (i = 0; i < CDEV_COUNT; ++i) {
-		cdevs[i] = create_test_cdev(i);
+	for (i = 0; i < CDEV_COUNT - 2; ++i) {
+		cdevs[i] = create_test_cdev(i, NULL);
 	}
+
+	sensors[SENSOR_COUNT - 1] = create_test_tzone(SENSOR_COUNT - 1, "gddv_test_target_0");
+	sensors[SENSOR_COUNT - 2] = create_test_tzone(SENSOR_COUNT - 2, "gddv_test_target_1");
+	cdevs[CDEV_COUNT - 1] = create_test_cdev(CDEV_COUNT - 1, "gddv_test_source_0");
+	cdevs[CDEV_COUNT - 2] = create_test_cdev(CDEV_COUNT - 2, "gddv_test_source_1");
 
 	return 0;
 }
