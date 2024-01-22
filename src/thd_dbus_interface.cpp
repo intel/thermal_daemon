@@ -1158,7 +1158,7 @@ thd_dbus_on_bus_acquired(GDBusConnection *connection,
 			 gpointer         user_data) {
 	guint registration_id;
 	GDBusProxy *proxy_id = NULL;
-	GError *error;
+	GError *error = NULL;
 	GDBusNodeInfo *introspection_data = NULL;
 
 	if (user_data == NULL) {
