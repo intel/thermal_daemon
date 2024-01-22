@@ -147,7 +147,7 @@ static const struct thermal_cooling_device_ops cdev_ops = {
 	.set_cur_state = set_cur_state,
 };
 
-static struct thermald_cdev *create_test_cdev(int id, char *_name)
+static struct thermald_cdev *create_test_cdev(int id, char *_name, int max_state)
 {
 	struct thermald_cdev *cdev;
 	char name[20];
@@ -160,7 +160,7 @@ static struct thermald_cdev *create_test_cdev(int id, char *_name)
 		snprintf(name, sizeof(name), "thd_cdev_%d", id);
 	else
 		strncpy(name,  _name, sizeof(name) -1);
-	cdev->max_state = 10;
+	cdev->max_state = max_state;
 	cdev->cdev = thermal_cooling_device_register(name, cdev, &cdev_ops);
 	if (IS_ERR(cdev->cdev)) {
 		kfree(cdev);
@@ -247,13 +247,13 @@ static int __init thermald_init(void)
 		sensors[i] = create_test_tzone(i, NULL);
 	}
 	for (i = 0; i < CDEV_COUNT - 2; ++i) {
-		cdevs[i] = create_test_cdev(i, NULL);
+		cdevs[i] = create_test_cdev(i, NULL, 10);
 	}
 
 	sensors[SENSOR_COUNT - 1] = create_test_tzone(SENSOR_COUNT - 1, "gddv_test_target_0");
 	sensors[SENSOR_COUNT - 2] = create_test_tzone(SENSOR_COUNT - 2, "gddv_test_target_1");
-	cdevs[CDEV_COUNT - 1] = create_test_cdev(CDEV_COUNT - 1, "gddv_test_source_0");
-	cdevs[CDEV_COUNT - 2] = create_test_cdev(CDEV_COUNT - 2, "gddv_test_source_1");
+	cdevs[CDEV_COUNT - 1] = create_test_cdev(CDEV_COUNT - 1, "gddv_test_source_0", 100000000);
+	cdevs[CDEV_COUNT - 2] = create_test_cdev(CDEV_COUNT - 2, "gddv_test_source_1", 100000000);
 
 	return 0;
 }
