@@ -95,7 +95,7 @@ int cthd_engine_adaptive::install_passive(struct psv *psv) {
 		return THD_ERROR;
 	}
 
-	int temp = (psv->temp - 2732) * 100;
+	int temp = DECI_KELVIN_TO_CELSIUS(psv->temp) * 1000;
 	int target_state = 0;
 
 	if (psv->limit.length()) {

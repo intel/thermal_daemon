@@ -576,11 +576,6 @@ int cthd_gddv::parse_psvt(char *name, char *buf, int len) {
 	return 0;
 }
 
-#define DECI_KELVIN_TO_CELSIUS(t)       ({                      \
-        int _t = (t);                                          \
-        ((_t-2732 >= 0) ? (_t-2732+5)/10 : (_t-2732-5)/10);     \
-})
-
 void cthd_gddv::dump_psvt() {
 	thd_log_info("..psvt dump begin.. \n");
 	for (unsigned int i = 0; i < psvts.size(); ++i) {
