@@ -11,7 +11,7 @@
                "temperature":"80",
                "domain":"9",
                "control_knob":"65536",
-               "limit":"MAX",
+               "limit":"30000",
                "step_size":"1",
                "limit_coeff":"1",
                "unlimit_coeff":"1"
