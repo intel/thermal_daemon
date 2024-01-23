@@ -1158,7 +1158,7 @@ thd_dbus_on_bus_acquired(GDBusConnection *connection,
 			 gpointer         user_data) {
 	guint registration_id;
 	GDBusProxy *proxy_id = NULL;
-	GError *error;
+	GError *error = NULL;
 	GDBusNodeInfo *introspection_data = NULL;
 
 	if (user_data == NULL) {
@@ -1212,14 +1212,7 @@ thd_dbus_on_name_lost(GDBusConnection *connection,
 
 // Set up Dbus server with GDBus
 int thd_dbus_server_init(gboolean (*exit_handler)(void)) {
-	GError *error = NULL;
 	PrefObject *value_obj;
-
-	if (error != NULL) {
-		thd_log_error("Couldn't create introspection data: %s:\n",
-				error->message);
-		return THD_FATAL_ERROR;	
-	}
 
 	value_obj = PREF_OBJECT(g_object_new(PREF_TYPE_OBJECT, NULL));
 	if (value_obj == NULL) {
