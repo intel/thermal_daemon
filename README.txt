@@ -116,6 +116,9 @@ For build, follow the same procedure as Fedora.
 
 Releases
 
+Release 2.5.6
+- Fix crash with GDBus port
+
 Release 2.5.5
 - Use GDBus for dbus
 - Handle single trip to solve thermal shutdown issue for an Alder Lake desktop
