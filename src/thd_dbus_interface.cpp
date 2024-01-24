@@ -131,7 +131,9 @@ gboolean thd_dbus_interface_disable_cooling_device(PrefObject *obj, gchar *name,
 }
 
 // This is a generated file, which expects the above prototypes
+#ifndef GDBUS
 #include "thd_dbus_interface.h"
+#endif
 
 // DBUS Related functions
 
@@ -144,8 +146,10 @@ static void pref_object_init(PrefObject *obj) {
 static void pref_object_class_init(PrefObjectClass *_class) {
 	g_assert(_class != NULL);
 
+#ifndef GDBUS
 	dbus_g_object_type_install_info(PREF_TYPE_OBJECT,
 			&dbus_glib_thd_dbus_interface_object_info);
+#endif
 }
 
 // Callback function called to inform a sent value via dbus
