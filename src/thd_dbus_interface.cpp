@@ -1220,6 +1220,8 @@ int thd_dbus_server_init(gboolean (*exit_handler)(void)) {
 		return THD_FATAL_ERROR;
 	}
 
+	thd_dbus_exit_callback = exit_handler;
+
 	interface_vtable.method_call = thd_dbus_handle_method_call;
 	interface_vtable.get_property = thd_dbus_handle_get_property;
 	interface_vtable.set_property = thd_dbus_handle_set_property;
