@@ -1123,7 +1123,7 @@ int cthd_gddv::verify_condition(struct condition condition) {
 		cond_name = "UKNKNOWN";
 	else
 		cond_name = condition_names[condition.condition];
-	thd_log_error("Unsupported condition %" PRIu64 " (%s)\n", condition.condition, cond_name);
+	thd_log_info("Unsupported condition %" PRIu64 " (%s)\n", condition.condition, cond_name);
 
 	return THD_ERROR;
 }
@@ -1138,7 +1138,7 @@ int cthd_gddv::verify_conditions() {
 	}
 
 	if (result != 0)
-		thd_log_error("Unsupported conditions are present\n");
+		thd_log_info("Unsupported conditions are present\n");
 
 	return result;
 }
