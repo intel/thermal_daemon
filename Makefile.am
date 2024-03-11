@@ -97,6 +97,6 @@ thd_dbus_interface.h: $(top_srcdir)/src/thd_dbus_interface.xml
 	$(AM_V_GEN) dbus-binding-tool --prefix=thd_dbus_interface --mode=glib-server --output=$@ $<
 
 thermald-resource.c: $(top_srcdir)/thermald-resource.gresource.xml
-	$(AM_V_GEN) glib-compile-resources --generate-source thermald-resource.gresource.xml
+	$(AM_V_GEN) glib-compile-resources --generate-source --sourcedir=${top_srcdir} $<
 
 CLEANFILES = $(BUILT_SOURCES)
