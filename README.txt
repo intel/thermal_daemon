@@ -113,6 +113,11 @@ For build, follow the same procedure as Fedora.
 
 Releases
 
+Release 2.5.7
+- Remove dependency on lzma libs
+- Fix remaining issues with  GDBUS transition
+- Seg fault when no config file for the first time
+
 Release 2.5.6
 - Fix crash with GDBus port
 
