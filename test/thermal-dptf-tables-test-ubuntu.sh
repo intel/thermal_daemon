@@ -2,7 +2,7 @@
 echo "This test will exit by printing error if there are no DPTF tables found"
 echo "Installing Packages"
 apt install -y git autoconf-archive g++ libglib2.0-dev libdbus-1-dev \
-libdbus-glib-1-dev libxml2-dev gtk-doc-tools libupower-glib-dev liblzma-dev \
+libdbus-glib-1-dev libxml2-dev gtk-doc-tools libupower-glib-dev \
 libevdev-dev
 status=$?
 if [ $status -eq 0 ];

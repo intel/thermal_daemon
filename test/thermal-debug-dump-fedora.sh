@@ -3,7 +3,7 @@ echo "Installing Packages"
 
 dnf install -y automake autoconf-archive gcc gcc-c++ \
 glib-devel dbus-glib-devel libxml2-devel \
-gtk-doc upower-devel xz-devel libevdev-devel kernel-tools \
+gtk-doc upower-devel libevdev-devel kernel-tools \
 stress-ng acpidump
 
 status=$?
