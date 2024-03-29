@@ -105,7 +105,6 @@ Install
 	zypper in automake autoconf-archive
 	zypper in gtk-doc
 	zypper in libupower-glib-devel
-	zypper in xz-devel
 	zypper in libevdev-devel
 
 For build, follow the same procedure as Fedora.
