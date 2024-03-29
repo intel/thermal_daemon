@@ -26,11 +26,7 @@
 #include <dirent.h>
 #include <errno.h>
 #include <inttypes.h>
-#ifndef ANDROID
-#include <lzma.h>
-#else
 #include "thd_lzma_dec.h"
-#endif
 #include <linux/input.h>
 #include <sys/types.h>
 #include "thd_gddv.h"
@@ -812,9 +808,6 @@ int cthd_gddv::parse_trt(char *buf, int len)
 #define ESIFDV_HEADER_SIGNATURE			0x1FE5
 #define ESIFDV_ITEM_KEYS_REV0_SIGNATURE	0xA0D8
 
-
-#ifdef ANDROID
-
 int cthd_gddv::handle_compressed_gddv(char *buf, int size) {
 	struct header *header = (struct header*) buf;
 	uint64_t payload_output_size;
@@ -855,58 +848,6 @@ int cthd_gddv::handle_compressed_gddv(char *buf, int size) {
 
 	return res;
 }
-
-#else
-
-int cthd_gddv::handle_compressed_gddv(char *buf, int size) {
-	struct header *header = (struct header*) buf;
-	uint64_t payload_output_size;
-	uint64_t output_size;
-	lzma_ret ret;
-	int res;
-	unsigned char *decompressed;
-	lzma_stream strm = LZMA_STREAM_INIT;
-
-	payload_output_size = *(uint64_t*) (buf + header->headersize + 5);
-	output_size = header->headersize + payload_output_size;
-	decompressed = (unsigned char*) malloc(output_size);
-
-	if (!decompressed) {
-		thd_log_warn("Failed to allocate buffer for decompressed output\n");
-		throw gddv_exception;
-	}
-	ret = lzma_auto_decoder(&strm, 64 * 1024 * 1024, 0);
-	if (ret) {
-		thd_log_warn("Failed to initialize LZMA decoder: %d\n", ret);
-		free(decompressed);
-		throw gddv_exception;
-	}
-	strm.next_out = decompressed + header->headersize;
-	strm.avail_out = output_size;
-	strm.next_in = (const unsigned char*) (buf + header->headersize);
-	strm.avail_in = size;
-	ret = lzma_code(&strm, LZMA_FINISH);
-	lzma_end(&strm);
-	if (ret && ret != LZMA_STREAM_END) {
-		thd_log_warn("Failed to decompress GDDV data: %d\n", ret);
-		free(decompressed);
-		throw gddv_exception;
-	}
-
-	/* Copy and update header.
-	 * This will contain one or more nested repositories usually. */
-	memcpy (decompressed, buf, header->headersize);
-	header = (struct header*) decompressed;
-	header->v2.flags &= ~ESIF_SERVICE_CONFIG_COMPRESSED;
-	header->v2.payload_size = payload_output_size;
-
-	res = parse_gddv((char*) decompressed, output_size, NULL);
-	free(decompressed);
-
-	return res;
-}
-
-#endif
 
 int cthd_gddv::parse_gddv_key(char *buf, int size, int *end_offset) {
 	int offset = 0;
