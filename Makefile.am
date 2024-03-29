@@ -36,7 +36,6 @@ thermald_LDADD = \
 	$(LIBM) \
 	$(LIBDL) \
 	$(XML_LIBS) \
-	$(LZMA_LIBS) \
 	$(UPOWER_LIBS) \
 	$(EVDEV_LIBS)
 
@@ -86,7 +85,10 @@ thermald_SOURCES = \
 	src/thd_sensor_rapl_power.cpp \
 	src/thd_zone_rapl_power.cpp \
 	src/thd_gddv.cpp \
-	thermald-resource.c
+	thermald-resource.c \
+	src/thd_lzma_dec.cpp \
+	src/LzmaDec.c
+
 
 man5_MANS = man/thermal-conf.xml.5
 man8_MANS = man/thermald.8
