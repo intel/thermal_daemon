@@ -1,3 +1,5 @@
+// From ESIF/Products/ESIF_CMP/Sources esif_cmp.c
+// Remove white spaces
 
 #include <errno.h>
 #include <inttypes.h>
@@ -7,7 +9,7 @@
 #include "LzmaDec.h"
 #include "thd_common.h"
 
-
+// Duplicate ESIF_CMP/Sources/Alloc.c MyAlloc
 void *MyAlloc(size_t size)
 {
   if (size == 0)
