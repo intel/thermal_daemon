@@ -1,3 +1,5 @@
+// From Intel DPTF github project ESIF/Products/ESIF_CMP/Sources
+// Fix white spaces from the source.
 /* 7zTypes.h -- Basic types
 2018-08-04 : Igor Pavlov : Public domain */
 
