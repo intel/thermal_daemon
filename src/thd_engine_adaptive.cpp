@@ -621,6 +621,8 @@ int cthd_engine_adaptive::thd_engine_init(bool ignore_cpuid_check,
 		int3400_base_path = "/sys/bus/platform/devices/INTC10A0:00/";
 	} else if (sysfs.exists("/sys/bus/platform/devices/INTC1042:00")) {
 		int3400_base_path = "/sys/bus/platform/devices/INTC1042:00/";
+	} else if (sysfs.exists("/sys/bus/platform/devices/INTC1068:00")) {
+		int3400_base_path = "/sys/bus/platform/devices/INTC1068:00/";
 	} else {
 		return THD_ERROR;
 	}

@@ -716,6 +716,7 @@ static supported_ids_t id_table[] = {
 		{ 6, 0xbe }, // Alderlake N
 		{ 6, 0xbf }, // Raptorlake S
 		{ 6, 0xaa }, // Mateor Lake L
+		{ 6, 0xbd }, // Lunar Lake M
 		{ 0, 0 } // Last Invalid entry
 };
 
