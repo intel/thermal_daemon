@@ -87,7 +87,7 @@ gboolean exclusive_control = FALSE;
 static GMainLoop *g_main_loop;
 
 #ifdef GDBUS
-gint watcher_id = 0;
+gint own_id = 0;
 #endif
 
 // g_log handler. All logs will be directed here
@@ -374,7 +374,7 @@ int main(int argc, char *argv[]) {
 	thd_log_warn("Oops g main loop exit..\n");
 
 #ifdef GDBUS
-	g_bus_unwatch_name (watcher_id);
+	g_bus_unown_name (own_id);
 #endif
 
 	fprintf(stdout, "Exiting ..\n");

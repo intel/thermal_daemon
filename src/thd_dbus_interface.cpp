@@ -588,7 +588,7 @@ gboolean thd_dbus_interface_get_sensor_temperature(PrefObject *obj, int index,
 #pragma GCC diagnostic push
 
 static GDBusInterfaceVTable interface_vtable;
-extern gint watcher_id;
+extern gint own_id;
 
 static GDBusNodeInfo *
 thd_dbus_load_introspection(const gchar *filename, GError **error)
@@ -1230,14 +1230,14 @@ int thd_dbus_server_init(gboolean (*exit_handler)(void)) {
 	interface_vtable.get_property = thd_dbus_handle_get_property;
 	interface_vtable.set_property = thd_dbus_handle_set_property;
 
-	watcher_id = g_bus_own_name(G_BUS_TYPE_SYSTEM,
-				    "org.freedesktop.thermald",
-				    G_BUS_NAME_OWNER_FLAGS_REPLACE,
-				    thd_dbus_on_bus_acquired,
-				    thd_dbus_on_name_acquired,
-				    thd_dbus_on_name_lost,
-				    g_object_ref(value_obj),
-				    NULL);
+	own_id = g_bus_own_name(G_BUS_TYPE_SYSTEM,
+				"org.freedesktop.thermald",
+				G_BUS_NAME_OWNER_FLAGS_REPLACE,
+				thd_dbus_on_bus_acquired,
+				thd_dbus_on_name_acquired,
+				thd_dbus_on_name_lost,
+				g_object_ref(value_obj),
+				NULL);
 	
 	return THD_SUCCESS;
 }
