@@ -322,9 +322,6 @@ int main(int argc, char *argv[]) {
 		g_unix_signal_add (SIGTERM, G_SOURCE_FUNC (sig_int_handler), NULL);
 	}
 
-	// Initialize the GType/GObject system
-	g_type_init();
-
 	// Create a main loop that will dispatch callbacks
 	g_main_loop = g_main_loop_new(NULL, FALSE);
 	if (g_main_loop == NULL) {
