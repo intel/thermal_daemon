@@ -69,9 +69,6 @@
 #define LOCKF_SUPPORT
 #ifdef GLIB_SUPPORT
 #include <glib.h>
-#include <dbus/dbus.h>
-#include <dbus/dbus-glib-lowlevel.h>
-#include <dbus/dbus-glib.h>
 #include <glib/gi18n.h>
 #include <gmodule.h>
 
