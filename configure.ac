@@ -62,20 +62,10 @@ GETTEXT_PACKAGE=thermald
 AC_SUBST(GETTEXT_PACKAGE)
 AC_DEFINE_UNQUOTED(GETTEXT_PACKAGE,"$GETTEXT_PACKAGE", [Gettext package])
 
-dnl
-dnl Checks for new dbus-glib property access function
-dnl
-AC_CHECK_LIB([dbus-glib-1], [dbus_glib_global_set_disable_legacy_property_access], ac_have_dg_prop="1", ac_have_dg_prop="0")
-AC_DEFINE_UNQUOTED(HAVE_DBUS_GLIB_DISABLE_LEGACY_PROP_ACCESS, $ac_have_dg_prop, [Define if you have a dbus-glib with dbus_glib_global_set_disable_legacy_property_access()])
-
-PKG_CHECK_MODULES(DBUS, dbus-1 >= 1.1 dbus-glib-1 >= 0.94)
-AC_SUBST(DBUS_CFLAGS)
-AC_SUBST(DBUS_LIBS)
-
 GLIB_VERSION_DEFINES="-DGLIB_VERSION_MIN_REQUIRED=GLIB_VERSION_2_26"
 DBUS_CFLAGS="$DBUS_CFLAGS $GLIB_VERSION_DEFINES"
 
-PKG_CHECK_MODULES(GLIB, gio-unix-2.0 >= 2.22 gmodule-2.0)
+PKG_CHECK_MODULES(GLIB, gio-unix-2.0 >= 2.22 gmodule-2.0 glib-2.0)
 GLIB_CFLAGS="$GLIB_CFLAGS $GLIB_VERSION_DEFINES"
 AC_SUBST(GLIB_CFLAGS)
 AC_SUBST(GLIB_LIBS)
