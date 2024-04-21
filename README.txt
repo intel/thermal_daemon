@@ -28,7 +28,6 @@ Install
 	yum install gcc
 	yum install gcc-c++
 	yum install glib-devel
-	yum install dbus-glib-devel
 	yum install libxml2-devel
 	yum install gtk-doc
 	yum install upower-devel
@@ -68,8 +67,6 @@ Building on Ubuntu
 	sudo apt install autoconf-archive
 	sudo apt install g++
 	sudo apt install libglib2.0-dev
-	sudo apt install libdbus-1-dev
-	sudo apt install libdbus-glib-1-dev
 	sudo apt install libxml2-dev
 	sudo apt install gtk-doc-tools
 	sudo apt install libupower-glib-dev
@@ -100,7 +97,6 @@ Install
 	zypper in gcc
 	zypper in gcc-c++
 	zypper in glib2-devel
-	zypper in dbus-1-glib-devel
 	zypper in libxml2-devel
 	zypper in automake autoconf-archive
 	zypper in gtk-doc
