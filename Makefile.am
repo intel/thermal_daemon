@@ -68,7 +68,6 @@ thermald_SOURCES = \
 	src/thd_rapl_power_meter.cpp \
 	src/thd_trt_art_reader.cpp \
 	src/thd_cdev_rapl_dram.cpp \
-	src/thd_cpu_default_binding.cpp \
 	src/thd_cdev_backlight.cpp \
 	src/thd_int3400.cpp \
 	src/thd_cdev_kbl_amdgpu.cpp \
