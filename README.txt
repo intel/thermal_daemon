@@ -109,6 +109,11 @@ For build, follow the same procedure as Fedora.
 
 Releases
 
+Release 2.5.8
+- Lunar Lake support
+- Deprecate modem support
+- Remove dbus-glib-devel as requirment
+
 Release 2.5.7
 - Remove dependency on lzma libs
 - Fix remaining issues with  GDBUS transition
