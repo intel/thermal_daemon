@@ -1,3 +1,5 @@
+// From Intel DPTF github project ESIF/Products/ESIF_CMP/Sources
+// Fix white spaces from the source.
 /* LzmaDec.h -- LZMA Decoder
 2018-04-21 : Igor Pavlov : Public domain */
 

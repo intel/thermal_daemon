@@ -68,7 +68,6 @@ thermald_SOURCES = \
 	src/thd_rapl_power_meter.cpp \
 	src/thd_trt_art_reader.cpp \
 	src/thd_cdev_rapl_dram.cpp \
-	src/thd_cpu_default_binding.cpp \
 	src/thd_cdev_backlight.cpp \
 	src/thd_int3400.cpp \
 	src/thd_cdev_kbl_amdgpu.cpp \
@@ -89,6 +88,6 @@ man5_MANS = man/thermal-conf.xml.5
 man8_MANS = man/thermald.8
 
 thermald-resource.c: $(top_srcdir)/thermald-resource.gresource.xml
-	$(AM_V_GEN) glib-compile-resources --generate-source thermald-resource.gresource.xml
+	$(AM_V_GEN) glib-compile-resources --generate-source --sourcedir=${top_srcdir} $<
 
 CLEANFILES = $(BUILT_SOURCES)

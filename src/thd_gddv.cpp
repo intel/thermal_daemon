@@ -572,11 +572,6 @@ int cthd_gddv::parse_psvt(char *name, char *buf, int len) {
 	return 0;
 }
 
-#define DECI_KELVIN_TO_CELSIUS(t)       ({                      \
-        int _t = (t);                                          \
-        ((_t-2732 >= 0) ? (_t-2732+5)/10 : (_t-2732-5)/10);     \
-})
-
 void cthd_gddv::dump_psvt() {
 	thd_log_info("..psvt dump begin.. \n");
 	for (unsigned int i = 0; i < psvts.size(); ++i) {
@@ -1535,6 +1530,8 @@ int cthd_gddv::gddv_init(void) {
 		int3400_base_path = "/sys/bus/platform/devices/INTC10A0:00/";
 	} else if (sysfs.exists("/sys/bus/platform/devices/INTC1042:00")) {
 		int3400_base_path = "/sys/bus/platform/devices/INTC1042:00/";
+	} else if (sysfs.exists("/sys/bus/platform/devices/INTC1068:00")) {
+		int3400_base_path = "/sys/bus/platform/devices/INTC1068:00/";
 	} else {
 		return THD_ERROR;
 	}
