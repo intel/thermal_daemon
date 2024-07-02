@@ -28,7 +28,7 @@ Running the project
 -------------------
 To communicate with thermald via dbus, the user has to be member of a group able to manage power.
 So make sure that there is a power related group the system and add your user id to this group.
-On some sytems this group will be called "power" and on others it may be called "powerdev".
+On some systems this group will be called "power" and on others it may be called "powerdev".
 
 Building the Thermal Monitor with make
 --------------------------------------
