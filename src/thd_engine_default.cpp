@@ -310,7 +310,7 @@ bool cthd_engine_default::add_int340x_processor_dev(void)
 
 				thd_log_info("Processor thermal device is present \n");
 				thd_log_info("It will act as CPU thermal zone !! \n");
-				thd_log_info("Processor thermal device passive Trip is %d\n",
+				thd_log_info("Processor thermal device passive Trip is %u\n",
 						trip->get_trip_temp());
 
 				processor_thermal->set_zone_active();

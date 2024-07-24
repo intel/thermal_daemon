@@ -495,12 +495,12 @@ bool cthd_sysfs_cdev_rapl::read_ppcc_power_limits() {
 		}
 
 		if (pl0_max_pwr <= pl0_min_pwr) {
-			thd_log_info("Invalid limits: ppcc limits max:%u min:%u  min_win:%u step:%u\n",
+			thd_log_info("Invalid limits: ppcc limits max:%d min:%d  min_win:%d step:%d\n",
 					pl0_max_pwr, pl0_min_pwr, pl0_min_window, pl0_step_pwr);
 			return false;
 		}
 
-		thd_log_info("ppcc limits max:%u min:%u  min_win:%u step:%u\n",
+		thd_log_info("ppcc limits max:%d min:%d  min_win:%d step:%d\n",
 				pl0_max_pwr, pl0_min_pwr, pl0_min_window, pl0_step_pwr);
 
 		int policy_matched;
@@ -570,12 +570,12 @@ bool cthd_sysfs_cdev_rapl::read_ppcc_power_limits() {
 		int def_max_power;
 
 		if (pl0_max_pwr <= pl0_min_pwr) {
-			thd_log_info("Invalid limits: ppcc limits max:%u min:%u  min_win:%u step:%u\n",
+			thd_log_info("Invalid limits: ppcc limits max:%d min:%d  min_win:%d step:%d\n",
 					pl0_max_pwr, pl0_min_pwr, pl0_min_window, pl0_step_pwr);
 			return false;
 		}
 
-		thd_log_info("ppcc limits max:%u min:%u  min_win:%u step:%u\n",
+		thd_log_info("ppcc limits max:%d min:%d  min_win:%d step:%d\n",
 				pl0_max_pwr, pl0_min_pwr, pl0_min_window, pl0_step_pwr);
 
 		def_max_power = rapl_read_pl1_max();

@@ -422,7 +422,7 @@ void cthd_gddv::dump_apct() {
 	for (unsigned int i = 0; i < conditions.size(); ++i) {
 		std::vector<struct condition> condition_set;
 
-		thd_log_info("condition_set %d\n", i);
+		thd_log_info("condition_set %u\n", i);
 		condition_set = conditions[i];
 		for (unsigned int j = 0; j < condition_set.size(); ++j) {
 			std::string cond_name, comp_str, op_str;
