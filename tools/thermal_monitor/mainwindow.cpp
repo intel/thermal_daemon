@@ -12,7 +12,7 @@
 */
 
 #include <QMessageBox>
-#include <QDesktopWidget>
+#include <QScreen>
 #include "mainwindow.h"
 #include "pollingdialog.h"
 #include "sensorsdialog.h"
@@ -79,7 +79,7 @@ void MainWindow::setupMenus()
     settingsMenu->addAction("Configure &polling interval", this, SLOT(configurePollingInterval()));
     settingsMenu->addAction("Configure &sensors", this, SLOT(configureSensors()));
     settingsMenu->addAction("&Clear settings and quit", this, SLOT(clearAndExit()));
-    settingsMenu->addAction("&Quit", this, SLOT(close()), QKeySequence::Quit);
+    settingsMenu->addAction("&Quit", this, SLOT(close()));
     QMenu *helpMenu = menuBar()->addMenu("&Help");
     helpMenu->addAction("&About", this, SLOT(showAboutDialog()));
 }
@@ -242,7 +242,7 @@ void MainWindow::updateTemperatureDataSlot()
         }
 
     if(logging_enabled) {
-        outStreamLogging << endl;
+            outStreamLogging << Qt::endl;
     }
 
     m_plotWidget->replot();
@@ -301,8 +301,8 @@ void MainWindow::loadSettings()
         move(settings.value("mainWindowGeometry/pos").toPoint());
     } else {
         // otherwise start with the default geometry calculated from the desktop size
-        QDesktopWidget desktop;
-        QRect screen = desktop.screenGeometry();
+	QScreen *qscreen = QGuiApplication::primaryScreen();
+        QRect screen = qscreen->availableGeometry();
         int width, height, x, y;
 
         width = screen.width() / DEFAULT_SCREEN_SIZE_DIVISOR;
@@ -403,7 +403,7 @@ void MainWindow::changeLogVariables(bool log_enabled, bool log_vis_only,
         QTextStream out(&logging_file);
         if (!logging_file.open(QIODevice::WriteOnly | QIODevice::Text)) {
             qCritical() << "Cannot open file for writing: "
-                        << qPrintable(logging_file.errorString()) << endl;
+                        << qPrintable(logging_file.errorString()) << Qt::endl;
             return;
         }
         outStreamLogging.setDevice(&logging_file);
@@ -414,7 +414,7 @@ void MainWindow::changeLogVariables(bool log_enabled, bool log_vis_only,
                 outStreamLogging << m_plotWidget->graph(i)->name() << ", ";
             }
         }
-        outStreamLogging << endl;
+        outStreamLogging << Qt::endl;
     }
 
     // logging has been turned off, so close the file

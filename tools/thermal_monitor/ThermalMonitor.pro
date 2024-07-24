@@ -14,7 +14,11 @@ CONFIG(release): DEFINES += QT_NO_DEBUG_OUTPUT
 TARGET = ThermalMonitor
 TEMPLATE = app
 
+# Depending on distro and QT version
+# name can be different, so choose correct one for your distro
 LIBS += -lQCustomPlot
+#LIBS += -lqcustomplot
+#LIBS += -lqcustomplot-qt6
 
 SOURCES += main.cpp\
         mainwindow.cpp \
