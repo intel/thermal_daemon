@@ -124,6 +124,11 @@ void tripsDialog::on_treeWidget_clicked(const QModelIndex &index)
     // Alternate the background color, black to display on the graph, white to ignore
     if (trip != -1 && col == 1){ // if the user clicks on a temperature
         ui->label->setText("Zone: " + index.parent().data().toString());
+
+        const QAbstractItemModel *model = index.model();
+        const QModelIndex &child = model->index(trip, col + 1, index.parent());
+
+        ui->label_2->setText("Type: " + child.data().toString() + " (°C)");
         ui->lineEdit->setText(index.data().toString());
 
         // ACTIVE_TRIP modification not supported at this time
