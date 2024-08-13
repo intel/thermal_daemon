@@ -128,10 +128,10 @@ struct condition {
 	int argument;
 	enum adaptive_operation operation;
 	enum adaptive_comparison time_comparison;
-	int time;
+	time_t time;
 	int target;
 	int state;
-	int state_entry_time;
+	time_t state_entry_time;
 	int ignore_condition;
 };
 
