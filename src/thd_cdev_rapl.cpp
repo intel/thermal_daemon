@@ -324,7 +324,8 @@ void cthd_sysfs_cdev_rapl::set_tcc(int tcc) {
 	if (!sysfs.exists("tcc_offset_degree_celsius"))
 		return;
 
-	sysfs.write("tcc_offset_degree_celsius", tcc);
+	if (sysfs.write("tcc_offset_degree_celsius", tcc) == -1)
+		thd_log_debug("TCC write failed\n");
 }
 
 void cthd_sysfs_cdev_rapl::set_adaptive_target(struct adaptive_target &target) {

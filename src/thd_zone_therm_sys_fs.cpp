@@ -50,7 +50,8 @@ cthd_sysfs_zone::~cthd_sysfs_zone() {
 		temp_stream << trip_sysfs.str() << i << "_temp";
 		if (initial_trip_values[i] >= 0
 				&& zone_sysfs.exists(temp_stream.str())) {
-			zone_sysfs.write(temp_stream.str(), initial_trip_values[i]);
+			if (zone_sysfs.write(temp_stream.str(), initial_trip_values[i]) == -1)
+				thd_log_debug("Tzone_sysfs.write failed for %d\n", initial_trip_values[i]);
 		}
 	}
 }
