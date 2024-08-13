@@ -86,6 +86,12 @@ public:
 					false), power_on_constraint_0_pwr(0), power_on_constraint_0_time_window(
 					0), power_on_enable_status(0), device_name("TCPU.D0")
 	{
+		pl1_max_pwr = 0;
+		pl1_min_pwr = 0;
+		pl1_min_window = 0;
+		pl1_max_window = 0;
+		pl1_step_pwr = 0;
+		pl1_valid = 0;
 	}
 	cthd_sysfs_cdev_rapl(unsigned int _index, int package,
 			std::string contol_path) :
@@ -99,6 +105,12 @@ public:
 					false), power_on_constraint_0_pwr(0), power_on_constraint_0_time_window(
 					0), power_on_enable_status(0), device_name("TCPU.D0")
 	{
+		pl1_max_pwr = 0;
+		pl1_min_pwr = 0;
+		pl1_min_window = 0;
+		pl1_max_window = 0;
+		pl1_step_pwr = 0;
+		pl1_valid = 0;
 	}
 
 	virtual void set_curr_state(int state, int arg);

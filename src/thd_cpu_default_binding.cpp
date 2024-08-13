@@ -187,8 +187,8 @@ void cthd_cpu_default_binding::update_zone_stat(std::string zone_name,
 }
 
 bool cthd_cpu_default_binding::check_cpu_load() {
-	unsigned int max_power;
-	unsigned int min_power;
+	unsigned int max_power = 0;
+	unsigned int min_power = 0;
 	unsigned int power;
 
 	power = thd_engine->rapl_power_meter.rapl_action_get_power(PACKAGE,

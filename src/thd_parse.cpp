@@ -617,7 +617,7 @@ int cthd_parse::parse_new_platform(xmlNode * a_node, xmlDoc *doc,
 		thermal_info_t *info_ptr) {
 	xmlNode *cur_node = NULL;
 	unsigned char *tmp_value;
-	thermal_info_t info;
+	thermal_info_t info = {};
 
 	for (cur_node = a_node; cur_node; cur_node = cur_node->next) {
 		if (cur_node->type == XML_ELEMENT_NODE) {
