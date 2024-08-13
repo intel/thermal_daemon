@@ -27,8 +27,8 @@
 
 cthd_zone_dynamic::cthd_zone_dynamic(int index, std::string _name,
 		unsigned int _trip_temp, trip_point_type_t _trip_type, std::string _sensor, std::string _cdev) :
-		cthd_zone(index, ""), name(_name), trip_temp(_trip_temp), trip_type(_trip_type), sensor_name(
-				_sensor), cdev_name(_cdev) {
+		cthd_zone(index, ""), name(std::move(_name)), trip_temp(_trip_temp), trip_type(_trip_type), sensor_name(
+				std::move(_sensor)), cdev_name(std::move(_cdev)) {
 	type_str = name;
 }
 

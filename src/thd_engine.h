@@ -228,7 +228,7 @@ public:
 		return preference;
 	}
 	void set_config_file(std::string conf_file) {
-		config_file = conf_file;
+		config_file = std::move(conf_file);
 	}
 	std::string get_config_file() {
 		return config_file;

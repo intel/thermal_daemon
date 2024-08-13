@@ -327,7 +327,7 @@ void cthd_sysfs_cdev_rapl::set_tcc(int tcc) {
 	sysfs.write("tcc_offset_degree_celsius", tcc);
 }
 
-void cthd_sysfs_cdev_rapl::set_adaptive_target(struct adaptive_target target) {
+void cthd_sysfs_cdev_rapl::set_adaptive_target(struct adaptive_target &target) {
 	int argument = std::stoi(target.argument, NULL);
 	if (target.code == "PL1MAX") {
 		int pl1_rapl;

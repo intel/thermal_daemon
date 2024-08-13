@@ -89,7 +89,7 @@ public:
 	}
 	cthd_sysfs_cdev_rapl(unsigned int _index, int package,
 			std::string contol_path) :
-			cthd_cdev(_index, contol_path), phy_max(0), package_id(
+			cthd_cdev(_index, std::move(contol_path)), phy_max(0), package_id(
 					package), constraint_index(
 					0), pl2_index(
 					-1), dynamic_phy_max_enable(false), pl0_max_pwr(
@@ -108,7 +108,7 @@ public:
 	virtual int update();
 	virtual void set_curr_state_raw(int state, int arg);
 	void set_tcc(int tcc);
-	void set_adaptive_target(struct adaptive_target target);
+	void set_adaptive_target(struct adaptive_target &target);
 	void thd_cdev_set_min_state_param(int arg);
 	int get_phy_max_state() {
 		return phy_max;

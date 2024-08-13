@@ -32,7 +32,7 @@ protected:
 
 public:
 	cthd_sysfs_cdev(unsigned int _index, std::string control_path) :
-			cthd_cdev(_index, control_path) {
+			cthd_cdev(_index, std::move(control_path)) {
 	}
 	virtual void set_curr_state(int state, int arg);
 	virtual int get_curr_state();

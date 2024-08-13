@@ -69,7 +69,7 @@ public:
 	int set_threshold(int index, int temp);
 	;
 	void update_path(std::string str) {
-		sensor_sysfs.update_path(str);
+		sensor_sysfs.update_path(std::move(str));
 	}
 	void set_async_capable(bool capable) {
 		async_capable = capable;

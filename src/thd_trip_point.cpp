@@ -44,7 +44,7 @@ void cthd_trip_point::set_dependency(std::string cdev, std::string state_str)
 {
 	cthd_cdev *cdev_ptr;
 
-	cdev_ptr = thd_engine->search_cdev(cdev);
+	cdev_ptr = thd_engine->search_cdev(std::move(cdev));
 	if (cdev_ptr) {
 		int match;
 		int state_index = 0;

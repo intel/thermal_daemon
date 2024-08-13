@@ -28,7 +28,7 @@
 cthd_zone_generic::cthd_zone_generic(int index, int _config_index,
 		std::string type) :
 		cthd_zone(index, ""), config_index(_config_index) {
-	type_str = type;
+	type_str = std::move(type);
 
 }
 

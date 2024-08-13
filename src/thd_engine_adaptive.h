@@ -48,12 +48,12 @@ protected:
 	int int3400_installed;
 	int current_matched_target;
 
-	int set_itmt_target(struct adaptive_target target);
+	int set_itmt_target(struct adaptive_target &target);
 	int install_passive(struct psv *psv);
 	int install_itmt(struct itmt_entry *itmt_entry);
 	void psvt_consolidate();
 	void set_trip(std::string device, std::string argument);
-	void set_int3400_target(struct adaptive_target target);
+	void set_int3400_target(struct adaptive_target &target);
 	void exec_fallback_target(int target);
 	void execute_target(struct adaptive_target &target);
 	void install_passive_default();
@@ -77,12 +77,12 @@ public:
 	~cthd_engine_adaptive() {
 	}
 	ppcc_t* get_ppcc_param(std::string name) {
-		return gddv.get_ppcc_param(name);
+		return gddv.get_ppcc_param(std::move(name));
 	}
 
 	int search_idsp(std::string name)
 	{
-		return gddv.search_idsp(name);
+		return gddv.search_idsp(std::move(name));
 	}
 
 	int thd_engine_init(bool ignore_cpuid_check, bool adaptive);

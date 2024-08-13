@@ -350,7 +350,7 @@ int cthd_engine_adaptive::install_itmt(struct itmt_entry *itmt_entry) {
 	return 0;
 }
 
-int cthd_engine_adaptive::set_itmt_target(struct adaptive_target target) {
+int cthd_engine_adaptive::set_itmt_target(struct adaptive_target &target) {
 	struct itmt *itmt;
 
 	thd_log_info("set_int3400 ITMT target %s\n", target.argument.c_str());
@@ -384,7 +384,7 @@ int cthd_engine_adaptive::set_itmt_target(struct adaptive_target target) {
 
 }
 
-void cthd_engine_adaptive::set_int3400_target(struct adaptive_target target) {
+void cthd_engine_adaptive::set_int3400_target(struct adaptive_target &target) {
 
 	if (target.code == "ITMT") {
 		if (set_itmt_target(target) == THD_SUCCESS) {
