@@ -37,14 +37,6 @@
 #include "thd_sensor_virtual.h"
 #include "thd_cdev_backlight.h"
 #include "thd_int3400.h"
-#include "thd_sensor_kbl_amdgpu_thermal.h"
-#include "thd_sensor_kbl_amdgpu_power.h"
-#include "thd_cdev_kbl_amdgpu.h"
-#include "thd_zone_kbl_amdgpu.h"
-#include "thd_sensor_kbl_g_mcp.h"
-#include "thd_zone_kbl_g_mcp.h"
-#include "thd_cdev_kbl_amdgpu.h"
-#include "thd_zone_kbl_g_mcp.h"
 #include "thd_sensor_rapl_power.h"
 #include "thd_zone_rapl_power.h"
 
@@ -176,30 +168,6 @@ int cthd_engine_default::read_thermal_sensors() {
 	if (index == current_sensor_index) {
 		// No coretemp sysfs exist, try hwmon
 		thd_log_warn("Thermal DTS: No coretemp sysfs found\n");
-	}
-
-	cthd_sensor_kbl_amdgpu_thermal *amdgpu_thermal = new cthd_sensor_kbl_amdgpu_thermal(index);
-	if (amdgpu_thermal->sensor_update() == THD_SUCCESS) {
-		sensors.push_back(amdgpu_thermal);
-		++index;
-	} else {
-		delete amdgpu_thermal;
-	}
-
-	cthd_sensor_kbl_amdgpu_power *amdgpu_power = new cthd_sensor_kbl_amdgpu_power(index);
-	if (amdgpu_power->sensor_update() == THD_SUCCESS) {
-		sensors.push_back(amdgpu_power);
-		++index;
-	} else {
-		delete amdgpu_power;
-	}
-
-	cthd_sensor_kbl_g_mcp *mcp_power = new cthd_sensor_kbl_g_mcp(index);
-	if (mcp_power->sensor_update() == THD_SUCCESS) {
-		sensors.push_back(mcp_power);
-		++index;
-	} else {
-		delete mcp_power;
 	}
 
 	if (debug_mode_on()) {
@@ -772,18 +740,6 @@ int cthd_engine_default::read_cooling_devices() {
 			++current_cdev_index;
 		} else
 			delete backlight_dev;
-	}
-
-	cthd_cdev *cdev_amdgpu = search_cdev("amdgpu");
-	if (!cdev_amdgpu) {
-		cthd_cdev_kgl_amdgpu *cdev_amdgpu = new cthd_cdev_kgl_amdgpu(
-				current_cdev_index, 0);
-		cdev_amdgpu->set_cdev_type("amdgpu");
-		if (cdev_amdgpu->update() == THD_SUCCESS) {
-			cdevs.push_back(cdev_amdgpu);
-			++current_cdev_index;
-		} else
-			delete cdev_amdgpu;
 	}
 
 	// Add from XML cooling device config

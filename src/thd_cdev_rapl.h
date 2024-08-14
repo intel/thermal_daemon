@@ -86,10 +86,16 @@ public:
 					false), power_on_constraint_0_pwr(0), power_on_constraint_0_time_window(
 					0), power_on_enable_status(0), device_name("TCPU.D0")
 	{
+		pl1_max_pwr = 0;
+		pl1_min_pwr = 0;
+		pl1_min_window = 0;
+		pl1_max_window = 0;
+		pl1_step_pwr = 0;
+		pl1_valid = 0;
 	}
 	cthd_sysfs_cdev_rapl(unsigned int _index, int package,
 			std::string contol_path) :
-			cthd_cdev(_index, contol_path), phy_max(0), package_id(
+			cthd_cdev(_index, std::move(contol_path)), phy_max(0), package_id(
 					package), constraint_index(
 					0), pl2_index(
 					-1), dynamic_phy_max_enable(false), pl0_max_pwr(
@@ -99,6 +105,12 @@ public:
 					false), power_on_constraint_0_pwr(0), power_on_constraint_0_time_window(
 					0), power_on_enable_status(0), device_name("TCPU.D0")
 	{
+		pl1_max_pwr = 0;
+		pl1_min_pwr = 0;
+		pl1_min_window = 0;
+		pl1_max_window = 0;
+		pl1_step_pwr = 0;
+		pl1_valid = 0;
 	}
 
 	virtual void set_curr_state(int state, int arg);
@@ -108,7 +120,7 @@ public:
 	virtual int update();
 	virtual void set_curr_state_raw(int state, int arg);
 	void set_tcc(int tcc);
-	void set_adaptive_target(struct adaptive_target target);
+	void set_adaptive_target(struct adaptive_target &target);
 	void thd_cdev_set_min_state_param(int arg);
 	int get_phy_max_state() {
 		return phy_max;

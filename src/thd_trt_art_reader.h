@@ -48,7 +48,7 @@ struct rel_object_t {
 
 	rel_object_t(std::string name, int _temperature = 0, int _step = 0) {
 		target_device = name;
-		target_sensor = name;
+		target_sensor = std::move(name);
 		temperature = _temperature;
 		step = _step;
 	}

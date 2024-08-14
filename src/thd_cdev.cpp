@@ -254,17 +254,19 @@ int cthd_cdev::thd_cdev_set_state(int set_point, int target_temp,
 		bool found = false;
 		bool first_entry = false;
 
-		if (zone_trip_limits.size() == 0)
+		if (zone_trip_limits.size() == 0) {
 			first_entry = true;
-
-		// Search for the zone and trip id in the list
-		for (unsigned int i = 0; i < zone_trip_limits.size(); ++i) {
-			if (zone_trip_limits[i].zone == zone_id
-					&& zone_trip_limits[i].trip == trip_id) {
-				found = true;
-				break;
+		} else {
+			// Search for the zone and trip id in the list
+			for (unsigned int i = 0; i < zone_trip_limits.size(); ++i) {
+				if (zone_trip_limits[i].zone == zone_id
+						&& zone_trip_limits[i].trip == trip_id) {
+					found = true;
+					break;
+				}
 			}
 		}
+
 		// If not found in the list add to the list
 		if (!found) {
 			zone_trip_limits_t limit;
@@ -326,7 +328,16 @@ int cthd_cdev::thd_cdev_set_state(int set_point, int target_temp,
 
 		zone_trip_limits_t limit;
 
-		limit = zone_trip_limits[zone_trip_limits.size() - 1];
+		/* The below check to keep static analysis happy. There is no way
+		 * zone_trip_limits.size() == 0.
+		 * The above !found case ensures atleast size == 1
+		 */
+		unsigned int zone_trips_size = zone_trip_limits.size();
+
+		if (!zone_trips_size)
+			zone_trips_size = 1;
+
+		limit = zone_trip_limits[zone_trips_size - 1];
 		target_state_valid = limit.target_state_valid;
 
 		target_value = limit.target_value;

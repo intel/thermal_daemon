@@ -186,7 +186,7 @@ public:
 	virtual int map_target_state(int target_valid, int target_state) {
 		return target_state;
 	}
-	virtual void set_adaptive_target(struct adaptive_target) {};
+	virtual void set_adaptive_target(struct adaptive_target &target) {};
 	void set_debounce_interval(int interval) {
 		debounce_interval = interval;
 	}
@@ -240,10 +240,10 @@ public:
 		return cdev_sysfs.get_base_path();
 	}
 	void set_cdev_type(std::string _type_str) {
-		type_str = _type_str;
+		type_str = std::move(_type_str);
 	}
 	void set_cdev_alias(std::string _alias_str) {
-		alias_str = _alias_str;
+		alias_str = std::move(_alias_str);
 	}
 	void set_pid_param(double kp, double ki, double kd) {
 		pid_ctrl.kp = kp;
@@ -257,7 +257,7 @@ public:
 	}
 
 	void thd_cdev_set_write_prefix(std::string prefix) {
-		write_prefix = prefix;
+		write_prefix = std::move(prefix);
 	}
 
 	void cdev_dump() {

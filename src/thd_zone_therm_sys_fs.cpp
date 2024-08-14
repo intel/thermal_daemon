@@ -27,7 +27,7 @@
 #include <stdlib.h>
 
 cthd_sysfs_zone::cthd_sysfs_zone(int count, std::string path) :
-		cthd_zone(count, path), trip_point_cnt(0) {
+		cthd_zone(count, std::move(path)), trip_point_cnt(0) {
 
 	std::stringstream tc_type_dev;
 	tc_type_dev << index << "/type";
@@ -50,7 +50,8 @@ cthd_sysfs_zone::~cthd_sysfs_zone() {
 		temp_stream << trip_sysfs.str() << i << "_temp";
 		if (initial_trip_values[i] >= 0
 				&& zone_sysfs.exists(temp_stream.str())) {
-			zone_sysfs.write(temp_stream.str(), initial_trip_values[i]);
+			if (zone_sysfs.write(temp_stream.str(), initial_trip_values[i]) == -1)
+				thd_log_debug("Tzone_sysfs.write failed for %d\n", initial_trip_values[i]);
 		}
 	}
 }

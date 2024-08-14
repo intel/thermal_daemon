@@ -62,7 +62,7 @@ int cthd_sysfs_cdev_rapl_dram::update() {
 	if (!found)
 		return THD_ERROR;
 
-	cdev_sysfs.update_path(path_name);
+	cdev_sysfs.update_path(std::move(path_name));
 
 	return cthd_sysfs_cdev_rapl::update();
 }

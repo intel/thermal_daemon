@@ -74,7 +74,7 @@ public:
 	mode_t get_mode(const std::string &path);
 
 	void update_path(std::string path) {
-		base_path = path;
+		base_path = std::move(path);
 	}
 };
 

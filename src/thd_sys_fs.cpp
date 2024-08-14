@@ -71,26 +71,29 @@ int csys_fs::write(const std::string &path, unsigned int data) {
 }
 
 int csys_fs::read(const std::string &path, char *buf, int len) {
+	if (!buf)
+		return -EINVAL;
+
 	std::string p = base_path + path;
 	int fd = ::open(p.c_str(), O_RDONLY);
-	int orig_len = len;
+	size_t curr_len = len;
 	if (fd < 0) {
 		thd_log_info("sysfs read failed %s\n", p.c_str());
 		return -errno;
 	}
-	while (len > 0) {
-		int ret = ::read(fd, buf, len);
-		if (ret < 0) {
+	while (curr_len > 0) {
+		ssize_t ret = ::read(fd, buf, curr_len);
+		if (ret <= 0 || ret > len || ret >= INT_MAX) {
 			thd_log_info("sysfs read failed %s\n", p.c_str());
 			close(fd);
-			return ret;
+			return -1;
 		}
-		buf += ret;
-		len -= ret;
+		buf += (int) ret;
+		curr_len -= ret;
 	}
 	close(fd);
 
-	return orig_len - len;
+	return len;
 }
 
 int csys_fs::read(const std::string &path, unsigned int position, char *buf,

@@ -57,7 +57,7 @@ public:
 			tcc_offset_low(0), force_mmio_rapl(false) {
 	}
 	cthd_engine_default(std::string _uuid) :
-			cthd_engine(_uuid),
+			cthd_engine(std::move(_uuid)),
 			workaround_interval(0), tcc_offset_checked(0),
 			tcc_offset_low(0), force_mmio_rapl(false) {
 	}

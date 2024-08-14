@@ -44,7 +44,7 @@ void cthd_trip_point::set_dependency(std::string cdev, std::string state_str)
 {
 	cthd_cdev *cdev_ptr;
 
-	cdev_ptr = thd_engine->search_cdev(cdev);
+	cdev_ptr = thd_engine->search_cdev(std::move(cdev));
 	if (cdev_ptr) {
 		int match;
 		int state_index = 0;
@@ -142,7 +142,6 @@ bool cthd_trip_point::thd_trip_point_check(int id, unsigned int read_temp,
 	}
 
 	if (type == CRITICAL) {
-		int ret = -1;
 
 		if (!ignore_critical && read_temp >= temp) {
 			thd_log_warn("critical temp reached \n");
@@ -153,15 +152,18 @@ bool cthd_trip_point::thd_trip_point_check(int id, unsigned int read_temp,
 			crit_trip_count = 0;
 			sync();
 #ifdef ANDROID
+			int ret;
+
 			ret = property_set("sys.powerctl", "shutdown,thermal");
-#else
-			reboot(RB_POWER_OFF);
-#endif
 			if (ret != 0)
 				thd_log_warn("power off failed ret=%d err=%s\n",
 					     ret, strerror(errno));
 			else
 				thd_log_warn("power off initiated\n");
+#else
+			thd_log_warn("power off initiated\n");
+			reboot(RB_POWER_OFF);
+#endif
 
 			return true;
 		}

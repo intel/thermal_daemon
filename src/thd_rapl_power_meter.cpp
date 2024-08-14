@@ -107,7 +107,7 @@ void cthd_rapl_power_meter::rapl_read_domains(const char *dir_name) {
 					domain.type = DRAM;
 				}
 				if (measure_mask & domain.type) {
-					domain.name = buffer;
+					domain.name = std::move(buffer);
 					domain.path = std::string(dir_name)
 							+ std::string(dir_entry->d_name);
 					domain_list.push_back(domain);

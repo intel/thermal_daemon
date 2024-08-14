@@ -289,7 +289,10 @@ int main(int argc, char *argv[]) {
 		fprintf(stderr, "Cannot create '%s': %s", TDRUNDIR, strerror(errno));
 		exit(EXIT_FAILURE);
 	}
-	g_mkdir_with_parents(TDCONFDIR, 0755); // Don't care return value as directory
+	if (g_mkdir_with_parents(TDCONFDIR, 0755) != 0) {
+		// Don't care return value as directory
+		fprintf(stderr, "Cannot create '%s': %s", TDCONFDIR, strerror(errno));
+	}
 	// may already exist
 	if (log_info) {
 		thd_log_level |= G_LOG_LEVEL_INFO;

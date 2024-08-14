@@ -455,8 +455,8 @@ void cthd_gddv::dump_apct() {
 
 			thd_log_info(
 					"\ttarget:%d device:%s condition:%s comparison:%s argument:%d"
-							" operation:%s time_comparison:%d time:%d"
-							" stare:%d state_entry_time:%d \n",
+							" operation:%s time_comparison:%d time:%ld"
+							" stare:%d state_entry_time:%ld \n",
 					condition_set[j].target, condition_set[j].device.c_str(),
 					cond_name.c_str(), comp_str.c_str(),
 					condition_set[j].argument, op_str.c_str(),
@@ -1173,7 +1173,7 @@ int cthd_gddv::evaluate_oem_condition(struct condition condition) {
 		}
 		int value = std::stoi(data, NULL);
 
-		return compare_condition(condition, value);
+		return compare_condition(std::move(condition), value);
 	}
 
 	return THD_ERROR;
@@ -1192,7 +1192,7 @@ int cthd_gddv::evaluate_temperature_condition(
 	else
 		sensor_name = condition.device.substr(pos + 1);
 
-	cthd_sensor *sensor = thd_engine->search_sensor(sensor_name);
+	cthd_sensor *sensor = thd_engine->search_sensor(std::move(sensor_name));
 	if (!sensor) {
 		thd_log_info("Unable to find a sensor for %s\n",
 				condition.device.c_str());
@@ -1205,7 +1205,7 @@ int cthd_gddv::evaluate_temperature_condition(
 	// Conditions are specified in decikelvin, temperatures are in
 	// millicelsius.
 	value = value / 100 + 2732;
-	return compare_condition(condition, value);
+	return compare_condition(std::move(condition), value);
 }
 
 #ifdef ANDROID
@@ -1227,7 +1227,7 @@ int cthd_gddv::evaluate_lid_condition(struct condition condition) {
 		int lid_closed = libevdev_get_event_value(lid_dev, EV_SW, SW_LID);
 		value = !lid_closed;
 	}
-	return compare_condition(condition, value);
+	return compare_condition(std::move(condition), value);
 }
 #endif
 
@@ -1236,7 +1236,7 @@ int cthd_gddv::evaluate_workload_condition(
 	// We don't have a good way to assert workload at the moment, so just
 	// default to bursty
 
-	return compare_condition(condition, 3);
+	return compare_condition(std::move(condition), 3);
 }
 
 #ifdef ANDROID
@@ -1268,14 +1268,14 @@ int cthd_gddv::evaluate_platform_type_condition(
 		if (tablet)
 			value = 2;
 	}
-	return compare_condition(condition, value);
+	return compare_condition(std::move(condition), value);
 }
 #endif
 
 int cthd_gddv::evaluate_power_slider_condition(
 		struct condition condition) {
 
-	return compare_condition(condition, power_slider);
+	return compare_condition(std::move(condition), power_slider);
 }
 
 #ifdef ANDROID
@@ -1312,7 +1312,7 @@ int cthd_gddv::evaluate_ac_condition(struct condition condition) {
 	if (on_battery)
 		value = 1;
 
-	return compare_condition(condition, value);
+	return compare_condition(std::move(condition), value);
 }
 #endif
 
@@ -1365,7 +1365,7 @@ int cthd_gddv::evaluate_condition(struct condition condition) {
 		if (condition.time && condition.state_entry_time == 0) {
 			condition.state_entry_time = time(NULL);
 		}
-		ret = compare_time(condition);
+		ret = compare_time(std::move(condition));
 	} else {
 		condition.state_entry_time = 0;
 	}
