@@ -111,7 +111,10 @@ Releases
 
 Release 2.5.8
 - Lunar Lake support
-- Deprecate modem support
+- Arrow Lake support
+- Remove coverity errors to minimum
+- Add a script to plot temperature and trips from debug log
+- Deprecate modem/KBL-G support
 - Remove dbus-glib-devel as requirment
 
 Release 2.5.7
