@@ -282,7 +282,7 @@ int cthd_acpi_rel::read_psvt() {
 
 	fd = open (rel_cdev.c_str (), O_RDWR);
 	if (fd < 0) {
-		PRINT_ERROR("failed to open %s \n", rel_cdev.c_str ());
+		PRINT_ERROR("failed to open %s\n", rel_cdev.c_str ());
 		return -1;
 	}
 
@@ -330,7 +330,7 @@ int cthd_acpi_rel::read_art() {
 
 	fd = open(rel_cdev.c_str(), O_RDWR);
 	if (fd < 0) {
-		PRINT_ERROR("failed to open %s \n", rel_cdev.c_str());
+		PRINT_ERROR("failed to open %s\n", rel_cdev.c_str());
 		return -1;
 	}
 
@@ -377,7 +377,7 @@ int cthd_acpi_rel::read_trt() {
 
 	fd = open(rel_cdev.c_str(), O_RDWR);
 	if (fd < 0) {
-		PRINT_ERROR("failed to open %s \n", rel_cdev.c_str());
+		PRINT_ERROR("failed to open %s\n", rel_cdev.c_str());
 		return -1;
 	}
 

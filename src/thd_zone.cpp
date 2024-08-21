@@ -38,7 +38,7 @@ cthd_zone::cthd_zone(int _index, std::string control_path, sensor_relate_t rel) 
 		index(_index), zone_sysfs(control_path.c_str()), zone_temp(0), zone_active(
 				false), zone_cdev_binded_status(false), type_str(), sensor_rel(
 				rel) {
-	thd_log_debug("Added zone index:%d \n", index);
+	thd_log_debug("Added zone index:%d\n", index);
 }
 
 cthd_zone::~cthd_zone() {
@@ -151,7 +151,7 @@ int cthd_zone::zone_update() {
 	int ret;
 
 	if (zone_bind_sensors() != THD_SUCCESS) {
-		thd_log_warn("Zone update failed: unable to bind \n");
+		thd_log_warn("Zone update failed: unable to bind\n");
 		return THD_ERROR;
 	}
 	ret = read_trip_points();
@@ -294,7 +294,7 @@ void cthd_zone::add_trip(cthd_trip_point &trip, int force) {
 	bool add = true;
 	for (unsigned int j = 0; j < trip_points.size(); ++j) {
 		if (trip_points[j].get_trip_type() == trip.get_trip_type()) {
-			thd_log_debug("updating existing trip temp \n");
+			thd_log_debug("updating existing trip temp\n");
 			trip_points[j] = trip;
 			add = false;
 			break;
@@ -312,7 +312,7 @@ void cthd_zone::update_highest_trip_temp(cthd_trip_point &trip)
 		thd_log_info("trip_points.size():%zu\n", trip_points.size());
 		for (unsigned int j = trip_points.size() - 1;; --j) {
 			if (trip_points[j].get_trip_type() == trip.get_trip_type()) {
-				thd_log_info("updating existing trip temp \n");
+				thd_log_info("updating existing trip temp\n");
 				trip_points[j].update_trip_temp(trip.get_trip_temp());
 				trip_points[j].update_trip_hyst(trip.get_trip_hyst());
 				break;
@@ -325,7 +325,7 @@ void cthd_zone::update_highest_trip_temp(cthd_trip_point &trip)
 void cthd_zone::update_trip_temp(cthd_trip_point &trip) {
 	for (unsigned int j = 0; j < trip_points.size(); ++j) {
 		if (trip_points[j].get_trip_type() == trip.get_trip_type()) {
-			thd_log_debug("updating existing trip temp \n");
+			thd_log_debug("updating existing trip temp\n");
 			trip_points[j].update_trip_temp(trip.get_trip_temp());
 			trip_points[j].update_trip_hyst(trip.get_trip_hyst());
 			break;

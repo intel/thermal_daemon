@@ -151,7 +151,7 @@ int cthd_sysfs_cdev_rapl::rapl_sysfs_valid()
 	temp_str.str(std::string());
 	temp_str << "constraint_" << constraint_index << "_power_limit_uw";
 	if (!cdev_sysfs.exists(temp_str.str())) {
-		thd_log_debug("powercap RAPL no  power limit uw %s \n",
+		thd_log_debug("powercap RAPL no  power limit uw %s\n",
 				temp_str.str().c_str());
 		return THD_ERROR;
 	}
@@ -159,7 +159,7 @@ int cthd_sysfs_cdev_rapl::rapl_sysfs_valid()
 	temp_str.str(std::string());
 	temp_str << "constraint_" << constraint_index << "_time_window_us";
 	if (!cdev_sysfs.exists(temp_str.str())) {
-		thd_log_info("powercap RAPL no time_window_us %s \n",
+		thd_log_info("powercap RAPL no time_window_us %s\n",
 				temp_str.str().c_str());
 		return THD_ERROR;
 	}
@@ -202,7 +202,7 @@ int cthd_sysfs_cdev_rapl::rapl_update_pl1(int pl1)
 	ret = cdev_sysfs.write(temp_power_str.str(), pl1);
 	if (ret <= 0) {
 		thd_log_info(
-				"pkg_power: powercap RAPL max power limit failed to write %d \n",
+				"pkg_power: powercap RAPL max power limit failed to write %d\n",
 				pl1);
 		return ret;
 	}
@@ -236,7 +236,7 @@ int cthd_sysfs_cdev_rapl::rapl_update_pl2(int pl2)
 	ret = cdev_sysfs.write(temp_power_str.str(), pl2);
 	if (ret <= 0) {
 		thd_log_info(
-				"pkg_power: powercap RAPL max power limit failed to write PL2 %d \n",
+				"pkg_power: powercap RAPL max power limit failed to write PL2 %d\n",
 				pl2);
 		return ret;
 	}
@@ -265,7 +265,7 @@ int cthd_sysfs_cdev_rapl::rapl_update_time_window(int time_window)
 
 	if (cdev_sysfs.write(temp_time_str.str(), time_window) <= 0) {
 		thd_log_info(
-				"pkg_power: powercap RAPL time window failed to write %d \n",
+				"pkg_power: powercap RAPL time window failed to write %d\n",
 				time_window);
 		return THD_ERROR;
 	}
@@ -281,7 +281,7 @@ int cthd_sysfs_cdev_rapl::rapl_update_pl2_time_window(int time_window)
 
 	if (cdev_sysfs.write(temp_time_str.str(), time_window) <= 0) {
 		thd_log_info(
-				"pkg_power: powercap RAPL time window failed to write %d \n",
+				"pkg_power: powercap RAPL time window failed to write %d\n",
 				time_window);
 		return THD_ERROR;
 	}
@@ -296,7 +296,7 @@ int cthd_sysfs_cdev_rapl::rapl_update_enable_status(int enable)
 	temp_str << "enabled";
 	if (cdev_sysfs.write(temp_str.str(), enable) <= 0) {
 		thd_log_info(
-				"pkg_power: powercap RAPL enable failed to write %d \n",
+				"pkg_power: powercap RAPL enable failed to write %d\n",
 				enable);
 		return THD_ERROR;
 	}
@@ -417,10 +417,10 @@ int cthd_sysfs_cdev_rapl::update() {
 			int ret = cdev_sysfs.read("name", domain_name);
 
 			if (!ret)
-				thd_log_info("%s:powercap RAPL invalid max power limit range \n",
+				thd_log_info("%s:powercap RAPL invalid max power limit range\n",
 						domain_name.c_str());
 
-			thd_log_info("Calculate dynamically phy_max \n");
+			thd_log_info("Calculate dynamically phy_max\n");
 
 			power_on_constraint_0_pwr = rapl_read_pl1();
 			thd_log_debug("power_on_constraint_0_pwr %d\n",
@@ -449,7 +449,7 @@ int cthd_sysfs_cdev_rapl::update() {
 					constraint_phy_max, phy_max);
 			phy_max = constraint_phy_max;
 		}
-		thd_log_info("powercap RAPL max power limit range %d \n", phy_max);
+		thd_log_info("powercap RAPL max power limit range %d\n", phy_max);
 
 		set_inc_dec_value(-phy_max * (float) rapl_power_dec_percent / 100);
 		min_state = phy_max;

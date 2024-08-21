@@ -46,12 +46,12 @@ cthd_rapl_power_meter::cthd_rapl_power_meter(unsigned int mask) :
 	thd_attr = pthread_attr_t();
 
 	if (rapl_sysfs.exists()) {
-		thd_log_debug("RAPL sysfs present \n");
+		thd_log_debug("RAPL sysfs present\n");
 		rapl_present = true;
 		last_time = time(NULL);
 		rapl_read_domains(rapl_sysfs.get_base_path());
 	} else {
-		thd_log_warn("NO RAPL sysfs present \n");
+		thd_log_warn("NO RAPL sysfs present\n");
 		rapl_present = false;
 	}
 }
@@ -191,7 +191,7 @@ bool cthd_rapl_power_meter::rapl_energy_loop() {
 			else if (domain_list[i].power < domain_list[i].min_power)
 				domain_list[i].min_power = domain_list[i].power;
 
-			thd_log_debug(" energy %d:%lld:%lld mj: %u mw \n",
+			thd_log_debug(" energy %d:%lld:%lld mj: %u mw\n",
 					domain_list[i].type,
 					domain_list[i].energy_cumulative_counter,
 					domain_list[i].energy_counter

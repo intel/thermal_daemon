@@ -215,7 +215,7 @@ int cthd_gddv::parse_apat(char *apat, int len) {
 
 void cthd_gddv::dump_apat()
 {
-	thd_log_info("..apat dump begin.. \n");
+	thd_log_info("..apat dump begin..\n");
 	for (unsigned int i = 0; i < targets.size(); ++i) {
 		thd_log_info(
 				"target_id:%" PRIu64 " name:%s participant:%s domain:%d code:%s argument:%s\n",
@@ -418,7 +418,7 @@ static const char *comp_strs[] = {
     (sizeof(array) / sizeof(array[0]))
 
 void cthd_gddv::dump_apct() {
-	thd_log_info("..apct dump begin.. \n");
+	thd_log_info("..apct dump begin..\n");
 	for (unsigned int i = 0; i < conditions.size(); ++i) {
 		std::vector<struct condition> condition_set;
 
@@ -456,7 +456,7 @@ void cthd_gddv::dump_apct() {
 			thd_log_info(
 					"\ttarget:%d device:%s condition:%s comparison:%s argument:%d"
 							" operation:%s time_comparison:%d time:%ld"
-							" stare:%d state_entry_time:%ld \n",
+							" stare:%d state_entry_time:%ld\n",
 					condition_set[j].target, condition_set[j].device.c_str(),
 					cond_name.c_str(), comp_str.c_str(),
 					condition_set[j].argument, op_str.c_str(),
@@ -464,7 +464,7 @@ void cthd_gddv::dump_apct() {
 					condition_set[j].state, condition_set[j].state_entry_time);
 		}
 	}
-	thd_log_info("..apct dump end.. \n");
+	thd_log_info("..apct dump end..\n");
 }
 
 ppcc_t* cthd_gddv::get_ppcc_param(std::string name) {
@@ -514,7 +514,7 @@ int cthd_gddv::parse_ppcc(char *name, char *buf, int len) {
 
 void cthd_gddv::dump_ppcc()
 {
-	thd_log_info("..ppcc dump begin.. \n");
+	thd_log_info("..ppcc dump begin..\n");
 	for (unsigned int i = 0; i < ppccs.size(); ++i) {
 		thd_log_info(
 				"Name:%s Limit:0 power_limit_max:%d power_limit_min:%d step_size:%d time_win_max:%d time_win_min:%d\n",
@@ -573,7 +573,7 @@ int cthd_gddv::parse_psvt(char *name, char *buf, int len) {
 }
 
 void cthd_gddv::dump_psvt() {
-	thd_log_info("..psvt dump begin.. \n");
+	thd_log_info("..psvt dump begin..\n");
 	for (unsigned int i = 0; i < psvts.size(); ++i) {
 		std::vector<struct psv> psvs = psvts[i].psvs;
 
@@ -650,7 +650,7 @@ int cthd_gddv::parse_itmt(char *name, char *buf, int len) {
 }
 
 void cthd_gddv::dump_itmt() {
-	thd_log_info("..itmt dump begin.. \n");
+	thd_log_info("..itmt dump begin..\n");
 	for (unsigned int i = 0; i < itmts.size(); ++i) {
 		std::vector<struct itmt_entry> itmt = itmts[i].itmt_entries;
 
@@ -705,7 +705,7 @@ void cthd_gddv::parse_idsp(char *name, char *start, int length) {
 }
 
 void cthd_gddv::dump_idsps() {
-	thd_log_info("..idsp dump begin.. \n");
+	thd_log_info("..idsp dump begin..\n");
 	for (unsigned int i = 0; i < idsps.size(); ++i) {
 		thd_log_info("idsp :%s\n", idsps[i].c_str());
 	}
@@ -743,7 +743,7 @@ void cthd_gddv::parse_trip_point(char *name, char *type, char *val, int len)
 }
 
 void cthd_gddv::dump_trips() {
-	thd_log_info("..trippoint dump begin.. \n");
+	thd_log_info("..trippoint dump begin..\n");
 	for (unsigned int i = 0; i < trippoints.size(); ++i) {
 		thd_log_info("name:%s type_str:%s type:%d temp:%d\n",
 				trippoints[i].name.c_str(), trippoints[i].type_str.c_str(),

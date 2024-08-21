@@ -405,13 +405,13 @@ int cthd_cdev::thd_cdev_set_state(int set_point, int target_temp,
 				// set the state to min_state
 				target_value = get_min_state();
 			} else if (force) {
-				thd_log_info("forced to min_state \n");
+				thd_log_info("forced to min_state\n");
 				target_state_valid = 1;
 				target_value = get_min_state();
 			}
 		} else {
 			if (force) {
-				thd_log_info("forced to min_state \n");
+				thd_log_info("forced to min_state\n");
 				target_state_valid = 1;
 				target_value = get_min_state();
 			} else {

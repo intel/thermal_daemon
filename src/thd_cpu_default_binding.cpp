@@ -88,10 +88,10 @@ void cthd_gating_cdev::set_curr_state(int state, int arg) {
 		}
 	} else if (start && state) {
 		if (def_bind_ref->check_cpu_load()) {
-			thd_log_info("Turn on the gate \n");
+			thd_log_info("Turn on the gate\n");
 			curr_state = max_state;
 		} else {
-			thd_log_info("Not CPU specific increase \n");
+			thd_log_info("Not CPU specific increase\n");
 			curr_state = 0;
 		}
 	} else {
@@ -205,7 +205,7 @@ bool cthd_cpu_default_binding::check_cpu_load() {
 	}
 
 	if (power > (max_power * 60 / 100)) {
-		thd_log_info("Significant cpu load \n");
+		thd_log_info("Significant cpu load\n");
 		return true;
 	}
 
@@ -275,7 +275,7 @@ void cthd_cpu_default_binding::do_default_binding(
 				cdev_binding_info->cdev_gate_entry->set_cdev_type(
 						cdev_binding_info->zone_name + "_" + "cpu_gate_entry");
 			} else {
-				thd_log_info("do_default_binding failed \n");
+				thd_log_info("do_default_binding failed\n");
 				cdev_binding_info->cdev_gate_entry = NULL;
 				delete cdev_binding_info;
 				continue;
@@ -287,7 +287,7 @@ void cthd_cpu_default_binding::do_default_binding(
 				cdev_binding_info->cdev_gate_exit->set_cdev_type(
 						cdev_binding_info->zone_name + "_" + "cpu_gate_exit");
 			} else {
-				thd_log_info("do_default_binding failed \n");
+				thd_log_info("do_default_binding failed\n");
 				delete cdev_binding_info->cdev_gate_entry;
 				cdev_binding_info->cdev_gate_entry = NULL;
 				delete cdev_binding_info;

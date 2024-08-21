@@ -108,7 +108,7 @@ public:
 	}
 
 	void zone_cdev_set_binded() {
-		thd_log_debug("zone %s bounded \n", type_str.c_str());
+		thd_log_debug("zone %s bounded\n", type_str.c_str());
 		zone_cdev_binded_status = true;
 	}
 
@@ -223,11 +223,11 @@ public:
 		thd_log_info("Zone %d: %s, Active:%d Bind:%d Sensor_cnt:%lu\n", index,
 				type_str.c_str(), zone_active, zone_cdev_binded_status,
 				(unsigned long) sensors.size());
-		thd_log_info("..sensors.. \n");
+		thd_log_info("..sensors..\n");
 		for (unsigned int i = 0; i < sensors.size(); ++i) {
 			sensors[i]->sensor_dump();
 		}
-		thd_log_info("..trips.. \n");
+		thd_log_info("..trips..\n");
 		for (unsigned int i = 0; i < trip_points.size(); ++i) {
 			trip_points[i].trip_dump();
 		}

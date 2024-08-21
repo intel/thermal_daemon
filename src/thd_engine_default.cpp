@@ -276,8 +276,8 @@ bool cthd_engine_default::add_int340x_processor_dev(void)
 					trip->thd_trip_update_set_point(new_passive);
 				}
 
-				thd_log_info("Processor thermal device is present \n");
-				thd_log_info("It will act as CPU thermal zone !! \n");
+				thd_log_info("Processor thermal device is present\n");
+				thd_log_info("It will act as CPU thermal zone !!\n");
 				thd_log_info("Processor thermal device passive Trip is %u\n",
 						trip->get_trip_temp());
 
@@ -360,7 +360,7 @@ int cthd_engine_default::read_thermal_zones() {
 
 	if (!thd_ignore_default_control && !valid_int340x && !search_zone("cpu")) {
 		bool cpu_zone_created = false;
-		thd_log_info("zone cpu will be created \n");
+		thd_log_info("zone cpu will be created\n");
 		// Default CPU temperature zone
 		// Find path to read DTS temperature
 		for (i = 0; i < 2; ++i) {
@@ -424,11 +424,11 @@ int cthd_engine_default::read_thermal_zones() {
 			thermal_zone_t *zone_config = parser.get_zone_dev_index(i);
 			if (!zone_config)
 				continue;
-			thd_log_debug("Look for Zone  [%s] \n", zone_config->type.c_str());
+			thd_log_debug("Look for Zone  [%s]\n", zone_config->type.c_str());
 			cthd_zone *zone = search_zone(zone_config->type);
 			if (zone) {
 				activate = false;
-				thd_log_info("Zone already present %s \n",
+				thd_log_info("Zone already present %s\n",
 						zone_config->type.c_str());
 				for (unsigned int k = 0; k < zone_config->trip_pts.size();
 						++k) {
@@ -485,7 +485,7 @@ int cthd_engine_default::read_thermal_zones() {
 						}
 						zone->add_trip(trip_pt);
 					} else {
-						thd_log_debug("Trip temp == 0 is in zone %s \n",
+						thd_log_debug("Trip temp == 0 is in zone %s\n",
 								zone_config->type.c_str());
 						// Try to find some existing non zero trips and associate the cdevs
 						// This is the way from an XML config a generic cooling device
@@ -555,7 +555,7 @@ int cthd_engine_default::read_thermal_zones() {
 	}
 
 	if (!zones.size()) {
-		thd_log_info("No Thermal Zones found \n");
+		thd_log_info("No Thermal Zones found\n");
 		return THD_FATAL_ERROR;
 	}
 #ifdef AUTO_DETECT_RELATIONSHIP
