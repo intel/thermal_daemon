@@ -89,7 +89,7 @@ int cthd_sysfs_zone::read_trip_points() {
 		type_stream << trip_sysfs.str() << i << "_type";
 		if (zone_sysfs.exists(type_stream.str())) {
 			zone_sysfs.read(type_stream.str(), _type_str);
-			thd_log_debug("read_trip_points %s:%s \n",
+			thd_log_debug("read_trip_points %s:%s\n",
 					type_stream.str().c_str(), _type_str.c_str());
 		}
 		temp_stream << trip_sysfs.str() << i << "_temp";
@@ -97,7 +97,7 @@ int cthd_sysfs_zone::read_trip_points() {
 			mode = zone_sysfs.get_mode(temp_stream.str());
 			zone_sysfs.read(temp_stream.str(), _temp_str);
 			std::istringstream(_temp_str) >> temp;
-			thd_log_debug("read_trip_points %s:%s \n",
+			thd_log_debug("read_trip_points %s:%s\n",
 					temp_stream.str().c_str(), _temp_str.c_str());
 		}
 
@@ -107,7 +107,7 @@ int cthd_sysfs_zone::read_trip_points() {
 			std::istringstream(_hist_str) >> hyst;
 			if (hyst < 1000 || hyst > 5000)
 				hyst = 1000;
-			thd_log_debug("read_trip_points %s:%s \n",
+			thd_log_debug("read_trip_points %s:%s\n",
 					hist_stream.str().c_str(), _hist_str.c_str());
 		}
 
@@ -140,7 +140,7 @@ int cthd_sysfs_zone::read_trip_points() {
 		}
 	}
 
-	thd_log_debug("read_trip_points Added from sysfs %d trips \n", trip_point_cnt);
+	thd_log_debug("read_trip_points Added from sysfs %d trips\n", trip_point_cnt);
 
 	if (!trip_point_cnt) {
 		cthd_sensor *sensor;
@@ -160,7 +160,7 @@ int cthd_sysfs_zone::read_trip_points() {
 }
 
 int cthd_sysfs_zone::read_cdev_trip_points() {
-	thd_log_debug(" >> read_cdev_trip_points for \n");
+	thd_log_debug(" >> read_cdev_trip_points for\n");
 
 	// Gather all Cdevs
 	// Gather all trip points
@@ -202,7 +202,7 @@ int cthd_sysfs_zone::read_cdev_trip_points() {
 		}
 	}
 	thd_log_debug(
-			"cthd_sysfs_zone::read_cdev_trip_points: ZONE bound to CDEV status %d \n",
+			"cthd_sysfs_zone::read_cdev_trip_points: ZONE bound to CDEV status %d\n",
 			zone_cdev_binded_status);
 
 	return THD_SUCCESS;

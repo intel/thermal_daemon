@@ -48,7 +48,7 @@ int cthd_zone_generic::read_trip_points() {
 		cthd_sensor *sensor = thd_engine->search_sensor(
 				trip_pt_config.sensor_type);
 		if (!sensor) {
-			thd_log_error("XML zone: invalid sensor type \n");
+			thd_log_error("XML zone: invalid sensor type\n");
 			continue;
 		}
 		sensor_list.push_back(sensor);

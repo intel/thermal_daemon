@@ -74,7 +74,7 @@ unsigned int cthd_sensor::read_temperature() {
 	std::istringstream(buffer) >> temp;
 	if (temp < 0)
 		temp = 0;
-	thd_log_debug("Sensor %s :temp %u \n", type_str.c_str(), temp);
+	thd_log_debug("Sensor %s :temp %u\n", type_str.c_str(), temp);
 	return (unsigned int)temp / scale;
 }
 

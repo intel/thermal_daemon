@@ -261,6 +261,7 @@ public:
 
 	ppcc_t* get_ppcc_param(std::string name);
 	int gddv_init(void);
+	size_t gddv_load(char **buf);
 	void gddv_free(void);
 	int verify_conditions();
 	int evaluate_conditions();

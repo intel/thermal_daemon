@@ -72,11 +72,11 @@ static void daemonShutdown() {
 static void signal_handler(int sig) {
 	switch (sig) {
 	case SIGHUP:
-		thd_log_warn("Received SIGHUP signal. \n");
+		thd_log_warn("Received SIGHUP signal.\n");
 		break;
 	case SIGINT:
 	case SIGTERM:
-		thd_log_info("Daemon exiting \n");
+		thd_log_info("Daemon exiting\n");
 		daemonShutdown();
 		exit(EXIT_SUCCESS);
 		break;
@@ -163,7 +163,7 @@ static void print_usage(FILE* stream, int exit_code) {
 			"  --no-daemon No daemon.\n"
 			"  --poll-interval Poll interval 0 to disable.\n"
 			"  --exclusive_control To act as exclusive thermal controller.\n"
-			"  --config-file Configuration file to use other than the default config. \n");
+			"  --config-file Configuration file to use other than the default config.\n");
 
 	exit(exit_code);
 }
@@ -295,7 +295,7 @@ int main(int argc, char *argv[]) {
 	for (;;)
 		sleep(0xffff);
 
-	thd_log_info("Linux Thermal Daemon is exiting \n");
+	thd_log_info("Linux Thermal Daemon is exiting\n");
 #endif
 	return 0;
 }

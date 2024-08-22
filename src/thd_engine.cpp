@@ -101,7 +101,7 @@ void cthd_engine::thd_engine_thread() {
 		thd_log_debug("poll exit %d polls_fd event %d %d\n", n,
 				poll_fds[0].revents, poll_fds[1].revents);
 		if (n < 0) {
-			thd_log_warn("Write to pipe failed \n");
+			thd_log_warn("Write to pipe failed\n");
 			continue;
 		}
 		time(&tm);
@@ -109,7 +109,7 @@ void cthd_engine::thd_engine_thread() {
 
 		if (n == 0 || (tm - thz_last_temp_ind_time) >= poll_timeout_sec) {
 			if (!status) {
-				thd_log_msg("Thermal Daemon is disabled \n");
+				thd_log_msg("Thermal Daemon is disabled\n");
 				continue;
 			}
 			pthread_mutex_lock(&thd_engine_mutex);
@@ -180,16 +180,16 @@ int cthd_engine::thd_engine_init(bool ignore_cpuid_check, bool adaptive) {
 	adaptive_mode = adaptive;
 
 	if (ignore_cpuid_check) {
-		thd_log_debug("Ignore CPU ID check for MSRs \n");
+		thd_log_debug("Ignore CPU ID check for MSRs\n");
 		proc_list_matched = true;
 	} else {
 		check_cpu_id();
 
 		if (!proc_list_matched) {
 			if ((parser_init() == THD_SUCCESS) && parser.platform_matched()) {
-				thd_log_msg("Unsupported cpu model, using thermal-conf.xml only \n");
+				thd_log_msg("Unsupported cpu model, using thermal-conf.xml only\n");
 			} else {
-				thd_log_msg("Unsupported cpu model, use thermal-conf.xml file or run with --ignore-cpuid-check \n");
+				thd_log_msg("Unsupported cpu model, use thermal-conf.xml file or run with --ignore-cpuid-check\n");
 				return THD_ERROR;
 			}
 		}
@@ -364,7 +364,7 @@ void cthd_engine::send_message(message_name_t msg_id, int size,
 		memcpy(msg_cap.msg, msg, msg_cap.msg_size);
 	int result = write(write_pipe_fd, &msg_cap, sizeof(message_capsul_t));
 	if (result < 0)
-		thd_log_warn("Write to pipe failed \n");
+		thd_log_warn("Write to pipe failed\n");
 }
 
 void cthd_engine::process_pref_change() {
@@ -378,7 +378,7 @@ void cthd_engine::process_pref_change() {
 	}
 	status = true;
 	if (preference != new_pref) {
-		thd_log_msg("Preference changed \n");
+		thd_log_msg("Preference changed\n");
 	}
 	preference = new_pref;
 	for (unsigned int i = 0; i < zones.size(); ++i) {
@@ -459,12 +459,12 @@ void cthd_engine::poll_enable_disable(bool status, message_capsul_t *msg) {
 	if (status) {
 		poll_sensor_mask |= (1 << (*sensor_id));
 		poll_timeout_msec = def_poll_interval;
-		thd_log_debug("thd_engine polling enabled via %u \n", *sensor_id);
+		thd_log_debug("thd_engine polling enabled via %u\n", *sensor_id);
 	} else {
 		poll_sensor_mask &= ~(1 << (*sensor_id));
 		if (!poll_sensor_mask) {
 			poll_timeout_msec = -1;
-			thd_log_debug("thd_engine polling last disabled via %u \n",
+			thd_log_debug("thd_engine polling last disabled via %u\n",
 					*sensor_id);
 		}
 	}
@@ -478,13 +478,13 @@ void cthd_engine::fast_poll_enable_disable(bool status, message_capsul_t *msg) {
 		if (!saved_poll_interval)
 			saved_poll_interval = poll_timeout_msec;
 		poll_timeout_msec = 1000;
-		thd_log_debug("thd_engine fast polling enabled via %u \n", *sensor_id);
+		thd_log_debug("thd_engine fast polling enabled via %u\n", *sensor_id);
 	} else {
 		fast_poll_sensor_mask &= ~(1 << (*sensor_id));
 		if (!fast_poll_sensor_mask) {
 			if (saved_poll_interval)
 				poll_timeout_msec = saved_poll_interval;
-			thd_log_debug("thd_engine polling last disabled via %u \n",
+			thd_log_debug("thd_engine polling last disabled via %u\n",
 					*sensor_id);
 		}
 	}
@@ -508,7 +508,7 @@ int cthd_engine::proc_message(message_capsul_t *msg) {
 		break;
 	case THERMAL_ZONE_NOTIFY:
 		if (!status) {
-			thd_log_msg("Thermal Daemon is disabled \n");
+			thd_log_msg("Thermal Daemon is disabled\n");
 			break;
 		}
 		thermal_zone_change(msg);
@@ -555,7 +555,7 @@ void cthd_engine::takeover_thermal_control() {
 	const std::string base_path = "/sys/class/thermal/";
 	cthd_INT3400 int3400(uuid);
 
-	thd_log_info("Taking over thermal control \n");
+	thd_log_info("Taking over thermal control\n");
 
 	int3400.set_default_uuid();
 
@@ -604,7 +604,7 @@ void cthd_engine::giveup_thermal_control() {
 	if (zone_preferences.size() == 0)
 		return;
 
-	thd_log_info("Giving up thermal control \n");
+	thd_log_info("Giving up thermal control\n");
 
 	csys_fs sysfs("/sys/class/thermal/");
 
@@ -771,7 +771,7 @@ int cthd_engine::check_cpu_id() {
 		i++;
 	}
 	if (!valid) {
-		thd_log_msg(" Need Linux PowerCap sysfs \n");
+		thd_log_msg(" Need Linux PowerCap sysfs\n");
 	}
 
 
@@ -802,7 +802,7 @@ void cthd_engine::thd_read_default_thermal_sensors() {
 		closedir(dir);
 	}
 
-	thd_log_debug("thd_read_default_thermal_sensors \n");
+	thd_log_debug("thd_read_default_thermal_sensors\n");
 	if ((dir = opendir(base_path.c_str())) != NULL) {
 		while ((entry = readdir(dir)) != NULL) {
 			if (!strncmp(entry->d_name, "thermal_zone",
@@ -825,7 +825,7 @@ void cthd_engine::thd_read_default_thermal_sensors() {
 	if (sensors.size())
 		current_sensor_index = max_index + 1;
 
-	thd_log_info("thd_read_default_thermal_sensors loaded %zu sensors \n",
+	thd_log_info("thd_read_default_thermal_sensors loaded %zu sensors\n",
 			sensors.size());
 }
 
@@ -835,7 +835,7 @@ void cthd_engine::thd_read_default_thermal_zones() {
 	const std::string base_path = "/sys/class/thermal/";
 	int max_index = 0;
 
-	thd_log_debug("thd_read_default_thermal_zones \n");
+	thd_log_debug("thd_read_default_thermal_zones\n");
 	if ((dir = opendir(base_path.c_str())) != NULL) {
 		while ((entry = readdir(dir)) != NULL) {
 			if (!strncmp(entry->d_name, "thermal_zone",
@@ -859,7 +859,7 @@ void cthd_engine::thd_read_default_thermal_zones() {
 	}
 	if (zones.size())
 		current_zone_index = max_index + 1;
-	thd_log_info("thd_read_default_thermal_zones loaded %zu zones \n",
+	thd_log_info("thd_read_default_thermal_zones loaded %zu zones\n",
 			zones.size());
 }
 
@@ -870,7 +870,7 @@ void cthd_engine::thd_read_default_cooling_devices() {
 	const std::string base_path = "/sys/class/thermal/";
 	int max_index = 0;
 
-	thd_log_debug("thd_read_default_cooling devices \n");
+	thd_log_debug("thd_read_default_cooling devices\n");
 	if ((dir = opendir(base_path.c_str())) != NULL) {
 		while ((entry = readdir(dir)) != NULL) {
 			if (!strncmp(entry->d_name, "cooling_device",
@@ -893,7 +893,7 @@ void cthd_engine::thd_read_default_cooling_devices() {
 	if (cdevs.size())
 		current_cdev_index = max_index + 1;
 
-	thd_log_info("thd_read_default_cooling devices loaded %zu cdevs \n",
+	thd_log_info("thd_read_default_cooling devices loaded %zu cdevs\n",
 			cdevs.size());
 }
 

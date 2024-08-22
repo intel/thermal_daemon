@@ -215,7 +215,7 @@ int cthd_gddv::parse_apat(char *apat, int len) {
 
 void cthd_gddv::dump_apat()
 {
-	thd_log_info("..apat dump begin.. \n");
+	thd_log_info("..apat dump begin..\n");
 	for (unsigned int i = 0; i < targets.size(); ++i) {
 		thd_log_info(
 				"target_id:%" PRIu64 " name:%s participant:%s domain:%d code:%s argument:%s\n",
@@ -418,7 +418,7 @@ static const char *comp_strs[] = {
     (sizeof(array) / sizeof(array[0]))
 
 void cthd_gddv::dump_apct() {
-	thd_log_info("..apct dump begin.. \n");
+	thd_log_info("..apct dump begin..\n");
 	for (unsigned int i = 0; i < conditions.size(); ++i) {
 		std::vector<struct condition> condition_set;
 
@@ -456,7 +456,7 @@ void cthd_gddv::dump_apct() {
 			thd_log_info(
 					"\ttarget:%d device:%s condition:%s comparison:%s argument:%d"
 							" operation:%s time_comparison:%d time:%ld"
-							" stare:%d state_entry_time:%ld \n",
+							" stare:%d state_entry_time:%ld\n",
 					condition_set[j].target, condition_set[j].device.c_str(),
 					cond_name.c_str(), comp_str.c_str(),
 					condition_set[j].argument, op_str.c_str(),
@@ -464,7 +464,7 @@ void cthd_gddv::dump_apct() {
 					condition_set[j].state, condition_set[j].state_entry_time);
 		}
 	}
-	thd_log_info("..apct dump end.. \n");
+	thd_log_info("..apct dump end..\n");
 }
 
 ppcc_t* cthd_gddv::get_ppcc_param(std::string name) {
@@ -514,7 +514,7 @@ int cthd_gddv::parse_ppcc(char *name, char *buf, int len) {
 
 void cthd_gddv::dump_ppcc()
 {
-	thd_log_info("..ppcc dump begin.. \n");
+	thd_log_info("..ppcc dump begin..\n");
 	for (unsigned int i = 0; i < ppccs.size(); ++i) {
 		thd_log_info(
 				"Name:%s Limit:0 power_limit_max:%d power_limit_min:%d step_size:%d time_win_max:%d time_win_min:%d\n",
@@ -573,7 +573,7 @@ int cthd_gddv::parse_psvt(char *name, char *buf, int len) {
 }
 
 void cthd_gddv::dump_psvt() {
-	thd_log_info("..psvt dump begin.. \n");
+	thd_log_info("..psvt dump begin..\n");
 	for (unsigned int i = 0; i < psvts.size(); ++i) {
 		std::vector<struct psv> psvs = psvts[i].psvs;
 
@@ -650,7 +650,7 @@ int cthd_gddv::parse_itmt(char *name, char *buf, int len) {
 }
 
 void cthd_gddv::dump_itmt() {
-	thd_log_info("..itmt dump begin.. \n");
+	thd_log_info("..itmt dump begin..\n");
 	for (unsigned int i = 0; i < itmts.size(); ++i) {
 		std::vector<struct itmt_entry> itmt = itmts[i].itmt_entries;
 
@@ -705,7 +705,7 @@ void cthd_gddv::parse_idsp(char *name, char *start, int length) {
 }
 
 void cthd_gddv::dump_idsps() {
-	thd_log_info("..idsp dump begin.. \n");
+	thd_log_info("..idsp dump begin..\n");
 	for (unsigned int i = 0; i < idsps.size(); ++i) {
 		thd_log_info("idsp :%s\n", idsps[i].c_str());
 	}
@@ -743,7 +743,7 @@ void cthd_gddv::parse_trip_point(char *name, char *type, char *val, int len)
 }
 
 void cthd_gddv::dump_trips() {
-	thd_log_info("..trippoint dump begin.. \n");
+	thd_log_info("..trippoint dump begin..\n");
 	for (unsigned int i = 0; i < trippoints.size(); ++i) {
 		thd_log_info("name:%s type_str:%s type:%d temp:%d\n",
 				trippoints[i].name.c_str(), trippoints[i].type_str.c_str(),
@@ -1515,10 +1515,118 @@ void cthd_gddv::setup_input_devices() {
 }
 #endif
 
+//#define GDDV_LOAD_FROM_FILE
+
+// Load a data_vault file from file system.
+// Two formats are supported:
+// 	data_vault.hex
+// 		from "od -x" output from sysfs folder for gddv_dump
+//	data_vault.bin
+//		Binary as is.
+// This is for test only and hence conditionally compiled
+// This file is stored at TDCONFDIR
+
+#ifdef GDDV_LOAD_FROM_FILE
+#define MAX_GDDV_FILE_SIZE	(4 * 1024)
+
+size_t cthd_gddv::gddv_load(char **buffer)
+{
+	std::string dir_name = TDCONFDIR;
+	std::string file_name;
+	ssize_t line_size;
+	char *data_buffer;
+	char *line_buffer = NULL;
+	size_t line_buffer_size = 0;
+	size_t data_buffer_index = 0;
+	FILE *fp;
+
+	file_name = dir_name + "/" + "data_vault.bin";
+
+	fp = fopen(file_name.c_str(), "r");
+	if (fp) {
+		data_buffer = new char[MAX_GDDV_FILE_SIZE];
+		if (!data_buffer) {
+			return 0;
+		}
+
+		while (!feof(fp)) {
+			unsigned char x;
+
+			x = fgetc(fp);
+			data_buffer[data_buffer_index++] = x;
+		}
+		fclose(fp);
+		*buffer = data_buffer;
+		return data_buffer_index;
+	}
+
+	file_name = dir_name + "/" + "data_vault.hex";
+
+	fp = fopen(file_name.c_str(), "r");
+	if (!fp)
+		return 0;
+
+	thd_log_debug("Found data_vault %s\n", file_name.c_str());
+
+	data_buffer = new char[MAX_GDDV_FILE_SIZE];
+	if (!data_buffer) {
+		return 0;
+	}
+
+	line_size = getline(&line_buffer, &line_buffer_size, fp);
+
+	while (line_size >= 0) {
+		char s[2] = " ";
+		char *token;
+
+		/* get the first token */
+		token = strtok(line_buffer, s);
+		if (!token) {
+			break;
+		}
+
+		while (token != NULL) {
+			token = strtok(NULL, s);
+			if (token) {
+				int byte;
+
+				sscanf(token, "%x", &byte);
+				data_buffer[data_buffer_index++] = byte & 0xff;
+				data_buffer[data_buffer_index++] = (byte & 0xff00) >> 8;
+			}
+		}
+
+		line_size = getline(&line_buffer, &line_buffer_size, fp);
+	}
+
+	free(line_buffer);
+
+	fclose(fp);
+
+	*buffer = data_buffer;
+
+	return data_buffer_index;
+}
+
+#else
+
+size_t cthd_gddv::gddv_load(char **buffer)
+{
+	return 0;
+}
+
+#endif
+
 int cthd_gddv::gddv_init(void) {
 	csys_fs sysfs("");
 	char *buf;
 	size_t size;
+
+	size = gddv_load(&buf);
+	if (size > 0) {
+		thd_log_info("Loading data vault from a file\n");
+		goto skip_load;
+	}
 
 	if (sysfs.exists("/sys/bus/platform/devices/INT3400:00")) {
 		int3400_base_path = "/sys/bus/platform/devices/INT3400:00/";
@@ -1561,6 +1669,7 @@ int cthd_gddv::gddv_init(void) {
 		return THD_FATAL_ERROR;
 	}
 
+skip_load:
 	try {
 		if (parse_gddv(buf, size, NULL)) {
 			thd_log_debug("Unable to parse GDDV");

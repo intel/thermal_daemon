@@ -45,7 +45,7 @@ int cthd_cdev_order_parse::parser_init() {
 	root_element = xmlDocGetRootElement(doc);
 
 	if (root_element == NULL) {
-		thd_log_warn("error: could not get root element \n");
+		thd_log_warn("error: could not get root element\n");
 		return THD_ERROR;
 	}
 

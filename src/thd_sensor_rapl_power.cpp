@@ -40,7 +40,7 @@ unsigned int cthd_sensor_rapl_power::read_temperature() {
 			PACKAGE);
 
 	pkg_power = (pkg_power / 1000);
-	thd_log_debug("Sensor %s :power %u \n", type_str.c_str(), pkg_power);
+	thd_log_debug("Sensor %s :power %u\n", type_str.c_str(), pkg_power);
 
 	return pkg_power;
 }

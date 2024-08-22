@@ -37,7 +37,7 @@ int cthd_kobj_uevent::kobj_uevent_open() {
 		return fd;
 
 	if (bind(fd, (struct sockaddr*) &nls, sizeof(struct sockaddr_nl))) {
-		thd_log_warn("kob_uevent bin failed \n");
+		thd_log_warn("kob_uevent bin failed\n");
 		close(fd);
 		return -1;
 	}

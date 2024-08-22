@@ -1,0 +1,22 @@
+{
+   "PSVT":[
+      {
+         "name":"IETM.D0",
+         "table":[
+            {
+               "source":"gddv_test_source_0",
+               "target":"gddv_test_target_0",
+               "priority":"10",
+               "sample_period":"10",
+               "temperature":"80",
+               "domain":"9",
+               "control_knob":"65536",
+               "limit":"30000",
+               "step_size":"1",
+               "limit_coeff":"1",
+               "unlimit_coeff":"1"
+            }
+         ]
+      }
+   ]
+}

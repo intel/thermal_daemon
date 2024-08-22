@@ -36,7 +36,7 @@ int cthd_zone_dynamic::read_trip_points() {
 
 	cthd_sensor *sensor = thd_engine->search_sensor(sensor_name);
 	if (!sensor) {
-		thd_log_warn("dynamic sensor: invalid sensor type \n");
+		thd_log_warn("dynamic sensor: invalid sensor type\n");
 		return THD_ERROR;
 	}
 	thd_log_info("XX index = %d\n", index);
@@ -63,7 +63,7 @@ int cthd_zone_dynamic::zone_bind_sensors() {
 
 	cthd_sensor *sensor = thd_engine->search_sensor(sensor_name);
 	if (!sensor) {
-		thd_log_warn("dynamic sensor: invalid sensor type \n");
+		thd_log_warn("dynamic sensor: invalid sensor type\n");
 		return THD_ERROR;
 	}
 	bind_sensor(sensor);

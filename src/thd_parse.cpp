@@ -80,7 +80,7 @@ int cthd_parse::parser_init(std::string config_file) {
 	if (config_file.empty()) {
 		std::ifstream conf_auto(filename_auto_conf.c_str());
 		if (conf_auto.is_open()) {
-			thd_log_msg("Using generated %s \n", filename_auto_conf.c_str());
+			thd_log_msg("Using generated %s\n", filename_auto_conf.c_str());
 			xml_config_file = filename_auto_conf.c_str();
 			auto_config = 1;
 		} else {
@@ -115,7 +115,7 @@ int cthd_parse::parser_init(std::string config_file) {
 	root_element = xmlDocGetRootElement(doc);
 
 	if (root_element == NULL) {
-		thd_log_warn("error: could not get root element \n");
+		thd_log_warn("error: could not get root element\n");
 		xmlFreeDoc(doc);
 		return THD_ERROR;
 	}
@@ -747,7 +747,7 @@ void cthd_parse::dump_thermal_conf() {
 		}
 
 		for (unsigned int j = 0; j < thermal_info_list[i].sensors.size(); ++j) {
-			thd_log_info("\tSensor %u \n", j);
+			thd_log_info("\tSensor %u\n", j);
 			thd_log_info("\t Name: %s\n",
 					thermal_info_list[i].sensors[j].name.c_str());
 			thd_log_info("\t Path: %s\n",
@@ -766,22 +766,22 @@ void cthd_parse::dump_thermal_conf() {
 			}
 		}
 		for (unsigned int j = 0; j < thermal_info_list[i].zones.size(); ++j) {
-			thd_log_info("\tZone %u \n", j);
+			thd_log_info("\tZone %u\n", j);
 			thd_log_info("\t Name: %s\n",
 					thermal_info_list[i].zones[j].type.c_str());
 			for (unsigned int k = 0;
 					k < thermal_info_list[i].zones[j].trip_pts.size(); ++k) {
-				thd_log_info("\t\t Trip Point %u \n", k);
-				thd_log_info("\t\t  temp/power %d \n",
+				thd_log_info("\t\t Trip Point %u\n", k);
+				thd_log_info("\t\t  temp/power %d\n",
 						thermal_info_list[i].zones[j].trip_pts[k].temperature);
-				thd_log_info("\t\t  trip type %d \n",
+				thd_log_info("\t\t  trip type %d\n",
 						thermal_info_list[i].zones[j].trip_pts[k].trip_pt_type);
-				thd_log_info("\t\t  hyst id %d \n",
+				thd_log_info("\t\t  hyst id %d\n",
 						thermal_info_list[i].zones[j].trip_pts[k].hyst);
-				thd_log_info("\t\t  sensor type %s \n",
+				thd_log_info("\t\t  sensor type %s\n",
 						thermal_info_list[i].zones[j].trip_pts[k].sensor_type.c_str());
 				if (thermal_info_list[i].zones[j].trip_pts[k].dependency.dependency)
-					thd_log_info("\t\t  Dependency on %s:%s \n",
+					thd_log_info("\t\t  Dependency on %s:%s\n",
 							thermal_info_list[i].zones[j].trip_pts[k].dependency.cdev.c_str(),
 							thermal_info_list[i].zones[j].trip_pts[k].dependency.state.c_str());
 
@@ -789,18 +789,18 @@ void cthd_parse::dump_thermal_conf() {
 						l
 								< thermal_info_list[i].zones[j].trip_pts[k].cdev_trips.size();
 						++l) {
-					thd_log_info("\t\t  cdev index %u \n", l);
-					thd_log_info("\t\t\t  type %s \n",
+					thd_log_info("\t\t  cdev index %u\n", l);
+					thd_log_info("\t\t\t  type %s\n",
 							thermal_info_list[i].zones[j].trip_pts[k].cdev_trips[l].type.c_str());
-					thd_log_info("\t\t\t  influence %d \n",
+					thd_log_info("\t\t\t  influence %d\n",
 							thermal_info_list[i].zones[j].trip_pts[k].cdev_trips[l].influence);
-					thd_log_info("\t\t\t  SamplingPeriod %d \n",
+					thd_log_info("\t\t\t  SamplingPeriod %d\n",
 							thermal_info_list[i].zones[j].trip_pts[k].cdev_trips[l].sampling_period);
 					if (thermal_info_list[i].zones[j].trip_pts[k].cdev_trips[l].target_state_valid)
-						thd_log_info("\t\t\t  TargetState %d \n",
+						thd_log_info("\t\t\t  TargetState %d\n",
 								thermal_info_list[i].zones[j].trip_pts[k].cdev_trips[l].target_state);
 					if (thermal_info_list[i].zones[j].trip_pts[k].cdev_trips[l].pid_param.valid)
-						thd_log_info("\t\t\t  PID values %f:%f:%f \n",
+						thd_log_info("\t\t\t  PID values %f:%f:%f\n",
 								thermal_info_list[i].zones[j].trip_pts[k].cdev_trips[l].pid_param.kp,
 								thermal_info_list[i].zones[j].trip_pts[k].cdev_trips[l].pid_param.ki,
 								thermal_info_list[i].zones[j].trip_pts[k].cdev_trips[l].pid_param.kd);
@@ -809,7 +809,7 @@ void cthd_parse::dump_thermal_conf() {
 		}
 		for (unsigned int l = 0; l < thermal_info_list[i].cooling_devs.size();
 				++l) {
-			thd_log_info("\tCooling Dev %u \n", l);
+			thd_log_info("\tCooling Dev %u\n", l);
 			thd_log_info("\t\tType: %s\n",
 					thermal_info_list[i].cooling_devs[l].type_string.c_str());
 			thd_log_info("\t\tPath: %s\n",
@@ -858,7 +858,7 @@ bool cthd_parse::match_product_sku(int index) {
 			return true;
 		}
 		if (line == thermal_info_list[index].product_sku) {
-			thd_log_info("Product Sku matched \n");
+			thd_log_info("Product Sku matched\n");
 			return true;
 		}
 	} else {
@@ -888,7 +888,7 @@ bool cthd_parse::platform_matched() {
 			}
 			if (line == thermal_info_list[i].uuid) {
 				matched_thermal_info_index = i;
-				thd_log_info("UUID matched \n");
+				thd_log_info("UUID matched\n");
 				return true;
 			}
 		}
@@ -912,7 +912,7 @@ bool cthd_parse::platform_matched() {
 				if (!match_product_sku(i))
 					continue;
 				matched_thermal_info_index = i;
-				thd_log_info("Product Name matched \n");
+				thd_log_info("Product Name matched\n");
 				return true;
 			}
 		}
@@ -922,7 +922,7 @@ bool cthd_parse::platform_matched() {
 			continue;
 		if (!thermal_info_list[i].product_name.compare(0, 1, "*")) {
 			matched_thermal_info_index = i;
-			thd_log_info("Product Name matched \n");
+			thd_log_info("Product Name matched\n");
 			return true;
 		}
 	}

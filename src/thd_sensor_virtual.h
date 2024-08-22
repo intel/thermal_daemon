@@ -42,7 +42,7 @@ public:
 	unsigned int read_temperature();
 	virtual void sensor_dump() {
 		if (link_sensor)
-			thd_log_info("sensor index:%d %s virtual link %s %f %f \n", index,
+			thd_log_info("sensor index:%d %s virtual link %s %f %f\n", index,
 					type_str.c_str(), link_sensor->get_sensor_type().c_str(),
 					multiplier, offset);
 	}
