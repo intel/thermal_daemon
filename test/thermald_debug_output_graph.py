@@ -58,7 +58,7 @@ def plot_temperature():
     g_plot('set title "Temperature plot"')
     g_plot("set term png size 1200, 600")
     g_plot('set output "' + output_png + '"')
-    print("Ploting using gnuplot, the output file name is : ", output_png)
+    print("Plotting using gnuplot, the output file name is : ", output_png)
 #    g_plot('plot "' + output_png + '" using 1:(column(n)) w lines title columnhead(n), for [n=2:50] "trips.csv" using 1:(column(n)) w dots title # columnhead(n)')
     g_plot(
         'plot for [n=2:12] "temperature.csv" u 1:(column(n)) w lines title columnhead(n), for [n=2:50] "trips.csv" u 1:(column(n)) w dots title columnhead(n)'
