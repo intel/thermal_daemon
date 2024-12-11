@@ -536,7 +536,7 @@ void cthd_engine::fast_poll_enable_disable(bool status, message_capsul_t *msg) {
 	} else {
 		fast_poll_sensor_mask &= ~(1 << (*sensor_id));
 		if (!fast_poll_sensor_mask) {
-			if (saved_poll_interval)
+			if (saved_poll_interval && poll_timeout_msec != -1)
 				poll_timeout_msec = saved_poll_interval;
 			thd_log_debug("thd_engine polling last disabled via %u\n",
 					*sensor_id);
