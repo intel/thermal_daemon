@@ -43,6 +43,7 @@
 #include "thd_zone_dynamic.h"
 #include "thd_cdev_gen_sysfs.h"
 #include "thd_int3400.h"
+#include "thd_thermal_netlink.h"
 
 static void *cthd_engine_thread(void *arg);
 
@@ -56,7 +57,7 @@ cthd_engine::cthd_engine(std::string _uuid) :
 				0), has_invariant_tsc(0), has_aperf(0), proc_list_matched(
 				false), poll_interval_sec(0), poll_sensor_mask(0), fast_poll_sensor_mask(
 				0), saved_poll_interval(0), poll_fd_cnt(0), rt_kernel(false), parser_init_done(
-				false) {
+				false), user_space_gov_present(true) {
 	thd_engine = pthread_t();
 	thd_attr = pthread_attr_t();
 
@@ -68,6 +69,9 @@ cthd_engine::cthd_engine(std::string _uuid) :
 
 cthd_engine::~cthd_engine() {
 	unsigned int i;
+
+	if (!user_space_gov_present)
+		netlink_free();
 
 	if (parser_init_done)
 		parser.parser_deinit();
@@ -122,24 +126,28 @@ void cthd_engine::thd_engine_thread() {
 			thz_last_temp_ind_time = tm;
 		}
 		if (uevent_fd >= 0 && (poll_fds[uevent_fd].revents & POLLIN)) {
-			// Kobj uevent
-			if (kobj_uevent.check_for_event()) {
-				time_t tm;
+			if (!user_space_gov_present) {
+				netlink_receive();
+			} else {
+				// Kobj uevent
+				if (kobj_uevent.check_for_event()) {
+					time_t tm;
 
-				time(&tm);
-				thd_log_debug("kobj uevent for thermal\n");
-				if ((tm - thz_last_uevent_time)
-						>= thz_notify_debounce_interval) {
-					pthread_mutex_lock(&thd_engine_mutex);
-					for (i = 0; i < zones.size(); ++i) {
-						cthd_zone *zone = zones[i];
-						zone->zone_temperature_notification(0, 0);
+					time(&tm);
+					thd_log_debug("kobj uevent for thermal\n");
+					if ((tm - thz_last_uevent_time)
+							>= thz_notify_debounce_interval) {
+						pthread_mutex_lock(&thd_engine_mutex);
+						for (i = 0; i < zones.size(); ++i) {
+							cthd_zone *zone = zones[i];
+							zone->zone_temperature_notification(0, 0);
+						}
+						pthread_mutex_unlock(&thd_engine_mutex);
+					} else {
+						thd_log_debug("IGNORE THZ kevent\n");
 					}
-					pthread_mutex_unlock(&thd_engine_mutex);
-				} else {
-					thd_log_debug("IGNORE THZ kevent\n");
+					thz_last_uevent_time = tm;
 				}
-				thz_last_uevent_time = tm;
 			}
 		}
 		if (wakeup_fd >= 0 && (poll_fds[wakeup_fd].revents & POLLIN)) {
@@ -174,6 +182,31 @@ bool cthd_engine::set_preference(const int pref) {
 	return true;
 }
 
+void cthd_engine::check_user_space_gov_present()
+{
+	std::ifstream f("/sys/class/thermal/thermal_zone0/available_policies",
+					std::fstream::in);
+	if (f.fail())
+		return;
+
+	user_space_gov_present = false;
+
+	while (!f.eof()) {
+		std::string token;
+
+		f >> token;
+		if (!f.bad()) {
+			if (!token.empty()) {
+				if (token == "user_space") {
+					user_space_gov_present = true;
+					thd_log_info("user_space thermal policy is present\n");
+				}
+			}
+		}
+		f.close();
+	}
+}
+
 int cthd_engine::thd_engine_init(bool ignore_cpuid_check, bool adaptive) {
 	int ret;
 
@@ -194,6 +227,8 @@ int cthd_engine::thd_engine_init(bool ignore_cpuid_check, bool adaptive) {
 			}
 		}
 	}
+
+	check_user_space_gov_present();
 
 	ret = read_thermal_sensors();
 	if (ret != THD_SUCCESS) {
@@ -284,21 +319,40 @@ int cthd_engine::thd_engine_start() {
 			thd_log_info("Proceed without polling mode!\n");
 		}
 
-		uevent_fd = poll_fd_cnt;
-		poll_fds[uevent_fd].fd = kobj_uevent.kobj_uevent_open();
-		if (poll_fds[uevent_fd].fd < 0) {
-			thd_log_warn("Invalid kobj_uevent handle\n");
-			uevent_fd = -1;
-			goto skip_kobj;
+		if (!user_space_gov_present) {
+			int fd;
+			int ret;
+
+			ret = netlink_init(&fd);
+			if (ret != THD_SUCCESS) {
+				thd_log_info("Netlink init failed, poll mode enabled\n");
+				poll_timeout_msec = def_poll_interval;
+				goto skip_kobj;
+			}
+			thd_log_debug("pol fd for netlink index :%d\n", poll_fd_cnt);
+
+			uevent_fd = poll_fd_cnt;
+			poll_fds[poll_fd_cnt].fd = fd;
+			poll_fds[poll_fd_cnt].events = POLLIN;
+			poll_fds[poll_fd_cnt].revents = 0;
+			poll_fd_cnt++;
+		} else {
+			uevent_fd = poll_fd_cnt;
+			poll_fds[uevent_fd].fd = kobj_uevent.kobj_uevent_open();
+			if (poll_fds[uevent_fd].fd < 0) {
+				thd_log_warn("Invalid kobj_uevent handle\n");
+				uevent_fd = -1;
+				goto skip_kobj;
+			}
+			thd_log_info("FD = %d\n", poll_fds[uevent_fd].fd);
+			kobj_uevent.register_dev_path(
+					(char *) "/devices/virtual/thermal/thermal_zone");
+			poll_fds[uevent_fd].events = POLLIN;
+			poll_fds[uevent_fd].revents = 0;
+			poll_fd_cnt++;
 		}
-		thd_log_info("FD = %d\n", poll_fds[uevent_fd].fd);
-		kobj_uevent.register_dev_path(
-				(char *) "/devices/virtual/thermal/thermal_zone");
-		poll_fds[uevent_fd].events = POLLIN;
-		poll_fds[uevent_fd].revents = 0;
-		poll_fd_cnt++;
 	}
-	skip_kobj:
+skip_kobj:
 #ifndef DISABLE_PTHREAD
 	// Create thread
 	pthread_attr_init(&thd_attr);
@@ -573,7 +627,7 @@ void cthd_engine::takeover_thermal_control() {
 				std::stringstream mode;
 
 				policy << "thermal_zone" << i << "/policy";
-				if (sysfs.exists(policy.str().c_str())) {
+				if (user_space_gov_present && sysfs.exists(policy.str().c_str())) {
 					int ret;
 
 					ret = sysfs.read(policy.str(), curr_policy);

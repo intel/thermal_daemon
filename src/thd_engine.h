@@ -123,6 +123,7 @@ private:
 	bool rt_kernel;
 	cthd_kobj_uevent kobj_uevent;
 	bool parser_init_done;
+	bool user_space_gov_present;
 
 	int proc_message(message_capsul_t *msg);
 	void process_pref_change();
@@ -290,6 +291,9 @@ public:
 	int parser_init();
 	void parser_deinit();
 	int debug_mode_on(void);
+
+	void check_user_space_gov_present();
+	bool is_user_space_gov_present() { return user_space_gov_present;}
 };
 
 #endif /* THD_ENGINE_H_ */

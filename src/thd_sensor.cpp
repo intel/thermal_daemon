@@ -84,7 +84,16 @@ void cthd_sensor::enable_uevent() {
 
 	policy_sysfs << "thermal_zone" << index << "/policy";
 	if (cdev_sysfs.exists(policy_sysfs.str().c_str())) {
-		cdev_sysfs.write(policy_sysfs.str(), "user_space");
+		int ret;
+
+		if (!thd_engine->is_user_space_gov_present()) {
+			thd_log_debug("user_space policy is not present\n");
+			return;
+		}
+
+		ret = cdev_sysfs.write(policy_sysfs.str(), "user_space");
+		if (ret < 0)
+			thd_log_info("user_space write failed\n");
 	}
 }
 
