@@ -72,6 +72,9 @@ AC_SUBST(GLIB_LIBS)
 
 PKG_CHECK_MODULES(XML, libxml-2.0 >= 2.4)
 
+PKG_CHECK_MODULES(libnl30, [libnl-3.0], libnl30=yes, libnl30=no)
+PKG_CHECK_MODULES(libnlgenl30, [libnl-genl-3.0], libnlgenl30=yes, libnlgenl30=no)
+
 AC_PATH_PROG([GDBUS_CODEGEN],[gdbus-codegen])
 
 PKG_CHECK_MODULES(UPOWER, upower-glib)

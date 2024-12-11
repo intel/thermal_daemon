@@ -14,6 +14,8 @@ AM_CXXFLAGS = \
 	-DTDRUNDIR=\"$(tdrundir)\" \
 	-DTDCONFDIR=\"$(tdconfdir)\" \
 	$(CXXFLAGS) \
+	$(libnl30_CFLAGS) \
+	$(libnlgenl30_CFLAGS) \
 	-I src
 
 EXTRA_DIST=Makefile.glib \
@@ -36,8 +38,8 @@ thermald_LDADD = \
 	$(LIBDL) \
 	$(XML_LIBS) \
 	$(UPOWER_LIBS) \
-	$(EVDEV_LIBS)
-
+	$(EVDEV_LIBS) \
+        $(libnlgenl30_LIBS)
 
 thermald_SOURCES = \
 	src/main.cpp \
@@ -75,8 +77,8 @@ thermald_SOURCES = \
 	src/thd_gddv.cpp \
 	thermald-resource.c \
 	src/thd_lzma_dec.cpp \
-	src/LzmaDec.c
-
+	src/LzmaDec.c \
+	src/thd_thermal_netlink.cpp
 
 man5_MANS = man/thermal-conf.xml.5
 man8_MANS = man/thermald.8
