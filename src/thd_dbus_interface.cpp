@@ -1172,7 +1172,7 @@ thd_dbus_on_bus_acquired(GDBusConnection *connection,
 
 	introspection_data = thd_dbus_load_introspection("src/thd_dbus_interface.xml",
 							 &error);
-	if (error != NULL) {
+	if (introspection_data == NULL || error != NULL) {
 		thd_log_error("Couldn't create introspection data: %s:\n",
 			      error->message);
 		return;
