@@ -1546,6 +1546,7 @@ size_t cthd_gddv::gddv_load(char **buffer)
 	if (fp) {
 		data_buffer = new char[MAX_GDDV_FILE_SIZE];
 		if (!data_buffer) {
+			fclose(fp);
 			return 0;
 		}
 
@@ -1570,6 +1571,7 @@ size_t cthd_gddv::gddv_load(char **buffer)
 
 	data_buffer = new char[MAX_GDDV_FILE_SIZE];
 	if (!data_buffer) {
+		fclose(fp);
 		return 0;
 	}
 
