@@ -604,6 +604,7 @@ int cthd_engine_adaptive::set_int3400_base_path()
 					int3400_base_path += entry->d_name;
 					int3400_base_path += "/";
 					thd_log_debug ("Discovered int3400 path:%s\n", int3400_base_path.c_str ());
+					closedir(dir);
 					return THD_SUCCESS;
 				}
 			}
