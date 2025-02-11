@@ -109,6 +109,10 @@ For build, follow the same procedure as Fedora.
 
 Releases
 
+Release 2.5.9
+- Panther Lake support
+- Intel P-state in passive mode support
+
 Release 2.5.8
 - Lunar Lake support
 - Arrow Lake support
