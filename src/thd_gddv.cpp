@@ -1619,7 +1619,7 @@ size_t cthd_gddv::gddv_load(char **buffer)
 
 #endif
 
-int cthd_gddv::gddv_init(void) {
+int cthd_gddv::gddv_init(std::string& base_path) {
 	csys_fs sysfs("");
 	char *buf;
 	size_t size;
@@ -1630,21 +1630,7 @@ int cthd_gddv::gddv_init(void) {
 		goto skip_load;
 	}
 
-	if (sysfs.exists("/sys/bus/platform/devices/INT3400:00")) {
-		int3400_base_path = "/sys/bus/platform/devices/INT3400:00/";
-	} else if (sysfs.exists("/sys/bus/platform/devices/INTC1040:00")) {
-		int3400_base_path = "/sys/bus/platform/devices/INTC1040:00/";
-	} else if (sysfs.exists("/sys/bus/platform/devices/INTC1041:00")) {
-		int3400_base_path = "/sys/bus/platform/devices/INTC1041:00/";
-	} else if (sysfs.exists("/sys/bus/platform/devices/INTC10A0:00")) {
-		int3400_base_path = "/sys/bus/platform/devices/INTC10A0:00/";
-	} else if (sysfs.exists("/sys/bus/platform/devices/INTC1042:00")) {
-		int3400_base_path = "/sys/bus/platform/devices/INTC1042:00/";
-	} else if (sysfs.exists("/sys/bus/platform/devices/INTC1068:00")) {
-		int3400_base_path = "/sys/bus/platform/devices/INTC1068:00/";
-	} else {
-		return THD_ERROR;
-	}
+	int3400_base_path = base_path;
 
 	if (sysfs.read(int3400_base_path + "firmware_node/path",
 			int3400_path) < 0) {

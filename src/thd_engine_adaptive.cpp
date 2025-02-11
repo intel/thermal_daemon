@@ -588,6 +588,31 @@ void cthd_engine_adaptive::update_engine_state() {
 	}
 }
 
+int cthd_engine_adaptive::set_int3400_base_path()
+{
+	const char *base_path = "/sys/bus/platform/drivers/int3400 thermal";
+	csys_fs sysfs ("");
+
+	if (sysfs.exists (base_path)) {
+		DIR *dir;
+		struct dirent *entry;
+
+		if ((dir = opendir (base_path)) != NULL) {
+			while ((entry = readdir (dir)) != NULL) {
+				if (!strncmp (entry->d_name, "INT", strlen ("INT"))) {
+					int3400_base_path = "/sys/bus/platform/devices/";
+					int3400_base_path += entry->d_name;
+					int3400_base_path += "/";
+					thd_log_debug ("Discovered int3400 path:%s\n", int3400_base_path.c_str ());
+					return THD_SUCCESS;
+				}
+			}
+		}
+	}
+
+	return THD_ERROR;
+}
+
 int cthd_engine_adaptive::thd_engine_init(bool ignore_cpuid_check,
 		bool adaptive) {
 	csys_fs sysfs("");
@@ -625,7 +650,8 @@ int cthd_engine_adaptive::thd_engine_init(bool ignore_cpuid_check,
 	} else if (sysfs.exists("/sys/bus/platform/devices/INTC1068:00")) {
 		int3400_base_path = "/sys/bus/platform/devices/INTC1068:00/";
 	} else {
-		return THD_ERROR;
+		if (set_int3400_base_path() != THD_SUCCESS)
+			return THD_ERROR;
 	}
 
 	if (sysfs.read(int3400_base_path + "firmware_node/path", int3400_path)
@@ -654,7 +680,7 @@ int cthd_engine_adaptive::thd_engine_init(bool ignore_cpuid_check,
 
 	delete[] buf;
 
-	res = gddv.gddv_init();
+	res = gddv.gddv_init(int3400_base_path);
 	if (res != THD_SUCCESS) {
 		return res;
 	}

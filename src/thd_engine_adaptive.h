@@ -57,6 +57,7 @@ protected:
 	void exec_fallback_target(int target);
 	void execute_target(struct adaptive_target &target);
 	void install_passive_default();
+	int set_int3400_base_path();
 
 public:
 #ifndef ANDROID
