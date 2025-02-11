@@ -106,7 +106,6 @@ int cthd_intel_p_state_cdev::update() {
 		ret = cdev_sysfs.read(status_attr.str(), status_str);
 		if (ret >= 0 && status_str != "active") {
 			thd_log_info("intel pstate is not in active mode\n");
-			return THD_ERROR;
 		}
 	}
 
