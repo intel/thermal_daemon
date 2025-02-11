@@ -720,6 +720,7 @@ static supported_ids_t id_table[] = {
 		{ 6, 0xc6 }, // Arrow Lake
 		{ 6, 0xc5 }, // Arrow Lake H
 		{ 6, 0xb5 }, // Arrow Lake U
+		{ 6, 0xcc }, // Panther Lake L
 		{ 0, 0 } // Last Invalid entry
 };
 
