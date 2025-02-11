@@ -607,6 +607,7 @@ int cthd_engine_adaptive::set_int3400_base_path()
 					return THD_SUCCESS;
 				}
 			}
+			closedir(dir);
 		}
 	}
 
