@@ -683,8 +683,6 @@ int cthd_engine_default::read_cooling_devices() {
 
 				if (adaptive_mode) {
 					thd_log_info("Disable rapl-msr interface and use rapl-mmio\n");
-					rapl_dev->rapl_update_enable_status(0);
-
 					target.code = "PL1MAX";
 					target.argument = "200000";
 					rapl_dev->set_adaptive_target(target);
