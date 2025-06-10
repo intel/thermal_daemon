@@ -174,6 +174,85 @@ bool cthd_engine::set_preference(const int pref) {
 	return true;
 }
 
+#define POWER_FLOOR_ENABLE_ATTRIBUTE "/sys/bus/pci/devices/0000:00:04.0/power_limits/power_floor_enable"
+#define POWER_FLOOR_STATUS_ATTRIBUTE  "/sys/bus/pci/devices/0000:00:04.0/power_limits/power_floor_status"
+
+void cthd_engine::enable_power_floor_event()
+{
+	int fd;
+
+	/* Enable feature via sysfs knob */
+	fd = open(POWER_FLOOR_ENABLE_ATTRIBUTE, O_RDWR);
+	if (fd < 0) {
+		thd_log_debug("Unable to open power floor status file\n");
+		return;
+	}
+
+	if (write(fd, "1\n", 2) < 0) {
+		thd_log_debug("Unable to enable power floor notifications\n");
+		close(fd);
+		return;
+	}
+
+	close(fd);
+
+	fd = open(POWER_FLOOR_STATUS_ATTRIBUTE, O_RDONLY);
+	if (fd < 0) {
+		thd_log_debug("Unable to open power floor status file\n");
+		return;
+	}
+	close(fd);
+
+	cthd_cdev *cdev;
+
+	cdev = search_cdev("intel_powerclamp");
+	if (!cdev) {
+		thd_log_debug("Power clamp driver not found!\n");
+		return;
+	}
+
+	cthd_sensor *sensor;
+
+	sensor = new cthd_sensor(current_sensor_index, POWER_FLOOR_STATUS_ATTRIBUTE,
+			"power_floor", SENSOR_TYPE_RAW);
+	if (sensor->sensor_update() != THD_SUCCESS) {
+		delete sensor;
+		return;
+	}
+
+	cthd_zone_dynamic *zone = new cthd_zone_dynamic(current_zone_index,
+			"power_floor", 1, PASSIVE, "power_floor", "intel_powerclamp");
+	if (!zone) {
+		delete sensor;
+		return;
+	}
+
+	sensors.push_back(sensor);
+	++current_sensor_index;
+
+	if (zone->zone_update() != THD_SUCCESS) {
+		// sensor will be deleted when all elements of sensors are deleted from sensors[]
+		delete zone;
+		return;
+	}
+
+	/* Add if present */
+	cthd_cdev *cdev_pci = match_cdev("PCIe_Port_Link_Speed");
+	if (cdev_pci) {
+		thd_log_debug("PCIe port link cooling device present\n");
+		cthd_trip_point *trip = zone->get_trip_at_index(0);
+		if (trip)
+			trip->thd_trip_point_add_cdev(*cdev_pci,
+					cthd_trip_point::default_influence);
+	}
+
+	zones.push_back(zone);
+	++current_zone_index;
+	zone->set_zone_active();
+
+	zone->zone_dump();
+}
+
 int cthd_engine::thd_engine_init(bool ignore_cpuid_check, bool adaptive) {
 	int ret;
 
@@ -215,6 +294,9 @@ int cthd_engine::thd_engine_init(bool ignore_cpuid_check, bool adaptive) {
 		// This is a fatal error and daemon will exit
 		return THD_FATAL_ERROR;
 	}
+
+	if (power_floor_enable)
+		enable_power_floor_event();
 
 	return THD_SUCCESS;
 }
@@ -934,6 +1016,24 @@ cthd_cdev* cthd_engine::search_cdev(std::string name) {
 			return cdev;
 		if (cdev->get_cdev_alias() == name)
 			return cdev;
+	}
+
+	return NULL;
+}
+
+// Partial match instead of full match
+cthd_cdev* cthd_engine::match_cdev(std::string name) {
+	cthd_cdev *cdev;
+
+	for (unsigned int i = 0; i < cdevs.size(); ++i) {
+		cdev = cdevs[i];
+		if (!cdev)
+			continue;
+		std::string cdev_name = cdev->get_cdev_type();
+		size_t match = cdev_name.find(name);
+		if (match != std::string::npos) {
+			return cdev;
+		}
 	}
 
 	return NULL;

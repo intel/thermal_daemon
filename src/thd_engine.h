@@ -239,6 +239,7 @@ public:
 	}
 	cthd_zone *search_zone(std::string name);
 	cthd_cdev *search_cdev(std::string name);
+	cthd_cdev *match_cdev(std::string name);
 	cthd_sensor *search_sensor(std::string name);
 	cthd_sensor *get_sensor(int index);
 	cthd_zone *get_zone(int index);
@@ -287,6 +288,7 @@ public:
 			int min_state, int max_state, int step);
 	cthd_cdev *user_get_cdev(unsigned int index);
 
+	void enable_power_floor_event();
 	int parser_init();
 	void parser_deinit();
 	int debug_mode_on(void);

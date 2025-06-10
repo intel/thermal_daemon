@@ -43,14 +43,14 @@ int cthd_zone_dynamic::read_trip_points() {
 	cthd_trip_point trip_pt(0, trip_type, trip_temp, 0, index,
 			sensor->get_index());
 
-	trip_points.push_back(trip_pt);
-
 	cthd_cdev *cdev = thd_engine->search_cdev(cdev_name);
 	if (cdev) {
 		trip_pt.thd_trip_point_add_cdev(*cdev, cthd_trip_point::default_influence);
 		zone_cdev_set_binded();
 	} else
 		return THD_ERROR;
+
+	trip_points.push_back(trip_pt);
 
 	return THD_SUCCESS;
 }

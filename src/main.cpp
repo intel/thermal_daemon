@@ -78,6 +78,7 @@ bool thd_ignore_default_control = false;
 bool workaround_enabled = false;
 bool disable_active_power = false;
 bool ignore_critical = false;
+bool power_floor_enable = false;
 
 // check cpuid
 static gboolean ignore_cpuid_check = false;
@@ -236,6 +237,9 @@ int main(int argc, char *argv[]) {
 			{ "ignore-critical-trip", 0, 0, G_OPTION_ARG_NONE,
 						&ignore_critical, N_(
 						"Ignore critical trips for reboot"), NULL },
+			{ "power-floor-enable", 0, 0, G_OPTION_ARG_NONE,
+						&power_floor_enable, N_(
+						"Handle power floor event"), NULL },
 			{ NULL, 0, 0,
 					G_OPTION_ARG_NONE, NULL, NULL, NULL } };
 
