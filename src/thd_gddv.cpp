@@ -455,8 +455,8 @@ void cthd_gddv::dump_apct() {
 
 			thd_log_info(
 					"\ttarget:%d device:%s condition:%s comparison:%s argument:%d"
-							" operation:%s time_comparison:%d time:%ld"
-							" stare:%d state_entry_time:%ld\n",
+							" operation:%s time_comparison:%d time:%jd"
+							" stare:%d state_entry_time:%jd\n",
 					condition_set[j].target, condition_set[j].device.c_str(),
 					cond_name.c_str(), comp_str.c_str(),
 					condition_set[j].argument, op_str.c_str(),
