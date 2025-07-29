@@ -46,6 +46,8 @@ cthd_INT3400::cthd_INT3400(std::string _uuid) : uuid(std::move(_uuid)), base_pat
 		base_path = "/sys/bus/acpi/devices/INTC1068:00/physical_node/uuids/";
 	} else if (cdev_sysfs.exists("/sys/bus/acpi/devices/INTC10D4:00/physical_node/uuids")) {
 		base_path = "/sys/bus/acpi/devices/INTC10D4:00/physical_node/uuids/";
+	} else if (cdev_sysfs.exists("/sys/bus/acpi/devices/INTC10FC:00/physical_node/uuids")) {
+		base_path = "/sys/bus/acpi/devices/INTC10FC:00/physical_node/uuids/";
 	}
 	thd_log_info("INT3400 Base path is %s\n", base_path.c_str());
 }
