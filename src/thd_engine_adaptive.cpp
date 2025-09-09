@@ -386,7 +386,7 @@ int cthd_engine_adaptive::set_itmt_target(struct adaptive_target &target) {
 
 void cthd_engine_adaptive::set_int3400_target(struct adaptive_target &target) {
 
-	if (target.code == "ITMT") {
+	if (target.code == "ITMT" || target.code == "ITMT3") {
 		if (set_itmt_target(target) == THD_SUCCESS) {
 			int3400_installed = 1;
 		}
