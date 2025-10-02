@@ -109,7 +109,7 @@ For build, follow the same procedure as Fedora.
 
 Releases
 
-Release 2.5.9
+Release 2.5.10
 - For new ITMT string version 3 support
 - There was issue in updating path for DPTF files for Panther Lake
 - Minor print format for time_t value
