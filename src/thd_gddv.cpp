@@ -1487,6 +1487,11 @@ void cthd_gddv::setup_input_devices() {
 	int i, ndev, ret;
 
 	ndev = scandir("/dev/input", &namelist, is_event_device, versionsort);
+	if (ndev == -1) {
+		thd_log_info("Didn't find input devices\n");
+		return;
+	}
+
 	for (i = 0; i < ndev; i++) {
 		struct libevdev *dev = NULL;
 		char fname[267];
@@ -1512,6 +1517,8 @@ void cthd_gddv::setup_input_devices() {
 			close(fd);
 		}
 	}
+
+	free(namelist);
 }
 #endif
 
