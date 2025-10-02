@@ -261,19 +261,26 @@ unsigned int cthd_rapl_power_meter::rapl_action_get_max_power(
 			std::string _path;
 			std::string _buffer;
 			csys_fs sys_fs;
-			unsigned int const_0_val, const_1_val;
+			int max_power;
+			unsigned int const_0_val = 0, const_1_val = 0;
 
 			const_0_val = 0;
 			const_1_val = 0;
 			_path = domain_list[i].path + "/" + "constraint_0_max_power_uw";
 			status = sys_fs.read(_path, _buffer);
-			if (status >= 0)
-				const_0_val = atoi(_buffer.c_str());
+			if (status >= 0) {
+				max_power = atoi(_buffer.c_str());
+				if (max_power > 0)
+					const_0_val = max_power;
+			}
 
 			_path = domain_list[i].path + "/" + "constraint_1_max_power_uw";
 			status = sys_fs.read(_path, _buffer);
-			if (status >= 0)
-				const_1_val = atoi(_buffer.c_str());
+			if (status >= 0) {
+				max_power = atoi(_buffer.c_str());
+				if (max_power > 0)
+					const_1_val = max_power;
+			}
 
 			value = const_1_val > const_0_val ? const_1_val : const_0_val;
 			if (value)

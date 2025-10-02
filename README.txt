@@ -110,6 +110,13 @@ For build, follow the same procedure as Fedora.
 Releases
 
 Release 2.5.9
+- For new ITMT string version 3 support
+- There was issue in updating path for DPTF files for Panther Lake
+- Minor print format for time_t value
+- Don't reset clamping bit for RAPL for MSR rapl zones when disabled
+- Add confitional power floor processing
+
+Release 2.5.9
 - Panther Lake support
 - Intel P-state in passive mode support
 
