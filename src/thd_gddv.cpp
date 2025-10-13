@@ -460,8 +460,8 @@ void cthd_gddv::dump_apct() {
 					condition_set[j].target, condition_set[j].device.c_str(),
 					cond_name.c_str(), comp_str.c_str(),
 					condition_set[j].argument, op_str.c_str(),
-					condition_set[j].time_comparison, condition_set[j].time,
-					condition_set[j].state, condition_set[j].state_entry_time);
+					condition_set[j].time_comparison, (intmax_t)condition_set[j].time,
+					condition_set[j].state, (intmax_t)condition_set[j].state_entry_time);
 		}
 	}
 	thd_log_info("..apct dump end..\n");
