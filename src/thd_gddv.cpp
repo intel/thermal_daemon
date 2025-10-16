@@ -601,6 +601,58 @@ struct psvt* cthd_gddv::find_def_psvt() {
 	return NULL;
 }
 
+struct __attribute__((packed)) itmt3_header {
+	uint32_t reserved;
+	uint64_t revision;
+};
+
+struct __attribute__((packed)) itmt3 {
+	char target[64];
+	uint64_t  temp;
+	uint64_t reserved_1;
+	char pl1_min[64];
+	char pl1_max[64];
+	char reserved_2[88];
+};
+
+int cthd_gddv::parse_itmt3(char *name, char *buf, unsigned int len) {
+	unsigned int offset = 0;
+	struct itmt itmt;
+
+	if (name == NULL)
+		itmt.name = "Default";
+	else
+		itmt.name = name;
+
+	if (len < sizeof(struct itmt3_header))
+		return THD_ERROR;
+
+	offset += sizeof(struct itmt3_header);
+
+	if (len - offset < sizeof(struct itmt3))
+		return THD_ERROR;
+
+	while (offset < len) {
+		struct itmt_entry itmt_entry;
+		struct itmt3 *entry = (struct itmt3 *)&buf[offset];
+
+		if (len - offset < sizeof(struct itmt3))
+			return THD_ERROR;
+
+		itmt_entry.target = entry->target;
+		itmt_entry.trip_point = entry->temp;
+		itmt_entry.pl1_min = entry->pl1_min;
+		itmt_entry.pl1_max = entry->pl1_max;
+
+		offset += sizeof(struct itmt3);
+		itmt.itmt_entries.push_back(itmt_entry);
+	}
+
+	itmts.push_back(itmt);
+
+	return 0;
+}
+
 int cthd_gddv::parse_itmt(char *name, char *buf, int len) {
 	int offset = 0;
 	int version = get_uint64(buf, &offset);
@@ -918,6 +970,14 @@ int cthd_gddv::parse_gddv_key(char *buf, int size, int *end_offset) {
 
 	if (type && strcmp(type, "apat") == 0) {
 		parse_apat(val, vallength);
+	}
+
+	if (type && strncmp(type, "itmt3", strlen("itmt3")) == 0) {
+		thd_log_debug("Found ITMT 3\n");
+		if (point == NULL)
+			parse_itmt3(name, val, vallength);
+		else
+			parse_itmt3(point, val, vallength);
 	}
 
 	if (type && strcmp(type, "itmt") == 0) {
