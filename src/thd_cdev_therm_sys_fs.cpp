@@ -32,7 +32,7 @@
 
 int cthd_sysfs_cdev::update() {
 
-	std::stringstream tc_state_dev;
+	std::ostringstream tc_state_dev;
 	tc_state_dev << "cooling_device" << index << "/cur_state";
 	if (cdev_sysfs.exists(tc_state_dev.str())) {
 		std::string state_str;
@@ -41,7 +41,7 @@ int cthd_sysfs_cdev::update() {
 	} else
 		curr_state = 0;
 
-	std::stringstream tc_max_state_dev;
+	std::ostringstream tc_max_state_dev;
 	tc_max_state_dev << "cooling_device" << index << "/max_state";
 	if (cdev_sysfs.exists(tc_max_state_dev.str())) {
 		std::string state_str;
@@ -50,7 +50,7 @@ int cthd_sysfs_cdev::update() {
 	} else
 		max_state = 0;
 
-	std::stringstream tc_type_dev;
+	std::ostringstream tc_type_dev;
 	tc_type_dev << "cooling_device" << index << "/type";
 	if (cdev_sysfs.exists(tc_type_dev.str())) {
 		cdev_sysfs.read(tc_type_dev.str(), type_str);
@@ -71,7 +71,7 @@ int cthd_sysfs_cdev::update() {
 
 int cthd_sysfs_cdev::get_max_state() {
 
-	std::stringstream tc_state_dev;
+	std::ostringstream tc_state_dev;
 	tc_state_dev << "cooling_device" << index << "/max_state";
 	if (cdev_sysfs.exists(tc_state_dev.str())) {
 		std::string state_str;
@@ -85,10 +85,10 @@ int cthd_sysfs_cdev::get_max_state() {
 
 void cthd_sysfs_cdev::set_curr_state(int state, int arg) {
 
-	std::stringstream tc_state_dev;
+	std::ostringstream tc_state_dev;
 	tc_state_dev << "cooling_device" << index << "/cur_state";
 	if (cdev_sysfs.exists(tc_state_dev.str())) {
-		std::stringstream state_str;
+		std::ostringstream state_str;
 		state_str << state;
 		thd_log_debug("set cdev state index %d state %d\n", index, state);
 		cdev_sysfs.write(tc_state_dev.str(), state_str.str());
@@ -102,7 +102,7 @@ int cthd_sysfs_cdev::get_curr_state() {
 	if (!read_back) {
 		return curr_state;
 	}
-	std::stringstream tc_state_dev;
+	std::ostringstream tc_state_dev;
 	tc_state_dev << "cooling_device" << index << "/cur_state";
 	if (cdev_sysfs.exists(tc_state_dev.str())) {
 		std::string state_str;

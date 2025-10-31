@@ -37,12 +37,12 @@
  */
 
 void cthd_intel_p_state_cdev::set_curr_state(int state, int arg) {
-	std::stringstream tc_state_dev;
+	std::ostringstream tc_state_dev;
 	int new_state;
 
 	tc_state_dev << "/max_perf_pct";
 	if (cdev_sysfs.exists(tc_state_dev.str())) {
-		std::stringstream state_str;
+		std::ostringstream state_str;
 		if (state == 0)
 			new_state = 100;
 		else {
@@ -64,7 +64,7 @@ void cthd_intel_p_state_cdev::set_curr_state(int state, int arg) {
 }
 
 void cthd_intel_p_state_cdev::set_turbo_disable_status(bool enable) {
-	std::stringstream tc_state_dev;
+	std::ostringstream tc_state_dev;
 
 	if (enable == turbo_status) {
 		return;
@@ -95,8 +95,8 @@ int cthd_intel_p_state_cdev::map_target_state(int target_valid, int target_state
 }
 
 int cthd_intel_p_state_cdev::update() {
-	std::stringstream tc_state_dev;
-	std::stringstream status_attr;
+	std::ostringstream tc_state_dev;
+	std::ostringstream status_attr;
 
 	status_attr << "/status";
 	if (cdev_sysfs.exists(status_attr.str())) {

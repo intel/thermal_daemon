@@ -88,7 +88,7 @@ void cthd_zone::update_zone_preference() {
 }
 
 int cthd_zone::read_user_set_psv_temp() {
-	std::stringstream filename;
+	std::ostringstream filename;
 	int temp = -1;
 
 	filename << TDRUNDIR << "/" << "thd_user_psv_temp." << type_str << "."
@@ -250,8 +250,8 @@ int cthd_zone::bind_cooling_device(trip_point_type_t type,
 
 int cthd_zone::update_max_temperature(int max_temp) {
 
-	std::stringstream filename;
-	std::stringstream temp_str;
+	std::ostringstream filename;
+	std::ostringstream temp_str;
 
 	filename << TDRUNDIR << "/" << "thd_user_set_max." << type_str << "."
 			<< "conf";
@@ -268,8 +268,8 @@ int cthd_zone::update_max_temperature(int max_temp) {
 
 int cthd_zone::update_psv_temperature(int psv_temp) {
 
-	std::stringstream filename;
-	std::stringstream temp_str;
+	std::ostringstream filename;
+	std::ostringstream temp_str;
 
 	filename << TDRUNDIR << "/" << "thd_user_psv_temp." << type_str << "."
 			<< "conf";
