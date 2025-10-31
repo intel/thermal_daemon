@@ -117,7 +117,7 @@ int cthd_cpu_default_binding::read_zone_stat(std::string zone_name,
 		cpu_zone_stat_t *stat) {
 	std::ifstream filein;
 
-	std::stringstream filename;
+	std::ostringstream filename;
 	filename << TDRUNDIR << "/" << "cpu_def_zone_bind.out";
 
 	filein.open(filename.str().c_str(), std::ios::in | std::ios::binary);
@@ -144,7 +144,7 @@ void cthd_cpu_default_binding::update_zone_stat(std::string zone_name,
 	cpu_zone_stat_t obj;
 	bool found = false;
 
-	std::stringstream filename;
+	std::ostringstream filename;
 	filename << TDRUNDIR << "/" << "cpu_def_zone_bind.out";
 
 	filein.open(filename.str().c_str(), std::ios::in | std::ios::binary);

@@ -92,7 +92,7 @@ int cthd_cdev_cpufreq::init() {
 	unsigned int scaling_min_frequency = 0;
 	unsigned int scaling_max_frequency = 0;
 	for (int i = cpu_start_index; i <= cpu_end_index; ++i) {
-		std::stringstream str;
+		std::ostringstream str;
 		std::string freq_str;
 		str << "cpu" << i << "/cpufreq/scaling_min_freq";
 		if (cdev_sysfs.exists(str.str())) {
@@ -105,7 +105,7 @@ int cthd_cdev_cpufreq::init() {
 	}
 
 	for (int i = cpu_start_index; i <= cpu_end_index; ++i) {
-		std::stringstream str;
+		std::ostringstream str;
 		std::string freq_str;
 		str << "cpu" << i << "/cpufreq/scaling_max_freq";
 		if (cdev_sysfs.exists(str.str())) {
@@ -163,10 +163,10 @@ void cthd_cdev_cpufreq::set_curr_state(int state, int arg) {
 
 		if (cpu_index == -1) {
 			for (int i = cpu_start_index; i <= cpu_end_index; ++i) {
-				std::stringstream str;
+				std::ostringstream str;
 				str << "cpu" << i << "/cpufreq/scaling_max_freq";
 				if (cdev_sysfs.exists(str.str())) {
-					std::stringstream speed;
+					std::ostringstream speed;
 					speed << cpufreqs[state];
 					cdev_sysfs.write(str.str(), speed.str());
 				}
@@ -175,10 +175,10 @@ void cthd_cdev_cpufreq::set_curr_state(int state, int arg) {
 			}
 		} else {
 			if (thd_engine->apply_cpu_operation(cpu_index)) {
-				std::stringstream str;
+				std::ostringstream str;
 				str << "cpu" << cpu_index << "/cpufreq/scaling_max_freq";
 				if (cdev_sysfs.exists(str.str())) {
-					std::stringstream speed;
+					std::ostringstream speed;
 					speed << cpufreqs[state];
 					cdev_sysfs.write(str.str(), speed.str());
 				}

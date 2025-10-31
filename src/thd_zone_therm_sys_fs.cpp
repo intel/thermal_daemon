@@ -29,7 +29,7 @@
 cthd_sysfs_zone::cthd_sysfs_zone(int count, std::string path) :
 		cthd_zone(count, std::move(path)), trip_point_cnt(0) {
 
-	std::stringstream tc_type_dev;
+	std::ostringstream tc_type_dev;
 	tc_type_dev << index << "/type";
 
 	thd_log_debug("Thermal Zone look for %s\n", tc_type_dev.str().c_str());
@@ -42,11 +42,11 @@ cthd_sysfs_zone::cthd_sysfs_zone(int count, std::string path) :
 }
 
 cthd_sysfs_zone::~cthd_sysfs_zone() {
-	std::stringstream trip_sysfs;
+	std::ostringstream trip_sysfs;
 	trip_sysfs << index << "/" << "trip_point_";
 
 	for (unsigned int i = 0; i < initial_trip_values.size(); ++i) {
-		std::stringstream temp_stream;
+		std::ostringstream temp_stream;
 		temp_stream << trip_sysfs.str() << i << "_temp";
 		if (initial_trip_values[i] >= 0
 				&& zone_sysfs.exists(temp_stream.str())) {
@@ -71,12 +71,12 @@ int cthd_sysfs_zone::zone_bind_sensors() {
 int cthd_sysfs_zone::read_trip_points() {
 
 	// Gather all trip points
-	std::stringstream trip_sysfs;
+	std::ostringstream trip_sysfs;
 	trip_sysfs << index << "/" << "trip_point_";
 	for (int i = 0; i < max_trip_points; ++i) {
-		std::stringstream type_stream;
-		std::stringstream temp_stream;
-		std::stringstream hist_stream;
+		std::ostringstream type_stream;
+		std::ostringstream temp_stream;
+		std::ostringstream hist_stream;
 		std::string _type_str;
 		std::string _temp_str;
 		std::string _hist_str;
@@ -164,10 +164,10 @@ int cthd_sysfs_zone::read_cdev_trip_points() {
 
 	// Gather all Cdevs
 	// Gather all trip points
-	std::stringstream cdev_sysfs;
+	std::ostringstream cdev_sysfs;
 	cdev_sysfs << index << "/" << "cdev";
 	for (int i = 0; i < max_cool_devs; ++i) {
-		std::stringstream trip_pt_stream, cdev_stream;
+		std::ostringstream trip_pt_stream, cdev_stream;
 		std::string trip_pt_str;
 		int trip_cnt = -1;
 		char buf[51], *ptr;

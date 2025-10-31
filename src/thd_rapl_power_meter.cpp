@@ -67,7 +67,7 @@ void cthd_rapl_power_meter::rapl_read_domains(const char *dir_name) {
 		if ((dir = opendir(dir_name)) != NULL) {
 			while ((dir_entry = readdir(dir)) != NULL) {
 				std::string buffer;
-				std::stringstream path;
+				std::ostringstream path;
 				int status;
 				rapl_domain_t domain;
 
@@ -96,7 +96,7 @@ void cthd_rapl_power_meter::rapl_read_domains(const char *dir_name) {
 				thd_log_debug("name %s\n", buffer.c_str());
 				if (fnmatch("package-*", buffer.c_str(), 0) == 0) {
 					domain.type = PACKAGE;
-					std::stringstream path;
+					std::ostringstream path;
 					path << dir_name << dir_entry->d_name << "/";
 					rapl_read_domains(path.str().c_str());
 				} else if (buffer == "core") {

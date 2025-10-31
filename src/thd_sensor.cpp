@@ -80,7 +80,7 @@ unsigned int cthd_sensor::read_temperature() {
 
 void cthd_sensor::enable_uevent() {
 	csys_fs cdev_sysfs("/sys/class/thermal/");
-	std::stringstream policy_sysfs;
+	std::ostringstream policy_sysfs;
 
 	policy_sysfs << "thermal_zone" << index << "/policy";
 	if (cdev_sysfs.exists(policy_sysfs.str().c_str())) {
@@ -92,8 +92,8 @@ int cthd_sensor::set_threshold(int index, int temp) {
 	if (type != SENSOR_TYPE_THERMAL_SYSFS)
 		return THD_ERROR;
 
-	std::stringstream tcdev;
-	std::stringstream thres;
+	std::ostringstream tcdev;
+	std::ostringstream thres;
 	int status = 0;
 
 	if (thd_engine->get_poll_interval())
