@@ -47,12 +47,9 @@ int cthd_cdev_backlight::update() {
 	int ret;
 
 	if (cdev_sysfs.exists()) {
-		std::string temp_str;
-
-		ret = cdev_sysfs.read("max_brightness", temp_str);
+		ret = cdev_sysfs.read("max_brightness", &max_state);
 		if (ret < 0)
 			return ret;
-		std::istringstream(temp_str) >> max_state;
 	}
 
 	if (max_state <= 0)
@@ -105,15 +102,11 @@ void cthd_cdev_backlight::set_curr_state(int state, int arg) {
 	}
 
 	if (ref_backlight_state == 0 && state == inc_dec_val) {
-		std::string temp_str;
-
 		// First time enter to throttle LCD after normal or state == 0
 		// Store the current backlight
-		ret = cdev_sysfs.read("brightness", temp_str);
+		ret = cdev_sysfs.read("brightness", &ref_backlight_state);
 		if (ret < 0)
 			return;
-
-		std::istringstream(temp_str) >> ref_backlight_state;
 
 		thd_log_debug("LCD ref state is %d\n", ref_backlight_state);
 	}

@@ -63,15 +63,13 @@ int cthd_sensor::sensor_update() {
 
 unsigned int cthd_sensor::read_temperature() {
 	csys_fs sysfs;
-	std::string buffer;
 	int temp;
 
 	thd_log_debug("read_temperature sensor ID %d\n", index);
 	if (type == SENSOR_TYPE_THERMAL_SYSFS)
-		sensor_sysfs.read("temp", buffer);
+		sensor_sysfs.read("temp", &temp);
 	else
-		sensor_sysfs.read("", buffer);
-	std::istringstream(buffer) >> temp;
+		sensor_sysfs.read("", &temp);
 	if (temp < 0)
 		temp = 0;
 	thd_log_debug("Sensor %s :temp %u\n", type_str.c_str(), temp);

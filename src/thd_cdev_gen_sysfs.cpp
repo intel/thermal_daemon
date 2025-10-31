@@ -26,9 +26,9 @@
 
 int cthd_gen_sysfs_cdev::update() {
 	if (cdev_sysfs.exists()) {
-		std::string state_str;
-		cdev_sysfs.read("", state_str);
-		std::istringstream(state_str) >> curr_state;
+		int ret = cdev_sysfs.read("", &curr_state);
+		if (ret < 0)
+			return ret;
 		min_state = max_state = curr_state;
 	} else {
 		if (cdev_sysfs.get_base_path().empty())

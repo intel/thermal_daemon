@@ -1226,12 +1226,11 @@ int cthd_gddv::evaluate_oem_condition(const struct condition& condition) {
 
 	if (oem_condition != -1) {
 		std::string filename = "odvp" + std::to_string(oem_condition);
-		std::string data;
-		if (sysfs.read(filename, data) < 0) {
+		int value;
+		if (sysfs.read(filename, &value) < 0) {
 			thd_log_error("Unable to read %s\n", filename.c_str());
 			return THD_ERROR;
 		}
-		int value = std::stoi(data, NULL);
 
 		return compare_condition(condition, value);
 	}
@@ -1347,15 +1346,15 @@ int cthd_gddv::evaluate_power_slider_condition(
  * */
 int cthd_gddv::evaluate_ac_condition(const struct condition& condition) {
         csys_fs cdev_sysfs("/sys/class/power_supply/AC/online");
-        std::string buffer;
         int status = 0;
         int value = 0;
 
         thd_log_debug("evaluate evaluate_ac_condition %" PRIu64 "\n", condition.condition);
         if (cdev_sysfs.exists("")) {
-                        cdev_sysfs.read("", buffer);
-                        std::istringstream(buffer) >> status;
-        thd_log_debug("evaluate found battery sys status=%d\n",status);
+                int ret = cdev_sysfs.read("", &status);
+                if (ret < 0)
+                    return ret;
+                thd_log_debug("evaluate found battery sys status=%d\n",status);
         }
         if (status!=1) {
                 value = 1;
