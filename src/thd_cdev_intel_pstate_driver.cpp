@@ -111,9 +111,9 @@ int cthd_intel_p_state_cdev::update() {
 
 	tc_state_dev << "/max_perf_pct";
 	if (cdev_sysfs.exists(tc_state_dev.str())) {
-		std::string state_str;
-		cdev_sysfs.read(tc_state_dev.str(), state_str);
-		std::istringstream(state_str) >> curr_state;
+		int ret = cdev_sysfs.read(tc_state_dev.str(), &curr_state);
+		if (ret < 0)
+			return ret;
 	} else {
 		return THD_ERROR;
 	}
