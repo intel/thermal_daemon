@@ -826,7 +826,7 @@ void cthd_engine_default::workaround_rapl_mmio_power(void)
 		csys_fs _sysfs("/sys/devices/virtual/powercap/intel-rapl-mmio/intel-rapl-mmio:0/");
 
 		if (_sysfs.exists()) {
-			std::stringstream temp_str;
+			std::ostringstream temp_str;
 
 			temp_str << "enabled";
 			if (_sysfs.write(temp_str.str(), 0) > 0)

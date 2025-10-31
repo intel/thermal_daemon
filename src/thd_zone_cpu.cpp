@@ -59,8 +59,8 @@ int cthd_zone_cpu::init() {
 
 	// Calculate the temperature trip points using the settings in coretemp
 	for (int i = 0; i < max_dts_sensors; ++i) {
-		std::stringstream temp_crit_str;
-		std::stringstream temp_max_str;
+		std::ostringstream temp_crit_str;
+		std::ostringstream temp_max_str;
 
 		temp_crit_str << "temp" << i << "_crit";
 		temp_max_str << "temp" << i << "_max";
@@ -241,7 +241,7 @@ int cthd_zone_cpu::zone_bind_sensors() {
 	unsigned int mask = 0x1;
 	do {
 		if (sensor_mask & mask) {
-			std::stringstream temp_input_str;
+			std::ostringstream temp_input_str;
 			temp_input_str << "temp" << cnt << "_input";
 			cthd_sensor *sensor;
 
