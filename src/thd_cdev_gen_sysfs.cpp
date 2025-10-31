@@ -49,7 +49,7 @@ int cthd_gen_sysfs_cdev::update() {
 
 void cthd_gen_sysfs_cdev::set_curr_state(int state, int arg) {
 
-	std::stringstream state_str;
+	std::ostringstream state_str;
 
 	if (write_prefix.length())
 		state_str << write_prefix;
