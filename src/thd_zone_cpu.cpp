@@ -66,9 +66,9 @@ int cthd_zone_cpu::init() {
 		temp_max_str << "temp" << i << "_max";
 
 		if (dts_sysfs.exists(temp_crit_str.str())) {
-			std::string temp_str;
-			dts_sysfs.read(temp_crit_str.str(), temp_str);
-			std::istringstream(temp_str) >> temp;
+			int ret = dts_sysfs.read(temp_crit_str.str(), &temp);
+			if (ret < 0)
+				return ret;
 			if (critical_temp == 0 || temp < critical_temp)
 				critical_temp = temp;
 
@@ -79,9 +79,9 @@ int cthd_zone_cpu::init() {
 			// Set which index is present
 			sensor_mask = sensor_mask | (1 << i);
 
-			std::string temp_str;
-			dts_sysfs.read(temp_max_str.str(), temp_str);
-			std::istringstream(temp_str) >> temp;
+			int ret = dts_sysfs.read(temp_max_str.str(), &temp);
+			if (ret < 0)
+				return ret;
 			if (max_temp == 0 || temp < max_temp)
 				max_temp = temp;
 			found = true;
