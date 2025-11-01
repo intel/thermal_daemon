@@ -202,7 +202,7 @@ public:
 		return cdevs[0].cdev;
 	}
 
-	void set_dependency(std::string cdev, std::string state_str);
+	void set_dependency(const std::string& cdev, const std::string& state_str);
 
 #ifndef ANDROID
 	trip_pt_cdev_t &get_cdev_at_index(unsigned int index) {

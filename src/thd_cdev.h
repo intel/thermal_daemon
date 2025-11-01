@@ -89,7 +89,7 @@ private:
 public:
 	static const int default_debounce_interval = 2; // In seconds
 	cthd_cdev(unsigned int _index, std::string control_path) :
-			index(_index), cdev_sysfs(control_path.c_str()), trip_point(0), max_state(
+			index(_index), cdev_sysfs(std::move(control_path)), trip_point(0), max_state(
 					0), min_state(0), curr_state(0), curr_pow(0), base_pow_state(
 					0), inc_dec_val(1), auto_down_adjust(false), read_back(
 					true), debounce_interval(default_debounce_interval), last_action_time(
