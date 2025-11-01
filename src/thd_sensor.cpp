@@ -25,7 +25,7 @@
 #include "thd_sensor.h"
 #include "thd_engine.h"
 
-cthd_sensor::cthd_sensor(int _index, std::string control_path,
+cthd_sensor::cthd_sensor(int _index, const std::string& control_path,
 		std::string _type_str, int _type) :
 		index(_index), type(_type), sensor_sysfs(control_path.c_str()), sensor_active(
 				false), type_str(std::move(_type_str)), async_capable(false), virtual_sensor(

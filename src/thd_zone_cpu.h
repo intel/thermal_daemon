@@ -54,7 +54,7 @@ public:
 	static const int def_offset_from_critical = 10000;
 	static const int def_critical_temp = 100000;
 
-	cthd_zone_cpu(int count, std::string path, int package_id);
+	cthd_zone_cpu(int count, const std::string& path, int package_id);
 	int load_cdev_xml(cthd_trip_point &trip_pt, std::vector<std::string> &list);
 
 	virtual int read_trip_points();

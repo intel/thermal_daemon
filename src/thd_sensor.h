@@ -49,7 +49,7 @@ private:
 	void enable_uevent();
 
 public:
-	cthd_sensor(int _index, std::string control_path, std::string _type_str,
+	cthd_sensor(int _index, const std::string& control_path, std::string _type_str,
 			int _type = SENSOR_TYPE_THERMAL_SYSFS);
 	virtual ~cthd_sensor() {
 	}

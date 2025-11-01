@@ -36,7 +36,7 @@ public:
 	static const int max_trip_points = 50;
 	static const int max_cool_devs = 50;
 
-	cthd_sysfs_zone(int count, std::string path);
+	cthd_sysfs_zone(int count, const std::string& path);
 	~cthd_sysfs_zone();
 
 	virtual int read_trip_points();

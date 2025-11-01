@@ -34,7 +34,7 @@
 #include "thd_zone.h"
 #include "thd_engine.h"
 
-cthd_zone::cthd_zone(int _index, std::string control_path, sensor_relate_t rel) :
+cthd_zone::cthd_zone(int _index, const std::string& control_path, sensor_relate_t rel) :
 		index(_index), zone_sysfs(control_path.c_str()), zone_temp(0), zone_active(
 				false), zone_cdev_binded_status(false), type_str(), sensor_rel(
 				rel) {

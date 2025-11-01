@@ -26,8 +26,8 @@
 #include "thd_engine.h"
 #include <stdlib.h>
 
-cthd_sysfs_zone::cthd_sysfs_zone(int count, std::string path) :
-		cthd_zone(count, std::move(path)), trip_point_cnt(0) {
+cthd_sysfs_zone::cthd_sysfs_zone(int count, const std::string& path) :
+		cthd_zone(count, path), trip_point_cnt(0) {
 
 	std::stringstream tc_type_dev;
 	tc_type_dev << index << "/type";
