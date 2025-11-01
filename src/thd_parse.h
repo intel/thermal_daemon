@@ -199,13 +199,13 @@ private:
 
 public:
 	cthd_parse();
-	int parser_init(std::string config_file);
+	int parser_init(const std::string& config_file);
 	void parser_deinit();
 	int start_parse();
 	void dump_thermal_conf();
 	bool platform_matched();
 	int get_polling_interval();
-	ppcc_t *get_ppcc_param(std::string name);
+	ppcc_t *get_ppcc_param(const std::string& name);
 	int zone_count() {
 		return thermal_info_list[matched_thermal_info_index].zones.size();
 	}
