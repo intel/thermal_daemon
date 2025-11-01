@@ -122,7 +122,7 @@ int cthd_engine_adaptive::install_passive(struct psv *psv) {
 	return 0;
 }
 
-void cthd_engine_adaptive::set_trip(std::string target, std::string argument) {
+void cthd_engine_adaptive::set_trip(const std::string& target, const std::string& argument) {
 	std::string psv_zone;
 	float float_temp = stof(argument, NULL);
 	int temp = (int) (float_temp * 1000);

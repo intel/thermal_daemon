@@ -57,9 +57,9 @@ unsigned int cthd_sensor_virtual::read_temperature() {
 	return temp;
 }
 
-int cthd_sensor_virtual::sensor_update_param(std::string new_dep_sensor, double slope, double intercept)
+int cthd_sensor_virtual::sensor_update_param(const std::string& new_dep_sensor, double slope, double intercept)
 {
-	cthd_sensor *sensor = thd_engine->search_sensor(std::move(new_dep_sensor));
+	cthd_sensor *sensor = thd_engine->search_sensor(new_dep_sensor);
 
 	if (sensor)
 		link_sensor = sensor;

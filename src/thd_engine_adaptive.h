@@ -52,7 +52,7 @@ protected:
 	int install_passive(struct psv *psv);
 	int install_itmt(struct itmt_entry *itmt_entry);
 	void psvt_consolidate();
-	void set_trip(std::string device, std::string argument);
+	void set_trip(const std::string& device, const std::string& argument);
 	void set_int3400_target(struct adaptive_target &target);
 	void exec_fallback_target(int target);
 	void execute_target(struct adaptive_target &target);
@@ -77,8 +77,8 @@ public:
 
 	~cthd_engine_adaptive() {
 	}
-	ppcc_t* get_ppcc_param(std::string name) {
-		return gddv.get_ppcc_param(std::move(name));
+	ppcc_t* get_ppcc_param(const std::string& name) {
+		return gddv.get_ppcc_param(name);
 	}
 
 	int search_idsp(std::string name)

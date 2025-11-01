@@ -110,7 +110,7 @@ int cthd_engine_default::read_thermal_sensors() {
 					// Check name
 					std::string name_path = base_path[i] + entry->d_name
 							+ "/name";
-					csys_fs name_sysfs(name_path.c_str());
+					csys_fs name_sysfs(name_path);
 					if (!name_sysfs.exists()) {
 						thd_log_info("dts %s doesn't exist\n",
 								name_path.c_str());
@@ -373,7 +373,7 @@ int cthd_engine_default::read_thermal_zones() {
 
 						std::string name_path = base_path[i] + entry->d_name
 								+ "/name";
-						csys_fs name_sysfs(name_path.c_str());
+						csys_fs name_sysfs(name_path);
 						if (!name_sysfs.exists()) {
 							thd_log_info("dts zone %s doesn't exist\n",
 									name_path.c_str());

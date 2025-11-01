@@ -47,7 +47,7 @@ public:
 					multiplier, offset);
 	}
 
-	int sensor_update_param(std::string new_dep_sensor, double slope, double intercept);
+	int sensor_update_param(const std::string& new_dep_sensor, double slope, double intercept);
 
 };
 

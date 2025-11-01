@@ -72,7 +72,7 @@ cthd_parse::cthd_parse() :
 	filename_auto_conf = name_conf + "/" + "thermal-conf.xml.auto";
 }
 
-int cthd_parse::parser_init(std::string config_file) {
+int cthd_parse::parser_init(const std::string& config_file) {
 	cthd_acpi_rel rel;
 	const char *xml_config_file;
 	int ret;
@@ -978,7 +978,7 @@ thermal_zone_t *cthd_parse::get_zone_dev_index(unsigned int zone_index) {
 
 }
 
-ppcc_t *cthd_parse::get_ppcc_param(std::string name) {
+ppcc_t *cthd_parse::get_ppcc_param(const std::string& name) {
 	if (name != "TCPU.D0")
 		return NULL;
 

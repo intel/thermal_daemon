@@ -40,11 +40,11 @@ int _temp, unsigned int _hyst, int _zone_id, int _sensor_id,
 			temp, hyst);
 }
 
-void cthd_trip_point::set_dependency(std::string cdev, std::string state_str)
+void cthd_trip_point::set_dependency(const std::string& cdev, const std::string& state_str)
 {
 	cthd_cdev *cdev_ptr;
 
-	cdev_ptr = thd_engine->search_cdev(std::move(cdev));
+	cdev_ptr = thd_engine->search_cdev(cdev);
 	if (cdev_ptr) {
 		int match;
 		int state_index = 0;

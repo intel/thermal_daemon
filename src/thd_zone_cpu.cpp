@@ -41,12 +41,12 @@ const char *def_cooling_devices[] = { "rapl_controller", "intel_pstate",
 		"intel_powerclamp", "cpufreq", "Processor", NULL };
 
 cthd_zone_cpu::cthd_zone_cpu(int index, std::string path, int package_id) :
-		cthd_zone(index, path, SENSORS_CORELATED), dts_sysfs(path.c_str()), critical_temp(
+		cthd_zone(index, path, SENSORS_CORELATED), dts_sysfs(std::move(path)), critical_temp(
 				0), max_temp(0), psv_temp(0), trip_point_cnt(0), sensor_mask(0), phy_package_id(
 				package_id), pkg_thres_th_zone(-1), pkg_temp_poll_enable(false) {
 
 	type_str = "cpu";
-	thd_log_debug("zone dts syfs: %s, package id %d\n", path.c_str(),
+	thd_log_debug("zone dts syfs: %s, package id %d\n", dts_sysfs.get_base_path().c_str(),
 			package_id);
 }
 

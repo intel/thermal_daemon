@@ -467,7 +467,7 @@ void cthd_gddv::dump_apct() {
 	thd_log_info("..apct dump end..\n");
 }
 
-ppcc_t* cthd_gddv::get_ppcc_param(std::string name) {
+ppcc_t* cthd_gddv::get_ppcc_param(const std::string& name) {
 	if (name != "TCPU.D0")
 		return NULL;
 
@@ -764,7 +764,7 @@ void cthd_gddv::dump_idsps() {
 	thd_log_info("idsp dump end\n");
 }
 
-int cthd_gddv::search_idsp(std::string name)
+int cthd_gddv::search_idsp(const std::string& name)
 {
 	for (unsigned int i = 0; i < idsps.size(); ++i) {
 		if (!idsps[i].compare(0, 36, name))
@@ -804,7 +804,7 @@ void cthd_gddv::dump_trips() {
 	thd_log_info("trippoint dump end\n");
 }
 
-int cthd_gddv::get_trip_temp(std::string name, trip_point_type_t type) {
+int cthd_gddv::get_trip_temp(const std::string& name, trip_point_type_t type) {
 	std::string search_name = name + ".D0";
 	for (unsigned int i = 0; i < trippoints.size(); ++i) {
 		if (!trippoints[i].name.compare(search_name)
@@ -1087,7 +1087,7 @@ int cthd_gddv::parse_gddv(char *buf, int size, int *end_offset) {
 	return 0;
 }
 
-int cthd_gddv::verify_condition(struct condition condition) {
+int cthd_gddv::verify_condition(const struct condition& condition) {
 	const char *cond_name;
 
 	if (condition.condition >= Oem0 && condition.condition <= Oem5)
@@ -1139,7 +1139,7 @@ int cthd_gddv::verify_conditions() {
 	return result;
 }
 
-int cthd_gddv::compare_condition(struct condition condition,
+int cthd_gddv::compare_condition(const struct condition& condition,
 		int value) {
 
 	if (thd_engine && thd_engine->debug_mode_on()) {
@@ -1187,7 +1187,7 @@ int cthd_gddv::compare_condition(struct condition condition,
 	}
 }
 
-int cthd_gddv::compare_time(struct condition condition) {
+int cthd_gddv::compare_time(const struct condition& condition) {
 	int elapsed = time(NULL) - condition.state_entry_time;
 
 	switch (condition.time_comparison) {
@@ -1214,8 +1214,8 @@ int cthd_gddv::compare_time(struct condition condition) {
 	}
 }
 
-int cthd_gddv::evaluate_oem_condition(struct condition condition) {
-	csys_fs sysfs(int3400_base_path.c_str());
+int cthd_gddv::evaluate_oem_condition(const struct condition& condition) {
+	csys_fs sysfs(int3400_base_path);
 	int oem_condition = -1;
 
 	if (condition.condition >= Oem0 && condition.condition <= Oem5)
@@ -1233,7 +1233,7 @@ int cthd_gddv::evaluate_oem_condition(struct condition condition) {
 		}
 		int value = std::stoi(data, NULL);
 
-		return compare_condition(std::move(condition), value);
+		return compare_condition(condition, value);
 	}
 
 	return THD_ERROR;
@@ -1252,7 +1252,7 @@ int cthd_gddv::evaluate_temperature_condition(
 	else
 		sensor_name = condition.device.substr(pos + 1);
 
-	cthd_sensor *sensor = thd_engine->search_sensor(std::move(sensor_name));
+	cthd_sensor *sensor = thd_engine->search_sensor(sensor_name);
 	if (!sensor) {
 		thd_log_info("Unable to find a sensor for %s\n",
 				condition.device.c_str());
@@ -1265,17 +1265,17 @@ int cthd_gddv::evaluate_temperature_condition(
 	// Conditions are specified in decikelvin, temperatures are in
 	// millicelsius.
 	value = value / 100 + 2732;
-	return compare_condition(std::move(condition), value);
+	return compare_condition(condition, value);
 }
 
 #ifdef ANDROID
-int cthd_gddv::evaluate_lid_condition(struct condition condition) {
+int cthd_gddv::evaluate_lid_condition(const struct condition& condition) {
         int value = 1;
 
         return compare_condition(condition, value);
 }
 #else
-int cthd_gddv::evaluate_lid_condition(struct condition condition) {
+int cthd_gddv::evaluate_lid_condition(const struct condition& condition) {
 	int value = 0;
 
 	if (lid_dev) {
@@ -1287,16 +1287,16 @@ int cthd_gddv::evaluate_lid_condition(struct condition condition) {
 		int lid_closed = libevdev_get_event_value(lid_dev, EV_SW, SW_LID);
 		value = !lid_closed;
 	}
-	return compare_condition(std::move(condition), value);
+	return compare_condition(condition, value);
 }
 #endif
 
 int cthd_gddv::evaluate_workload_condition(
-		struct condition condition) {
+		const struct condition& condition) {
 	// We don't have a good way to assert workload at the moment, so just
 	// default to bursty
 
-	return compare_condition(std::move(condition), 3);
+	return compare_condition(condition, 3);
 }
 
 #ifdef ANDROID
@@ -1307,14 +1307,14 @@ int cthd_gddv::evaluate_workload_condition(
  * Other/Invalid(0)
  * */
 int cthd_gddv::evaluate_platform_type_condition(
-                struct condition condition) {
+                const struct condition& condition) {
         int value = 2;//Tablet
 
         return compare_condition(condition, value);
 }
 #else
 int cthd_gddv::evaluate_platform_type_condition(
-		struct condition condition) {
+		const struct condition& condition) {
 	int value = 1;
 
 	if (tablet_dev) {
@@ -1328,14 +1328,14 @@ int cthd_gddv::evaluate_platform_type_condition(
 		if (tablet)
 			value = 2;
 	}
-	return compare_condition(std::move(condition), value);
+	return compare_condition(condition, value);
 }
 #endif
 
 int cthd_gddv::evaluate_power_slider_condition(
-		struct condition condition) {
+		const struct condition& condition) {
 
-	return compare_condition(std::move(condition), power_slider);
+	return compare_condition(condition, power_slider);
 }
 
 #ifdef ANDROID
@@ -1345,7 +1345,7 @@ int cthd_gddv::evaluate_power_slider_condition(
  DC(1)
  Short Term DC(2)
  * */
-int cthd_gddv::evaluate_ac_condition(struct condition condition) {
+int cthd_gddv::evaluate_ac_condition(const struct condition& condition) {
         csys_fs cdev_sysfs("/sys/class/power_supply/AC/online");
         std::string buffer;
         int status = 0;
@@ -1365,14 +1365,14 @@ int cthd_gddv::evaluate_ac_condition(struct condition condition) {
         return compare_condition(condition, value);
 }
 #else
-int cthd_gddv::evaluate_ac_condition(struct condition condition) {
+int cthd_gddv::evaluate_ac_condition(const struct condition& condition) {
 	int value = 0;
 	bool on_battery = up_client_get_on_battery(upower_client);
 
 	if (on_battery)
 		value = 1;
 
-	return compare_condition(std::move(condition), value);
+	return compare_condition(condition, value);
 }
 #endif
 
@@ -1425,7 +1425,7 @@ int cthd_gddv::evaluate_condition(struct condition condition) {
 		if (condition.time && condition.state_entry_time == 0) {
 			condition.state_entry_time = time(NULL);
 		}
-		ret = compare_time(std::move(condition));
+		ret = compare_time(condition);
 	} else {
 		condition.state_entry_time = 0;
 	}
@@ -1434,7 +1434,7 @@ int cthd_gddv::evaluate_condition(struct condition condition) {
 }
 
 int cthd_gddv::evaluate_condition_set(
-		std::vector<struct condition> condition_set) {
+		const std::vector<struct condition>& condition_set) {
 	for (int i = 0; i < (int) condition_set.size(); i++) {
 		thd_log_debug("evaluate condition.condition at index %d\n", i);
 		if (evaluate_condition(condition_set[i]) != 0)
@@ -1459,7 +1459,7 @@ int cthd_gddv::evaluate_conditions() {
 	return target;
 }
 
-struct psvt* cthd_gddv::find_psvt(std::string name) {
+struct psvt* cthd_gddv::find_psvt(const std::string& name) {
 	for (int i = 0; i < (int) psvts.size(); i++) {
 		if (!strcasecmp(psvts[i].name.c_str(), name.c_str())) {
 			return &psvts[i];
@@ -1469,7 +1469,7 @@ struct psvt* cthd_gddv::find_psvt(std::string name) {
 	return NULL;
 }
 
-struct itmt* cthd_gddv::find_itmt(std::string name) {
+struct itmt* cthd_gddv::find_itmt(const std::string& name) {
 	for (int i = 0; i < (int) itmts.size(); i++) {
 		if (!strcasecmp(itmts[i].name.c_str(), name.c_str())) {
 			return &itmts[i];

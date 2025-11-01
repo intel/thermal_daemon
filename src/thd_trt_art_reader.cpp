@@ -79,7 +79,7 @@ static void associate_device(sub_type_t type, string &name) {
 					name_path.clear();
 					name_path = base_path + entry->d_name + "/"
 							+ std::string(buf) + "/";
-					csys_fs acpi_sysfs(name_path.c_str());
+					csys_fs acpi_sysfs(name_path);
 					std::string uid;
 					if (acpi_sysfs.exists("uid")) {
 						ret = acpi_sysfs.read("uid", uid);
@@ -144,7 +144,7 @@ cthd_acpi_rel::cthd_acpi_rel() :
 
 }
 
-int cthd_acpi_rel::process_psvt(std::string file_name) {
+int cthd_acpi_rel::process_psvt(const std::string& file_name) {
 	cthd_INT3400 int3400 ("9E04115A-AE87-4D1C-9500-0F3E340BFE75");
 	std::string prefix;
 	int ret;
@@ -217,7 +217,7 @@ int cthd_acpi_rel::process_psvt(std::string file_name) {
 	return THD_SUCCESS;
 }
 
-int cthd_acpi_rel::generate_conf(std::string file_name) {
+int cthd_acpi_rel::generate_conf(const std::string& file_name) {
 	int trt_status;
 	string prefix;
 	int art_status;
@@ -564,7 +564,7 @@ void cthd_acpi_rel::add_active_trip_point(rel_object_t &rel_obj) {
 	conf_file << prefix.c_str() << "</TripPoint>\n";
 }
 
-void cthd_acpi_rel::create_thermal_zone(string type) {
+void cthd_acpi_rel::create_thermal_zone(const string& type) {
 	unsigned int i;
 
 	indentation += "\t";
