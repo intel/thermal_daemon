@@ -49,7 +49,7 @@ cthd_rapl_power_meter::cthd_rapl_power_meter(unsigned int mask) :
 		thd_log_debug("RAPL sysfs present\n");
 		rapl_present = true;
 		last_time = time(NULL);
-		rapl_read_domains(rapl_sysfs.get_base_path());
+		rapl_read_domains(rapl_sysfs.get_base_path().c_str());
 	} else {
 		thd_log_warn("NO RAPL sysfs present\n");
 		rapl_present = false;
@@ -117,7 +117,7 @@ void cthd_rapl_power_meter::rapl_read_domains(const char *dir_name) {
 			closedir(dir);
 		} else {
 			thd_log_debug("opendir failed %s :%s\n", strerror(errno),
-					rapl_sysfs.get_base_path());
+					rapl_sysfs.get_base_path().c_str());
 		}
 	}
 

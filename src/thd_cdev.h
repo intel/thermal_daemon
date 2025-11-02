@@ -236,7 +236,7 @@ public:
 	std::string get_cdev_alias() {
 		return alias_str;
 	}
-	std::string get_base_path() {
+	const std::string& get_base_path() {
 		return cdev_sysfs.get_base_path();
 	}
 	void set_cdev_type(std::string _type_str) {

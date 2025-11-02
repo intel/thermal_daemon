@@ -54,7 +54,7 @@ int cthd_sensor::sensor_update() {
 			return THD_SUCCESS;
 		} else {
 			thd_log_msg("sensor id %d %s: No temp sysfs for reading raw temp\n",
-					index, sensor_sysfs.get_base_path());
+					index, sensor_sysfs.get_base_path().c_str());
 			return THD_ERROR;
 		}
 	}
