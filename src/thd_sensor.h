@@ -54,11 +54,11 @@ public:
 	virtual ~cthd_sensor() {
 	}
 	int sensor_update();
-	virtual std::string get_sensor_type() {
+	virtual const std::string& get_sensor_type() {
 		return type_str;
 	}
 
-	virtual std::string get_sensor_path() {
+	virtual const std::string& get_sensor_path() {
 		return sensor_sysfs.get_base_path();
 	}
 
@@ -82,7 +82,7 @@ public:
 	}
 	virtual void sensor_dump() {
 		thd_log_info("sensor index:%d %s %s Async:%d\n", index,
-				type_str.c_str(), sensor_sysfs.get_base_path(), async_capable);
+				type_str.c_str(), sensor_sysfs.get_base_path().c_str(), async_capable);
 	}
 	// Even if sensors are capable of async, it is possible that it is not reliable enough
 	// at critical monitoring point. Sensors can be forced to go to poll mode at that temp

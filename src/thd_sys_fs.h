@@ -62,8 +62,8 @@ public:
 	int read(const std::string &path, unsigned int position, char *buf,
 			int len);
 
-	const char *get_base_path() {
-		return base_path.c_str();
+	const std::string& get_base_path() {
+		return base_path;
 	}
 	int read_symbolic_link_value(const std::string &path, char *buf, int len);
 
