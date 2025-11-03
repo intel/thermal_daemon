@@ -1578,6 +1578,8 @@ void cthd_gddv::setup_input_devices() {
 		}
 	}
 
+	for (i = 0; i < ndev; i++)
+		free(namelist[i]);
 	free(namelist);
 }
 #endif
