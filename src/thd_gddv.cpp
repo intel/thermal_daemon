@@ -1558,6 +1558,7 @@ void cthd_gddv::setup_input_devices() {
 		int fd = -1;
 
 		snprintf(fname, sizeof(fname), "/dev/input/%s", namelist[i]->d_name);
+		free(namelist[i]);
 		fd = open(fname, O_RDONLY | O_NONBLOCK | O_CLOEXEC);
 		if (fd < 0)
 			continue;
