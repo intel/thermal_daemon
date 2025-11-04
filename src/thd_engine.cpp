@@ -858,7 +858,7 @@ int cthd_engine::check_cpu_id() {
 	}
 
 
-	for (std::string path : blocklist_paths) {
+	for (const std::string& path : blocklist_paths) {
 		struct stat s;
 
 		if (!stat(path.c_str(), &s)) {
@@ -980,11 +980,11 @@ void cthd_engine::thd_read_default_cooling_devices() {
 			cdevs.size());
 }
 
-ppcc_t* cthd_engine::get_ppcc_param(std::string name) {
-	return parser.get_ppcc_param(std::move(name));
+ppcc_t* cthd_engine::get_ppcc_param(const std::string& name) {
+	return parser.get_ppcc_param(name);
 }
 
-cthd_zone* cthd_engine::search_zone(std::string name) {
+cthd_zone* cthd_engine::search_zone(const std::string& name) {
 	cthd_zone *zone;
 
 	for (unsigned int i = 0; i < zones.size(); ++i) {
@@ -1005,7 +1005,7 @@ cthd_zone* cthd_engine::search_zone(std::string name) {
 	return NULL;
 }
 
-cthd_cdev* cthd_engine::search_cdev(std::string name) {
+cthd_cdev* cthd_engine::search_cdev(const std::string& name) {
 	cthd_cdev *cdev;
 
 	for (unsigned int i = 0; i < cdevs.size(); ++i) {
@@ -1022,7 +1022,7 @@ cthd_cdev* cthd_engine::search_cdev(std::string name) {
 }
 
 // Partial match instead of full match
-cthd_cdev* cthd_engine::match_cdev(std::string name) {
+cthd_cdev* cthd_engine::match_cdev(const std::string& name) {
 	cthd_cdev *cdev;
 
 	for (unsigned int i = 0; i < cdevs.size(); ++i) {
@@ -1039,7 +1039,7 @@ cthd_cdev* cthd_engine::match_cdev(std::string name) {
 	return NULL;
 }
 
-cthd_sensor* cthd_engine::search_sensor(std::string name) {
+cthd_sensor* cthd_engine::search_sensor(const std::string& name) {
 	cthd_sensor *sensor;
 
 	for (unsigned int i = 0; i < sensors.size(); ++i) {
@@ -1085,7 +1085,7 @@ cthd_zone* cthd_engine::get_zone(int index) {
 		return NULL;
 }
 
-cthd_zone* cthd_engine::get_zone(std::string type) {
+cthd_zone* cthd_engine::get_zone(const std::string& type) {
 	cthd_zone *zone;
 
 	for (unsigned int i = 0; i < zones.size(); ++i) {
@@ -1213,12 +1213,12 @@ cthd_cdev *cthd_engine::user_get_cdev(unsigned int index) {
 		return NULL;
 }
 
-int cthd_engine::user_set_psv_temp(std::string name, unsigned int temp) {
+int cthd_engine::user_set_psv_temp(const std::string& name, unsigned int temp) {
 	cthd_zone *zone;
 	int ret;
 
 	pthread_mutex_lock(&thd_engine_mutex);
-	zone = get_zone(std::move(name));
+	zone = get_zone(name);
 	if (!zone) {
 		pthread_mutex_unlock(&thd_engine_mutex);
 		thd_log_warn("user_set_psv_temp\n");
@@ -1231,12 +1231,12 @@ int cthd_engine::user_set_psv_temp(std::string name, unsigned int temp) {
 	return ret;
 }
 
-int cthd_engine::user_set_max_temp(std::string name, unsigned int temp) {
+int cthd_engine::user_set_max_temp(const std::string& name, unsigned int temp) {
 	cthd_zone *zone;
 	int ret;
 
 	pthread_mutex_lock(&thd_engine_mutex);
-	zone = get_zone(std::move(name));
+	zone = get_zone(name);
 	if (!zone) {
 		pthread_mutex_unlock(&thd_engine_mutex);
 		thd_log_warn("user_set_max_temp\n");
@@ -1276,11 +1276,11 @@ int cthd_engine::user_add_zone(std::string zone_name, unsigned int trip_temp,
 	return ret;
 }
 
-int cthd_engine::user_set_zone_status(std::string name, int status) {
+int cthd_engine::user_set_zone_status(const std::string& name, int status) {
 	cthd_zone *zone;
 
 	pthread_mutex_lock(&thd_engine_mutex);
-	zone = get_zone(std::move(name));
+	zone = get_zone(name);
 	if (!zone) {
 		pthread_mutex_unlock(&thd_engine_mutex);
 		return THD_ERROR;
@@ -1297,11 +1297,11 @@ int cthd_engine::user_set_zone_status(std::string name, int status) {
 	return THD_SUCCESS;
 }
 
-int cthd_engine::user_get_zone_status(std::string name, int *status) {
+int cthd_engine::user_get_zone_status(const std::string& name, int *status) {
 	cthd_zone *zone;
 
 	pthread_mutex_lock(&thd_engine_mutex);
-	zone = get_zone(std::move(name));
+	zone = get_zone(name);
 	if (!zone) {
 		pthread_mutex_unlock(&thd_engine_mutex);
 		return THD_ERROR;
@@ -1317,7 +1317,7 @@ int cthd_engine::user_get_zone_status(std::string name, int *status) {
 	return THD_SUCCESS;
 }
 
-int cthd_engine::user_delete_zone(std::string name) {
+int cthd_engine::user_delete_zone(const std::string& name) {
 	pthread_mutex_lock(&thd_engine_mutex);
 	for (unsigned int i = 0; i < zones.size(); ++i) {
 		if (zones[i]->get_zone_type() == name) {

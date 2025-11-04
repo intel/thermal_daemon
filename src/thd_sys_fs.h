@@ -43,9 +43,8 @@ public:
 	csys_fs() :
 			base_path("") {
 	}
-	;
-	csys_fs(const char *path) :
-			base_path(path) {
+	csys_fs(std::string path) :
+			base_path(std::move(path)) {
 	}
 
 	/* write data to base path (dir) + provided path */
