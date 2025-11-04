@@ -64,7 +64,7 @@ class _gddv_exception: public std::exception {
 	virtual const char* what() const throw () {
 		return "GDDV parsing failed";
 	}
-} gddv_exception;
+} const gddv_exception;  // TODO: why singleton
 
 void cthd_gddv::destroy_dynamic_sources() {
 #ifndef ANDROID
@@ -347,7 +347,7 @@ int cthd_gddv::parse_apct(char *apct, int len) {
 	return 0;
 }
 
-static const char *condition_names[] = {
+static const char * const condition_names[] = {
 		"Invalid",
 		"Default",
 		"Orientation",
@@ -407,7 +407,7 @@ static const char *condition_names[] = {
 		"Power_slider"
 };
 
-static const char *comp_strs[] = {
+static const char * const comp_strs[] = {
 		"INVALID",
 		"ADAPTIVE_EQUAL",
 		"ADAPTIVE_LESSER_OR_EQUAL",

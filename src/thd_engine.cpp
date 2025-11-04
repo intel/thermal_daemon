@@ -767,7 +767,7 @@ void cthd_engine::thd_engine_reload_zones() {
 
 // Add any tested platform ids in this table
 #ifndef ANDROID
-static supported_ids_t id_table[] = {
+static const supported_ids_t id_table[] = {
 		{ 6, 0x2a }, // Sandybridge
 		{ 6, 0x3a }, // IvyBridge
 		{ 6, 0x3c }, // Haswell
@@ -806,7 +806,7 @@ static supported_ids_t id_table[] = {
 		{ 0, 0 } // Last Invalid entry
 };
 
-std::vector<std::string> blocklist_paths {
+const char * const blocklist_paths[] {
 	/* Some Lenovo machines have in-firmware thermal management,
 	 * avoid having two entities trying to manage things.
 	 * We may want to change this to dytc_perfmode once that is
@@ -858,12 +858,12 @@ int cthd_engine::check_cpu_id() {
 	}
 
 
-	for (const std::string& path : blocklist_paths) {
+	for (const char *path : blocklist_paths) {
 		struct stat s;
 
-		if (!stat(path.c_str(), &s)) {
+		if (!stat(path, &s)) {
 			proc_list_matched = false;
-			thd_log_warn("[%s] present: Thermald can't run on this platform\n", path.c_str());
+			thd_log_warn("[%s] present: Thermald can't run on this platform\n", path);
 			break;
 		}
 	}
