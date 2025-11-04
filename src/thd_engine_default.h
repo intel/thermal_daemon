@@ -31,7 +31,7 @@
 
 class cthd_engine_default: public cthd_engine {
 private:
-	int add_replace_cdev(cooling_dev_t *config);
+	int add_replace_cdev(const cooling_dev_t *config);
 	bool add_int340x_processor_dev(void);
 	void disable_cpu_zone(thermal_zone_t *zone_config);
 	void workaround_rapl_mmio_power(void);

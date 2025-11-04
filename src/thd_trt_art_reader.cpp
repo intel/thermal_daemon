@@ -40,15 +40,15 @@ typedef struct {
 } sub_string_t;
 
 
-sub_string_t source_substitue_strings[] = { { "TPCH", "pch_wildcat_point" }, {
+const sub_string_t source_substitue_strings[] = { { "TPCH", "pch_wildcat_point" }, {
 		NULL, NULL } };
 
-sub_string_t target_substitue_strings[] = { { "B0D4", "rapl_controller" }, {
+const sub_string_t target_substitue_strings[] = { { "B0D4", "rapl_controller" }, {
 		"DPLY", "LCD" }, { "DISP", "LCD" }, { "TMEM", "rapl_controller_dram" },
 		{ "TCPU", "rapl_controller" }, { "B0DB", "rapl_controller" }, { NULL,
 		NULL } };
 
-sub_string_t sensor_substitue_strings[] = { { "TPCH", "pch_wildcat_point" }, {
+const sub_string_t sensor_substitue_strings[] = { { "TPCH", "pch_wildcat_point" }, {
 		NULL, NULL } };
 
 typedef enum {
@@ -117,7 +117,7 @@ static void associate_device(sub_type_t type, string &name) {
 
 static void subtitute_string(sub_type_t type, string &name) {
 	int i = 0;
-	sub_string_t *list;
+	const sub_string_t *list;
 
 	if (type == TARGET_DEV) {
 		associate_device(type, name);
