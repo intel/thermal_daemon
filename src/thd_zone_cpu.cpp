@@ -37,7 +37,7 @@
 #include "thd_engine_default.h"
 #include "thd_cdev_order_parser.h"
 
-const char *def_cooling_devices[] = { "rapl_controller", "intel_pstate",
+const char * const def_cooling_devices[] = { "rapl_controller", "intel_pstate",
 		"intel_powerclamp", "cpufreq", "Processor", NULL };
 
 cthd_zone_cpu::cthd_zone_cpu(int index, std::string path, int package_id) :

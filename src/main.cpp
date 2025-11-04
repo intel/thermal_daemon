@@ -58,7 +58,7 @@ extern int thd_dbus_server_init(gboolean (*exit_handler)(void));
 
 // Lock file
 static int lock_file_handle = -1;
-static const char *lock_file = TDRUNDIR "/thermald.pid";
+static const char * const lock_file = TDRUNDIR "/thermald.pid";
 
 // Default log level
 static int thd_log_level = G_LOG_LEVEL_ERROR | G_LOG_LEVEL_CRITICAL
