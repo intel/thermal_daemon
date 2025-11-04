@@ -56,7 +56,7 @@
  .pid = {0.0, 0.0, 0.0}},
  };
  */
-static cooling_dev_t cpu_def_cooling_devices[] = {
+static const cooling_dev_t cpu_def_cooling_devices[] = {
 		{ true, CDEV_DEF_BIT_UNIT_VAL
 				| CDEV_DEF_BIT_READ_BACK | CDEV_DEF_BIT_MIN_STATE | CDEV_DEF_BIT_STEP,
 				0, ABSOULUTE_VALUE, 0, 0, 5, false, false, "intel_powerclamp", "", 4,
@@ -570,7 +570,7 @@ int cthd_engine_default::read_thermal_zones() {
 	return THD_SUCCESS;
 }
 
-int cthd_engine_default::add_replace_cdev(cooling_dev_t *config) {
+int cthd_engine_default::add_replace_cdev(const cooling_dev_t *config) {
 	cthd_cdev *cdev;
 	bool cdev_present = false;
 	bool percent_unit = false;
