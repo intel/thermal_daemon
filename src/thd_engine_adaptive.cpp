@@ -164,7 +164,7 @@ void cthd_engine_adaptive::psvt_consolidate() {
 	 * If there is a next trip after MAX for a target, then choose a temperature limit in the middle
 	 */
 	for (unsigned int i = 0; i < zones.size(); ++i) {
-		cthd_zone *zone = zones[i];
+		cthd_zone *zone = zones[i].get();
 		unsigned int count = zone->get_trip_count();
 
 		// Special case for handling a single trip which has a defined
@@ -362,7 +362,7 @@ int cthd_engine_adaptive::set_itmt_target(struct adaptive_target &target) {
 
 	if (!int3400_installed) {
 		for (unsigned int i = 0; i < zones.size(); ++i) {
-			cthd_zone *_zone = zones[i];
+			cthd_zone *_zone = zones[i].get();
 
 			// This is only for debug to plot power, so keep
 			if (_zone->get_zone_type() == "rapl_pkg_power" || _zone->get_zone_type() == "power_floor")
@@ -404,7 +404,7 @@ void cthd_engine_adaptive::set_int3400_target(struct adaptive_target &target) {
 
 		if (!int3400_installed) {
 			for (unsigned int i = 0; i < zones.size(); ++i) {
-				cthd_zone *_zone = zones[i];
+				cthd_zone *_zone = zones[i].get();
 
 				// This is only for debug to plot power, so keep
 				if (_zone->get_zone_type() == "rapl_pkg_power" || _zone->get_zone_type() == "power_floor")
@@ -453,7 +453,7 @@ void cthd_engine_adaptive::install_passive_default() {
 	thd_log_info("IETM_D0 processed\n");
 
 	for (unsigned int i = 0; i < zones.size(); ++i) {
-		cthd_zone *_zone = zones[i];
+		cthd_zone *_zone = zones[i].get();
 		_zone->zone_reset(1);
 		_zone->trip_delete_all();
 
@@ -618,7 +618,6 @@ int cthd_engine_adaptive::set_int3400_base_path()
 int cthd_engine_adaptive::thd_engine_init(bool ignore_cpuid_check,
 		bool adaptive) {
 	csys_fs sysfs("");
-	char *buf;
 	size_t size;
 	int res;
 
@@ -670,19 +669,16 @@ int cthd_engine_adaptive::thd_engine_init(bool ignore_cpuid_check,
 		return THD_ERROR;
 	}
 
-	buf = new char[size];
+	std::unique_ptr<char[]> buf(new char[size]);
 	if (!buf) {
 		thd_log_error("Unable to allocate memory for GDDV");
 		return THD_FATAL_ERROR;
 	}
 
-	if (sysfs.read(int3400_base_path + "data_vault", buf, size) < int(size)) {
+	if (sysfs.read(int3400_base_path + "data_vault", buf.get(), size) < int(size)) {
 		thd_log_debug("Unable to read GDDV data vault\n");
-		delete[] buf;
 		return THD_FATAL_ERROR;
 	}
-
-	delete[] buf;
 
 	res = gddv.gddv_init(int3400_base_path);
 	if (res != THD_SUCCESS) {

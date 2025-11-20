@@ -35,6 +35,8 @@
  * failed to control temperature of this zone.
  */
 
+#include <memory>
+
 #include "thd_zone_therm_sys_fs.h"
 
 #include "thd_cpu_default_binding.h"
@@ -262,49 +264,36 @@ void cthd_cpu_default_binding::do_default_binding(
 			continue;
 		}
 		if (!zone->zone_cdev_binded()) {
-			cpu_zone_binding_t *cdev_binding_info;
-
-			cdev_binding_info = new cpu_zone_binding_t;
+			std::unique_ptr<cpu_zone_binding_t> cdev_binding_info(new cpu_zone_binding_t);
 
 			cdev_binding_info->zone_name = zone->get_zone_type();
 			cdev_binding_info->zone = zone;
 
-			cdev_binding_info->cdev_gate_entry = new cthd_gating_cdev(id++,
-					this, cdev_binding_info, true);
+			cdev_binding_info->cdev_gate_entry.reset(new cthd_gating_cdev(id++,
+					this, cdev_binding_info.get(), true));
 			if (cdev_binding_info->cdev_gate_entry) {
 				cdev_binding_info->cdev_gate_entry->set_cdev_type(
 						cdev_binding_info->zone_name + "_" + "cpu_gate_entry");
 			} else {
-				thd_log_info("do_default_binding failed\n");
-				cdev_binding_info->cdev_gate_entry = NULL;
-				delete cdev_binding_info;
 				continue;
 			}
 
-			cdev_binding_info->cdev_gate_exit = new cthd_gating_cdev(id++, this,
-					cdev_binding_info, false);
+			cdev_binding_info->cdev_gate_exit.reset(new cthd_gating_cdev(id++, this,
+					cdev_binding_info.get(), false));
 			if (cdev_binding_info->cdev_gate_exit) {
 				cdev_binding_info->cdev_gate_exit->set_cdev_type(
 						cdev_binding_info->zone_name + "_" + "cpu_gate_exit");
 			} else {
 				thd_log_info("do_default_binding failed\n");
-				delete cdev_binding_info->cdev_gate_entry;
-				cdev_binding_info->cdev_gate_entry = NULL;
-				delete cdev_binding_info;
 				return;
 			}
 
 			thd_log_info("unbound zone %s\n", zone->get_zone_type().c_str());
 			int status = zone->bind_cooling_device(PASSIVE, 0,
-					cdev_binding_info->cdev_gate_entry, 0,
+					cdev_binding_info->cdev_gate_entry.get(), 0,
 					def_gating_cdev_sampling_period);
 			if (status == THD_ERROR) {
 				thd_log_info("unbound zone: Bind attempt failed\n");
-				delete cdev_binding_info->cdev_gate_exit;
-				cdev_binding_info->cdev_gate_exit = NULL;
-				delete cdev_binding_info->cdev_gate_entry;
-				cdev_binding_info->cdev_gate_entry = NULL;
-				delete cdev_binding_info;
 				continue;
 			}
 
@@ -316,22 +305,17 @@ void cthd_cpu_default_binding::do_default_binding(
 			}
 
 			status = zone->bind_cooling_device(PASSIVE, 0,
-					cdev_binding_info->cdev_gate_exit, 0,
+					cdev_binding_info->cdev_gate_exit.get(), 0,
 					def_gating_cdev_sampling_period);
 			if (status == THD_ERROR) {
 				thd_log_info("unbound zone: Bind attempt failed\n");
-				delete cdev_binding_info->cdev_gate_exit;
-				cdev_binding_info->cdev_gate_exit = NULL;
-				delete cdev_binding_info->cdev_gate_entry;
-				cdev_binding_info->cdev_gate_entry = NULL;
-				delete cdev_binding_info;
 				continue;
 			}
 			thd_log_info("unbound zone %s\n", zone->get_zone_type().c_str());
 
 			count++;
 			zone->set_zone_active();
-			cdev_list.push_back(cdev_binding_info);
+			cdev_list.push_back(std::move(cdev_binding_info));
 		}
 	}
 	if (count) {
