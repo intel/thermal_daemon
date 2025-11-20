@@ -28,6 +28,7 @@
 #include <inttypes.h>
 #include "thd_lzma_dec.h"
 #include <linux/input.h>
+#include <memory>
 #include <sys/types.h>
 #include "thd_gddv.h"
 
@@ -860,12 +861,11 @@ int cthd_gddv::handle_compressed_gddv(char *buf, int size) {
 	uint64_t payload_output_size;
 	uint64_t output_size;
 	int res;
-	unsigned char *decompressed;
 	size_t destlen=0;
 
 	payload_output_size = *(uint64_t*) (buf + header->headersize + 5);
 	output_size = header->headersize + payload_output_size;
-	decompressed = (unsigned char*) malloc(output_size);
+	std::unique_ptr<unsigned char[]> decompressed(new unsigned char[output_size]);
 
 	if (!decompressed) {
 		thd_log_warn("Failed to allocate buffer for decompressed output\n");
@@ -876,7 +876,7 @@ int cthd_gddv::handle_compressed_gddv(char *buf, int size) {
 
 	thd_log_debug("decompress result =%d\n",res);
 
-	res=lzma_decompress(( unsigned char*)(decompressed+ header->headersize),
+	res=lzma_decompress(( unsigned char*)(decompressed.get() + header->headersize),
 	                &destlen,
 	                (const unsigned char*) (buf + header->headersize),
 	                size-header->headersize);
@@ -885,13 +885,12 @@ int cthd_gddv::handle_compressed_gddv(char *buf, int size) {
 
 	/* Copy and update header.
 	 * This will contain one or more nested repositories usually. */
-	memcpy (decompressed, buf, header->headersize);
-	header = (struct header*) decompressed;
+	memcpy (decompressed.get(), buf, header->headersize);
+	header = (struct header*) decompressed.get();
 	header->v2.flags &= ~ESIF_SERVICE_CONFIG_COMPRESSED;
 	header->v2.payload_size = payload_output_size;
 
-	res = parse_gddv((char*) decompressed, output_size, NULL);
-	free(decompressed);
+	res = parse_gddv((char*) decompressed.get(), output_size, NULL);
 
 	return res;
 }
@@ -902,8 +901,6 @@ int cthd_gddv::parse_gddv_key(char *buf, int size, int *end_offset) {
 	uint32_t keylength;
 	uint32_t valtype;
 	uint32_t vallength;
-	char *key;
-	char *val;
 	char *str;
 	char *name = NULL;
 	char *type = NULL;
@@ -914,26 +911,23 @@ int cthd_gddv::parse_gddv_key(char *buf, int size, int *end_offset) {
 	offset += sizeof(keyflags);
 	memcpy(&keylength, buf + offset, sizeof(keylength));
 	offset += sizeof(keylength);
-	key = new char[keylength];
-	memcpy(key, buf + offset, keylength);
+	std::unique_ptr<char[]> key(new char[keylength]);
+	memcpy(key.get(), buf + offset, keylength);
 	offset += keylength;
 	memcpy(&valtype, buf + offset, sizeof(valtype));
 	offset += sizeof(valtype);
 	memcpy(&vallength, buf + offset, sizeof(vallength));
 	offset += sizeof(vallength);
-	val = new char[vallength];
-	memcpy(val, buf + offset, vallength);
+	std::unique_ptr<char[]> val(new char[vallength]);
+	memcpy(val.get(), buf + offset, vallength);
 	offset += vallength;
 
 	if (end_offset)
 		*end_offset = offset;
 
-	str = strtok(key, "/");
+	str = strtok(key.get(), "/");
 	if (!str) {
-		thd_log_debug("Ignoring key %s\n", key);
-
-		delete[] (key);
-		delete[] (val);
+		thd_log_debug("Ignoring key %s\n", key.get());
 
 		/* Ignore */
 		return THD_SUCCESS;
@@ -950,57 +944,54 @@ int cthd_gddv::parse_gddv_key(char *buf, int size, int *end_offset) {
 		}
 	}
 	if (name && type && strcmp(type, "ppcc") == 0) {
-		parse_ppcc(name, val, vallength);
+		parse_ppcc(name, val.get(), vallength);
 	}
 
 	if (type && strcmp(type, "psvt") == 0) {
 		if (point == NULL)
-			parse_psvt(name, val, vallength);
+			parse_psvt(name, val.get(), vallength);
 		else
-			parse_psvt(point, val, vallength);
+			parse_psvt(point, val.get(), vallength);
 	}
 
 	if (type && strcmp(type, "appc") == 0) {
-		parse_appc(val, vallength);
+		parse_appc(val.get(), vallength);
 	}
 
 	if (type && strcmp(type, "apct") == 0) {
-		parse_apct(val, vallength);
+		parse_apct(val.get(), vallength);
 	}
 
 	if (type && strcmp(type, "apat") == 0) {
-		parse_apat(val, vallength);
+		parse_apat(val.get(), vallength);
 	}
 
 	if (type && strncmp(type, "itmt3", strlen("itmt3")) == 0) {
 		thd_log_debug("Found ITMT 3\n");
 		if (point == NULL)
-			parse_itmt3(name, val, vallength);
+			parse_itmt3(name, val.get(), vallength);
 		else
-			parse_itmt3(point, val, vallength);
+			parse_itmt3(point, val.get(), vallength);
 	}
 
 	if (type && strcmp(type, "itmt") == 0) {
 		if (point == NULL)
-			parse_itmt(name, val, vallength);
+			parse_itmt(name, val.get(), vallength);
 		else
-			parse_itmt(point, val, vallength);
+			parse_itmt(point, val.get(), vallength);
 	}
 
 	if (name && type && strcmp(type, "idsp") == 0) {
-		parse_idsp(name, val, vallength);
+		parse_idsp(name, val.get(), vallength);
 	}
 
 	if (name && type && point && strcmp(type, "trippoint") == 0) {
-		parse_trip_point(name, point, val, vallength);
+		parse_trip_point(name, point, val.get(), vallength);
 	}
 
 	if (type && strcmp(type, "_trt") == 0) {
-		parse_trt(val, vallength);
+		parse_trt(val.get(), vallength);
 	}
-
-	delete[] (key);
-	delete[] (val);
 
 	return THD_SUCCESS;
 }
@@ -1688,12 +1679,14 @@ size_t cthd_gddv::gddv_load(char **buffer)
 
 int cthd_gddv::gddv_init(std::string& base_path) {
 	csys_fs sysfs("");
-	char *buf;
+	char *raw;
+	std::unique_ptr<char[]> buf;
 	size_t size;
 
-	size = gddv_load(&buf);
+	size = gddv_load(&raw);
 	if (size > 0) {
 		thd_log_info("Loading data vault from a file\n");
+		buf.reset(raw);
 		goto skip_load;
 	}
 
@@ -1711,24 +1704,22 @@ int cthd_gddv::gddv_init(std::string& base_path) {
 		return THD_ERROR;
 	}
 
-	buf = new char[size];
+	buf.reset(new char[size]);
 	if (!buf) {
 		thd_log_error("Unable to allocate memory for GDDV");
 		return THD_FATAL_ERROR;
 	}
 
-	if (sysfs.read(int3400_base_path + "data_vault", buf, size)
+	if (sysfs.read(int3400_base_path + "data_vault", buf.get(), size)
 			< int(size)) {
 		thd_log_debug("Unable to read GDDV data vault\n");
-		delete[] buf;
 		return THD_FATAL_ERROR;
 	}
 
 skip_load:
 	try {
-		if (parse_gddv(buf, size, NULL)) {
+		if (parse_gddv(buf.get(), size, NULL)) {
 			thd_log_debug("Unable to parse GDDV");
-			delete[] buf;
 			return THD_FATAL_ERROR;
 		}
 
@@ -1741,11 +1732,8 @@ skip_load:
 		dump_apct();
 		dump_idsps();
 		dump_trips();
-
-		delete [] buf;
 	} catch (std::exception &e) {
 		thd_log_warn("%s\n", e.what());
-		delete [] buf;
 		return THD_FATAL_ERROR;
 	}
 

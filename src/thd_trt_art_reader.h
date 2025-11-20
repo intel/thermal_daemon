@@ -34,6 +34,7 @@
 #include <iostream>
 #include <fstream>
 #include <list>
+#include <memory>
 #include <vector>
 #include <algorithm>
 
@@ -77,13 +78,13 @@ private:
 	std::ofstream conf_file;
 	std::vector<rel_object_t> rel_list;
 
-	unsigned char *trt_data;
+	std::unique_ptr<unsigned char[]> trt_data;
 	unsigned int trt_count;
 
-	unsigned char *art_data;
+	std::unique_ptr<unsigned char[]> art_data;
 	unsigned int art_count;
 
-	unsigned char *psvt_data;
+	std::unique_ptr<unsigned char[]> psvt_data;
 	unsigned int psvt_count;
 
 	int read_trt();
