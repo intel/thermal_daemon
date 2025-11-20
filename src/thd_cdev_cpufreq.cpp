@@ -93,12 +93,10 @@ int cthd_cdev_cpufreq::init() {
 	unsigned int scaling_max_frequency = 0;
 	for (int i = cpu_start_index; i <= cpu_end_index; ++i) {
 		std::stringstream str;
-		std::string freq_str;
+		unsigned int freq_int;
 		str << "cpu" << i << "/cpufreq/scaling_min_freq";
 		if (cdev_sysfs.exists(str.str())) {
-			cdev_sysfs.read(str.str(), freq_str);
-			unsigned int freq_int;
-			std::istringstream(freq_str) >> freq_int;
+			cdev_sysfs.read(str.str(), reinterpret_cast<int*>(&freq_int));
 			if (scaling_min_frequency == 0 || freq_int < scaling_min_frequency)
 				scaling_min_frequency = freq_int;
 		}
@@ -106,13 +104,10 @@ int cthd_cdev_cpufreq::init() {
 
 	for (int i = cpu_start_index; i <= cpu_end_index; ++i) {
 		std::stringstream str;
-		std::string freq_str;
+		unsigned int freq_int;
 		str << "cpu" << i << "/cpufreq/scaling_max_freq";
 		if (cdev_sysfs.exists(str.str())) {
-			cdev_sysfs.read(str.str(), freq_str);
-
-			unsigned int freq_int;
-			std::istringstream(freq_str) >> freq_int;
+			cdev_sysfs.read(str.str(), reinterpret_cast<int*>(&freq_int));
 			if (scaling_max_frequency == 0 || freq_int > scaling_max_frequency)
 				scaling_max_frequency = freq_int;
 		}
