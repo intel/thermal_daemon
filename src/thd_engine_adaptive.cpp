@@ -33,7 +33,7 @@
 int cthd_engine_adaptive::install_passive(struct psv *psv) {
 	std::string psv_zone;
 
-	size_t pos = psv->target.find_last_of(".");
+	size_t pos = psv->target.find_last_of('.');
 	if (pos == std::string::npos)
 		psv_zone = psv->target;
 	else
@@ -64,7 +64,7 @@ int cthd_engine_adaptive::install_passive(struct psv *psv) {
 	}
 
 	std::string psv_cdev;
-	pos = psv->source.find_last_of(".");
+	pos = psv->source.find_last_of('.');
 	if (pos == std::string::npos)
 		psv_cdev = psv->source;
 	else
@@ -127,7 +127,7 @@ void cthd_engine_adaptive::set_trip(std::string target, std::string argument) {
 	float float_temp = stof(argument, NULL);
 	int temp = (int) (float_temp * 1000);
 
-	size_t pos = target.find_last_of(".");
+	size_t pos = target.find_last_of('.');
 
 	if (pos == std::string::npos)
 		psv_zone = target;
@@ -249,7 +249,7 @@ void cthd_engine_adaptive::psvt_consolidate() {
 int cthd_engine_adaptive::install_itmt(struct itmt_entry *itmt_entry) {
 	std::string itmt_zone;
 
-	size_t pos = itmt_entry->target.find_last_of(".");
+	size_t pos = itmt_entry->target.find_last_of('.');
 	if (pos == std::string::npos)
 		itmt_zone = itmt_entry->target;
 	else
@@ -487,7 +487,7 @@ void cthd_engine_adaptive::execute_target(struct adaptive_target &target) {
 
 	thd_log_info("Target Name:%s\n", target.name.c_str());
 
-	size_t pos = target.participant.find_last_of(".");
+	size_t pos = target.participant.find_last_of('.');
 	if (pos == std::string::npos)
 		name = target.participant;
 	else

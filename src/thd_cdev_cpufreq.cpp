@@ -36,7 +36,7 @@ int cthd_cdev_cpufreq::init() {
 		size_t p0 = 0, p1;
 
 		cdev_sysfs.read("present", count_str);
-		p1 = count_str.find_first_of("-", p0);
+		p1 = count_str.find_first_of('-', p0);
 		if (p1 == std::string::npos)
 			return THD_ERROR;
 

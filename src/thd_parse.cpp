@@ -359,7 +359,7 @@ int cthd_parse::parse_new_cooling_dev(xmlNode * a_node, xmlDoc *doc,
 	cdev->inc_dec_step = 1;
 	cdev->read_back = true;
 	cdev->auto_down_control = false;
-	cdev->status = 0;
+	cdev->status = false;
 	cdev->pid_enable = false;
 	cdev->unit_val = ABSOULUTE_VALUE;
 	cdev->debounce_interval = 0;
