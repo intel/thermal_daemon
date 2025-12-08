@@ -1246,7 +1246,7 @@ int cthd_gddv::evaluate_temperature_condition(
 	if (condition.ignore_condition)
 		return THD_ERROR;
 
-	size_t pos = condition.device.find_last_of(".");
+	size_t pos = condition.device.find_last_of('.');
 	if (pos == std::string::npos)
 		sensor_name = condition.device;
 	else

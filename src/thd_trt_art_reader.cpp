@@ -89,7 +89,7 @@ static void associate_device(sub_type_t type, string &name) {
 						ret = acpi_sysfs.read("path", uid);
 						if (ret < 0)
 							continue;
-						size_t pos = uid.find_last_of(".");
+						size_t pos = uid.find_last_of('.');
 						if (pos != std::string::npos) {
 							uid = uid.substr(pos + 1);
 						}
