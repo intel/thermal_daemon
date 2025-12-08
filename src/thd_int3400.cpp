@@ -31,25 +31,27 @@
 
 cthd_INT3400::cthd_INT3400(std::string _uuid) : uuid(std::move(_uuid)), base_path("") {
 	csys_fs cdev_sysfs("");
+	const char *int3400_base_path = "/sys/bus/platform/drivers/int3400 thermal";
+	csys_fs sysfs ("");
 
-	if (cdev_sysfs.exists("/sys/bus/acpi/devices/INT3400:00/physical_node/uuids")) {
-		base_path = "/sys/bus/acpi/devices/INT3400:00/physical_node/uuids/";
-	} else if (cdev_sysfs.exists("/sys/bus/acpi/devices/INTC1040:00/physical_node/uuids")) {
-		base_path = "/sys/bus/acpi/devices/INTC1040:00/physical_node/uuids/";
-	} else if (cdev_sysfs.exists("/sys/bus/acpi/devices/INTC1041:00/physical_node/uuids")) {
-		base_path = "/sys/bus/acpi/devices/INTC1041:00/physical_node/uuids/";
-	} else if (cdev_sysfs.exists("/sys/bus/acpi/devices/INTC10A0:00/physical_node/uuids")) {
-		base_path = "/sys/bus/acpi/devices/INTC10A0:00/physical_node/uuids/";
-	} else if (cdev_sysfs.exists("/sys/bus/acpi/devices/INTC1042:00/physical_node/uuids")) {
-		base_path = "/sys/bus/acpi/devices/INTC1042:00/physical_node/uuids/";
-	} else if (cdev_sysfs.exists("/sys/bus/acpi/devices/INTC1068:00/physical_node/uuids")) {
-		base_path = "/sys/bus/acpi/devices/INTC1068:00/physical_node/uuids/";
-	} else if (cdev_sysfs.exists("/sys/bus/acpi/devices/INTC10D4:00/physical_node/uuids")) {
-		base_path = "/sys/bus/acpi/devices/INTC10D4:00/physical_node/uuids/";
-	} else if (cdev_sysfs.exists("/sys/bus/acpi/devices/INTC10FC:00/physical_node/uuids")) {
-		base_path = "/sys/bus/acpi/devices/INTC10FC:00/physical_node/uuids/";
+	if (sysfs.exists (int3400_base_path)) {
+		DIR *dir;
+		struct dirent *entry;
+
+		if ((dir = opendir (int3400_base_path)) != NULL) {
+			while ((entry = readdir (dir)) != NULL) {
+				if (!strncmp (entry->d_name, "INT", strlen ("INT"))) {
+					base_path = "/sys/bus/platform/devices/";
+					base_path += entry->d_name;
+					base_path += "/";
+					thd_log_info("INT3400 Base path is %s\n", base_path.c_str());
+					closedir(dir);
+					return;
+				}
+			}
+			closedir(dir);
+		}
 	}
-	thd_log_info("INT3400 Base path is %s\n", base_path.c_str());
 }
 
 int cthd_INT3400::match_supported_uuid() {

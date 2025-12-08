@@ -638,26 +638,8 @@ int cthd_engine_adaptive::thd_engine_init(bool ignore_cpuid_check,
 		return THD_ERROR;
 	}
 
-	if (sysfs.exists("/sys/bus/platform/devices/INT3400:00")) {
-		int3400_base_path = "/sys/bus/platform/devices/INT3400:00/";
-	} else if (sysfs.exists("/sys/bus/platform/devices/INTC1040:00")) {
-		int3400_base_path = "/sys/bus/platform/devices/INTC1040:00/";
-	} else if (sysfs.exists("/sys/bus/platform/devices/INTC1041:00")) {
-		int3400_base_path = "/sys/bus/platform/devices/INTC1041:00/";
-	} else if (sysfs.exists("/sys/bus/platform/devices/INTC10A0:00")) {
-		int3400_base_path = "/sys/bus/platform/devices/INTC10A0:00/";
-	} else if (sysfs.exists("/sys/bus/platform/devices/INTC1042:00")) {
-		int3400_base_path = "/sys/bus/platform/devices/INTC1042:00/";
-	} else if (sysfs.exists("/sys/bus/platform/devices/INTC1068:00")) {
-		int3400_base_path = "/sys/bus/platform/devices/INTC1068:00/";
-	} else if (sysfs.exists("/sys/bus/platform/devices/INTC10D4:00")) {
-		int3400_base_path = "/sys/bus/platform/devices/INTC10D4:00/";
-	} else if (sysfs.exists("/sys/bus/platform/devices/INTC10FC:00")) {
-		int3400_base_path = "/sys/bus/platform/devices/INTC10FC:00/";
-	} else {
-		if (set_int3400_base_path() != THD_SUCCESS)
-			return THD_ERROR;
-	}
+	if (set_int3400_base_path() != THD_SUCCESS)
+		return THD_ERROR;
 
 	if (sysfs.read(int3400_base_path + "firmware_node/path", int3400_path)
 			< 0) {
