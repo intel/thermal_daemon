@@ -38,6 +38,7 @@
 class csys_fs {
 private:
 	std::string base_path;
+	int check_non_symbolic_path(std::string path);
 
 public:
 	csys_fs() :
@@ -69,7 +70,7 @@ public:
 	bool exists(const std::string &path);
 	bool exists();
 	size_t size(const std::string &path);
-	int create();
+	int create(int flags = (O_CREAT | O_WRONLY | O_TRUNC), mode_t mode = 0600);
 	mode_t get_mode(const std::string &path);
 
 	void update_path(std::string path) {

@@ -25,6 +25,21 @@
 #include "thd_sys_fs.h"
 #include "thd_common.h"
 #include <stdlib.h>
+#include <vector>
+
+int csys_fs::check_non_symbolic_path(std::string path)
+{
+	struct stat stat;
+
+	if (lstat(path.c_str(), &stat) == -1) {
+		return -errno;
+	}
+
+	if (S_ISLNK(stat.st_mode))
+		return THD_ERROR;
+
+	return THD_SUCCESS;
+}
 
 int csys_fs::write(const std::string &path, const std::string &buf) {
 	std::string p = base_path + path;
@@ -200,9 +215,37 @@ size_t csys_fs::size(const std::string &path) {
 	return 0;
 }
 
-int csys_fs::create() {
+int csys_fs::create(int flags, mode_t mode) {
 
-	int fd = ::open(base_path.c_str(), O_CREAT | O_WRONLY | O_TRUNC, S_IRWXU);
+	thd_log_debug("create :%s\n", base_path.c_str());
+
+	if (base_path.empty() || base_path.front() != '/') {
+		thd_log_debug("Invalid base_path:%s\n", base_path.c_str());
+		return -1;
+	}
+
+	std::istringstream path(base_path.c_str());
+	std::vector < std::string > tokens;
+	std::string token;
+
+	while (std::getline(path, token, '/')) {
+		tokens.push_back(token);
+	}
+
+	std::ostringstream _path;
+
+	for (const auto &word : tokens) {
+		if (word.empty())
+			continue;
+		_path << "/" << word;
+		int ret = check_non_symbolic_path(_path.str());
+		if (ret == THD_ERROR) {
+			thd_log_info("path :%s is symbolic link\n", _path.str().c_str());
+			return -1;
+		}
+	}
+
+	int fd = ::open(base_path.c_str(), flags, mode);
 	if (fd < 0) {
 		thd_log_info("sysfs create failed %s\n", base_path.c_str());
 		return -errno;

@@ -136,7 +136,13 @@ static void daemonize(char *rundir, char *pidfile) {
 	dup(i);
 	chdir(rundir);
 
-	pid_file_handle = open(pidfile, O_RDWR | O_CREAT, 0600);
+	csys_fs path(pidfile);
+	if (path.create() == -1) {
+		thd_log_info("Could not create PID lock file %s, exiting\n", pidfile);
+		exit(EXIT_FAILURE);
+	}
+
+	pid_file_handle = open(pidfile, O_RDWR);
 	if (pid_file_handle == -1) {
 		/* Couldn't open lock file */
 		thd_log_info("Could not open PID lock file %s, exiting\n", pidfile);
