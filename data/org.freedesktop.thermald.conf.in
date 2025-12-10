@@ -19,6 +19,52 @@
         <policy group="@dbusservicepowergrp@">
                 <allow send_destination="org.freedesktop.thermald"/>
                 <allow receive_sender="org.freedesktop.thermald"/>
+
+                <deny send_destination="org.freedesktop.thermald"
+                send_member="SetCurrentPreference"/>
+
+                <deny send_destination="org.freedesktop.thermald"
+                send_member="SetUserMaxTemperature"/>
+
+                <deny send_destination="org.freedesktop.thermald"
+                send_member="SetUserPassiveTemperature"/>
+
+                <deny send_destination="org.freedesktop.thermald"
+                send_member="AddSensor"/>
+
+                <deny send_destination="org.freedesktop.thermald"
+                send_member="AddVirtualSensor"/>
+
+                <deny send_destination="org.freedesktop.thermald"
+                send_member="AddZonePassive"/>
+
+                <deny send_destination="org.freedesktop.thermald"
+                send_member="DeleteZone"/>
+
+                <deny send_destination="org.freedesktop.thermald"
+                send_member="SetZoneStatus"/>
+
+                <deny send_destination="org.freedesktop.thermald"
+                send_member="AddTripPoint"/>
+
+                <deny send_destination="org.freedesktop.thermald"
+                send_member="DeleteTripPoint"/>
+
+                <deny send_destination="org.freedesktop.thermald"
+                send_member="AddCoolingDevice"/>
+
+                <deny send_destination="org.freedesktop.thermald"
+                send_member="UpdateCoolingDevice"/>
+
+                <deny send_destination="org.freedesktop.thermald"
+                send_member="DisableCoolingDevice"/>
+
+                <deny send_destination="org.freedesktop.thermald"
+                send_member="Reinit"/>
+
+                <deny send_destination="org.freedesktop.thermald"
+                send_member="Terminate"/>
+
         </policy>
 
 </busconfig>
