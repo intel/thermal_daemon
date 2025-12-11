@@ -85,3 +85,9 @@ thermald-resource.c: $(top_srcdir)/thermald-resource.gresource.xml
 	$(AM_V_GEN) glib-compile-resources --generate-source --sourcedir=${top_srcdir} $<
 
 CLEANFILES = $(BUILT_SOURCES)
+
+clang-tidy:
+	clang-tidy -extra-arg-before=-xc++ \
+		$(thermald_SOURCES) \
+		-- $(filter-out -Wclobbered,$(AM_CXXFLAGS)) \
+		$(thermald_CPPFLAGS) -I .
