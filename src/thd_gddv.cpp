@@ -185,7 +185,7 @@ int cthd_gddv::parse_appc(char *appc, int len) {
 		condition.participant = get_string(appc, &offset);
 		condition.domain = get_uint64(appc, &offset);
 		condition.type = get_uint64(appc, &offset);
-		custom_conditions.push_back(condition);
+		custom_conditions.push_back(std::move(condition));
 	}
 
 	return 0;
@@ -209,7 +209,7 @@ int cthd_gddv::parse_apat(char *apat, int len) {
 		target.domain = get_uint64(apat, &offset);
 		target.code = get_string(apat, &offset);
 		target.argument = get_string(apat, &offset);
-		targets.push_back(target);
+		targets.push_back(std::move(target));
 	}
 	return 0;
 }
@@ -280,9 +280,9 @@ int cthd_gddv::parse_apct(char *apct, int len) {
 						i++;
 					}
 				}
-				condition_set.push_back(condition);
+				condition_set.push_back(std::move(condition));
 			}
-			conditions.push_back(condition_set);
+			conditions.push_back(move(condition_set));
 		}
 	} else if (version == 2) {
 		while (offset < len) {
@@ -337,9 +337,9 @@ int cthd_gddv::parse_apct(char *apct, int len) {
 						i++;
 					}
 				}
-				condition_set.push_back(condition);
+				condition_set.push_back(std::move(condition));
 			}
-			conditions.push_back(condition_set);
+			conditions.push_back(std::move(condition_set));
 		}
 	} else {
 		thd_log_warn("Unsupported APCT version %d\n", (int) version);
@@ -508,7 +508,7 @@ int cthd_gddv::parse_ppcc(char *name, char *buf, int len) {
 	else
 		ppcc.limit_1_valid = 0;
 
-	ppccs.push_back(ppcc);
+	ppccs.push_back(std::move(ppcc));
 
 	return 0;
 }
@@ -565,10 +565,10 @@ int cthd_gddv::parse_psvt(char *name, char *buf, int len) {
 		psv.limit_coeff = get_uint64(buf, &offset);
 		psv.unlimit_coeff = get_uint64(buf, &offset);
 		offset += 12;
-		psvt.psvs.push_back(psv);
+		psvt.psvs.push_back(std::move(psv));
 	}
 
-	psvts.push_back(psvt);
+	psvts.push_back(std::move(psvt));
 
 	return 0;
 }
@@ -646,10 +646,10 @@ int cthd_gddv::parse_itmt3(char *name, char *buf, unsigned int len) {
 		itmt_entry.pl1_max = entry->pl1_max;
 
 		offset += sizeof(struct itmt3);
-		itmt.itmt_entries.push_back(itmt_entry);
+		itmt.itmt_entries.push_back(std::move(itmt_entry));
 	}
 
-	itmts.push_back(itmt);
+	itmts.push_back(std::move(itmt));
 
 	return 0;
 }
@@ -694,10 +694,10 @@ int cthd_gddv::parse_itmt(char *name, char *buf, int len) {
 			offset += 12;
 		}
 
-		itmt.itmt_entries.push_back(itmt_entry);
+		itmt.itmt_entries.push_back(std::move(itmt_entry));
 	}
 
-	itmts.push_back(itmt);
+	itmts.push_back(std::move(itmt));
 
 	return 0;
 }
@@ -750,7 +750,7 @@ void cthd_gddv::parse_idsp(char *name, char *start, int length) {
 		idsp_str = idsp;
 		std::transform(idsp_str.begin(), idsp_str.end(), idsp_str.begin(),
 				::toupper);
-		idsps.push_back(idsp_str);
+		idsps.push_back(std::move(idsp_str));
 
 		str += len;
 		i += len;
@@ -792,7 +792,7 @@ void cthd_gddv::parse_trip_point(char *name, char *type, char *val, int len)
 	else
 		trip.type = INVALID_TRIP_TYPE;
 	trip.temp = DECI_KELVIN_TO_CELSIUS(*(int *)val);
-	trippoints.push_back(trip);
+	trippoints.push_back(std::move(trip));
 }
 
 void cthd_gddv::dump_trips() {
@@ -1533,7 +1533,7 @@ static int is_event_device(const struct dirent *dir) {
 }
 
 void cthd_gddv::setup_input_devices() {
-	struct dirent **namelist;
+	struct dirent **namelist = NULL;
 	int i, ndev, ret;
 
 	ndev = scandir("/dev/input", &namelist, is_event_device, versionsort);

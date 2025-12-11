@@ -33,7 +33,7 @@ const std::string cthd_cdev_backlight::backlight_devices[MAX_BACKLIGHT_DEV] = {
 };
 
 cthd_cdev_backlight::cthd_cdev_backlight(unsigned int _index, int _cpu_index) :
-		cthd_cdev(_index, backlight_devices[0]), ref_backlight_state(0) {
+		cthd_cdev(_index, backlight_devices[0]), ref_backlight_state(0), min_back_light(0) {
 	int active_device = 0;
 	do {
 		cdev_sysfs.update_path(backlight_devices[active_device]);

@@ -33,7 +33,7 @@
 #include "thd_pid.h"
 #include "thd_adaptive_types.h"
 
-typedef struct {
+typedef struct _zone_trip_limits{
 	int zone;
 	int trip;
 	int target_state_valid;
@@ -41,6 +41,40 @@ typedef struct {
 	int _min_state;
 	int _max_state;
 	int _min_max_valid;
+
+	_zone_trip_limits() {
+		zone = 0;
+		trip = 0;
+		target_state_valid = 0;
+		target_value = 0;
+		_min_state = _max_state = _min_max_valid = 0;
+	}
+
+	_zone_trip_limits(const _zone_trip_limits& x) {
+		zone = x.zone;
+		trip = x.trip;
+		target_state_valid = x.target_state_valid;
+		target_value = x.target_value;
+		_min_state = x._min_state;
+		_max_state = x._max_state;
+		_min_max_valid = x._min_max_valid;
+	}
+
+	~_zone_trip_limits() {}
+
+	_zone_trip_limits& operator=(const _zone_trip_limits& x) {
+		if (this == &x) {
+		  return *this;
+		}
+		zone = x.zone;
+		trip = x.trip;
+		target_state_valid = x.target_state_valid;
+		target_value = x.target_value;
+		_min_state = x._min_state;
+		_max_state = x._max_state;
+		_min_max_valid = x._min_max_valid;
+		return *this;
+	}
 } zone_trip_limits_t;
 
 #define ZONE_TRIP_LIMIT_COUNT	12

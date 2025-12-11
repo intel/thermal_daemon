@@ -142,7 +142,7 @@ void cthd_zone::sort_and_update_poll_trip() {
 			cthd_trip_point trip_pt_polling(trip_points.size(), POLLING,
 					polling_trip, 0, index, sensor->get_index());
 			trip_pt_polling.thd_trip_point_set_control_type(PARALLEL);
-			trip_points.push_back(trip_pt_polling);
+			trip_points.push_back(std::move(trip_pt_polling));
 		}
 	}
 }

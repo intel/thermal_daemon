@@ -635,7 +635,7 @@ int cthd_engine_default::add_replace_cdev(const cooling_dev_t *config) {
 }
 
 int cthd_engine_default::read_cooling_devices() {
-	int size;
+	int size, rapl_mmio_added = 0;
 	int i;
 
 	// Read first all the default cooling devices added by kernel
@@ -644,13 +644,13 @@ int cthd_engine_default::read_cooling_devices() {
 	// Add RAPL cooling device
 	std::unique_ptr<cthd_sysfs_cdev_rapl> rapl_dev(new cthd_sysfs_cdev_rapl(
 			current_cdev_index, 0));
+	if (!rapl_dev)
+			return THD_ERROR;
 	cthd_sysfs_cdev_rapl *rapl_dev_borrow = nullptr;
 	rapl_dev->set_cdev_type("rapl_controller");
 	rapl_dev->set_cdev_alias("B0D4");
 	if (rapl_dev->update() == THD_SUCCESS) {
 		rapl_dev_borrow = rapl_dev.get();
-		cdevs.push_back(std::move(rapl_dev));
-		++current_cdev_index;
 	} else {
 		rapl_dev.reset();
 	}
@@ -663,8 +663,6 @@ int cthd_engine_default::read_cooling_devices() {
 						"/sys/devices/virtual/powercap/intel-rapl-mmio/intel-rapl-mmio:0/"));
 		rapl_mmio_dev->set_cdev_type("rapl_controller_mmio");
 		if (rapl_mmio_dev->update() == THD_SUCCESS) {
-			cdevs.push_back(std::move(rapl_mmio_dev));
-			++current_cdev_index;
 
 			// Prefer MMIO access over MSR access for B0D4
 			if (rapl_dev_borrow) {
@@ -679,8 +677,18 @@ int cthd_engine_default::read_cooling_devices() {
 					rapl_dev_borrow->set_adaptive_target(target);
 				}
 			}
-			cdevs.back()->set_cdev_alias("B0D4");
+
+			rapl_mmio_dev->set_cdev_alias("B0D4");
+			cdevs.push_back(std::move(rapl_mmio_dev));
+			++current_cdev_index;
+			rapl_mmio_added = 1;
+
 		}
+	}
+
+	if (!rapl_mmio_added) {
+		cdevs.push_back(std::move(rapl_dev));
+		++current_cdev_index;
 	}
 
 	// Add Intel P state driver as cdev

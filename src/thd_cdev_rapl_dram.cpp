@@ -41,7 +41,7 @@ int cthd_sysfs_cdev_rapl_dram::update() {
 		std::string temp_str;
 
 		temp_str = base + entry->d_name + "/" + "name";
-		csys_fs name_sysfs(temp_str);
+		csys_fs name_sysfs(std::move(temp_str));
 		if (!name_sysfs.exists()) {
 			continue;
 		}

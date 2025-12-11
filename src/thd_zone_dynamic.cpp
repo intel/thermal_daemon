@@ -50,7 +50,7 @@ int cthd_zone_dynamic::read_trip_points() {
 	} else
 		return THD_ERROR;
 
-	trip_points.push_back(trip_pt);
+	trip_points.push_back(std::move(trip_pt));
 
 	return THD_SUCCESS;
 }

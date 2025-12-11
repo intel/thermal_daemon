@@ -228,11 +228,10 @@ void cthd_engine::enable_power_floor_event()
 					cthd_trip_point::default_influence);
 	}
 
-	++current_zone_index;
 	zone->set_zone_active();
-
 	zone->zone_dump();
 	zones.push_back(std::move(zone));
+	++current_zone_index;
 }
 
 int cthd_engine::thd_engine_init(bool ignore_cpuid_check, bool adaptive) {
@@ -642,7 +641,7 @@ void cthd_engine::takeover_thermal_control() {
 
 					ret = sysfs.read(policy.str(), curr_policy);
 					if (ret >= 0) {
-						zone_preferences.push_back(curr_policy);
+						zone_preferences.push_back(std::move(curr_policy));
 						sysfs.write(policy.str(), "user_space");
 					}
 				}
@@ -1103,7 +1102,7 @@ int cthd_engine::user_add_sensor(std::string name, std::string path) {
 	for (unsigned int i = 0; i < sensors.size(); ++i) {
 		if (sensors[i]->get_sensor_type() == name) {
 			cthd_sensor *sensor = sensors[i].get();
-			sensor->update_path(path);
+			sensor->update_path(std::move(path));
 			pthread_mutex_unlock(&thd_engine_mutex);
 			return THD_SUCCESS;
 		}
@@ -1231,10 +1230,10 @@ int cthd_engine::user_add_zone(std::string zone_name, unsigned int trip_temp,
 	}
 	if (zone->zone_update() == THD_SUCCESS) {
 		pthread_mutex_lock(&thd_engine_mutex);
-		pthread_mutex_unlock(&thd_engine_mutex);
 		zone->set_zone_active();
-		++current_zone_index;
 		zones.push_back(std::move(zone));
+		++current_zone_index;
+		pthread_mutex_unlock(&thd_engine_mutex);
 	} else {
 		return THD_ERROR;
 	}

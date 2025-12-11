@@ -135,7 +135,7 @@ int cthd_sysfs_zone::read_trip_points() {
 			cthd_trip_point trip_pt(trip_point_cnt, trip_type, temp, hyst,
 					index, sensor->get_index());
 			trip_pt.thd_trip_point_set_control_type(SEQUENTIAL);
-			trip_points.push_back(trip_pt);
+			trip_points.push_back(std::move(trip_pt));
 			++trip_point_cnt;
 		}
 	}
@@ -151,7 +151,7 @@ int cthd_sysfs_zone::read_trip_points() {
 
 		cthd_trip_point trip_pt(0, PASSIVE, INT32_MAX, 0, index, sensor->get_index());
 		trip_pt.thd_trip_point_set_control_type(SEQUENTIAL);
-		trip_points.push_back(trip_pt);
+		trip_points.push_back(std::move(trip_pt));
 		++trip_point_cnt;
 		thd_log_debug("Added one default trip\n");
 	}

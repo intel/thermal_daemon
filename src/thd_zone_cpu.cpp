@@ -145,7 +145,7 @@ int cthd_zone_cpu::parse_cdev_order() {
 						psv_temp, def_hystersis, index, DEFAULT_SENSOR_ID);
 				trip_pt_passive.thd_trip_point_set_control_type(SEQUENTIAL);
 				load_cdev_xml(trip_pt_passive, order_list);
-				trip_points.push_back(trip_pt_passive);
+				trip_points.push_back(std::move(trip_pt_passive));
 				trip_point_cnt++;
 			}
 		}
@@ -178,7 +178,7 @@ int cthd_zone_cpu::read_trip_points() {
 		}
 		++i;
 	}
-	trip_points.push_back(trip_pt_passive);
+	trip_points.push_back(std::move(trip_pt_passive));
 	trip_point_cnt++;
 
 	// Add active trip point at the end
@@ -190,7 +190,7 @@ int cthd_zone_cpu::read_trip_points() {
 	if (cdev) {
 		trip_pt_active.thd_trip_point_add_cdev(*cdev,
 				cthd_trip_point::default_influence);
-		trip_points.push_back(trip_pt_active);
+		trip_points.push_back(std::move(trip_pt_active));
 		trip_point_cnt++;
 	}
 

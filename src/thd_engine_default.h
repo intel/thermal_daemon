@@ -37,7 +37,7 @@ private:
 	void workaround_rapl_mmio_power(void);
 	void workaround_tcc_offset(void);
 
-	cthd_cpu_default_binding def_binding;
+	//cthd_cpu_default_binding def_binding;
 	int workaround_interval;
 #ifndef ANDROID
 	int tcc_offset_checked;

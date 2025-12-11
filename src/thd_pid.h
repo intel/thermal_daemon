@@ -43,6 +43,32 @@ private:
 public:
 	cthd_pid();
 	double kp, ki, kd;
+	cthd_pid(const cthd_pid& x) {
+		kp = x.kp;
+		ki = x.ki;
+		kd = x.kd;
+		last_time = x.last_time;
+		err_sum = x.err_sum;
+		last_err = x.last_err;
+		target_temp = x.target_temp;
+	}
+	
+	~cthd_pid() { }
+
+	cthd_pid& operator=(const cthd_pid& x) {
+		if (this == &x) {
+		  return *this; // Return early, do nothing
+		}
+		kp = x.kp;
+		ki = x.ki;
+		kd = x.kd;
+		last_time = x.last_time;
+		err_sum = x.err_sum;
+		last_err = x.last_err;
+		target_temp = x.target_temp;
+		return *this;
+	}
+	
 	void set_pid_param(double _kp, double _ki, double _kd)
 	{
 		kp = _kp;
@@ -55,5 +81,5 @@ public:
 	}
 	void reset() {
 		err_sum = last_err = last_time = 0;
-	}
+	}	
 };

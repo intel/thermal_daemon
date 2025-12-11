@@ -79,7 +79,7 @@ int cthd_cdev_cpufreq::init() {
 			f >> token;
 			if (!f.bad()) {
 				if (!token.empty())
-					_cpufreqs.push_back(token);
+					_cpufreqs.push_back(std::move(token));
 			}
 		}
 		f.close();
@@ -97,8 +97,10 @@ int cthd_cdev_cpufreq::init() {
 
 		str << "cpu" << i << "/cpufreq/scaling_min_freq";
 		if (cdev_sysfs.exists(str.str())) {
-			cdev_sysfs.read(str.str(), reinterpret_cast<int*>(&freq_int));
-			if (scaling_min_frequency == 0 || freq_int < scaling_min_frequency)
+			int ret;
+
+			ret = cdev_sysfs.read(str.str(), reinterpret_cast<int*>(&freq_int));
+			if (ret < 0 || scaling_min_frequency == 0 || freq_int < scaling_min_frequency)
 				scaling_min_frequency = freq_int;
 		}
 	}
@@ -109,8 +111,10 @@ int cthd_cdev_cpufreq::init() {
 
 		str << "cpu" << i << "/cpufreq/scaling_max_freq";
 		if (cdev_sysfs.exists(str.str())) {
-			cdev_sysfs.read(str.str(), reinterpret_cast<int*>(&freq_int));
-			if (scaling_max_frequency == 0 || freq_int > scaling_max_frequency)
+			int ret;
+
+			ret = cdev_sysfs.read(str.str(), reinterpret_cast<int*>(&freq_int));
+			if (ret < 0 || scaling_max_frequency == 0 || freq_int > scaling_max_frequency)
 				scaling_max_frequency = freq_int;
 		}
 	}
@@ -154,7 +158,7 @@ void cthd_cdev_cpufreq::add_frequency(unsigned int freq_int) {
 
 void cthd_cdev_cpufreq::set_curr_state(int state, int arg) {
 
-	if (state < (int) cpufreqs.size()) {
+	if (state >=0 && state < (int) cpufreqs.size()) {
 		thd_log_debug("cpu freq set_curr_stat %d: %d\n", state,
 				cpufreqs[state]);
 

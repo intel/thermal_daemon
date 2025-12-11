@@ -110,7 +110,7 @@ void cthd_rapl_power_meter::rapl_read_domains(const char *dir_name) {
 					domain.name = std::move(buffer);
 					domain.path = std::string(dir_name)
 							+ std::string(dir_entry->d_name);
-					domain_list.push_back(domain);
+					domain_list.push_back(std::move(domain));
 					++count;
 				}
 			}

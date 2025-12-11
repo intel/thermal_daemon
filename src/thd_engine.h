@@ -270,6 +270,14 @@ public:
 	virtual void workarounds() {
 	}
 
+	void thd_engine_lock() {
+		pthread_mutex_lock(&thd_engine_mutex);
+	}
+
+	void thd_engine_unlock() {
+		pthread_mutex_unlock(&thd_engine_mutex);
+	}
+
 	// User/External messages
 	int user_add_sensor(std::string name, std::string path);
 	cthd_sensor *user_get_sensor(unsigned int index);

@@ -286,7 +286,7 @@ int cthd_parse::parse_trip_points(xmlNode * a_node, xmlDoc *doc,
 				trip_pt.dependency.dependency = 0;
 				if (parse_new_trip_point(cur_node->children, doc,
 						&trip_pt) == THD_SUCCESS)
-					info_ptr->trip_pts.push_back(trip_pt);
+					info_ptr->trip_pts.push_back(std::move(trip_pt));
 			}
 		}
 	}

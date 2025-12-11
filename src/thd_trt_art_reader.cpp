@@ -606,7 +606,7 @@ void cthd_acpi_rel::parse_target_devices() {
 
 		if (find_iter == rel_list.end()) {
 			rel_obj.trt_objects.push_back(&trt[i]);
-			rel_list.push_back(rel_obj);
+			rel_list.push_back(std::move(rel_obj));
 		} else
 			find_iter->trt_objects.push_back(&trt[i]);
 	}
@@ -621,7 +621,7 @@ void cthd_acpi_rel::parse_target_devices() {
 
 		if (find_iter == rel_list.end()) {
 			rel_obj.art_objects.push_back(&art[i]);
-			rel_list.push_back(rel_obj);
+			rel_list.push_back(std::move(rel_obj));
 		} else
 			find_iter->art_objects.push_back(&art[i]);
 	}
@@ -642,7 +642,7 @@ void cthd_acpi_rel::parse_target_devices() {
 
 		if (find_iter == rel_list.end()) {
 			rel_obj.psvt_objects.push_back(&psvt[i]);
-			rel_list.push_back(rel_obj);
+			rel_list.push_back(std::move(rel_obj));
 		} else
 			find_iter->psvt_objects.push_back(&psvt[i]);
 	}
