@@ -168,7 +168,6 @@ int cthd_sysfs_zone::read_cdev_trip_points() {
 	cdev_sysfs << index << "/" << "cdev";
 	for (int i = 0; i < max_cool_devs; ++i) {
 		std::ostringstream trip_pt_stream, cdev_stream;
-		std::string trip_pt_str;
 		int trip_cnt = -1;
 		char buf[51], *ptr;
 		trip_pt_stream << cdev_sysfs.str() << i << "_trip_point";
