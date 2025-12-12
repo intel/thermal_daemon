@@ -38,7 +38,7 @@
 class csys_fs {
 private:
 	std::string base_path;
-	int check_non_symbolic_path(std::string path);
+	int check_non_symbolic_path(const std::string& path);
 
 public:
 	csys_fs() :

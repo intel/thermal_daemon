@@ -27,7 +27,7 @@
 #include <stdlib.h>
 #include <vector>
 
-int csys_fs::check_non_symbolic_path(std::string path)
+int csys_fs::check_non_symbolic_path(const std::string& path)
 {
 	struct stat stat;
 

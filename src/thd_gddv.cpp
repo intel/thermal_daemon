@@ -1144,7 +1144,7 @@ int cthd_gddv::compare_condition(const struct condition& condition,
 
 	if (thd_engine && thd_engine->debug_mode_on()) {
 		if (condition.condition < ARRAY_SIZE(condition_names)) {
-			std::string cond_name, comp_str, op_str;
+			std::string cond_name, comp_str;
 
 			cond_name = condition_names[condition.condition];
 			if (condition.comparison < ARRAY_SIZE(comp_strs)) {
