@@ -139,8 +139,8 @@ static void subtitute_string(sub_type_t type, string &name) {
 cthd_acpi_rel::cthd_acpi_rel() :
 		rel_cdev("/dev/acpi_thermal_rel"), xml_hdr("<?xml version=\"1.0\"?>\n"), conf_begin(
 				"<ThermalConfiguration>\n"), conf_end(
-				"</ThermalConfiguration>\n"), conf_file(), trt_data(NULL), trt_count(
-				0), art_data(NULL), art_count(0), psvt_data(NULL), psvt_count(0) {
+				"</ThermalConfiguration>\n"), conf_file(), trt_count(
+				0), art_count(0), psvt_count(0) {
 
 }
 
@@ -212,8 +212,6 @@ int cthd_acpi_rel::process_psvt(const std::string& file_name) {
 	conf_file << conf_end;
 	conf_file.close ();
 
-	delete[] psvt_data;
-
 	return THD_SUCCESS;
 }
 
@@ -268,10 +266,10 @@ int cthd_acpi_rel::generate_conf(const std::string& file_name) {
 	conf_file.close();
 
 	cleanup: if (trt_status > 0)
-		delete[] trt_data;
+		trt_data.reset();
 
 	if (art_status > 0)
-		delete[] art_data;
+		art_data.reset();
 
 	return ret;
 }
@@ -302,14 +300,14 @@ int cthd_acpi_rel::read_psvt() {
 	}
 	PRINT_DEBUG("PSVT length %lu ...\n", length);
 
-	psvt_data = (unsigned char*) new char[length];
+	psvt_data.reset(new unsigned char[length]);
 	if (!psvt_data) {
 		PRINT_ERROR("cannot allocate buffer %lu to read PSVT\n", length);
 		close (fd);
 		return -1;
 	}
 
-	ret = ioctl (fd, ACPI_THERMAL_GET_PSVT, psvt_data);
+	ret = ioctl (fd, ACPI_THERMAL_GET_PSVT, psvt_data.get());
 	if (ret < 0) {
 		PRINT_ERROR(" failed to GET PSVT on %s\n", rel_cdev.c_str ());
 		close (fd);
@@ -350,13 +348,13 @@ int cthd_acpi_rel::read_art() {
 	}
 	PRINT_DEBUG("ART length %lu ...\n", length);
 
-	art_data = (unsigned char*) new char[length];
+	art_data.reset(new unsigned char[length]);
 	if (!art_data) {
 		PRINT_ERROR("cannot allocate buffer %lu to read ART\n", length);
 		close(fd);
 		return -1;
 	}
-	ret = ioctl(fd, ACPI_THERMAL_GET_ART, art_data);
+	ret = ioctl(fd, ACPI_THERMAL_GET_ART, art_data.get());
 	if (ret < 0) {
 		PRINT_ERROR(" failed to GET ART on %s\n", rel_cdev.c_str());
 		close(fd);
@@ -396,13 +394,13 @@ int cthd_acpi_rel::read_trt() {
 		return -1;
 	}
 
-	trt_data = (unsigned char*) new char[length];
+	trt_data.reset(new unsigned char[length]);
 	if (!trt_data) {
 		PRINT_ERROR("cannot allocate buffer %lu to read TRT\n", length);
 		close(fd);
 		return -1;
 	}
-	ret = ioctl(fd, ACPI_THERMAL_GET_TRT, trt_data);
+	ret = ioctl(fd, ACPI_THERMAL_GET_TRT, trt_data.get());
 	if (ret < 0) {
 		PRINT_ERROR(" failed to GET TRT on %s\n", rel_cdev.c_str());
 		close(fd);
@@ -592,9 +590,9 @@ void cthd_acpi_rel::create_thermal_zone(const string& type) {
 }
 
 void cthd_acpi_rel::parse_target_devices() {
-	union trt_object *trt = (union trt_object *) trt_data;
-	union art_object *art = (union art_object *) art_data;
-	union psvt_object *psvt = (union psvt_object *) psvt_data;
+	union trt_object *trt = (union trt_object *) trt_data.get();
+	union art_object *art = (union art_object *) art_data.get();
+	union psvt_object *psvt = (union psvt_object *) psvt_data.get();
 
 	unsigned int i;
 
@@ -692,7 +690,7 @@ void cthd_acpi_rel::create_platform_conf() {
 #if LOG_DEBUG_INFO == 1
 void cthd_acpi_rel::dump_trt() {
 
-	union trt_object *trt = (union trt_object *) trt_data;
+	union trt_object *trt = (union trt_object *) trt_data.get();
 	unsigned int i;
 
 	for (i = 0; i < trt_count; i++) {
@@ -708,7 +706,7 @@ void cthd_acpi_rel::dump_trt() {
 
 void cthd_acpi_rel::dump_psvt() {
 
-	union psvt_object *trt = (union psvt_object*) psvt_data;
+	union psvt_object *trt = (union psvt_object*) psvt_data.get();
 	unsigned int i;
 
 	for (i = 0; i < psvt_count; i++) {
@@ -730,7 +728,7 @@ void cthd_acpi_rel::dump_psvt() {
 
 void cthd_acpi_rel::dump_art() {
 
-	union art_object *art = (union art_object *) art_data;
+	union art_object *art = (union art_object *) art_data.get();
 	unsigned int i;
 
 	for (i = 0; i < art_count; i++) {

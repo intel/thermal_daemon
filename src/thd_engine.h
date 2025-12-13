@@ -25,6 +25,7 @@
 #ifndef THD_ENGINE_H_
 #define THD_ENGINE_H_
 
+#include <memory>
 #include <pthread.h>
 #include <poll.h>
 #include <time.h>
@@ -74,9 +75,9 @@ typedef struct {
 class cthd_engine {
 
 protected:
-	std::vector<cthd_zone *> zones;
-	std::vector<cthd_sensor *> sensors;
-	std::vector<cthd_cdev *> cdevs;
+	std::vector<std::unique_ptr<cthd_zone>> zones;
+	std::vector<std::unique_ptr<cthd_sensor>> sensors;
+	std::vector<std::unique_ptr<cthd_cdev>> cdevs;
 	int current_cdev_index;
 	int current_zone_index;
 	int current_sensor_index;
@@ -258,8 +259,8 @@ public:
 		return cdevs.size();
 	}
 
-	void add_zone(cthd_zone *zone) {
-		zones.push_back(zone);
+	void add_zone(std::unique_ptr<cthd_zone> zone) {
+		zones.push_back(std::move(zone));
 	}
 
 	bool rt_kernel_status() {
