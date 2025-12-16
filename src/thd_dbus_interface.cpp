@@ -702,7 +702,7 @@ thd_dbus_handle_method_call(GDBusConnection       *connection,
 		g_autofree gchar *trip_point_sensor = NULL;
 		g_autofree gchar *trip_point_cdev = NULL;
 
-		g_variant_get(parameters, "(siss)", &zone_name, &trip_point_temp,
+		g_variant_get(parameters, "(suss)", &zone_name, &trip_point_temp,
 			      &trip_point_sensor, &trip_point_cdev);
 		
 		thd_dbus_interface_add_zone_passive(obj, zone_name, trip_point_temp,
