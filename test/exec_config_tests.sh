@@ -14,7 +14,7 @@ CONF_FILE="/etc/thermald/thermal-conf.xml.auto"
 
 echo "Executing test 1: Simple zone to cdev association"
 cp test1.xml $CONF_FILE
-dbus-send --system --dest=org.freedesktop.thermald /org/freedesktop/thermald org.freedesktop.thermald.Reinit
+dbus-send --system --dest=org.freedesktop.thermald --print-reply /org/freedesktop/thermald org.freedesktop.thermald.Reinit
 sleep 5
 
 THD0_ZONE=$(grep -r . /sys/class/thermal/* 2>/tmp/err.txt | grep  type:thd_test_0 | sed 's/\/type.*//')
@@ -65,7 +65,7 @@ fi
 # TEST 2
 echo "Executing test 2: Check if influence field is respected, in picking up cdev"
 cp test2.xml $CONF_FILE
-dbus-send --system --dest=org.freedesktop.thermald /org/freedesktop/thermald org.freedesktop.thermald.Reinit
+dbus-send --system --dest=org.freedesktop.thermald --print-reply /org/freedesktop/thermald org.freedesktop.thermald.Reinit
 sleep 5
 
 THD0_ZONE=$(grep -r . /sys/class/thermal/* 2>/tmp/err.txt | grep  type:thd_test_0 | sed 's/\/type.*//')
@@ -159,7 +159,7 @@ echo "currently it is a visual test only"
 echo "It will show Too early to act messages, gap between two ops is 15+ sec as per connfig here "
 
 cp test3.xml $CONF_FILE
-dbus-send --system --dest=org.freedesktop.thermald /org/freedesktop/thermald org.freedesktop.thermald.Reinit
+dbus-send --system --dest=org.freedesktop.thermald --print-reply /org/freedesktop/thermald org.freedesktop.thermald.Reinit
 sleep 5
 
 THD0_ZONE=$(grep -r . /sys/class/thermal/* 2>/tmp/err.txt | grep  type:thd_test_0 | sed 's/\/type.*//')
@@ -214,7 +214,7 @@ one zone crossed passive, make sure that the other zone
 doesn't deactivate an activated cdev "
 
 cp test4.xml $CONF_FILE
-dbus-send --system --dest=org.freedesktop.thermald /org/freedesktop/thermald org.freedesktop.thermald.Reinit
+dbus-send --system --dest=org.freedesktop.thermald --print-reply /org/freedesktop/thermald org.freedesktop.thermald.Reinit
 sleep 5
 
 THD0_ZONE=$(grep -r . /sys/class/thermal/* 2>/tmp/err.txt | grep  type:thd_test_0 | sed 's/\/type.*//')
@@ -268,7 +268,7 @@ echo "Executing test 5: Test case where sensor/zone/cdev are not"
 echo " in thermal sysfs and still able to control"
 
 cp test5.xml $CONF_FILE
-dbus-send --system --dest=org.freedesktop.thermald /org/freedesktop/thermald org.freedesktop.thermald.Reinit
+dbus-send --system --dest=org.freedesktop.thermald --print-reply /org/freedesktop/thermald org.freedesktop.thermald.Reinit
 sleep 5
 
 THD5_ZONE=/sys/kernel/thermald_test
