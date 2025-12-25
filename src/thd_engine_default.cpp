@@ -635,7 +635,7 @@ int cthd_engine_default::add_replace_cdev(const cooling_dev_t *config) {
 }
 
 int cthd_engine_default::read_cooling_devices() {
-	int size, rapl_mmio_added = 0;
+	int size;
 	int i;
 
 	// Read first all the default cooling devices added by kernel
@@ -681,12 +681,11 @@ int cthd_engine_default::read_cooling_devices() {
 			rapl_mmio_dev->set_cdev_alias("B0D4");
 			cdevs.push_back(std::move(rapl_mmio_dev));
 			++current_cdev_index;
-			rapl_mmio_added = 1;
 
 		}
 	}
 
-	if (!rapl_mmio_added) {
+	if (rapl_dev_borrow) {
 		cdevs.push_back(std::move(rapl_dev));
 		++current_cdev_index;
 	}
