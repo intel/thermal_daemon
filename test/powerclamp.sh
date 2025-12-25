@@ -1,6 +1,6 @@
 #!/bin/bash
 
-CONF_FILE="/var/run/thermald/thermal-conf.xml.auto"
+CONF_FILE="/etc/thermald/thermal-conf.xml.auto"
 
 echo "Executing test : Test powerclamp cooling"
 cp powerclamp.xml $CONF_FILE

@@ -6,7 +6,7 @@ make
 
 insmod thermald_test_kern_module.ko
 
-CONF_FILE="/var/run/thermald/thermal-conf.xml.auto"
+CONF_FILE="/etc/thermald/thermal-conf.xml.auto"
 
 #Test 1: Simple association: one zone to one cooling device
 # check if cdev state reach max when temp >= 40C and when

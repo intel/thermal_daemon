@@ -1,6 +1,6 @@
 #!/bin/bash
 
-CONF_FILE="/var/run/thermald/thermal-conf.xml.auto"
+CONF_FILE="/etc/thermald/thermal-conf.xml.auto"
 
 echo "Executing test : Test intel_pstate cooling"
 cp intel_pstate.xml $CONF_FILE
