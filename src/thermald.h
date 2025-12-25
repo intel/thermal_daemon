@@ -72,6 +72,8 @@
 #include <glib/gi18n.h>
 #include <gmodule.h>
 
+extern gboolean log_debug;
+
 // Log macros
 #define thd_log_fatal		g_error		// Print error and terminate
 #define thd_log_error		g_critical
@@ -79,7 +81,7 @@
 #define thd_log_msg		g_message
 #define thd_log_debug(...) \
 	do { \
-		if (G_UNLIKELY (!g_log_writer_default_would_drop (G_LOG_LEVEL_DEBUG, G_LOG_DOMAIN))) \
+		if (G_UNLIKELY (!g_log_writer_default_would_drop (G_LOG_LEVEL_DEBUG, G_LOG_DOMAIN)) || log_debug) \
 			g_debug(__VA_ARGS__); \
 	} while (0)
 #define thd_log_info(...)	g_log(NULL, G_LOG_LEVEL_INFO, __VA_ARGS__)

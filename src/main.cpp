@@ -178,11 +178,12 @@ gboolean sig_int_handler(void) {
 	return FALSE;
 }
 
+gboolean log_debug = FALSE;
+
 // main function
 int main(int argc, char *argv[]) {
 	gboolean show_version = FALSE;
 	gboolean log_info = FALSE;
-	gboolean log_debug = FALSE;
 	gboolean no_daemon = FALSE;
 	gboolean systemd = FALSE;
 	gboolean test_mode = FALSE;
