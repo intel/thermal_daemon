@@ -60,7 +60,7 @@ int cthd_zone_rapl_power::read_trip_points() {
 			cthd_trip_point::default_influence, thd_engine->get_poll_interval(),
 			0, 0, NULL);
 
-	trip_points.push_back(trip_pt_passive);
+	trip_points.push_back(std::move(trip_pt_passive));
 
 	thd_log_debug("cthd_zone_rapl_power::read_trip_points  OK\n");
 

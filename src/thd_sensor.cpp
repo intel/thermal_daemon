@@ -27,7 +27,7 @@
 
 cthd_sensor::cthd_sensor(int _index, std::string control_path,
 		std::string _type_str, int _type) :
-		index(_index), type(_type), sensor_sysfs(control_path.c_str()), sensor_active(
+		index(_index), type(_type), sensor_sysfs(std::move(control_path)), sensor_active(
 				false), type_str(std::move(_type_str)), async_capable(false), virtual_sensor(
 				false), thresholds(0), scale(1) {
 
@@ -54,7 +54,7 @@ int cthd_sensor::sensor_update() {
 			return THD_SUCCESS;
 		} else {
 			thd_log_msg("sensor id %d %s: No temp sysfs for reading raw temp\n",
-					index, sensor_sysfs.get_base_path());
+					index, sensor_sysfs.get_base_path().c_str());
 			return THD_ERROR;
 		}
 	}
@@ -63,16 +63,14 @@ int cthd_sensor::sensor_update() {
 
 unsigned int cthd_sensor::read_temperature() {
 	csys_fs sysfs;
-	std::string buffer;
-	int temp;
+	int temp, ret;
 
 	thd_log_debug("read_temperature sensor ID %d\n", index);
 	if (type == SENSOR_TYPE_THERMAL_SYSFS)
-		sensor_sysfs.read("temp", buffer);
+		ret = sensor_sysfs.read("temp", &temp);
 	else
-		sensor_sysfs.read("", buffer);
-	std::istringstream(buffer) >> temp;
-	if (temp < 0)
+		ret = sensor_sysfs.read("", &temp);
+	if (ret < 0 || temp < 0)
 		temp = 0;
 	thd_log_debug("Sensor %s :temp %u\n", type_str.c_str(), temp);
 	return (unsigned int)temp / scale;
@@ -80,7 +78,7 @@ unsigned int cthd_sensor::read_temperature() {
 
 void cthd_sensor::enable_uevent() {
 	csys_fs cdev_sysfs("/sys/class/thermal/");
-	std::stringstream policy_sysfs;
+	std::ostringstream policy_sysfs;
 
 	policy_sysfs << "thermal_zone" << index << "/policy";
 	if (cdev_sysfs.exists(policy_sysfs.str().c_str())) {
@@ -92,8 +90,8 @@ int cthd_sensor::set_threshold(int index, int temp) {
 	if (type != SENSOR_TYPE_THERMAL_SYSFS)
 		return THD_ERROR;
 
-	std::stringstream tcdev;
-	std::stringstream thres;
+	std::ostringstream tcdev;
+	std::ostringstream thres;
 	int status = 0;
 
 	if (thd_engine->get_poll_interval())

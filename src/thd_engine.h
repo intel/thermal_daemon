@@ -25,6 +25,7 @@
 #ifndef THD_ENGINE_H_
 #define THD_ENGINE_H_
 
+#include <memory>
 #include <pthread.h>
 #include <poll.h>
 #include <time.h>
@@ -74,9 +75,9 @@ typedef struct {
 class cthd_engine {
 
 protected:
-	std::vector<cthd_zone *> zones;
-	std::vector<cthd_sensor *> sensors;
-	std::vector<cthd_cdev *> cdevs;
+	std::vector<std::unique_ptr<cthd_zone>> zones;
+	std::vector<std::unique_ptr<cthd_sensor>> sensors;
+	std::vector<std::unique_ptr<cthd_cdev>> cdevs;
 	int current_cdev_index;
 	int current_zone_index;
 	int current_sensor_index;
@@ -233,17 +234,17 @@ public:
 	std::string get_config_file() {
 		return config_file;
 	}
-	virtual ppcc_t *get_ppcc_param(std::string name);
+	virtual ppcc_t *get_ppcc_param(const std::string& name);
 	virtual int search_idsp(std::string name) {
 		return THD_ERROR;
 	}
-	cthd_zone *search_zone(std::string name);
-	cthd_cdev *search_cdev(std::string name);
-	cthd_cdev *match_cdev(std::string name);
-	cthd_sensor *search_sensor(std::string name);
+	cthd_zone *search_zone(const std::string& name);
+	cthd_cdev *search_cdev(const std::string& name);
+	cthd_cdev *match_cdev(const std::string& name);
+	cthd_sensor *search_sensor(const std::string& name);
 	cthd_sensor *get_sensor(int index);
 	cthd_zone *get_zone(int index);
-	cthd_zone *get_zone(std::string type);
+	cthd_zone *get_zone(const std::string& type);
 	int get_sensor_temperature(int index, unsigned int *temperature);
 
 	unsigned int get_sensor_count() {
@@ -258,8 +259,8 @@ public:
 		return cdevs.size();
 	}
 
-	void add_zone(cthd_zone *zone) {
-		zones.push_back(zone);
+	void add_zone(std::unique_ptr<cthd_zone> zone) {
+		zones.push_back(std::move(zone));
 	}
 
 	bool rt_kernel_status() {
@@ -269,6 +270,14 @@ public:
 	virtual void workarounds() {
 	}
 
+	void thd_engine_lock() {
+		pthread_mutex_lock(&thd_engine_mutex);
+	}
+
+	void thd_engine_unlock() {
+		pthread_mutex_unlock(&thd_engine_mutex);
+	}
+
 	// User/External messages
 	int user_add_sensor(std::string name, std::string path);
 	cthd_sensor *user_get_sensor(unsigned int index);
@@ -276,13 +285,13 @@ public:
 	int user_add_virtual_sensor(std::string name, std::string dep_sensor,
 			double slope, double intercept);
 
-	int user_set_psv_temp(std::string name, unsigned int temp);
-	int user_set_max_temp(std::string name, unsigned int temp);
+	int user_set_psv_temp(const std::string& name, unsigned int temp);
+	int user_set_max_temp(const std::string& name, unsigned int temp);
 	int user_add_zone(std::string zone_name, unsigned int trip_temp,
 			std::string sensor_name, std::string cdev_name);
-	int user_set_zone_status(std::string name, int status);
-	int user_get_zone_status(std::string name, int *status);
-	int user_delete_zone(std::string name);
+	int user_set_zone_status(const std::string& name, int status);
+	int user_get_zone_status(const std::string& name, int *status);
+	int user_delete_zone(const std::string& name);
 
 	int user_add_cdev(std::string cdev_name, std::string cdev_path,
 			int min_state, int max_state, int step);

@@ -16,9 +16,5 @@
                 <deny send_destination="org.freedesktop.thermald"/>
                 <allow receive_sender="org.freedesktop.thermald"/>
         </policy>
-        <policy group="@dbusservicepowergrp@">
-                <allow send_destination="org.freedesktop.thermald"/>
-                <allow receive_sender="org.freedesktop.thermald"/>
-        </policy>
 
 </busconfig>

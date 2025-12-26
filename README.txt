@@ -54,6 +54,8 @@ add appropriate prefix.
 	sudo systemctl status thermald.service
 - Stop service
 	sudo systemctl stop thermald.service
+- To enable service at boot
+	sudo systemctl enable thermald.service
 
 4. Terminate using DBUS I/F
 	sudo test/test_pref.sh

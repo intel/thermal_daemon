@@ -28,6 +28,7 @@
 #include <inttypes.h>
 #include "thd_lzma_dec.h"
 #include <linux/input.h>
+#include <memory>
 #include <sys/types.h>
 #include "thd_gddv.h"
 
@@ -64,7 +65,7 @@ class _gddv_exception: public std::exception {
 	virtual const char* what() const throw () {
 		return "GDDV parsing failed";
 	}
-} gddv_exception;
+} const gddv_exception;  // TODO: why singleton
 
 void cthd_gddv::destroy_dynamic_sources() {
 #ifndef ANDROID
@@ -184,7 +185,7 @@ int cthd_gddv::parse_appc(char *appc, int len) {
 		condition.participant = get_string(appc, &offset);
 		condition.domain = get_uint64(appc, &offset);
 		condition.type = get_uint64(appc, &offset);
-		custom_conditions.push_back(condition);
+		custom_conditions.push_back(std::move(condition));
 	}
 
 	return 0;
@@ -208,7 +209,7 @@ int cthd_gddv::parse_apat(char *apat, int len) {
 		target.domain = get_uint64(apat, &offset);
 		target.code = get_string(apat, &offset);
 		target.argument = get_string(apat, &offset);
-		targets.push_back(target);
+		targets.push_back(std::move(target));
 	}
 	return 0;
 }
@@ -279,9 +280,9 @@ int cthd_gddv::parse_apct(char *apct, int len) {
 						i++;
 					}
 				}
-				condition_set.push_back(condition);
+				condition_set.push_back(std::move(condition));
 			}
-			conditions.push_back(condition_set);
+			conditions.push_back(move(condition_set));
 		}
 	} else if (version == 2) {
 		while (offset < len) {
@@ -336,9 +337,9 @@ int cthd_gddv::parse_apct(char *apct, int len) {
 						i++;
 					}
 				}
-				condition_set.push_back(condition);
+				condition_set.push_back(std::move(condition));
 			}
-			conditions.push_back(condition_set);
+			conditions.push_back(std::move(condition_set));
 		}
 	} else {
 		thd_log_warn("Unsupported APCT version %d\n", (int) version);
@@ -347,7 +348,7 @@ int cthd_gddv::parse_apct(char *apct, int len) {
 	return 0;
 }
 
-static const char *condition_names[] = {
+static const char * const condition_names[] = {
 		"Invalid",
 		"Default",
 		"Orientation",
@@ -407,7 +408,7 @@ static const char *condition_names[] = {
 		"Power_slider"
 };
 
-static const char *comp_strs[] = {
+static const char * const comp_strs[] = {
 		"INVALID",
 		"ADAPTIVE_EQUAL",
 		"ADAPTIVE_LESSER_OR_EQUAL",
@@ -430,12 +431,12 @@ void cthd_gddv::dump_apct() {
 			if (condition_set[j].condition < ARRAY_SIZE(condition_names)) {
 				cond_name = condition_names[condition_set[j].condition];
 			} else if (condition_set[j].condition >= 0x1000 && condition_set[j].condition < 0x10000) {
-				std::stringstream msg;
+				std::ostringstream msg;
 
 				msg << "Oem" << (condition_set[j].condition - 0x1000 + 6);
 				cond_name = msg.str();
 			} else {
-				std::stringstream msg;
+				std::ostringstream msg;
 
 				msg << "UNKNOWN" << "( " << condition_set[j].condition << " )";
 				cond_name = msg.str();
@@ -467,7 +468,7 @@ void cthd_gddv::dump_apct() {
 	thd_log_info("..apct dump end..\n");
 }
 
-ppcc_t* cthd_gddv::get_ppcc_param(std::string name) {
+ppcc_t* cthd_gddv::get_ppcc_param(const std::string& name) {
 	if (name != "TCPU.D0")
 		return NULL;
 
@@ -507,7 +508,7 @@ int cthd_gddv::parse_ppcc(char *name, char *buf, int len) {
 	else
 		ppcc.limit_1_valid = 0;
 
-	ppccs.push_back(ppcc);
+	ppccs.push_back(std::move(ppcc));
 
 	return 0;
 }
@@ -564,10 +565,10 @@ int cthd_gddv::parse_psvt(char *name, char *buf, int len) {
 		psv.limit_coeff = get_uint64(buf, &offset);
 		psv.unlimit_coeff = get_uint64(buf, &offset);
 		offset += 12;
-		psvt.psvs.push_back(psv);
+		psvt.psvs.push_back(std::move(psv));
 	}
 
-	psvts.push_back(psvt);
+	psvts.push_back(std::move(psvt));
 
 	return 0;
 }
@@ -645,10 +646,10 @@ int cthd_gddv::parse_itmt3(char *name, char *buf, unsigned int len) {
 		itmt_entry.pl1_max = entry->pl1_max;
 
 		offset += sizeof(struct itmt3);
-		itmt.itmt_entries.push_back(itmt_entry);
+		itmt.itmt_entries.push_back(std::move(itmt_entry));
 	}
 
-	itmts.push_back(itmt);
+	itmts.push_back(std::move(itmt));
 
 	return 0;
 }
@@ -693,10 +694,10 @@ int cthd_gddv::parse_itmt(char *name, char *buf, int len) {
 			offset += 12;
 		}
 
-		itmt.itmt_entries.push_back(itmt_entry);
+		itmt.itmt_entries.push_back(std::move(itmt_entry));
 	}
 
-	itmts.push_back(itmt);
+	itmts.push_back(std::move(itmt));
 
 	return 0;
 }
@@ -749,7 +750,7 @@ void cthd_gddv::parse_idsp(char *name, char *start, int length) {
 		idsp_str = idsp;
 		std::transform(idsp_str.begin(), idsp_str.end(), idsp_str.begin(),
 				::toupper);
-		idsps.push_back(idsp_str);
+		idsps.push_back(std::move(idsp_str));
 
 		str += len;
 		i += len;
@@ -764,7 +765,7 @@ void cthd_gddv::dump_idsps() {
 	thd_log_info("idsp dump end\n");
 }
 
-int cthd_gddv::search_idsp(std::string name)
+int cthd_gddv::search_idsp(const std::string& name)
 {
 	for (unsigned int i = 0; i < idsps.size(); ++i) {
 		if (!idsps[i].compare(0, 36, name))
@@ -791,7 +792,7 @@ void cthd_gddv::parse_trip_point(char *name, char *type, char *val, int len)
 	else
 		trip.type = INVALID_TRIP_TYPE;
 	trip.temp = DECI_KELVIN_TO_CELSIUS(*(int *)val);
-	trippoints.push_back(trip);
+	trippoints.push_back(std::move(trip));
 }
 
 void cthd_gddv::dump_trips() {
@@ -804,7 +805,7 @@ void cthd_gddv::dump_trips() {
 	thd_log_info("trippoint dump end\n");
 }
 
-int cthd_gddv::get_trip_temp(std::string name, trip_point_type_t type) {
+int cthd_gddv::get_trip_temp(const std::string& name, trip_point_type_t type) {
 	std::string search_name = name + ".D0";
 	for (unsigned int i = 0; i < trippoints.size(); ++i) {
 		if (!trippoints[i].name.compare(search_name)
@@ -860,12 +861,11 @@ int cthd_gddv::handle_compressed_gddv(char *buf, int size) {
 	uint64_t payload_output_size;
 	uint64_t output_size;
 	int res;
-	unsigned char *decompressed;
 	size_t destlen=0;
 
 	payload_output_size = *(uint64_t*) (buf + header->headersize + 5);
 	output_size = header->headersize + payload_output_size;
-	decompressed = (unsigned char*) malloc(output_size);
+	std::unique_ptr<unsigned char[]> decompressed(new unsigned char[output_size]);
 
 	if (!decompressed) {
 		thd_log_warn("Failed to allocate buffer for decompressed output\n");
@@ -876,7 +876,7 @@ int cthd_gddv::handle_compressed_gddv(char *buf, int size) {
 
 	thd_log_debug("decompress result =%d\n",res);
 
-	res=lzma_decompress(( unsigned char*)(decompressed+ header->headersize),
+	res=lzma_decompress(( unsigned char*)(decompressed.get() + header->headersize),
 	                &destlen,
 	                (const unsigned char*) (buf + header->headersize),
 	                size-header->headersize);
@@ -885,13 +885,12 @@ int cthd_gddv::handle_compressed_gddv(char *buf, int size) {
 
 	/* Copy and update header.
 	 * This will contain one or more nested repositories usually. */
-	memcpy (decompressed, buf, header->headersize);
-	header = (struct header*) decompressed;
+	memcpy (decompressed.get(), buf, header->headersize);
+	header = (struct header*) decompressed.get();
 	header->v2.flags &= ~ESIF_SERVICE_CONFIG_COMPRESSED;
 	header->v2.payload_size = payload_output_size;
 
-	res = parse_gddv((char*) decompressed, output_size, NULL);
-	free(decompressed);
+	res = parse_gddv((char*) decompressed.get(), output_size, NULL);
 
 	return res;
 }
@@ -902,8 +901,6 @@ int cthd_gddv::parse_gddv_key(char *buf, int size, int *end_offset) {
 	uint32_t keylength;
 	uint32_t valtype;
 	uint32_t vallength;
-	char *key;
-	char *val;
 	char *str;
 	char *name = NULL;
 	char *type = NULL;
@@ -914,26 +911,23 @@ int cthd_gddv::parse_gddv_key(char *buf, int size, int *end_offset) {
 	offset += sizeof(keyflags);
 	memcpy(&keylength, buf + offset, sizeof(keylength));
 	offset += sizeof(keylength);
-	key = new char[keylength];
-	memcpy(key, buf + offset, keylength);
+	std::unique_ptr<char[]> key(new char[keylength]);
+	memcpy(key.get(), buf + offset, keylength);
 	offset += keylength;
 	memcpy(&valtype, buf + offset, sizeof(valtype));
 	offset += sizeof(valtype);
 	memcpy(&vallength, buf + offset, sizeof(vallength));
 	offset += sizeof(vallength);
-	val = new char[vallength];
-	memcpy(val, buf + offset, vallength);
+	std::unique_ptr<char[]> val(new char[vallength]);
+	memcpy(val.get(), buf + offset, vallength);
 	offset += vallength;
 
 	if (end_offset)
 		*end_offset = offset;
 
-	str = strtok(key, "/");
+	str = strtok(key.get(), "/");
 	if (!str) {
-		thd_log_debug("Ignoring key %s\n", key);
-
-		delete[] (key);
-		delete[] (val);
+		thd_log_debug("Ignoring key %s\n", key.get());
 
 		/* Ignore */
 		return THD_SUCCESS;
@@ -950,57 +944,54 @@ int cthd_gddv::parse_gddv_key(char *buf, int size, int *end_offset) {
 		}
 	}
 	if (name && type && strcmp(type, "ppcc") == 0) {
-		parse_ppcc(name, val, vallength);
+		parse_ppcc(name, val.get(), vallength);
 	}
 
 	if (type && strcmp(type, "psvt") == 0) {
 		if (point == NULL)
-			parse_psvt(name, val, vallength);
+			parse_psvt(name, val.get(), vallength);
 		else
-			parse_psvt(point, val, vallength);
+			parse_psvt(point, val.get(), vallength);
 	}
 
 	if (type && strcmp(type, "appc") == 0) {
-		parse_appc(val, vallength);
+		parse_appc(val.get(), vallength);
 	}
 
 	if (type && strcmp(type, "apct") == 0) {
-		parse_apct(val, vallength);
+		parse_apct(val.get(), vallength);
 	}
 
 	if (type && strcmp(type, "apat") == 0) {
-		parse_apat(val, vallength);
+		parse_apat(val.get(), vallength);
 	}
 
 	if (type && strncmp(type, "itmt3", strlen("itmt3")) == 0) {
 		thd_log_debug("Found ITMT 3\n");
 		if (point == NULL)
-			parse_itmt3(name, val, vallength);
+			parse_itmt3(name, val.get(), vallength);
 		else
-			parse_itmt3(point, val, vallength);
+			parse_itmt3(point, val.get(), vallength);
 	}
 
 	if (type && strcmp(type, "itmt") == 0) {
 		if (point == NULL)
-			parse_itmt(name, val, vallength);
+			parse_itmt(name, val.get(), vallength);
 		else
-			parse_itmt(point, val, vallength);
+			parse_itmt(point, val.get(), vallength);
 	}
 
 	if (name && type && strcmp(type, "idsp") == 0) {
-		parse_idsp(name, val, vallength);
+		parse_idsp(name, val.get(), vallength);
 	}
 
 	if (name && type && point && strcmp(type, "trippoint") == 0) {
-		parse_trip_point(name, point, val, vallength);
+		parse_trip_point(name, point, val.get(), vallength);
 	}
 
 	if (type && strcmp(type, "_trt") == 0) {
-		parse_trt(val, vallength);
+		parse_trt(val.get(), vallength);
 	}
-
-	delete[] (key);
-	delete[] (val);
 
 	return THD_SUCCESS;
 }
@@ -1087,7 +1078,7 @@ int cthd_gddv::parse_gddv(char *buf, int size, int *end_offset) {
 	return 0;
 }
 
-int cthd_gddv::verify_condition(struct condition condition) {
+int cthd_gddv::verify_condition(const struct condition& condition) {
 	const char *cond_name;
 
 	if (condition.condition >= Oem0 && condition.condition <= Oem5)
@@ -1139,12 +1130,12 @@ int cthd_gddv::verify_conditions() {
 	return result;
 }
 
-int cthd_gddv::compare_condition(struct condition condition,
+int cthd_gddv::compare_condition(const struct condition& condition,
 		int value) {
 
 	if (thd_engine && thd_engine->debug_mode_on()) {
 		if (condition.condition < ARRAY_SIZE(condition_names)) {
-			std::string cond_name, comp_str, op_str;
+			std::string cond_name, comp_str;
 
 			cond_name = condition_names[condition.condition];
 			if (condition.comparison < ARRAY_SIZE(comp_strs)) {
@@ -1187,7 +1178,7 @@ int cthd_gddv::compare_condition(struct condition condition,
 	}
 }
 
-int cthd_gddv::compare_time(struct condition condition) {
+int cthd_gddv::compare_time(const struct condition& condition) {
 	int elapsed = time(NULL) - condition.state_entry_time;
 
 	switch (condition.time_comparison) {
@@ -1214,8 +1205,8 @@ int cthd_gddv::compare_time(struct condition condition) {
 	}
 }
 
-int cthd_gddv::evaluate_oem_condition(struct condition condition) {
-	csys_fs sysfs(int3400_base_path.c_str());
+int cthd_gddv::evaluate_oem_condition(const struct condition& condition) {
+	csys_fs sysfs(int3400_base_path);
 	int oem_condition = -1;
 
 	if (condition.condition >= Oem0 && condition.condition <= Oem5)
@@ -1226,14 +1217,13 @@ int cthd_gddv::evaluate_oem_condition(struct condition condition) {
 
 	if (oem_condition != -1) {
 		std::string filename = "odvp" + std::to_string(oem_condition);
-		std::string data;
-		if (sysfs.read(filename, data) < 0) {
+		int value;
+		if (sysfs.read(filename, &value) < 0) {
 			thd_log_error("Unable to read %s\n", filename.c_str());
 			return THD_ERROR;
 		}
-		int value = std::stoi(data, NULL);
 
-		return compare_condition(std::move(condition), value);
+		return compare_condition(condition, value);
 	}
 
 	return THD_ERROR;
@@ -1246,13 +1236,13 @@ int cthd_gddv::evaluate_temperature_condition(
 	if (condition.ignore_condition)
 		return THD_ERROR;
 
-	size_t pos = condition.device.find_last_of(".");
+	size_t pos = condition.device.find_last_of('.');
 	if (pos == std::string::npos)
 		sensor_name = condition.device;
 	else
 		sensor_name = condition.device.substr(pos + 1);
 
-	cthd_sensor *sensor = thd_engine->search_sensor(std::move(sensor_name));
+	cthd_sensor *sensor = thd_engine->search_sensor(sensor_name);
 	if (!sensor) {
 		thd_log_info("Unable to find a sensor for %s\n",
 				condition.device.c_str());
@@ -1265,17 +1255,17 @@ int cthd_gddv::evaluate_temperature_condition(
 	// Conditions are specified in decikelvin, temperatures are in
 	// millicelsius.
 	value = value / 100 + 2732;
-	return compare_condition(std::move(condition), value);
+	return compare_condition(condition, value);
 }
 
 #ifdef ANDROID
-int cthd_gddv::evaluate_lid_condition(struct condition condition) {
+int cthd_gddv::evaluate_lid_condition(const struct condition& condition) {
         int value = 1;
 
         return compare_condition(condition, value);
 }
 #else
-int cthd_gddv::evaluate_lid_condition(struct condition condition) {
+int cthd_gddv::evaluate_lid_condition(const struct condition& condition) {
 	int value = 0;
 
 	if (lid_dev) {
@@ -1287,16 +1277,16 @@ int cthd_gddv::evaluate_lid_condition(struct condition condition) {
 		int lid_closed = libevdev_get_event_value(lid_dev, EV_SW, SW_LID);
 		value = !lid_closed;
 	}
-	return compare_condition(std::move(condition), value);
+	return compare_condition(condition, value);
 }
 #endif
 
 int cthd_gddv::evaluate_workload_condition(
-		struct condition condition) {
+		const struct condition& condition) {
 	// We don't have a good way to assert workload at the moment, so just
 	// default to bursty
 
-	return compare_condition(std::move(condition), 3);
+	return compare_condition(condition, 3);
 }
 
 #ifdef ANDROID
@@ -1307,14 +1297,14 @@ int cthd_gddv::evaluate_workload_condition(
  * Other/Invalid(0)
  * */
 int cthd_gddv::evaluate_platform_type_condition(
-                struct condition condition) {
+                const struct condition& condition) {
         int value = 2;//Tablet
 
         return compare_condition(condition, value);
 }
 #else
 int cthd_gddv::evaluate_platform_type_condition(
-		struct condition condition) {
+		const struct condition& condition) {
 	int value = 1;
 
 	if (tablet_dev) {
@@ -1328,14 +1318,14 @@ int cthd_gddv::evaluate_platform_type_condition(
 		if (tablet)
 			value = 2;
 	}
-	return compare_condition(std::move(condition), value);
+	return compare_condition(condition, value);
 }
 #endif
 
 int cthd_gddv::evaluate_power_slider_condition(
-		struct condition condition) {
+		const struct condition& condition) {
 
-	return compare_condition(std::move(condition), power_slider);
+	return compare_condition(condition, power_slider);
 }
 
 #ifdef ANDROID
@@ -1345,17 +1335,17 @@ int cthd_gddv::evaluate_power_slider_condition(
  DC(1)
  Short Term DC(2)
  * */
-int cthd_gddv::evaluate_ac_condition(struct condition condition) {
+int cthd_gddv::evaluate_ac_condition(const struct condition& condition) {
         csys_fs cdev_sysfs("/sys/class/power_supply/AC/online");
-        std::string buffer;
         int status = 0;
         int value = 0;
 
         thd_log_debug("evaluate evaluate_ac_condition %" PRIu64 "\n", condition.condition);
         if (cdev_sysfs.exists("")) {
-                        cdev_sysfs.read("", buffer);
-                        std::istringstream(buffer) >> status;
-        thd_log_debug("evaluate found battery sys status=%d\n",status);
+                int ret = cdev_sysfs.read("", &status);
+                if (ret < 0)
+                    return ret;
+                thd_log_debug("evaluate found battery sys status=%d\n",status);
         }
         if (status!=1) {
                 value = 1;
@@ -1365,14 +1355,14 @@ int cthd_gddv::evaluate_ac_condition(struct condition condition) {
         return compare_condition(condition, value);
 }
 #else
-int cthd_gddv::evaluate_ac_condition(struct condition condition) {
+int cthd_gddv::evaluate_ac_condition(const struct condition& condition) {
 	int value = 0;
 	bool on_battery = up_client_get_on_battery(upower_client);
 
 	if (on_battery)
 		value = 1;
 
-	return compare_condition(std::move(condition), value);
+	return compare_condition(condition, value);
 }
 #endif
 
@@ -1425,7 +1415,7 @@ int cthd_gddv::evaluate_condition(struct condition condition) {
 		if (condition.time && condition.state_entry_time == 0) {
 			condition.state_entry_time = time(NULL);
 		}
-		ret = compare_time(std::move(condition));
+		ret = compare_time(condition);
 	} else {
 		condition.state_entry_time = 0;
 	}
@@ -1434,7 +1424,7 @@ int cthd_gddv::evaluate_condition(struct condition condition) {
 }
 
 int cthd_gddv::evaluate_condition_set(
-		std::vector<struct condition> condition_set) {
+		const std::vector<struct condition>& condition_set) {
 	for (int i = 0; i < (int) condition_set.size(); i++) {
 		thd_log_debug("evaluate condition.condition at index %d\n", i);
 		if (evaluate_condition(condition_set[i]) != 0)
@@ -1459,7 +1449,7 @@ int cthd_gddv::evaluate_conditions() {
 	return target;
 }
 
-struct psvt* cthd_gddv::find_psvt(std::string name) {
+struct psvt* cthd_gddv::find_psvt(const std::string& name) {
 	for (int i = 0; i < (int) psvts.size(); i++) {
 		if (!strcasecmp(psvts[i].name.c_str(), name.c_str())) {
 			return &psvts[i];
@@ -1469,7 +1459,7 @@ struct psvt* cthd_gddv::find_psvt(std::string name) {
 	return NULL;
 }
 
-struct itmt* cthd_gddv::find_itmt(std::string name) {
+struct itmt* cthd_gddv::find_itmt(const std::string& name) {
 	for (int i = 0; i < (int) itmts.size(); i++) {
 		if (!strcasecmp(itmts[i].name.c_str(), name.c_str())) {
 			return &itmts[i];
@@ -1543,7 +1533,7 @@ static int is_event_device(const struct dirent *dir) {
 }
 
 void cthd_gddv::setup_input_devices() {
-	struct dirent **namelist;
+	struct dirent **namelist = NULL;
 	int i, ndev, ret;
 
 	ndev = scandir("/dev/input", &namelist, is_event_device, versionsort);
@@ -1558,6 +1548,7 @@ void cthd_gddv::setup_input_devices() {
 		int fd = -1;
 
 		snprintf(fname, sizeof(fname), "/dev/input/%s", namelist[i]->d_name);
+		free(namelist[i]);
 		fd = open(fname, O_RDONLY | O_NONBLOCK | O_CLOEXEC);
 		if (fd < 0)
 			continue;
@@ -1688,12 +1679,14 @@ size_t cthd_gddv::gddv_load(char **buffer)
 
 int cthd_gddv::gddv_init(std::string& base_path) {
 	csys_fs sysfs("");
-	char *buf;
+	char *raw;
+	std::unique_ptr<char[]> buf;
 	size_t size;
 
-	size = gddv_load(&buf);
+	size = gddv_load(&raw);
 	if (size > 0) {
 		thd_log_info("Loading data vault from a file\n");
+		buf.reset(raw);
 		goto skip_load;
 	}
 
@@ -1711,24 +1704,22 @@ int cthd_gddv::gddv_init(std::string& base_path) {
 		return THD_ERROR;
 	}
 
-	buf = new char[size];
+	buf.reset(new char[size]);
 	if (!buf) {
 		thd_log_error("Unable to allocate memory for GDDV");
 		return THD_FATAL_ERROR;
 	}
 
-	if (sysfs.read(int3400_base_path + "data_vault", buf, size)
+	if (sysfs.read(int3400_base_path + "data_vault", buf.get(), size)
 			< int(size)) {
 		thd_log_debug("Unable to read GDDV data vault\n");
-		delete[] buf;
 		return THD_FATAL_ERROR;
 	}
 
 skip_load:
 	try {
-		if (parse_gddv(buf, size, NULL)) {
+		if (parse_gddv(buf.get(), size, NULL)) {
 			thd_log_debug("Unable to parse GDDV");
-			delete[] buf;
 			return THD_FATAL_ERROR;
 		}
 
@@ -1741,11 +1732,8 @@ skip_load:
 		dump_apct();
 		dump_idsps();
 		dump_trips();
-
-		delete [] buf;
 	} catch (std::exception &e) {
 		thd_log_warn("%s\n", e.what());
-		delete [] buf;
 		return THD_FATAL_ERROR;
 	}
 

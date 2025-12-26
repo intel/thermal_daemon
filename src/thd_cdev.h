@@ -33,7 +33,7 @@
 #include "thd_pid.h"
 #include "thd_adaptive_types.h"
 
-typedef struct {
+typedef struct _zone_trip_limits{
 	int zone;
 	int trip;
 	int target_state_valid;
@@ -41,6 +41,40 @@ typedef struct {
 	int _min_state;
 	int _max_state;
 	int _min_max_valid;
+
+	_zone_trip_limits() {
+		zone = 0;
+		trip = 0;
+		target_state_valid = 0;
+		target_value = 0;
+		_min_state = _max_state = _min_max_valid = 0;
+	}
+
+	_zone_trip_limits(const _zone_trip_limits& x) {
+		zone = x.zone;
+		trip = x.trip;
+		target_state_valid = x.target_state_valid;
+		target_value = x.target_value;
+		_min_state = x._min_state;
+		_max_state = x._max_state;
+		_min_max_valid = x._min_max_valid;
+	}
+
+	~_zone_trip_limits() {}
+
+	_zone_trip_limits& operator=(const _zone_trip_limits& x) {
+		if (this == &x) {
+		  return *this;
+		}
+		zone = x.zone;
+		trip = x.trip;
+		target_state_valid = x.target_state_valid;
+		target_value = x.target_value;
+		_min_state = x._min_state;
+		_max_state = x._max_state;
+		_min_max_valid = x._min_max_valid;
+		return *this;
+	}
 } zone_trip_limits_t;
 
 #define ZONE_TRIP_LIMIT_COUNT	12
@@ -89,7 +123,7 @@ private:
 public:
 	static const int default_debounce_interval = 2; // In seconds
 	cthd_cdev(unsigned int _index, std::string control_path) :
-			index(_index), cdev_sysfs(control_path.c_str()), trip_point(0), max_state(
+			index(_index), cdev_sysfs(std::move(control_path)), trip_point(0), max_state(
 					0), min_state(0), curr_state(0), curr_pow(0), base_pow_state(
 					0), inc_dec_val(1), auto_down_adjust(false), read_back(
 					true), debounce_interval(default_debounce_interval), last_action_time(
@@ -236,7 +270,7 @@ public:
 	std::string get_cdev_alias() {
 		return alias_str;
 	}
-	std::string get_base_path() {
+	const std::string& get_base_path() {
 		return cdev_sysfs.get_base_path();
 	}
 	void set_cdev_type(std::string _type_str) {

@@ -26,22 +26,18 @@
 
 int cthd_gen_sysfs_cdev::update() {
 	if (cdev_sysfs.exists()) {
-		std::string state_str;
-		cdev_sysfs.read("", state_str);
-		std::istringstream(state_str) >> curr_state;
-		min_state = max_state = curr_state;
-	} else {
-		if (cdev_sysfs.get_base_path() && !strcmp(cdev_sysfs.get_base_path(), ""))
-			return THD_ERROR;
+		std::string base_path = cdev_sysfs.get_base_path();
+		if ((base_path.find("/sys/") != std::string::npos) || (base_path.find("/tmp")  != std::string::npos)) {
+			int ret = cdev_sysfs.read("", &curr_state);
+			if (ret < 0)
+				return ret;
 
-		int ret = cdev_sysfs.create();
-
-		if (ret < 0)
+			min_state = max_state = curr_state;
+		} else {
+			thd_log_info( "cthd_gen_sysfs_cdev::update: Invalid sysfs path or allowed path %s\n",
+					base_path.c_str());
 			return THD_ERROR;
-
-		ret = cdev_sysfs.write("", 0);
-		if (ret < 0)
-			return THD_ERROR;
+		}
 	}
 
 	return THD_SUCCESS;
@@ -49,7 +45,7 @@ int cthd_gen_sysfs_cdev::update() {
 
 void cthd_gen_sysfs_cdev::set_curr_state(int state, int arg) {
 
-	std::stringstream state_str;
+	std::ostringstream state_str;
 
 	if (write_prefix.length())
 		state_str << write_prefix;

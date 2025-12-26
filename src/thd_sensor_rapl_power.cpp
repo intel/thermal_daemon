@@ -36,8 +36,12 @@ cthd_sensor_rapl_power::cthd_sensor_rapl_power(int index) :
 unsigned int cthd_sensor_rapl_power::read_temperature() {
 	thd_engine->rapl_power_meter.rapl_start_measure_power();
 
+	thd_engine->thd_engine_unlock();
+
 	unsigned int pkg_power = thd_engine->rapl_power_meter.rapl_action_get_power(
 			PACKAGE);
+
+	thd_engine->thd_engine_lock();
 
 	pkg_power = (pkg_power / 1000);
 	thd_log_debug("Sensor %s :power %u\n", type_str.c_str(), pkg_power);

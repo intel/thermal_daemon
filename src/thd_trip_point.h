@@ -53,7 +53,7 @@ typedef enum {
 	EQUAL, GREATER, LESSER, LESSER_OR_EQUAL, GREATER_OR_EQUAL
 } trip_point_cdev_depend_rel_t;
 
-typedef struct {
+typedef struct _trip_pt_cdev_t{
 	cthd_cdev *cdev;
 	int influence;
 	int sampling_priod;
@@ -65,6 +65,74 @@ typedef struct {
 	int min_max_valid;
 	int min_state;
 	int max_state;
+
+	_trip_pt_cdev_t() {
+		cdev = 0;
+		influence = 0;
+		sampling_priod = 0;
+		last_op_time = 0;
+		target_state_valid = 0;
+		target_state = 0;
+		pid_param.valid = 0;
+		pid_param.kp = 0;
+		pid_param.ki = 0;
+		pid_param.kd = 0;
+		min_max_valid = 0;
+		min_state = 0;
+		max_state = 0;
+	}
+
+	_trip_pt_cdev_t(const _trip_pt_cdev_t& x) {
+		cdev = x.cdev;
+		influence = x.influence;
+		sampling_priod = x.sampling_priod;
+		last_op_time = x.last_op_time;
+		target_state_valid = x.target_state_valid;
+		target_state = x.target_state;
+
+		pid_param.valid = x.pid_param.valid;
+		pid_param.kp = x.pid_param.kp;
+		pid_param.ki = x.pid_param.ki;
+		pid_param.kd = x.pid_param.kd;
+
+		pid = x.pid;
+		min_max_valid = x.min_max_valid;
+		min_state = x.min_state;
+		max_state = x.max_state;
+	}
+
+	~_trip_pt_cdev_t() { }
+
+	_trip_pt_cdev_t& operator=(const _trip_pt_cdev_t& x) {
+		if (this == &x) {
+		  return *this; // Return early, do nothing
+		}
+		cdev = x.cdev;
+		influence = x.influence;
+		sampling_priod = x.sampling_priod;
+		last_op_time = x.last_op_time;
+		target_state_valid = x.target_state_valid;
+		target_state = x.target_state;
+		pid_param.valid = x.pid_param.valid;
+		pid_param.kp = x.pid_param.kp;
+		pid_param.ki = x.pid_param.ki;
+		pid_param.kd = x.pid_param.kd;
+		pid = x.pid;
+		min_max_valid = x.min_max_valid;
+		min_state = x.min_state;
+		max_state = x.max_state;
+
+		return *this;
+	}
+
+    bool operator > (const _trip_pt_cdev_t& other) const {
+        return influence > other.influence;
+    }
+
+    bool operator < (const _trip_pt_cdev_t& other) const {
+        return influence < other.influence;
+    }
+
 } trip_pt_cdev_t;
 
 #define DEFAULT_SENSOR_ID	0xFFFF
@@ -72,7 +140,6 @@ typedef struct {
 static bool trip_cdev_sort(trip_pt_cdev_t &cdev1, trip_pt_cdev_t &cdev2) {
 	return (cdev1.influence > cdev2.influence);
 }
-
 
 class cthd_trip_point {
 private:
@@ -202,7 +269,7 @@ public:
 		return cdevs[0].cdev;
 	}
 
-	void set_dependency(std::string cdev, std::string state_str);
+	void set_dependency(const std::string& cdev, const std::string& state_str);
 
 #ifndef ANDROID
 	trip_pt_cdev_t &get_cdev_at_index(unsigned int index) {

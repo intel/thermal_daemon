@@ -25,6 +25,8 @@
 #ifndef THD_DEFAULT_BINDING_H_
 #define THD_DEFAULT_BINDING_H_
 
+#include <memory>
+
 #include "thd_engine.h"
 #include "thd_cdev.h"
 
@@ -35,8 +37,8 @@ typedef struct {
 
 typedef struct {
 	std::string zone_name;
-	cthd_cdev *cdev_gate_entry;
-	cthd_cdev *cdev_gate_exit;
+	std::unique_ptr<cthd_cdev> cdev_gate_entry;
+	std::unique_ptr<cthd_cdev> cdev_gate_exit;
 	cthd_zone *zone;
 } cpu_zone_binding_t;
 
@@ -51,19 +53,10 @@ public:
 	static const int def_gating_cdev_sampling_period = 30;
 	static const unsigned int def_starting_power_differential = 4000000;
 
-	std::vector<cpu_zone_binding_t*> cdev_list;
+	std::vector<std::unique_ptr<cpu_zone_binding_t>> cdev_list;
 
 	cthd_cpu_default_binding() :
 			cpu_package_max_power(0) {
-	}
-	~ cthd_cpu_default_binding() {
-		for (unsigned int i = 0; i < cdev_list.size(); ++i) {
-			cpu_zone_binding_t *cdev_binding_info = cdev_list[i];
-			delete cdev_binding_info->cdev_gate_exit;
-			delete cdev_binding_info->cdev_gate_entry;
-			delete cdev_binding_info;
-		}
-		cdev_list.clear();
 	}
 
 	void do_default_binding(std::vector<cthd_cdev *> &cdevs);

@@ -37,16 +37,16 @@
 #include "thd_engine_default.h"
 #include "thd_cdev_order_parser.h"
 
-const char *def_cooling_devices[] = { "rapl_controller", "intel_pstate",
+const char * const def_cooling_devices[] = { "rapl_controller", "intel_pstate",
 		"intel_powerclamp", "cpufreq", "Processor", NULL };
 
 cthd_zone_cpu::cthd_zone_cpu(int index, std::string path, int package_id) :
-		cthd_zone(index, path, SENSORS_CORELATED), dts_sysfs(path.c_str()), critical_temp(
+		cthd_zone(index, path, SENSORS_CORELATED), dts_sysfs(std::move(path)), critical_temp(
 				0), max_temp(0), psv_temp(0), trip_point_cnt(0), sensor_mask(0), phy_package_id(
 				package_id), pkg_thres_th_zone(-1), pkg_temp_poll_enable(false) {
 
 	type_str = "cpu";
-	thd_log_debug("zone dts syfs: %s, package id %d\n", path.c_str(),
+	thd_log_debug("zone dts syfs: %s, package id %d\n", dts_sysfs.get_base_path().c_str(),
 			package_id);
 }
 
@@ -59,16 +59,16 @@ int cthd_zone_cpu::init() {
 
 	// Calculate the temperature trip points using the settings in coretemp
 	for (int i = 0; i < max_dts_sensors; ++i) {
-		std::stringstream temp_crit_str;
-		std::stringstream temp_max_str;
+		std::ostringstream temp_crit_str;
+		std::ostringstream temp_max_str;
 
 		temp_crit_str << "temp" << i << "_crit";
 		temp_max_str << "temp" << i << "_max";
 
 		if (dts_sysfs.exists(temp_crit_str.str())) {
-			std::string temp_str;
-			dts_sysfs.read(temp_crit_str.str(), temp_str);
-			std::istringstream(temp_str) >> temp;
+			int ret = dts_sysfs.read(temp_crit_str.str(), &temp);
+			if (ret < 0)
+				return ret;
 			if (critical_temp == 0 || temp < critical_temp)
 				critical_temp = temp;
 
@@ -79,9 +79,9 @@ int cthd_zone_cpu::init() {
 			// Set which index is present
 			sensor_mask = sensor_mask | (1 << i);
 
-			std::string temp_str;
-			dts_sysfs.read(temp_max_str.str(), temp_str);
-			std::istringstream(temp_str) >> temp;
+			int ret = dts_sysfs.read(temp_max_str.str(), &temp);
+			if (ret < 0)
+				return ret;
 			if (max_temp == 0 || temp < max_temp)
 				max_temp = temp;
 			found = true;
@@ -145,7 +145,7 @@ int cthd_zone_cpu::parse_cdev_order() {
 						psv_temp, def_hystersis, index, DEFAULT_SENSOR_ID);
 				trip_pt_passive.thd_trip_point_set_control_type(SEQUENTIAL);
 				load_cdev_xml(trip_pt_passive, order_list);
-				trip_points.push_back(trip_pt_passive);
+				trip_points.push_back(std::move(trip_pt_passive));
 				trip_point_cnt++;
 			}
 		}
@@ -178,7 +178,7 @@ int cthd_zone_cpu::read_trip_points() {
 		}
 		++i;
 	}
-	trip_points.push_back(trip_pt_passive);
+	trip_points.push_back(std::move(trip_pt_passive));
 	trip_point_cnt++;
 
 	// Add active trip point at the end
@@ -190,7 +190,7 @@ int cthd_zone_cpu::read_trip_points() {
 	if (cdev) {
 		trip_pt_active.thd_trip_point_add_cdev(*cdev,
 				cthd_trip_point::default_influence);
-		trip_points.push_back(trip_pt_active);
+		trip_points.push_back(std::move(trip_pt_active));
 		trip_point_cnt++;
 	}
 
@@ -241,7 +241,7 @@ int cthd_zone_cpu::zone_bind_sensors() {
 	unsigned int mask = 0x1;
 	do {
 		if (sensor_mask & mask) {
-			std::stringstream temp_input_str;
+			std::ostringstream temp_input_str;
 			temp_input_str << "temp" << cnt << "_input";
 			cthd_sensor *sensor;
 

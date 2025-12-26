@@ -29,7 +29,7 @@
 cthd_sysfs_zone::cthd_sysfs_zone(int count, std::string path) :
 		cthd_zone(count, std::move(path)), trip_point_cnt(0) {
 
-	std::stringstream tc_type_dev;
+	std::ostringstream tc_type_dev;
 	tc_type_dev << index << "/type";
 
 	thd_log_debug("Thermal Zone look for %s\n", tc_type_dev.str().c_str());
@@ -42,11 +42,11 @@ cthd_sysfs_zone::cthd_sysfs_zone(int count, std::string path) :
 }
 
 cthd_sysfs_zone::~cthd_sysfs_zone() {
-	std::stringstream trip_sysfs;
+	std::ostringstream trip_sysfs;
 	trip_sysfs << index << "/" << "trip_point_";
 
 	for (unsigned int i = 0; i < initial_trip_values.size(); ++i) {
-		std::stringstream temp_stream;
+		std::ostringstream temp_stream;
 		temp_stream << trip_sysfs.str() << i << "_temp";
 		if (initial_trip_values[i] >= 0
 				&& zone_sysfs.exists(temp_stream.str())) {
@@ -71,15 +71,13 @@ int cthd_sysfs_zone::zone_bind_sensors() {
 int cthd_sysfs_zone::read_trip_points() {
 
 	// Gather all trip points
-	std::stringstream trip_sysfs;
+	std::ostringstream trip_sysfs;
 	trip_sysfs << index << "/" << "trip_point_";
 	for (int i = 0; i < max_trip_points; ++i) {
-		std::stringstream type_stream;
-		std::stringstream temp_stream;
-		std::stringstream hist_stream;
+		std::ostringstream type_stream;
+		std::ostringstream temp_stream;
+		std::ostringstream hist_stream;
 		std::string _type_str;
-		std::string _temp_str;
-		std::string _hist_str;
 		trip_point_type_t trip_type;
 		int temp = 0, hyst = 1;
 		mode_t mode = 0;
@@ -95,20 +93,22 @@ int cthd_sysfs_zone::read_trip_points() {
 		temp_stream << trip_sysfs.str() << i << "_temp";
 		if (zone_sysfs.exists(temp_stream.str())) {
 			mode = zone_sysfs.get_mode(temp_stream.str());
-			zone_sysfs.read(temp_stream.str(), _temp_str);
-			std::istringstream(_temp_str) >> temp;
-			thd_log_debug("read_trip_points %s:%s\n",
-					temp_stream.str().c_str(), _temp_str.c_str());
+			int ret = zone_sysfs.read(temp_stream.str(), &temp);
+			if (ret < 0)
+				return ret;
+			thd_log_debug("read_trip_points %s:%d\n",
+					temp_stream.str().c_str(), temp);
 		}
 
 		hist_stream << trip_sysfs.str() << i << "_hyst";
 		if (zone_sysfs.exists(hist_stream.str())) {
-			zone_sysfs.read(hist_stream.str(), _hist_str);
-			std::istringstream(_hist_str) >> hyst;
+			int ret = zone_sysfs.read(hist_stream.str(), &hyst);
+			if (ret < 0)
+				return ret;
 			if (hyst < 1000 || hyst > 5000)
 				hyst = 1000;
-			thd_log_debug("read_trip_points %s:%s\n",
-					hist_stream.str().c_str(), _hist_str.c_str());
+			thd_log_debug("read_trip_points %s:%d\n",
+					hist_stream.str().c_str(), hyst);
 		}
 
 		if (_type_str == "critical")
@@ -135,7 +135,7 @@ int cthd_sysfs_zone::read_trip_points() {
 			cthd_trip_point trip_pt(trip_point_cnt, trip_type, temp, hyst,
 					index, sensor->get_index());
 			trip_pt.thd_trip_point_set_control_type(SEQUENTIAL);
-			trip_points.push_back(trip_pt);
+			trip_points.push_back(std::move(trip_pt));
 			++trip_point_cnt;
 		}
 	}
@@ -151,7 +151,7 @@ int cthd_sysfs_zone::read_trip_points() {
 
 		cthd_trip_point trip_pt(0, PASSIVE, INT32_MAX, 0, index, sensor->get_index());
 		trip_pt.thd_trip_point_set_control_type(SEQUENTIAL);
-		trip_points.push_back(trip_pt);
+		trip_points.push_back(std::move(trip_pt));
 		++trip_point_cnt;
 		thd_log_debug("Added one default trip\n");
 	}
@@ -164,22 +164,22 @@ int cthd_sysfs_zone::read_cdev_trip_points() {
 
 	// Gather all Cdevs
 	// Gather all trip points
-	std::stringstream cdev_sysfs;
+	std::ostringstream cdev_sysfs;
 	cdev_sysfs << index << "/" << "cdev";
 	for (int i = 0; i < max_cool_devs; ++i) {
-		std::stringstream trip_pt_stream, cdev_stream;
-		std::string trip_pt_str;
+		std::ostringstream trip_pt_stream, cdev_stream;
 		int trip_cnt = -1;
 		char buf[51], *ptr;
 		trip_pt_stream << cdev_sysfs.str() << i << "_trip_point";
 
 		if (zone_sysfs.exists(trip_pt_stream.str())) {
-			zone_sysfs.read(trip_pt_stream.str(), trip_pt_str);
-			std::istringstream(trip_pt_str) >> trip_cnt;
+			int ret = zone_sysfs.read(trip_pt_stream.str(), &trip_cnt);
+			if (ret < 0)
+				return ret;
 		} else
 			continue;
-		thd_log_debug("cdev trip point: %s contains %d\n", trip_pt_str.c_str(),
-				trip_cnt);
+		thd_log_debug("cdev trip point: %s contains %d\n",
+				trip_pt_stream.str().c_str(), trip_cnt);
 		cdev_stream << cdev_sysfs.str() << i;
 		if (zone_sysfs.exists(cdev_stream.str())) {
 			thd_log_debug("cdev%d present\n", i);

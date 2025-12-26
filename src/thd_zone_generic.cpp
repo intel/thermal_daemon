@@ -73,7 +73,7 @@ int cthd_zone_generic::read_trip_points() {
 				zone_cdev_set_binded();
 			}
 		}
-		trip_points.push_back(trip_pt);
+		trip_points.push_back(std::move(trip_pt));
 		++trip_point_cnt;
 	}
 

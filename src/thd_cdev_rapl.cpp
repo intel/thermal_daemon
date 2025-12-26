@@ -121,7 +121,7 @@ int cthd_sysfs_cdev_rapl::get_max_state() {
 
 int cthd_sysfs_cdev_rapl::rapl_sysfs_valid()
 {
-	std::stringstream temp_str;
+	std::ostringstream temp_str;
 	int found_long_term = 0;
 	int i;
 
@@ -169,7 +169,7 @@ int cthd_sysfs_cdev_rapl::rapl_sysfs_valid()
 
 int cthd_sysfs_cdev_rapl::rapl_read_pl1_max()
 {
-	std::stringstream temp_power_str;
+	std::ostringstream temp_power_str;
 	int current_pl1_max;
 
 	temp_power_str << "constraint_" << constraint_index << "_max_power_uw";
@@ -182,7 +182,7 @@ int cthd_sysfs_cdev_rapl::rapl_read_pl1_max()
 
 int cthd_sysfs_cdev_rapl::rapl_read_pl1()
 {
-	std::stringstream temp_power_str;
+	std::ostringstream temp_power_str;
 	int current_pl1;
 
 	temp_power_str << "constraint_" << constraint_index << "_power_limit_uw";
@@ -195,7 +195,7 @@ int cthd_sysfs_cdev_rapl::rapl_read_pl1()
 
 int cthd_sysfs_cdev_rapl::rapl_update_pl1(int pl1)
 {
-	std::stringstream temp_power_str;
+	std::ostringstream temp_power_str;
 	int ret;
 
 	temp_power_str << "constraint_" << constraint_index << "_power_limit_uw";
@@ -212,7 +212,7 @@ int cthd_sysfs_cdev_rapl::rapl_update_pl1(int pl1)
 
 int cthd_sysfs_cdev_rapl::rapl_read_pl2()
 {
-	std::stringstream temp_power_str;
+	std::ostringstream temp_power_str;
 	int current_pl2;
 
 	temp_power_str << "constraint_" << pl2_index << "_power_limit_uw";
@@ -225,7 +225,7 @@ int cthd_sysfs_cdev_rapl::rapl_read_pl2()
 
 int cthd_sysfs_cdev_rapl::rapl_update_pl2(int pl2)
 {
-	std::stringstream temp_power_str;
+	std::ostringstream temp_power_str;
 	int ret;
 
 	if (pl2_index == -1) {
@@ -246,7 +246,7 @@ int cthd_sysfs_cdev_rapl::rapl_update_pl2(int pl2)
 
 int cthd_sysfs_cdev_rapl::rapl_read_time_window()
 {
-	std::stringstream temp_time_str;
+	std::ostringstream temp_time_str;
 	int tm_window;
 
 	temp_time_str << "constraint_" << constraint_index << "_time_window_us";
@@ -259,7 +259,7 @@ int cthd_sysfs_cdev_rapl::rapl_read_time_window()
 
 int cthd_sysfs_cdev_rapl::rapl_update_time_window(int time_window)
 {
-	std::stringstream temp_time_str;
+	std::ostringstream temp_time_str;
 
 	temp_time_str << "constraint_" << constraint_index << "_time_window_us";
 
@@ -275,7 +275,7 @@ int cthd_sysfs_cdev_rapl::rapl_update_time_window(int time_window)
 
 int cthd_sysfs_cdev_rapl::rapl_update_pl2_time_window(int time_window)
 {
-	std::stringstream temp_time_str;
+	std::ostringstream temp_time_str;
 
 	temp_time_str << "constraint_" << pl2_index << "_time_window_us";
 
@@ -291,7 +291,7 @@ int cthd_sysfs_cdev_rapl::rapl_update_pl2_time_window(int time_window)
 
 int cthd_sysfs_cdev_rapl::rapl_update_enable_status(int enable)
 {
-	std::stringstream temp_str;
+	std::ostringstream temp_str;
 
 	temp_str << "enabled";
 	if (cdev_sysfs.write(temp_str.str(), enable) <= 0) {
@@ -306,7 +306,7 @@ int cthd_sysfs_cdev_rapl::rapl_update_enable_status(int enable)
 
 int cthd_sysfs_cdev_rapl::rapl_read_enable_status()
 {
-	std::stringstream temp_str;
+	std::ostringstream temp_str;
 	int enable;
 
 	temp_str << "enabled";

@@ -1,10 +1,10 @@
 #!/bin/bash
 
-CONF_FILE="/var/run/thermald/thermal-conf.xml.auto"
+CONF_FILE="/etc/thermald/thermal-conf.xml.auto"
 
 echo "Executing test : Test powerclamp cooling"
 cp powerclamp.xml $CONF_FILE
-dbus-send --system --dest=org.freedesktop.thermald /org/freedesktop/thermald org.freedesktop.thermald.Reinit
+dbus-send --system --dest=org.freedesktop.thermald --print-reply /org/freedesktop/thermald org.freedesktop.thermald.Reinit
 sleep 5
 
 THD0_ZONE=$(grep -r . /sys/class/thermal/* 2>/tmp/err.txt | grep  type:x86_pkg_temp | sed 's/\/type.*//')

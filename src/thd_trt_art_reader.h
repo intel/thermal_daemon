@@ -34,6 +34,7 @@
 #include <iostream>
 #include <fstream>
 #include <list>
+#include <memory>
 #include <vector>
 #include <algorithm>
 
@@ -77,13 +78,13 @@ private:
 	std::ofstream conf_file;
 	std::vector<rel_object_t> rel_list;
 
-	unsigned char *trt_data;
+	std::unique_ptr<unsigned char[]> trt_data;
 	unsigned int trt_count;
 
-	unsigned char *art_data;
+	std::unique_ptr<unsigned char[]> art_data;
 	unsigned int art_count;
 
-	unsigned char *psvt_data;
+	std::unique_ptr<unsigned char[]> psvt_data;
 	unsigned int psvt_count;
 
 	int read_trt();
@@ -91,7 +92,7 @@ private:
 	void create_platform_conf();
 	void create_platform_pref(int perf);
 	void create_thermal_zones();
-	void create_thermal_zone(std::string type);
+	void create_thermal_zone(const std::string& type);
 	void add_passive_trip_point(rel_object_t &rel_obj);
 	void add_psvt_trip_point(rel_object_t &rel_obj);
 	void add_active_trip_point(rel_object_t &rel_obj);
@@ -101,7 +102,7 @@ private:
 	void dump_art();
 
 	int read_psvt();
-	int process_psvt(std::string file_name);
+	int process_psvt(const std::string& file_name);
 	void dump_psvt();
 
 public:
@@ -109,7 +110,7 @@ public:
 
 	cthd_acpi_rel();
 
-	int generate_conf(std::string file_name);
+	int generate_conf(const std::string& file_name);
 };
 
 #endif /* THD_TRT_ART_READER_H_ */

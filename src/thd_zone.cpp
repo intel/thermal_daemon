@@ -35,7 +35,7 @@
 #include "thd_engine.h"
 
 cthd_zone::cthd_zone(int _index, std::string control_path, sensor_relate_t rel) :
-		index(_index), zone_sysfs(control_path.c_str()), zone_temp(0), zone_active(
+		index(_index), zone_sysfs(std::move(control_path)), zone_temp(0), zone_active(
 				false), zone_cdev_binded_status(false), type_str(), sensor_rel(
 				rel) {
 	thd_log_debug("Added zone index:%d\n", index);
@@ -88,7 +88,7 @@ void cthd_zone::update_zone_preference() {
 }
 
 int cthd_zone::read_user_set_psv_temp() {
-	std::stringstream filename;
+	std::ostringstream filename;
 	int temp = -1;
 
 	filename << TDRUNDIR << "/" << "thd_user_psv_temp." << type_str << "."
@@ -142,7 +142,7 @@ void cthd_zone::sort_and_update_poll_trip() {
 			cthd_trip_point trip_pt_polling(trip_points.size(), POLLING,
 					polling_trip, 0, index, sensor->get_index());
 			trip_pt_polling.thd_trip_point_set_control_type(PARALLEL);
-			trip_points.push_back(trip_pt_polling);
+			trip_points.push_back(std::move(trip_pt_polling));
 		}
 	}
 }
@@ -250,8 +250,8 @@ int cthd_zone::bind_cooling_device(trip_point_type_t type,
 
 int cthd_zone::update_max_temperature(int max_temp) {
 
-	std::stringstream filename;
-	std::stringstream temp_str;
+	std::ostringstream filename;
+	std::ostringstream temp_str;
 
 	filename << TDRUNDIR << "/" << "thd_user_set_max." << type_str << "."
 			<< "conf";
@@ -268,8 +268,8 @@ int cthd_zone::update_max_temperature(int max_temp) {
 
 int cthd_zone::update_psv_temperature(int psv_temp) {
 
-	std::stringstream filename;
-	std::stringstream temp_str;
+	std::ostringstream filename;
+	std::ostringstream temp_str;
 
 	filename << TDRUNDIR << "/" << "thd_user_psv_temp." << type_str << "."
 			<< "conf";
