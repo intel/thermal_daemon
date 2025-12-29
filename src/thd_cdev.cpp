@@ -177,23 +177,23 @@ int cthd_cdev::thd_cdev_exponential_controller(int set_point, int target_temp,
 	return THD_SUCCESS;
 }
 
-static bool sort_clamp_values_asc(zone_trip_limits_t limit_1,
-		zone_trip_limits_t limit_2) {
+static bool sort_clamp_values_asc(const zone_trip_limits_t& limit_1,
+		const zone_trip_limits_t& limit_2) {
 	return (limit_1.target_value < limit_2.target_value);
 }
 
-static bool sort_clamp_values_dec(zone_trip_limits_t limit_1,
-		zone_trip_limits_t limit_2) {
+static bool sort_clamp_values_dec(const zone_trip_limits_t& limit_1,
+		const zone_trip_limits_t& limit_2) {
 	return (limit_1.target_value > limit_2.target_value);
 }
 
-static bool sort_min_max_values_asc(zone_trip_limits_t limit_1,
-		zone_trip_limits_t limit_2) {
+static bool sort_min_max_values_asc(const zone_trip_limits_t& limit_1,
+		const zone_trip_limits_t& limit_2) {
 	return (limit_1._min_state < limit_2._min_state);
 }
 
-static bool sort_min_max_values_dec(zone_trip_limits_t limit_1,
-		zone_trip_limits_t limit_2) {
+static bool sort_min_max_values_dec(const zone_trip_limits_t& limit_1,
+		const zone_trip_limits_t& limit_2) {
 	return (limit_1._max_state > limit_2._max_state);
 }
 
