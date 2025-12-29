@@ -82,48 +82,11 @@ typedef struct _trip_pt_cdev_t{
 		max_state = 0;
 	}
 
-	_trip_pt_cdev_t(const _trip_pt_cdev_t& x) {
-		cdev = x.cdev;
-		influence = x.influence;
-		sampling_priod = x.sampling_priod;
-		last_op_time = x.last_op_time;
-		target_state_valid = x.target_state_valid;
-		target_state = x.target_state;
-
-		pid_param.valid = x.pid_param.valid;
-		pid_param.kp = x.pid_param.kp;
-		pid_param.ki = x.pid_param.ki;
-		pid_param.kd = x.pid_param.kd;
-
-		pid = x.pid;
-		min_max_valid = x.min_max_valid;
-		min_state = x.min_state;
-		max_state = x.max_state;
-	}
+	_trip_pt_cdev_t(const _trip_pt_cdev_t& x) = default;
 
 	~_trip_pt_cdev_t() { }
 
-	_trip_pt_cdev_t& operator=(const _trip_pt_cdev_t& x) {
-		if (this == &x) {
-		  return *this; // Return early, do nothing
-		}
-		cdev = x.cdev;
-		influence = x.influence;
-		sampling_priod = x.sampling_priod;
-		last_op_time = x.last_op_time;
-		target_state_valid = x.target_state_valid;
-		target_state = x.target_state;
-		pid_param.valid = x.pid_param.valid;
-		pid_param.kp = x.pid_param.kp;
-		pid_param.ki = x.pid_param.ki;
-		pid_param.kd = x.pid_param.kd;
-		pid = x.pid;
-		min_max_valid = x.min_max_valid;
-		min_state = x.min_state;
-		max_state = x.max_state;
-
-		return *this;
-	}
+	_trip_pt_cdev_t& operator=(const _trip_pt_cdev_t& x) = default;
 
     bool operator > (const _trip_pt_cdev_t& other) const {
         return influence > other.influence;
