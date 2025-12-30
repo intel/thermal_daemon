@@ -282,7 +282,7 @@ int cthd_gddv::parse_apct(char *apct, int len) {
 				}
 				condition_set.push_back(std::move(condition));
 			}
-			conditions.push_back(move(condition_set));
+			conditions.push_back(std::move(condition_set));
 		}
 	} else if (version == 2) {
 		while (offset < len) {
