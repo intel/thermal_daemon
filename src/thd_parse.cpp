@@ -106,6 +106,36 @@ int cthd_parse::parser_init(const std::string& config_file) {
 		}
 	}
 
+	struct stat file_stat;
+
+	if (stat(xml_config_file, &file_stat) == -1) {
+		thd_log_info("Could not get file status for %s\n", xml_config_file);
+		return THD_ERROR;
+	}
+
+	// Make sure file is owned by root and not writable by group/others
+
+	if (file_stat.st_uid != 0) {
+		thd_log_info("Config file %s is not owned by root\n", xml_config_file);
+		return THD_ERROR;
+	}
+
+	if (file_stat.st_mode & (S_IWGRP | S_IWOTH)) {
+		thd_log_info("File %s is group, other writable\n", xml_config_file);
+		return THD_ERROR;
+	}
+
+	// Check if file is not a symbolic link
+
+	if (lstat(xml_config_file, &file_stat) == -1) {
+		return THD_ERROR;
+	}
+
+	if (S_ISLNK(file_stat.st_mode)) {
+		thd_log_info("Config file %s is a symbolic link\n", xml_config_file);
+		return THD_ERROR;
+	}
+
 	thd_log_msg("Using config file %s\n", xml_config_file);
 	doc = xmlReadFile(xml_config_file, NULL, 0);
 	if (doc == NULL) {
