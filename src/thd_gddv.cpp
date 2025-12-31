@@ -412,7 +412,8 @@ static const char * const comp_strs[] = {
 		"INVALID",
 		"ADAPTIVE_EQUAL",
 		"ADAPTIVE_LESSER_OR_EQUAL",
-		"ADAPTIVE_GREATER_OR_EQUAL"
+		"ADAPTIVE_GREATER_OR_EQUAL",
+		"ADAPTIVE_NOT_EQUAL"
 };
 
 #define ARRAY_SIZE(array) \
@@ -1173,6 +1174,12 @@ int cthd_gddv::compare_condition(const struct condition& condition,
 		else
 			return THD_ERROR;
 		break;
+	case ADAPTIVE_NOT_EQUAL:
+	    if (value != condition.argument)
+			return THD_SUCCESS;
+		else
+		    return THD_ERROR;
+        break;
 	default:
 		return THD_ERROR;
 	}
@@ -1199,6 +1206,12 @@ int cthd_gddv::compare_time(const struct condition& condition) {
 			return THD_SUCCESS;
 		else
 			return THD_ERROR;
+		break;
+	case ADAPTIVE_NOT_EQUAL:
+	    if (elapsed != condition.time)
+			return THD_SUCCESS;
+		else
+		    return THD_ERROR;
 		break;
 	default:
 		return THD_ERROR;
@@ -1778,4 +1791,3 @@ void cthd_gddv::gddv_free(void)
 {
 	destroy_dynamic_sources();
 }
-
