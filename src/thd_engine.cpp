@@ -1220,8 +1220,8 @@ int cthd_engine::user_add_cdev(std::string cdev_name, std::string cdev_path,
 		if (cdev_sysfs->update() != THD_SUCCESS) {
 			return THD_ERROR;
 		}
-		cdev = cdev_sysfs.get();
 		cdevs.push_back(std::move(cdev_sysfs));
+		cdev = cdevs.back().get();
 		++current_cdev_index;
 	}
 	cdev->set_min_state(min_state);
