@@ -72,11 +72,11 @@ public:
 	}
 
 #endif
-	~cthd_engine_default();
-	int read_thermal_zones();
-	int read_cooling_devices();
-	int read_thermal_sensors();
-	void workarounds();
+	~cthd_engine_default() override;
+	int read_thermal_zones() override;
+	int read_cooling_devices() override;
+	int read_thermal_sensors() override;
+	void workarounds() override;
 };
 
 int thd_engine_create_default_engine(bool ignore_cpuid_check,

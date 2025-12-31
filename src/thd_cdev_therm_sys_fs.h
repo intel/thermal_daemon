@@ -34,10 +34,10 @@ public:
 	cthd_sysfs_cdev(unsigned int _index, std::string control_path) :
 			cthd_cdev(_index, std::move(control_path)) {
 	}
-	virtual void set_curr_state(int state, int arg);
-	virtual int get_curr_state();
-	virtual int get_max_state();
-	virtual int update();
+	void set_curr_state(int state, int arg) override;
+	int get_curr_state() override;
+	int get_max_state() override;
+	int update() override;
 };
 
 #endif /* THD_CDEV_THERM_SYS_FS_H_ */

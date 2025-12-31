@@ -62,7 +62,7 @@ struct header {
 } __attribute__ ((packed));
 
 class _gddv_exception: public std::exception {
-	virtual const char* what() const throw () {
+	const char* what() const throw () override {
 		return "GDDV parsing failed";
 	}
 } const gddv_exception;  // TODO: why singleton
