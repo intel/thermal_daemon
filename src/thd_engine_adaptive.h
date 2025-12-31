@@ -81,9 +81,9 @@ public:
 		return gddv.get_ppcc_param(name);
 	}
 
-	int search_idsp(std::string name) override
+	int search_idsp(const std::string& name) override
 	{
-		return gddv.search_idsp(std::move(name));
+		return gddv.search_idsp(name);
 	}
 
 	int thd_engine_init(bool ignore_cpuid_check, bool adaptive) override;

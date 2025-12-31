@@ -105,6 +105,10 @@ int cthd_zone::read_user_set_psv_temp() {
 	return temp;
 }
 
+static inline bool trip_sort(const cthd_trip_point& trip1, const cthd_trip_point& trip2) {
+	return (trip1.get_trip_temp() < trip2.get_trip_temp());
+}
+
 void cthd_zone::sort_and_update_poll_trip() {
 	thd_log_debug("sort_and_update_poll_trip: trip_points_size =%zu\n",
 			trip_points.size());
