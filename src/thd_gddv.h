@@ -99,7 +99,7 @@ enum adaptive_condition {
 };
 
 enum adaptive_comparison {
-	ADAPTIVE_EQUAL = 0x01, ADAPTIVE_LESSER_OR_EQUAL, ADAPTIVE_GREATER_OR_EQUAL,
+	ADAPTIVE_EQUAL = 0x01, ADAPTIVE_LESSER_OR_EQUAL, ADAPTIVE_GREATER_OR_EQUAL, ADAPTIVE_NOT_EQUAL,
 };
 
 enum adaptive_operation {
