@@ -27,7 +27,7 @@
 int cthd_gen_sysfs_cdev::update() {
 	if (cdev_sysfs.exists()) {
 		std::string base_path = cdev_sysfs.get_base_path();
-		if ((base_path.find("/sys/") != std::string::npos) || (base_path.find("/tmp")  != std::string::npos)) {
+		if (base_path.find("/sys/") != std::string::npos) {
 			int ret = cdev_sysfs.read("", &curr_state);
 			if (ret < 0)
 				return ret;
@@ -38,6 +38,10 @@ int cthd_gen_sysfs_cdev::update() {
 					base_path.c_str());
 			return THD_ERROR;
 		}
+	} else {
+		thd_log_info( "cthd_gen_sysfs_cdev::update: sysfs path does not exist %s\n",
+				cdev_sysfs.get_base_path().c_str());
+		return THD_ERROR;
 	}
 
 	return THD_SUCCESS;
