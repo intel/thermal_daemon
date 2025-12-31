@@ -593,8 +593,8 @@ int cthd_engine_default::add_replace_cdev(const cooling_dev_t *config) {
 		if (tmp->update() != THD_SUCCESS) {
 			return THD_ERROR;
 		}
-		cdev = tmp.get();
 		cdevs.push_back(std::move(tmp));
+		cdev = cdevs.back().get();
 		++current_cdev_index;
 	}
 
