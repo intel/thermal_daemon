@@ -454,9 +454,10 @@ gboolean thd_dbus_interface_get_cdev_information(PrefObject *obj, gint index,
 	thd_log_debug("thd_dbus_interface_get_cdev_information %d\n", index);
 
 	cthd_cdev *cdev = thd_engine->user_get_cdev(index);
-	if (!cdev)
+	if (!cdev) {
+		thd_log_debug("cthd_dbus_interface_get_cdev_information: Invalid cdev index %d\n", index);
 		return FALSE;
-
+	}
 	cdev_str = g_new(char, MAX_DBUS_REPLY_STR_LEN + 1);
 	if (!cdev_str)
 		return FALSE;
@@ -735,7 +736,7 @@ thd_dbus_handle_method_call(GDBusConnection       *connection,
 	if (g_strcmp0(method_name, "DeleteZone") == 0) {
 		g_autofree gchar *zone_name = NULL;
 
-		g_variant_get(parameters, "(&s)", &zone_name);
+		g_variant_get(parameters, "(s)", &zone_name);
 
 		thd_dbus_interface_delete_zone(obj, zone_name, &error);
 
