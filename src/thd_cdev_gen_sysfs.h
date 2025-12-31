@@ -33,9 +33,9 @@ public:
 	cthd_gen_sysfs_cdev(unsigned int _index, std::string control_path) :
 			cthd_cdev(_index, std::move(control_path)) {
 	}
-	virtual void set_curr_state(int state, int arg);
-	virtual void set_curr_state_raw(int state, int arg);
-	virtual int update();
+	void set_curr_state(int state, int arg) override;
+	void set_curr_state_raw(int state, int arg) override;
+	int update() override;
 };
 
 #endif /* THD_CDEV_GEN_SYSFS_H_ */

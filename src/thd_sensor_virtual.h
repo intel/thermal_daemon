@@ -37,10 +37,10 @@ private:
 public:
 	cthd_sensor_virtual(int _index, std::string _type_str,
 			std::string _link_type_str, double multiplier, double offset);
-	~cthd_sensor_virtual();
+	~cthd_sensor_virtual() override;
 	int sensor_update();
-	unsigned int read_temperature();
-	virtual void sensor_dump() {
+	unsigned int read_temperature() override;
+	void sensor_dump() override {
 		if (link_sensor)
 			thd_log_info("sensor index:%d %s virtual link %s %f %f\n", index,
 					type_str.c_str(), link_sensor->get_sensor_type().c_str(),

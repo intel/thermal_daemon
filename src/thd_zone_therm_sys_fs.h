@@ -37,11 +37,11 @@ public:
 	static const int max_cool_devs = 50;
 
 	cthd_sysfs_zone(int count, std::string path);
-	~cthd_sysfs_zone();
+	~cthd_sysfs_zone() override;
 
-	virtual int read_trip_points();
-	virtual int read_cdev_trip_points();
-	virtual int zone_bind_sensors();
+	int read_trip_points() override;
+	int read_cdev_trip_points() override;
+	int zone_bind_sensors() override;
 
 };
 

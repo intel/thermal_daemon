@@ -57,9 +57,9 @@ public:
 	cthd_zone_cpu(int count, std::string path, int package_id);
 	int load_cdev_xml(cthd_trip_point &trip_pt, std::vector<std::string> &list);
 
-	virtual int read_trip_points();
-	int read_cdev_trip_points();
-	int zone_bind_sensors();
+	int read_trip_points() override;
+	int read_cdev_trip_points() override;
+	int zone_bind_sensors() override;
 
 };
 

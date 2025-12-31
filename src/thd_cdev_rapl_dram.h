@@ -36,7 +36,7 @@ public:
 		device_name = "TMEM.D0";
 	}
 
-	virtual int update();
+	int update() override;
 };
 
 #endif /* THD_CDEV_RAPL_DRAM_H_ */

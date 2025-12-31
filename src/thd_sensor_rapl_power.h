@@ -31,7 +31,7 @@ class cthd_sensor_rapl_power: public cthd_sensor {
 private:
 public:
 	cthd_sensor_rapl_power(int index);
-	unsigned int read_temperature();
+	unsigned int read_temperature() override;
 };
 
 #endif

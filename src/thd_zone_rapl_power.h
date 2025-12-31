@@ -30,9 +30,9 @@
 class cthd_zone_rapl_power: public cthd_zone {
 public:
 	cthd_zone_rapl_power(int index);
-	int read_trip_points();
-	int zone_bind_sensors();
-	int read_cdev_trip_points();
+	int read_trip_points() override;
+	int zone_bind_sensors() override;
+	int read_cdev_trip_points() override;
 };
 
 #endif
