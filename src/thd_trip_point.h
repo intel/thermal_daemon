@@ -53,7 +53,8 @@ typedef enum {
 	EQUAL, GREATER, LESSER, LESSER_OR_EQUAL, GREATER_OR_EQUAL
 } trip_point_cdev_depend_rel_t;
 
-typedef struct _trip_pt_cdev_t{
+class trip_pt_cdev_t{
+public:
 	cthd_cdev *cdev;
 	int influence;
 	int sampling_priod;
@@ -66,7 +67,7 @@ typedef struct _trip_pt_cdev_t{
 	int min_state;
 	int max_state;
 
-	_trip_pt_cdev_t() {
+	trip_pt_cdev_t() {
 		cdev = 0;
 		influence = 0;
 		sampling_priod = 0;
@@ -82,21 +83,21 @@ typedef struct _trip_pt_cdev_t{
 		max_state = 0;
 	}
 
-	_trip_pt_cdev_t(const _trip_pt_cdev_t& x) = default;
+	trip_pt_cdev_t(const trip_pt_cdev_t& x) = default;
 
-	~_trip_pt_cdev_t() { }
+	~trip_pt_cdev_t() { }
 
-	_trip_pt_cdev_t& operator=(const _trip_pt_cdev_t& x) = default;
+	trip_pt_cdev_t& operator=(const trip_pt_cdev_t& x) = default;
 
-    bool operator > (const _trip_pt_cdev_t& other) const {
+    bool operator > (const trip_pt_cdev_t& other) const {
         return influence > other.influence;
     }
 
-    bool operator < (const _trip_pt_cdev_t& other) const {
+    bool operator < (const trip_pt_cdev_t& other) const {
         return influence < other.influence;
     }
 
-} trip_pt_cdev_t;
+} ;
 
 #define DEFAULT_SENSOR_ID	0xFFFF
 

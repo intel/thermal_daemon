@@ -39,31 +39,31 @@ else
 fi
 
 case $opt_no in
-0) dbus-send --system --dest=org.freedesktop.thermald /org/freedesktop/thermald org.freedesktop.thermald.SetCurrentPreference string:"FALLBACK"
+0) dbus-send --system --dest=org.freedesktop.thermald  --print-reply /org/freedesktop/thermald org.freedesktop.thermald.SetCurrentPreference string:"FALLBACK"
 ;;
 
-1) dbus-send --system --dest=org.freedesktop.thermald /org/freedesktop/thermald org.freedesktop.thermald.SetCurrentPreference string:"PERFORMANCE"
+1) dbus-send --system --dest=org.freedesktop.thermald  --print-reply /org/freedesktop/thermald org.freedesktop.thermald.SetCurrentPreference string:"PERFORMANCE"
 ;;
 
-2) dbus-send --system --dest=org.freedesktop.thermald /org/freedesktop/thermald org.freedesktop.thermald.SetCurrentPreference string:"ENERGY_CONSERVE"
+2) dbus-send --system --dest=org.freedesktop.thermald  --print-reply /org/freedesktop/thermald org.freedesktop.thermald.SetCurrentPreference string:"ENERGY_CONSERVE"
 ;;
 
-3) dbus-send --system --dest=org.freedesktop.thermald /org/freedesktop/thermald org.freedesktop.thermald.SetCurrentPreference string:"DISABLE"
+3) dbus-send --system --dest=org.freedesktop.thermald  --print-reply /org/freedesktop/thermald org.freedesktop.thermald.SetCurrentPreference string:"DISABLE"
 ;;
 
-4) dbus-send --system --dest=org.freedesktop.thermald /org/freedesktop/thermald org.freedesktop.thermald.Calibrate
+4) dbus-send --system --dest=org.freedesktop.thermald  --print-reply /org/freedesktop/thermald org.freedesktop.thermald.Calibrate
 ;;
 
 5)
 echo -n " Enter valid max temp in mill degree celsius "
 read max_temp
-dbus-send --system --dest=org.freedesktop.thermald /org/freedesktop/thermald org.freedesktop.thermald.SetUserMaxTemperature string:cpu uint32:$max_temp
+dbus-send --system --dest=org.freedesktop.thermald  --print-reply /org/freedesktop/thermald org.freedesktop.thermald.SetUserMaxTemperature string:cpu uint32:$max_temp
 ;;
 
 6)
 echo -n " Enter valid passive temp in mill degree celsius "
 read psv_temp
-dbus-send --system --dest=org.freedesktop.thermald /org/freedesktop/thermald org.freedesktop.thermald.SetUserPassiveTemperature string:cpu uint32:$psv_temp
+dbus-send --system --dest=org.freedesktop.thermald  --print-reply /org/freedesktop/thermald org.freedesktop.thermald.SetUserPassiveTemperature string:cpu uint32:$psv_temp
 ;;
 
 7) dbus-send --system --dest=org.freedesktop.thermald --print-reply /org/freedesktop/thermald org.freedesktop.thermald.Terminate
@@ -73,7 +73,7 @@ dbus-send --system --dest=org.freedesktop.thermald /org/freedesktop/thermald org
 ;;
 
 A)
-dbus-send --system --dest=org.freedesktop.thermald /org/freedesktop/thermald org.freedesktop.thermald.AddSensor string:"TEST_ADD_SENSOR" string:"/sys/class/thermal/thermal_zone0/temp"
+dbus-send --system --dest=org.freedesktop.thermald --print-reply /org/freedesktop/thermald org.freedesktop.thermald.AddSensor string:"TEST_ADD_SENSOR" string:"/sys/class/thermal/thermal_zone0/temp"
 ;;
 
 B)
@@ -81,11 +81,11 @@ dbus-send --system --dest=org.freedesktop.thermald --print-reply /org/freedeskto
 ;;
 
 C)
-dbus-send --system --dest=org.freedesktop.thermald /org/freedesktop/thermald org.freedesktop.thermald.AddZonePassive string:"TEST_ADD_ZONE" uint32:90000 string:"hwmon" string:"intel_pstate"
+dbus-send --system --dest=org.freedesktop.thermald --print-reply /org/freedesktop/thermald org.freedesktop.thermald.AddZonePassive string:"TEST_ADD_ZONE" uint32:90000 string:"TEST_ADD_SENSOR" string:"intel_pstate"
 ;;
 
 D)
-dbus-send --system --dest=org.freedesktop.thermald /org/freedesktop/thermald org.freedesktop.thermald.SetZoneStatus string:"TEST_ADD_ZONE" int32:0
+dbus-send --system --dest=org.freedesktop.thermald --print-reply /org/freedesktop/thermald org.freedesktop.thermald.SetZoneStatus string:"TEST_ADD_ZONE" int32:0
 ;;
 
 E)
@@ -93,11 +93,11 @@ dbus-send --system --dest=org.freedesktop.thermald --print-reply /org/freedeskto
 ;;
 
 F)
-dbus-send --system --dest=org.freedesktop.thermald /org/freedesktop/thermald org.freedesktop.thermald.DeleteZone string:"TEST_ADD_ZONE"
+dbus-send --system --dest=org.freedesktop.thermald --print-reply /org/freedesktop/thermald org.freedesktop.thermald.DeleteZone string:"TEST_ADD_ZONE"
 ;;
 
 G)
-dbus-send --system --dest=org.freedesktop.thermald /org/freedesktop/thermald org.freedesktop.thermald.AddCoolingDevice string:"TEST_CDEV" string:"/sys/class/thermal/cooling_device0/cur_state" int32:0 int32:1 int32:1
+dbus-send --system --dest=org.freedesktop.thermald --print-reply /org/freedesktop/thermald org.freedesktop.thermald.AddCoolingDevice string:"TEST_CDEV" string:"/sys/class/thermal/cooling_device0/cur_state" int32:0 int32:1 int32:1
 ;;
 
 H)

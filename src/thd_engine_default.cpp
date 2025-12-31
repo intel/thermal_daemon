@@ -651,6 +651,8 @@ int cthd_engine_default::read_cooling_devices() {
 	rapl_dev->set_cdev_alias("B0D4");
 	if (rapl_dev->update() == THD_SUCCESS) {
 		rapl_dev_borrow = rapl_dev.get();
+		cdevs.push_back(std::move(rapl_dev));
+		++current_cdev_index;
 	} else {
 		rapl_dev.reset();
 	}
@@ -683,11 +685,6 @@ int cthd_engine_default::read_cooling_devices() {
 			++current_cdev_index;
 
 		}
-	}
-
-	if (rapl_dev_borrow) {
-		cdevs.push_back(std::move(rapl_dev));
-		++current_cdev_index;
 	}
 
 	// Add Intel P state driver as cdev
