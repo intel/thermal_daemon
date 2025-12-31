@@ -28,7 +28,7 @@
 class arm_platform : public cthd_platform {
 public:
     arm_platform();
-    virtual ~arm_platform();
+    ~arm_platform() override;
 
     // Override virtual methods from base class
     void detect_platform() override;

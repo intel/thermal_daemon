@@ -121,7 +121,7 @@ public:
 	}
 
 	void set_zone_type(std::string type) {
-		type_str = type;
+		type_str = std::move(type);
 	}
 
 	void bind_sensor(cthd_sensor *sensor) {

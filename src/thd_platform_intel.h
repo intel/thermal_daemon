@@ -27,7 +27,7 @@
 class intel_platform : public cthd_platform {
 public:
     intel_platform();
-    virtual ~intel_platform();
+    ~intel_platform() override;
 
     // Override virtual methods from base class
     void detect_platform() override;

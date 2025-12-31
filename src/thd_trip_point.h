@@ -167,7 +167,7 @@ public:
 	trip_point_type_t get_trip_type() {
 		return type;
 	}
-	unsigned int get_trip_temp() {
+	unsigned int get_trip_temp() const {
 		return temp;
 	}
 	unsigned int get_trip_hyst() {
@@ -302,8 +302,4 @@ public:
 		}
 	}
 };
-
-static inline bool trip_sort(cthd_trip_point trip1, cthd_trip_point trip2) {
-	return (trip1.get_trip_temp() < trip2.get_trip_temp());
-}
 #endif

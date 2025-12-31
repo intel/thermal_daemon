@@ -230,7 +230,7 @@ public:
 		return config_file;
 	}
 	virtual ppcc_t *get_ppcc_param(const std::string& name);
-	virtual int search_idsp(std::string name) {
+	virtual int search_idsp(const std::string& name) {
 		return THD_ERROR;
 	}
 	cthd_zone *search_zone(const std::string& name);
