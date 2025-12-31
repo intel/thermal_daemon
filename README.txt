@@ -111,6 +111,13 @@ For build, follow the same procedure as Fedora.
 
 Releases
 
+Release 2.5.11
+- Clang-tidy fixes
+- Wildcat Lake support
+- CVE related to symbolic links exploitations
+- dbus interface fixes and remove power group after Thermal monitor
+support is deprecated
+
 Release 2.5.10
 - For new ITMT string version 3 support
 - There was issue in updating path for DPTF files for Panther Lake
