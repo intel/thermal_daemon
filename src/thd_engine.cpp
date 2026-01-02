@@ -1099,6 +1099,15 @@ void cthd_engine::check_for_rt_kernel() {
 int cthd_engine::user_add_sensor(std::string name, std::string path) {
 	pthread_mutex_lock(&thd_engine_mutex);
 
+	if (path.empty())
+		return THD_ERROR;
+
+	std::string start("/sys/");
+	if (path.substr(0, start.length()) != start) {
+		thd_log_debug("Invalid path %s\n", path.c_str());
+		return THD_ERROR;
+	}
+
 	for (unsigned int i = 0; i < sensors.size(); ++i) {
 		if (sensors[i]->get_sensor_type() == name) {
 			cthd_sensor *sensor = sensors[i].get();

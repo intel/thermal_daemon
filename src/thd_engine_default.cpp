@@ -195,7 +195,7 @@ int cthd_engine_default::read_thermal_sensors() {
 			} else {
 				std::unique_ptr<cthd_sensor> sensor_new;
 				if (sensor_config->virtual_sensor) {
-				std::unique_ptr<cthd_sensor_virtual> sensor_virt(new cthd_sensor_virtual(
+					std::unique_ptr<cthd_sensor_virtual> sensor_virt(new cthd_sensor_virtual(
 							index, sensor_config->name,
 							sensor_config->sensor_link.name,
 							sensor_config->sensor_link.multiplier,
@@ -205,6 +205,13 @@ int cthd_engine_default::read_thermal_sensors() {
 					}
 					sensor_new = std::move(sensor_virt);
 				} else {
+					std::string start("/sys/");
+					if (sensor_config->path.substr(0, start.length()) != start) {
+						thd_log_debug( "Invalid sysfs path or allowed path %s\n",
+								sensor_config->path.c_str());
+						continue;
+					}
+
 					sensor_new.reset(new cthd_sensor(index, sensor_config->path,
 							sensor_config->name, SENSOR_TYPE_RAW));
 					if (sensor_new->sensor_update() != THD_SUCCESS) {
