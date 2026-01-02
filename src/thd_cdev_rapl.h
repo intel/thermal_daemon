@@ -113,16 +113,16 @@ public:
 		pl1_valid = 0;
 	}
 
-	virtual void set_curr_state(int state, int arg);
-	virtual int get_curr_state();
-	virtual int get_curr_state(bool read_again);
-	virtual int get_max_state();
-	virtual int update();
-	virtual void set_curr_state_raw(int state, int arg);
+	void set_curr_state(int state, int arg) override;
+	int get_curr_state() override;
+	int get_curr_state(bool read_again) override;
+	int get_max_state() override;
+	int update() override;
+	void set_curr_state_raw(int state, int arg) override;
 	void set_tcc(int tcc);
-	void set_adaptive_target(struct adaptive_target &target);
-	void thd_cdev_set_min_state_param(int arg);
-	int get_phy_max_state() {
+	void set_adaptive_target(struct adaptive_target &target) override;
+	void thd_cdev_set_min_state_param(int arg) override;
+	int get_phy_max_state() override {
 		return phy_max;
 	}
 	int rapl_update_enable_status(int enable);

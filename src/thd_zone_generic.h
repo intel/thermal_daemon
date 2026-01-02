@@ -36,9 +36,9 @@ public:
 
 	cthd_zone_generic(int index, int _config_index, std::string type);
 
-	virtual int read_trip_points();
-	virtual int read_cdev_trip_points();
-	virtual int zone_bind_sensors();
+	int read_trip_points() override;
+	int read_cdev_trip_points() override;
+	int zone_bind_sensors() override;
 };
 
 #endif /* THD_ZONE_GENERIC_H_ */
