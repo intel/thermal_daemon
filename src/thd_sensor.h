@@ -69,6 +69,11 @@ public:
 	int set_threshold(int index, int temp);
 	;
 	void update_path(std::string str) {
+		std::string start("/sys/");
+		if (str.substr(0, start.length()) != start) {
+			thd_log_debug("Invalid path %s\n", str.c_str());
+			return;
+		}
 		sensor_sysfs.update_path(std::move(str));
 	}
 	void set_async_capable(bool capable) {
