@@ -1600,26 +1600,21 @@ void cthd_gddv::setup_input_devices() {
 #ifdef GDDV_LOAD_FROM_FILE
 #define MAX_GDDV_FILE_SIZE	(4 * 1024)
 
-size_t cthd_gddv::gddv_load(char **buffer)
+std::unique_ptr<char[]> cthd_gddv::gddv_load(size_t *size)
 {
 	std::string dir_name = TDCONFDIR;
 	std::string file_name;
 	ssize_t line_size;
-	char *data_buffer;
 	char *line_buffer = NULL;
 	size_t line_buffer_size = 0;
 	size_t data_buffer_index = 0;
 	FILE *fp;
+	std::unique_ptr<char[]> data_buffer(new char[MAX_GDDV_FILE_SIZE]);
 
 	file_name = dir_name + "/" + "data_vault.bin";
 
 	fp = fopen(file_name.c_str(), "r");
 	if (fp) {
-		data_buffer = new char[MAX_GDDV_FILE_SIZE];
-		if (!data_buffer) {
-			fclose(fp);
-			return 0;
-		}
 
 		while (!feof(fp)) {
 			unsigned char x;
@@ -1628,23 +1623,19 @@ size_t cthd_gddv::gddv_load(char **buffer)
 			data_buffer[data_buffer_index++] = x;
 		}
 		fclose(fp);
-		*buffer = data_buffer;
-		return data_buffer_index;
+		*size = data_buffer_index;
+		return data_buffer;
 	}
 
 	file_name = dir_name + "/" + "data_vault.hex";
 
 	fp = fopen(file_name.c_str(), "r");
-	if (!fp)
-		return 0;
+	if (!fp) {
+		*size = 0;
+		return {};
+	}
 
 	thd_log_debug("Found data_vault %s\n", file_name.c_str());
-
-	data_buffer = new char[MAX_GDDV_FILE_SIZE];
-	if (!data_buffer) {
-		fclose(fp);
-		return 0;
-	}
 
 	line_size = getline(&line_buffer, &line_buffer_size, fp);
 
@@ -1676,30 +1667,26 @@ size_t cthd_gddv::gddv_load(char **buffer)
 
 	fclose(fp);
 
-	*buffer = data_buffer;
-
-	return data_buffer_index;
+	*size = data_buffer_index;
+	return data_buffer;
 }
 
 #else
 
-size_t cthd_gddv::gddv_load(char **buffer)
+std::unique_ptr<char[]> cthd_gddv::gddv_load(size_t *size)
 {
-	return 0;
+	*size = 0;
+	return {};
 }
 
 #endif
 
 int cthd_gddv::gddv_init(std::string& base_path) {
 	csys_fs sysfs("");
-	char *raw;
-	std::unique_ptr<char[]> buf;
 	size_t size;
-
-	size = gddv_load(&raw);
+	std::unique_ptr<char[]> buf = gddv_load(&size);
 	if (size > 0) {
 		thd_log_info("Loading data vault from a file\n");
-		buf.reset(raw);
 		goto skip_load;
 	}
 

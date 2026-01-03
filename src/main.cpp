@@ -171,7 +171,7 @@ gboolean sig_int_handler(void) {
 	sleep(1);
 	if (g_main_loop)
 		g_main_loop_quit(g_main_loop);
-	delete thd_engine;
+	thd_engine.reset();
 	clean_up_lockfile();
 	exit(EXIT_SUCCESS);
 
