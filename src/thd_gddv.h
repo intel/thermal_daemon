@@ -31,6 +31,7 @@
 #include <upower.h>
 #endif
 
+#include <memory>
 #include "thd_engine.h"
 #include "thd_trt_art_reader.h"
 
@@ -262,7 +263,7 @@ public:
 
 	ppcc_t* get_ppcc_param(const std::string& name);
 	int gddv_init(std::string& base_path);
-	size_t gddv_load(char **buf);
+	std::unique_ptr<char[]> gddv_load(size_t *size);
 	void gddv_free(void);
 	int verify_conditions();
 	int evaluate_conditions();

@@ -757,12 +757,12 @@ int cthd_engine_default::read_cooling_devices() {
 }
 
 // Thermal engine
-cthd_engine *thd_engine;
+std::unique_ptr<cthd_engine> thd_engine;
 
 int thd_engine_create_default_engine(bool ignore_cpuid_check,
 		bool exclusive_control, const char *conf_file) {
 	int res;
-	thd_engine = new cthd_engine_default();
+	thd_engine.reset(new cthd_engine_default());
 	if (!thd_engine)
 		return THD_ERROR;
 
@@ -798,10 +798,9 @@ void cthd_engine_default::workarounds()
 	// Every 30 seconds repeat
 	if (!disable_active_power && !workaround_interval) {
 		// Create platform instance and call workaround
-		cthd_platform *platform = cthd_platform::create_platform();
+		std::unique_ptr<cthd_platform> platform = cthd_platform::create_platform();
 		if (platform) {
 			platform->workaround_rapl_mmio_power();
-			delete platform;
 		}
 
 		workaround_tcc_offset();
