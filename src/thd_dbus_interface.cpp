@@ -217,7 +217,7 @@ gboolean thd_dbus_interface_reinit(PrefObject *obj, GError **error) {
 
 	thd_engine->thd_engine_terminate();
 	sleep(1);
-	delete thd_engine;
+	thd_engine.reset();
 	sleep(2);
 
 

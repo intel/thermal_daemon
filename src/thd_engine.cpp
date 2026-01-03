@@ -744,7 +744,7 @@ void cthd_engine::thd_engine_reload_zones() {
 
 int cthd_engine::check_cpu_id() {
 	// Create platform instance using factory method
-	cthd_platform *platform = cthd_platform::create_platform();
+	std::unique_ptr<cthd_platform> platform = cthd_platform::create_platform();
 	if (!platform) {
 		thd_log_error("Failed to create platform instance\n");
 		proc_list_matched = false;
@@ -757,7 +757,6 @@ int cthd_engine::check_cpu_id() {
 	// Call platform-specific CPU ID check
 	int ret = platform->check_cpu_id(proc_list_matched);
 
-	delete platform;
 	return ret;
 }
 
