@@ -24,6 +24,7 @@
 #ifndef THD_THERMALD_H
 #define THD_THERMALD_H
 
+#include <memory>
 #include <stdio.h>
 #include <getopt.h>
 #include <locale.h>
@@ -110,7 +111,7 @@ static int dummy_printf(const char *__restrict __format, ...) {
 
 class cthd_engine;
 class cthd_engine_therm_sysfs;
-extern cthd_engine *thd_engine;
+extern std::unique_ptr<cthd_engine> thd_engine;
 extern int thd_poll_interval;
 extern bool thd_ignore_default_control;
 extern bool workaround_enabled;

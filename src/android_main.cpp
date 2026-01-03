@@ -66,7 +66,7 @@ static void daemonShutdown() {
 		close(pid_file_handle);
 	thd_engine->thd_engine_terminate();
 	sleep(1);
-	delete thd_engine;
+	thd_engine.reset();
 }
 
 // signal handler
@@ -297,7 +297,7 @@ int main(int argc, char *argv[]) {
 		close(pid_file_handle);
 	thd_engine->thd_engine_terminate();
 	sleep(1);
-	delete thd_engine;
+	thd_engine.reset();
 #else
 	for (;;)
 		sleep(0xffff);

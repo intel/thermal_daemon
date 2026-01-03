@@ -101,23 +101,23 @@ void cthd_platform::dump_platform_info() {
     thd_log_info("============================\n");
 }
 
-cthd_platform* cthd_platform::create_platform() {
+std::unique_ptr<cthd_platform> cthd_platform::create_platform() {
     // Detect platform architecture using uname
     struct utsname sysinfo;
     if (uname(&sysinfo) != 0) {
         thd_log_error("Failed to get system information\n");
-        return new cthd_platform();
+        return std::unique_ptr<cthd_platform>(new cthd_platform());
     }
 
     // Create appropriate platform instance based on architecture
     if (strcmp(sysinfo.machine, "x86_64") == 0) {
         thd_log_info("Creating Intel platform instance\n");
-        return new intel_platform();
+        return std::unique_ptr<cthd_platform>(new intel_platform());
     } else if (strcmp(sysinfo.machine, "aarch64") == 0 || strcmp(sysinfo.machine, "arm") == 0) {
         thd_log_info("Creating ARM platform instance\n");
-        return new arm_platform();
+        return std::unique_ptr<cthd_platform>(new arm_platform());
     } else {
         thd_log_info("Creating generic platform instance for %s\n", sysinfo.machine);
-        return new cthd_platform();
+        return std::unique_ptr<cthd_platform>(new cthd_platform());
     }
 }
