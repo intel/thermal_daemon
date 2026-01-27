@@ -1,0 +1,58 @@
+/*
+ * thd_platform.h: Platform detection and abstraction layer
+ *
+ * Copyright (c) 2026 Qualcomm Innovation Center, Inc. All rights reserved.
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License version
+ * 2 or later as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+ * 02110-1301, USA.
+ *
+ * Author Name <priyansh.jain@oss.qualcomm.com>
+ */
+
+#ifndef THD_PLATFORM_H_
+#define THD_PLATFORM_H_
+
+#include <string>
+#include <sys/utsname.h>
+
+typedef enum {
+    PLATFORM_UNKNOWN = 0,
+    PLATFORM_INTEL_X86,
+    PLATFORM_OTHER
+} platform_type_t;
+
+class cthd_platform {
+protected:
+    platform_type_t detected_platform;
+    std::string machine_type;
+
+public:
+    cthd_platform();
+    virtual ~cthd_platform();
+
+    // Virtual methods to be overridden by derived classes
+    virtual void detect_platform();
+    virtual int check_cpu_id(bool &proc_list_matched);
+    virtual void workaround_rapl_mmio_power();
+    virtual void dump_platform_info();
+
+    // Common methods
+    platform_type_t get_platform();
+    std::string get_machine_type();
+
+    // Factory method to create appropriate platform instance
+    static cthd_platform* create_platform();
+};
+
+#endif /* THD_PLATFORM_H_ */
