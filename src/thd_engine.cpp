@@ -319,7 +319,7 @@ int cthd_engine::thd_engine_start() {
 		poll_timeout_msec = poll_interval_sec * 1000;
 	}
 
-	if (parser.platform_matched()) {
+	if (!parser_init() && parser.platform_matched()) {
 		parser.set_default_preference();
 		int poll_secs = parser.get_polling_interval();
 		if (poll_secs) {
