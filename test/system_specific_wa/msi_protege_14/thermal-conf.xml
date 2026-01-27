@@ -1,0 +1,58 @@
+<?xml version="1.0"?>
+<!-- BEGIN -->
+<ThermalConfiguration>
+<Platform>
+	<Name> SEN2_OVERRIDE </Name>
+	<ProductName>Prestige 14 AI+ Flip Evo D3HMTG</ProductName>
+	<Preference>QUIET</Preference>
+	<PPCC>
+		<!--
+		Specify the Maximum/Minimum RAPL power limit for the
+		platform. The limits are in milli watts.
+		The step size to reduce/increase for each sampling interval
+		Time window in miili seconds.
+		-->
+		<PowerLimitIndex>0</PowerLimitIndex>
+		<PowerLimitMaximum>45000</PowerLimitMaximum>
+		<PowerLimitMinimum>30000</PowerLimitMinimum>
+		<TimeWindowMinimum>28000</TimeWindowMinimum>
+		<TimeWindowMaximum>32000</TimeWindowMaximum>
+		<StepSize>500</StepSize>
+	</PPCC>
+	<ThermalZones>
+     	<ThermalZone>
+	        <Type>TCPU</Type>
+		<TripPoints>
+			<TripPoint>
+				<Temperature>99000</Temperature>
+				<type>passive</type>
+			</TripPoint>
+		</TripPoints>
+	</ThermalZone>
+		<ThermalZone>
+			<Type>SEN2_control</Type>
+			<TripPoints>
+				<TripPoint>
+					<SensorType>SEN2</SensorType>
+					<Temperature>54000</Temperature>
+					<Type>Passive</Type>
+					<CoolingDevice>
+						<Type>B0D4</Type>
+						<SamplingPeriod>10</SamplingPeriod>
+					</CoolingDevice>
+				</TripPoint>
+				<TripPoint>
+					<SensorType>SEN2</SensorType>
+					<Temperature>53000</Temperature>
+					<Type>Passive</Type>
+					<CoolingDevice>
+						<Type>B0D4</Type>
+						<SamplingPeriod>10</SamplingPeriod>
+						<TargetState>45000000</TargetState>
+					</CoolingDevice>
+				</TripPoint>
+			</TripPoints>
+		</ThermalZone>
+	</ThermalZones>
+</Platform>
+</ThermalConfiguration>
