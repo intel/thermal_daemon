@@ -45,7 +45,8 @@ LOCAL_SRC_FILES := \
 		src/LzmaDec.c \
 		src/thd_gddv.cpp \
 		src/thd_platform.cpp \
-		src/thd_platform_intel.cpp
+		src/thd_platform_intel.cpp \
+		src/thd_platform_arm.cpp
 
 LOCAL_C_INCLUDES += external/libxml2/include
 

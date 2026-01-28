@@ -50,6 +50,12 @@ platform_type_t cthd_platform::detect_platform() {
     if (strcmp(sysinfo.machine, "x86_64") == 0) {
         detected_platform = PLATFORM_INTEL_X86;  // Default to Intel for x86_64
         thd_log_info("Intel/AMD x86_64 platform detected\n");
+    } else if (strcmp(sysinfo.machine, "aarch64") == 0) {
+        detected_platform = PLATFORM_ARM64;
+        thd_log_info("ARM64 platform detected\n");
+    } else if (strcmp(sysinfo.machine, "arm") == 0) {
+        detected_platform = PLATFORM_ARM32;
+        thd_log_info("ARM32 platform detected\n");
     } else {
         detected_platform = PLATFORM_OTHER;
         thd_log_info("Other architecture detected: %s\n", sysinfo.machine);
@@ -78,6 +84,11 @@ bool cthd_platform::is_intel_platform() {
     return (platform == PLATFORM_INTEL_X86);
 }
 
+bool cthd_platform::is_arm_platform() {
+    platform_type_t platform = get_platform();
+    return (platform == PLATFORM_ARM64 || platform == PLATFORM_ARM32);
+}
+
 void cthd_platform::dump_platform_info() {
     platform_type_t platform = get_platform();
 
@@ -87,6 +98,12 @@ void cthd_platform::dump_platform_info() {
     switch (platform) {
         case PLATFORM_INTEL_X86:
             thd_log_info("Platform: Intel x86/x86_64\n");
+            break;
+        case PLATFORM_ARM64:
+            thd_log_info("Platform: ARM64 (aarch64)\n");
+            break;
+        case PLATFORM_ARM32:
+            thd_log_info("Platform: ARM32\n");
             break;
         case PLATFORM_OTHER:
             thd_log_info("Platform: Other (%s)\n", get_machine_type().c_str());

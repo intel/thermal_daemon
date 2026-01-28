@@ -1,5 +1,5 @@
 /*
- * thd_platform.h: Platform detection and abstraction layer
+ * thd_platform_arm.cpp: ARM platform-specific functionality implementation
  *
  * Copyright (c) 2026 Qualcomm Innovation Center, Inc. All rights reserved.
  *
@@ -20,33 +20,13 @@
  * Author Name <priyansh.jain@oss.qualcomm.com>
  */
 
-#ifndef THD_PLATFORM_H_
-#define THD_PLATFORM_H_
+#include "thd_platform_arm.h"
+#include "thd_common.h"
 
-#include <string>
-#include <sys/utsname.h>
+int cthd_platform_arm::check_cpu_id_arm(bool &proc_list_matched) {
 
-typedef enum {
-    PLATFORM_UNKNOWN = 0,
-    PLATFORM_INTEL_X86,
-    PLATFORM_ARM64,
-    PLATFORM_ARM32,
-    PLATFORM_OTHER
-} platform_type_t;
+    // For ARM, we assume the platform is supported
+    proc_list_matched = true;
 
-class cthd_platform {
-private:
-    static platform_type_t detected_platform;
-    static bool platform_detected;
-    static std::string machine_type;
-
-public:
-    static platform_type_t detect_platform();
-    static platform_type_t get_platform();
-    static std::string get_machine_type();
-    static bool is_intel_platform();
-    static bool is_arm_platform();
-    static void dump_platform_info();
-};
-
-#endif /* THD_PLATFORM_H_ */
+    return THD_SUCCESS;
+}

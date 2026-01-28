@@ -45,6 +45,7 @@
 #include "thd_int3400.h"
 #include "thd_platform.h"
 #include "thd_platform_intel.h"
+#include "thd_platform_arm.h"
 
 static void *cthd_engine_thread(void *arg);
 
@@ -752,6 +753,9 @@ int cthd_engine::check_cpu_id() {
 	if (cthd_platform::is_intel_platform()) {
 		thd_log_info("Calling Intel platform CPU ID check\n");
 		return cthd_platform_intel::check_cpu_id_intel(proc_list_matched);
+	} else if (cthd_platform::is_arm_platform()) {
+		thd_log_info("Calling ARM platform CPU ID check\n");
+		return cthd_platform_arm::check_cpu_id_arm(proc_list_matched);
 	} else {
 		thd_log_warn("Unknown platform detected, defaulting to generic behavior\n");
 	proc_list_matched = false;
