@@ -75,20 +75,20 @@ public:
 	}
 #endif
 
-	~cthd_engine_adaptive() {
+	~cthd_engine_adaptive() override {
 	}
-	ppcc_t* get_ppcc_param(const std::string& name) {
+	ppcc_t* get_ppcc_param(const std::string& name) override {
 		return gddv.get_ppcc_param(name);
 	}
 
-	int search_idsp(std::string name)
+	int search_idsp(std::string name) override
 	{
 		return gddv.search_idsp(std::move(name));
 	}
 
-	int thd_engine_init(bool ignore_cpuid_check, bool adaptive);
-	int thd_engine_start();
-	void update_engine_state();
+	int thd_engine_init(bool ignore_cpuid_check, bool adaptive) override;
+	int thd_engine_start() override;
+	void update_engine_state() override;
 	void update_power_slider();
 };
 

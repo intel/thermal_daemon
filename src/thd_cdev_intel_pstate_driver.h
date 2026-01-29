@@ -44,10 +44,10 @@ public:
 					1), min_compensation(0), turbo_status(false) {
 	}
 	;
-	void set_curr_state(int state, int arg);
-	int get_max_state();
-	int update();
-	int map_target_state(int target_valid, int target_state);
+	void set_curr_state(int state, int arg) override;
+	int get_max_state() override;
+	int update() override;
+	int map_target_state(int target_valid, int target_state) override;
 };
 
 #endif /* THD_CDEV_INTEL_PSATATE_DRIVER_H_ */
