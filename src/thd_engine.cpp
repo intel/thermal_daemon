@@ -35,7 +35,6 @@
 #include <errno.h>
 #include <sys/types.h>
 #include <sys/utsname.h>
-#include <cpuid.h>
 #include <locale>
 #include <memory>
 #include "thd_engine.h"
@@ -44,6 +43,9 @@
 #include "thd_zone_dynamic.h"
 #include "thd_cdev_gen_sysfs.h"
 #include "thd_int3400.h"
+#include "thd_platform.h"
+#include "thd_platform_intel.h"
+#include "thd_platform_arm.h"
 
 static void *cthd_engine_thread(void *arg);
 
@@ -53,11 +55,10 @@ cthd_engine::cthd_engine(std::string _uuid) :
 				false), adaptive_mode(false), poll_timeout_msec(-1), wakeup_fd(
 				-1), uevent_fd(-1), control_mode(COMPLEMENTRY), write_pipe_fd(
 				0), preference(0), status(true), thz_last_uevent_time(0), thz_last_temp_ind_time(
-				0), thz_last_update_event_time(0), terminate(false), genuine_intel(
-				0), has_invariant_tsc(0), has_aperf(0), proc_list_matched(
-				false), poll_interval_sec(0), poll_sensor_mask(0), fast_poll_sensor_mask(
-				0), saved_poll_interval(0), poll_fd_cnt(0), rt_kernel(false), parser_init_done(
-				false) {
+				0), thz_last_update_event_time(0), terminate(false), has_invariant_tsc(0),
+				has_aperf(0), proc_list_matched(false), poll_interval_sec(0), poll_sensor_mask(0),
+				fast_poll_sensor_mask(0), saved_poll_interval(0), poll_fd_cnt(0), rt_kernel(false),
+				parser_init_done(false) {
 	thd_engine = pthread_t();
 	thd_attr = pthread_attr_t();
 
@@ -238,6 +239,7 @@ int cthd_engine::thd_engine_init(bool ignore_cpuid_check, bool adaptive) {
 	int ret;
 
 	adaptive_mode = adaptive;
+	cthd_platform::detect_platform();
 
 	if (ignore_cpuid_check) {
 		thd_log_debug("Ignore CPU ID check for MSRs\n");
@@ -318,7 +320,7 @@ int cthd_engine::thd_engine_start() {
 		poll_timeout_msec = poll_interval_sec * 1000;
 	}
 
-	if (parser.platform_matched()) {
+	if (!parser_init() && parser.platform_matched()) {
 		parser.set_default_preference();
 		int poll_secs = parser.get_polling_interval();
 		if (poll_secs) {
@@ -742,112 +744,23 @@ void cthd_engine::thd_engine_reload_zones() {
 	}
 }
 
-// Add any tested platform ids in this table
-#ifndef ANDROID
-static const supported_ids_t id_table[] = {
-		{ 6, 0x2a }, // Sandybridge
-		{ 6, 0x3a }, // IvyBridge
-		{ 6, 0x3c }, // Haswell
-		{ 6, 0x45 }, // Haswell ULT
-		{ 6, 0x46 }, // Haswell ULT
-		{ 6, 0x3d }, // Broadwell
-		{ 6, 0x47 }, // Broadwell-GT3E
-		{ 6, 0x37 }, // Valleyview BYT
-		{ 6, 0x4c }, // Brasewell
-		{ 6, 0x4e }, // skylake
-		{ 6, 0x5e }, // skylake
-		{ 6, 0x5c }, // Broxton
-		{ 6, 0x7a }, // Gemini Lake
-		{ 6, 0x8e }, // kabylake
-		{ 6, 0x9e }, // kabylake
-		{ 6, 0x66 }, // Cannonlake
-		{ 6, 0x7e }, // Icelake
-		{ 6, 0x8c }, // Tigerlake_L
-		{ 6, 0x8d }, // Tigerlake
-		{ 6, 0xa5 }, // Cometlake
-		{ 6, 0xa6 }, // Cometlake_L
-		{ 6, 0xa7 }, // Rocketlake
-		{ 6, 0x9c }, // Jasper Lake
-		{ 6, 0x97 }, // Alderlake
-		{ 6, 0x9a }, // Alderlake
-		{ 6, 0xb7 }, // Raptorlake
-		{ 6, 0xba }, // Raptorlake
-		{ 6, 0xbe }, // Alderlake N
-		{ 6, 0xbf }, // Raptorlake S
-		{ 6, 0xaa }, // Mateor Lake L
-		{ 6, 0xbd }, // Lunar Lake M
-		{ 6, 0xc6 }, // Arrow Lake
-		{ 6, 0xc5 }, // Arrow Lake H
-		{ 6, 0xb5 }, // Arrow Lake U
-		{ 6, 0xcc }, // Panther Lake L
-		{ 6, 0xd5 }, // Wildcat Lake L
-		{ 0, 0 } // Last Invalid entry
-};
-
-const char * const blocklist_paths[] {
-	/* Some Lenovo machines have in-firmware thermal management,
-	 * avoid having two entities trying to manage things.
-	 * We may want to change this to dytc_perfmode once that is
-	 * widely available. */
-	"/sys/devices/platform/thinkpad_acpi/dytc_lapmode",
-};
-#endif
-
 int cthd_engine::check_cpu_id() {
-#ifndef ANDROID
-	// Copied from turbostat program
-	unsigned int ebx, ecx, edx, max_level;
-	unsigned int fms, family, model, stepping;
-	genuine_intel = 0;
-	int i = 0;
-	bool valid = false;
 
+	// Dump platform information
+	cthd_platform::dump_platform_info();
+
+	// Call platform-specific CPU ID check
+	if (cthd_platform::is_intel_platform()) {
+		thd_log_info("Calling Intel platform CPU ID check\n");
+		return cthd_platform_intel::check_cpu_id_intel(proc_list_matched);
+	} else if (cthd_platform::is_arm_platform()) {
+		thd_log_info("Calling ARM platform CPU ID check\n");
+		return cthd_platform_arm::check_cpu_id_arm(proc_list_matched);
+	} else {
+		thd_log_warn("Unknown platform detected, defaulting to generic behavior\n");
 	proc_list_matched = false;
-	ebx = ecx = edx = 0;
-
-	__cpuid(0, max_level, ebx, ecx, edx);
-	if (ebx == 0x756e6547 && edx == 0x49656e69 && ecx == 0x6c65746e)
-		genuine_intel = 1;
-	if (genuine_intel == 0) {
-		// Simply return without further capability check
 		return THD_SUCCESS;
 	}
-	__cpuid(1, fms, ebx, ecx, edx);
-	family = (fms >> 8) & 0xf;
-	model = (fms >> 4) & 0xf;
-	stepping = fms & 0xf;
-	if (family == 6 || family == 0xf)
-		model += ((fms >> 16) & 0xf) << 4;
-
-	thd_log_msg(
-			"%u CPUID levels; family:model:stepping 0x%x:%x:%x (%u:%u:%u)\n",
-			max_level, family, model, stepping, family, model, stepping);
-
-	while (id_table[i].family) {
-		if (id_table[i].family == family && id_table[i].model == model) {
-			proc_list_matched = true;
-			valid = true;
-			break;
-		}
-		i++;
-	}
-	if (!valid) {
-		thd_log_msg(" Need Linux PowerCap sysfs\n");
-	}
-
-
-	for (const char *path : blocklist_paths) {
-		struct stat s;
-
-		if (!stat(path, &s)) {
-			proc_list_matched = false;
-			thd_log_warn("[%s] present: Thermald can't run on this platform\n", path);
-			break;
-		}
-	}
-
-#endif
-	return THD_SUCCESS;
 }
 
 void cthd_engine::thd_read_default_thermal_sensors() {

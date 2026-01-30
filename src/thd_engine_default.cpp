@@ -40,6 +40,8 @@
 #include "thd_int3400.h"
 #include "thd_sensor_rapl_power.h"
 #include "thd_zone_rapl_power.h"
+#include "thd_platform.h"
+#include "thd_platform_intel.h"
 
 
 // Default CPU cooling devices, which are not part of thermal sysfs
@@ -795,7 +797,10 @@ void cthd_engine_default::workarounds()
 {
 	// Every 30 seconds repeat
 	if (!disable_active_power && !workaround_interval) {
-		workaround_rapl_mmio_power();
+		if (cthd_platform::is_intel_platform()) {
+			cthd_platform_intel::workaround_rapl_mmio_power();
+		}
+
 		workaround_tcc_offset();
 		workaround_interval = 7;
 	} else {
@@ -803,75 +808,6 @@ void cthd_engine_default::workarounds()
 	}
 }
 
-#ifndef ANDROID
-#include <cpuid.h>
-#include <sys/mman.h>
-#define BIT_ULL(nr)	(1ULL << (nr))
-#endif
-
-void cthd_engine_default::workaround_rapl_mmio_power(void)
-{
-	if (!workaround_enabled)
-		return;
-
-	cthd_cdev *cdev = search_cdev("rapl_controller_mmio");
-	if (cdev) {
-		/* RAPL MMIO is enabled and getting used. No need to disable */
-		return;
-	} else {
-		csys_fs _sysfs("/sys/devices/virtual/powercap/intel-rapl-mmio/intel-rapl-mmio:0/");
-
-		if (_sysfs.exists()) {
-			std::ostringstream temp_str;
-
-			temp_str << "enabled";
-			if (_sysfs.write(temp_str.str(), 0) > 0)
-				return;
-
-			thd_log_debug("Failed to write to RAPL MMIO\n");
-		}
-	}
-
-#ifndef ANDROID
-	int map_fd;
-	void *rapl_mem;
-	unsigned char *rapl_pkg_pwr_addr;
-	unsigned long long pkg_power_limit;
-
-	unsigned int ebx, ecx, edx;
-	unsigned int fms, family, model;
-
-	ecx = edx = 0;
-	__cpuid(1, fms, ebx, ecx, edx);
-	family = (fms >> 8) & 0xf;
-	model = (fms >> 4) & 0xf;
-	if (family == 6 || family == 0xf)
-		model += ((fms >> 16) & 0xf) << 4;
-
-	// Apply for KabyLake only
-	if (model != 0x8e && model != 0x9e)
-		return;
-
-	map_fd = open("/dev/mem", O_RDWR, 0);
-	if (map_fd < 0)
-		return;
-
-	rapl_mem = mmap(NULL, 4096, PROT_READ | PROT_WRITE, MAP_SHARED, map_fd,
-			0xfed15000);
-	if (!rapl_mem || rapl_mem == MAP_FAILED) {
-		close(map_fd);
-		return;
-	}
-
-	rapl_pkg_pwr_addr = ((unsigned char *)rapl_mem + 0x9a0);
-	pkg_power_limit = *(unsigned long long *)rapl_pkg_pwr_addr;
-	*(unsigned long long *)rapl_pkg_pwr_addr = pkg_power_limit
-			& ~BIT_ULL(15);
-
-	munmap(rapl_mem, 4096);
-	close(map_fd);
-#endif
-}
 
 void cthd_engine_default::workaround_tcc_offset(void)
 {
