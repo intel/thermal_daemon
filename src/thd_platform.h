@@ -29,6 +29,8 @@
 typedef enum {
     PLATFORM_UNKNOWN = 0,
     PLATFORM_INTEL_X86,
+    PLATFORM_ARM64,
+    PLATFORM_ARM32,
     PLATFORM_OTHER
 } platform_type_t;
 

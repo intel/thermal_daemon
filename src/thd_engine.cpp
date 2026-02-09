@@ -45,6 +45,7 @@
 #include "thd_int3400.h"
 #include "thd_platform.h"
 #include "thd_platform_intel.h"
+#include "thd_platform_arm.h"
 
 static void *cthd_engine_thread(void *arg);
 

@@ -22,6 +22,7 @@
 
 #include "thd_platform.h"
 #include "thd_platform_intel.h"
+#include "thd_platform_arm.h"
 #include "thd_common.h"
 #include <cstring>
 #include <iostream>
@@ -45,6 +46,10 @@ void cthd_platform::detect_platform() {
 
     if (strcmp(sysinfo.machine, "x86_64") == 0) {
         detected_platform = PLATFORM_INTEL_X86;
+    } else if (strcmp(sysinfo.machine, "aarch64") == 0) {
+        detected_platform = PLATFORM_ARM64;
+    } else if (strcmp(sysinfo.machine, "arm") == 0) {
+        detected_platform = PLATFORM_ARM32;
     } else {
         detected_platform = PLATFORM_OTHER;
     }
@@ -79,6 +84,12 @@ void cthd_platform::dump_platform_info() {
         case PLATFORM_INTEL_X86:
             thd_log_info("Platform: Intel x86/x86_64\n");
             break;
+        case PLATFORM_ARM64:
+            thd_log_info("Platform: ARM64 (aarch64)\n");
+            break;
+        case PLATFORM_ARM32:
+            thd_log_info("Platform: ARM32\n");
+            break;
         case PLATFORM_OTHER:
             thd_log_info("Platform: Other (%s)\n", get_machine_type().c_str());
             break;
@@ -102,6 +113,9 @@ cthd_platform* cthd_platform::create_platform() {
     if (strcmp(sysinfo.machine, "x86_64") == 0) {
         thd_log_info("Creating Intel platform instance\n");
         return new intel_platform();
+    } else if (strcmp(sysinfo.machine, "aarch64") == 0 || strcmp(sysinfo.machine, "arm") == 0) {
+        thd_log_info("Creating ARM platform instance\n");
+        return new arm_platform();
     } else {
         thd_log_info("Creating generic platform instance for %s\n", sysinfo.machine);
         return new cthd_platform();
