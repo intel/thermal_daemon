@@ -150,7 +150,7 @@ int intel_platform::check_cpu_id(bool &proc_list_matched) {
         thd_log_msg(" Need Linux PowerCap sysfs\n");
     }
 
-    for (std::string path : blocklist_paths) {
+    for (const std::string& path : blocklist_paths) {
         struct stat s;
 
         if (!stat(path.c_str(), &s)) {
