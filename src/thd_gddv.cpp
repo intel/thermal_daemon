@@ -626,6 +626,8 @@ int cthd_gddv::parse_itmt3(char *name, char *buf, unsigned int len) {
 	else
 		itmt.name = name;
 
+	itmt.version = 3;
+
 	if (len < sizeof(struct itmt3_header))
 		return THD_ERROR;
 
@@ -672,6 +674,8 @@ int cthd_gddv::parse_itmt(char *name, char *buf, int len) {
 	else
 		itmt.name = name;
 
+	itmt.version = 1;
+
 	while (offset < len) {
 		struct itmt_entry itmt_entry;
 
@@ -709,6 +713,7 @@ void cthd_gddv::dump_itmt() {
 		std::vector<struct itmt_entry> itmt = itmts[i].itmt_entries;
 
 		thd_log_info("Name :%s\n", itmts[i].name.c_str());
+		thd_log_info("version :%d\n", itmts[i].version);
 		for (unsigned int j = 0; j < itmt.size(); ++j) {
 			thd_log_info("\t target:%s  trip_temp:%d pl1_min:%s pl1.max:%s\n",
 					itmt[j].target.c_str(),
@@ -1474,6 +1479,22 @@ struct psvt* cthd_gddv::find_psvt(const std::string& name) {
 
 struct itmt* cthd_gddv::find_itmt(const std::string& name) {
 	for (int i = 0; i < (int) itmts.size(); i++) {
+		int matched;
+
+		if (itmts[i].version == 3) {
+			matched = thd_engine->search_idsp("4215267F-F429-4776-9D84-D6C5992848A4");
+			if (matched != THD_SUCCESS) {
+				thd_log_info("Found version == 3; but no IDSP support\n");
+				continue;
+			}
+		} else if (itmts[i].version < 3) {
+			matched = thd_engine->search_idsp("6BD40D2D-98AA-A44B-1A92-D22BDE3117F1");
+			if (matched != THD_SUCCESS) {
+				thd_log_info("Found version < 3; but no IDSP support\n");
+				continue;
+			}
+		}
+
 		if (!strcasecmp(itmts[i].name.c_str(), name.c_str())) {
 			return &itmts[i];
 		}
