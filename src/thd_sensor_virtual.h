@@ -26,29 +26,68 @@
 #define THD_SENSOR_VIRTUAL_H_
 
 #include "thd_sensor.h"
+#include <atomic>
+#include <vector>
+
+typedef struct _link_sensor_t {
+	cthd_sensor *sensor;
+	double coeff;
+	double offset;
+	double prev_avg;
+	int power_sensor;
+} link_sensor_t;
+
+
+struct polling_table_entry {
+	int virtual_temp;
+	int sample_period;
+};
 
 class cthd_sensor_virtual: public cthd_sensor {
 private:
-	cthd_sensor *link_sensor;
-	std::string link_type_str;
+	std::vector <link_sensor_t *> link_sensors;
 	double multiplier;
 	double offset;
 
+	pthread_t poll_thread;
+	pthread_attr_t thd_attr;
+	std::atomic<bool> polling;
+	bool poll_thread_started;
 public:
+	std::atomic<bool> stop_polling;
+	std::atomic<int> last_temp;
+
+	static const int def_polling_period = 5; //seconds
+	std::atomic<int> polling_period;
+	std::vector<struct polling_table_entry> polling_table;
+
 	cthd_sensor_virtual(int _index, std::string _type_str,
-			std::string _link_type_str, double multiplier, double offset);
+			std::string& _link_type_str, double multiplier, double offset);
 	~cthd_sensor_virtual() override;
+
+	int add_target(std::string& _link_type_str, double coeff, double offset, int power_sensor);
+
 	int sensor_update();
+	unsigned int _read_temperature();
 	unsigned int read_temperature() override;
 	void sensor_dump() override {
-		if (link_sensor)
-			thd_log_info("sensor index:%d %s virtual link %s %f %f\n", index,
-					type_str.c_str(), link_sensor->get_sensor_type().c_str(),
-					multiplier, offset);
+		thd_log_info("Sensor:%s \n", type_str.c_str());
+
+		for (unsigned int i = 0; i < link_sensors.size(); ++i) {
+			link_sensor_t *link_sensor = link_sensors[i];
+			if (link_sensor->sensor) {
+				thd_log_info("\tAdd target sensor %s, %g %g\n",
+					link_sensor->sensor->get_sensor_type().c_str(), link_sensor->coeff, link_sensor->offset);
+			} else {
+				thd_log_info("\tAdd target CONSTANT, %g %g\n", link_sensor->coeff, link_sensor->offset);
+			}
+		}
 	}
 
 	int sensor_update_param(const std::string& new_dep_sensor, double slope, double intercept);
-
+	void enable_periodic_timer();
+	void disable_periodic_timer();
+	void update_polling_table(struct polling_table_entry& entry);
 };
 
 #endif /* THD_SENSOR_VIRTUAL_H_ */

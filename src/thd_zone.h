@@ -33,6 +33,7 @@
 #include "thd_cdev.h"
 #include "thd_trip_point.h"
 #include "thd_sensor.h"
+#include "thd_sensor_virtual.h"
 
 typedef struct {
 	int zone;
@@ -92,10 +93,26 @@ public:
 	void update_highest_trip_temp(cthd_trip_point &trip);
 
 	void set_zone_active() {
+		for (unsigned int i = 0; i < sensors.size(); ++i) {
+			cthd_sensor *sensor = sensors[i];
+			if (sensor->is_virtual()) {
+				cthd_sensor_virtual *_sensor = (cthd_sensor_virtual *) sensor;
+				_sensor->enable_periodic_timer();
+				break;
+			}
+		}
 		zone_active = true;
 	}
 	;
 	void set_zone_inactive() {
+		for (unsigned int i = 0; i < sensors.size(); ++i) {
+			cthd_sensor *sensor = sensors[i];
+			if (sensor->is_virtual()) {
+				cthd_sensor_virtual *_sensor = (cthd_sensor_virtual *) sensor;
+				_sensor->disable_periodic_timer();
+				break;
+			}
+		}
 		zone_active = false;
 	}
 
@@ -129,6 +146,7 @@ public:
 			if (sensors[i] == sensor)
 				return;
 		}
+
 		sensors.push_back(sensor);
 	}
 
