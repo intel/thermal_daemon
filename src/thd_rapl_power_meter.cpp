@@ -288,6 +288,23 @@ unsigned int cthd_rapl_power_meter::rapl_action_get_max_power(
 	return value;
 }
 
+unsigned int cthd_rapl_power_meter::rapl_action_get_last_power(domain_type type)
+{
+	unsigned int value = 0;
+
+	if (!rapl_present)
+		return 0;
+
+	for (unsigned int i = 0; i < domain_list.size(); ++i) {
+		if (type == domain_list[i].type) {
+			value = domain_list[i].power * 1000;
+			break;
+		}
+	}
+
+	return value;
+}
+
 unsigned int cthd_rapl_power_meter::rapl_action_get_power(domain_type type,
 		unsigned int *max_power, unsigned int *min_power) {
 	unsigned int value = 0;
