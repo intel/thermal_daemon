@@ -169,6 +169,7 @@ struct trt_entry {
 };
 
 struct itmt {
+	int version;
 	std::string name;
 	std::vector<struct itmt_entry> itmt_entries;
 };
