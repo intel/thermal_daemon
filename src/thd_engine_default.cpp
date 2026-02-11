@@ -172,7 +172,8 @@ int cthd_engine_default::read_thermal_sensors() {
 		thd_log_warn("Thermal DTS: No coretemp sysfs found\n");
 	}
 
-	if (debug_mode_on()) {
+	//if (debug_mode_on())
+	 {
 		// Only used for debug power using ThermalMonitor
 		std::unique_ptr<cthd_sensor_rapl_power> rapl_power(new cthd_sensor_rapl_power(index));
 		if (rapl_power->sensor_update() == THD_SUCCESS) {
@@ -542,16 +543,13 @@ int cthd_engine_default::read_thermal_zones() {
 	}
 	current_zone_index = index;
 
-	if (debug_mode_on()) {
-		// Only used for debug power using ThermalMonitor
-		std::unique_ptr<cthd_zone_rapl_power> rapl_power(new cthd_zone_rapl_power(index));
-		if (rapl_power->zone_update() == THD_SUCCESS) {
-			rapl_power->set_zone_active();
-			zones.push_back(std::move(rapl_power));
-			++index;
-		}
-		current_zone_index = index;
+	std::unique_ptr<cthd_zone_rapl_power> rapl_power(new cthd_zone_rapl_power(index));
+	if (rapl_power->zone_update() == THD_SUCCESS) {
+		rapl_power->set_zone_active();
+		zones.push_back(std::move(rapl_power));
+		++index;
 	}
+	current_zone_index = index;
 
 	if (!zones.size()) {
 		thd_log_info("No Thermal Zones found\n");
