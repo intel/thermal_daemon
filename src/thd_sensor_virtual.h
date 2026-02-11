@@ -26,25 +26,40 @@
 #define THD_SENSOR_VIRTUAL_H_
 
 #include "thd_sensor.h"
+#include <vector>
+
+typedef struct _link_sensor_t {
+	cthd_sensor *sensor;
+	double coeff;
+	double offset;
+	double prev_avg;
+} link_sensor_t;
 
 class cthd_sensor_virtual: public cthd_sensor {
 private:
-	cthd_sensor *link_sensor;
-	std::string link_type_str;
+	std::vector <link_sensor_t *> link_sensors;
 	double multiplier;
 	double offset;
 
 public:
 	cthd_sensor_virtual(int _index, std::string _type_str,
-			std::string _link_type_str, double multiplier, double offset);
-	~cthd_sensor_virtual() override;
+			std::string& _link_type_str, double multiplier, double offset);
+	~cthd_sensor_virtual();
+
+	int add_target(std::string& _link_type_str, double coeff, double offset);
+
 	int sensor_update();
-	unsigned int read_temperature() override;
-	void sensor_dump() override {
-		if (link_sensor)
-			thd_log_info("sensor index:%d %s virtual link %s %f %f\n", index,
-					type_str.c_str(), link_sensor->get_sensor_type().c_str(),
-					multiplier, offset);
+	unsigned int read_temperature();
+	virtual void sensor_dump() {
+		thd_log_info("Sensor:%s \n", type_str.c_str());
+
+		for (unsigned int i = 0; i < link_sensors.size(); ++i) {
+			link_sensor_t *link_sensor = link_sensors[i];
+			if (link_sensor->sensor) {
+				thd_log_info("\tAdd target sensor %s, %g %g\n",
+					link_sensor->sensor->get_sensor_type().c_str(), link_sensor->coeff, link_sensor->offset);
+			}
+		}
 	}
 
 	int sensor_update_param(const std::string& new_dep_sensor, double slope, double intercept);
