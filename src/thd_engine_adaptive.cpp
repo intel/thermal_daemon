@@ -29,6 +29,7 @@
 #include <linux/input.h>
 #include <sys/types.h>
 #include "thd_engine_adaptive.h"
+#include "thd_zone_dynamic.h"
 
 int cthd_engine_adaptive::install_passive(struct psv *psv) {
 	std::string psv_zone;
@@ -686,6 +687,66 @@ int cthd_engine_adaptive::thd_engine_init(bool ignore_cpuid_check,
 	res = cthd_engine::thd_engine_init(ignore_cpuid_check, adaptive);
 	if (res != THD_SUCCESS)
 		return res;
+
+	if (gddv.vscts.size()) {
+		thd_log_info("Found virtual sensor [%s]\n", gddv.vscts_name.c_str());
+
+		std::string dev_name;
+		size_t pos = gddv.vscts_name.find_last_of('.');
+		if (pos == std::string::npos) {
+			dev_name = gddv.vscts_name;
+		} else {
+				dev_name = gddv.vscts_name;
+				dev_name.resize(pos);
+		}
+
+		if (dev_name.empty())
+			return THD_ERROR;
+
+		std::string dummy = "";
+
+		std::unique_ptr<cthd_sensor_virtual> virt_sensor(new cthd_sensor_virtual(
+			current_sensor_index, dev_name, dummy, 0, 0));
+
+		for (unsigned int i = 0; i < gddv.vscts.size(); ++i) {
+			std::string target_name;
+
+			if (gddv.vscts[i].coeff_type == 1) {
+				target_name = "rapl_pkg_power";
+			} else {
+				size_t pos = gddv.vscts[i].target.find_last_of('.');
+				if (pos == std::string::npos)
+					target_name = gddv.vscts[0].target;
+				else
+					target_name = gddv.vscts[0].target.substr(pos + 1);
+			}
+
+			virt_sensor->add_target(target_name, ((double) gddv.vscts[i].coeff) / 1000,
+						((double) gddv.vscts[i].alpha) / 1000);
+		}
+
+		if (virt_sensor->sensor_update() != THD_SUCCESS) {
+			return THD_ERROR;
+		}
+
+		sensors.push_back(std::move(virt_sensor));
+		++current_sensor_index;
+
+		std::unique_ptr<cthd_zone_dynamic> zone(new cthd_zone_dynamic(current_zone_index,
+				dev_name, 0xffffffff, PASSIVE, dev_name, "intel_powerclamp"));
+		if (!zone) {
+			return THD_ERROR;
+		}
+
+		if (zone->zone_update() != THD_SUCCESS) {			// sensor will be deleted when all elements of sensors are deleted from sensors[]
+			return 0;
+		}
+
+		zone->set_zone_active();
+		zone->zone_dump();
+		zones.push_back(std::move(zone));
+		++current_zone_index;
+	}
 
 	return THD_SUCCESS;
 }

@@ -23,47 +23,130 @@
  */
 #include "thd_sensor_virtual.h"
 #include "thd_engine.h"
+#include <cmath>
 
 cthd_sensor_virtual::cthd_sensor_virtual(int _index, std::string _type_str,
-		std::string _link_type_str, double _multiplier, double _offset) :
-		cthd_sensor(_index, "none", std::move(_type_str)), link_sensor(NULL), link_type_str(
-				std::move(_link_type_str)), multiplier(_multiplier), offset(_offset) {
+		std::string& _link_type_str, double _multiplier, double _offset) :
+		cthd_sensor(_index, "none", std::move(_type_str))
+				, multiplier(_multiplier), offset(_offset) {
+
+	if (!_link_type_str.empty()) {
+		link_sensor_t *link_sensor = new (link_sensor_t);
+		if (!link_sensor)
+			return;
+
+		cthd_sensor *sensor = thd_engine->search_sensor(_link_type_str);
+		link_sensor->sensor = sensor;
+		link_sensor->offset = 0;
+		link_sensor->coeff = 0;
+		link_sensor->prev_avg = 0.0;
+		link_sensors.push_back(link_sensor);
+	}
+
 	virtual_sensor = true;
 }
 
 cthd_sensor_virtual::~cthd_sensor_virtual() {
+	for (unsigned int i = 0; i < link_sensors.size(); ++i) {
+		link_sensor_t *link_sensor = link_sensors[i];
+		delete link_sensor;
+	}
+	link_sensors.clear();
+}
+
+int cthd_sensor_virtual::add_target(std::string& _link_type_str, double coeff, double offset)
+{
+		cthd_sensor *sensor = thd_engine->search_sensor(_link_type_str);
+		if (sensor) {
+			link_sensor_t *link_sensor = new (link_sensor_t);
+			if (!link_sensor)
+				return THD_ERROR;
+
+			link_sensor->sensor = sensor;
+			link_sensor->offset = offset;
+			link_sensor->coeff = coeff;
+			link_sensor->prev_avg = 0.0;
+			link_sensors.push_back(link_sensor);
+		}
+
+		return THD_ERROR;
 }
 
 int cthd_sensor_virtual::sensor_update() {
-	cthd_sensor *sensor = thd_engine->search_sensor(link_type_str);
+	thd_log_debug("Add virtual sensor %s\n", type_str.c_str());
 
-	if (sensor)
-		link_sensor = sensor;
-	else
-		return THD_ERROR;
+	for (unsigned int i = 0; i < link_sensors.size(); ++i) {
+		link_sensor_t *link_sensor = link_sensors[i];
+
+		if (link_sensor->sensor) {
+			thd_log_debug("Add target sensor %s, %g %g\n",
+				link_sensor->sensor->get_sensor_type().c_str(), link_sensor->coeff, link_sensor->offset);
+		}
+	}
+	thd_log_info("Add virtual sensor success\n");
 
 	return THD_SUCCESS;
 }
 
 unsigned int cthd_sensor_virtual::read_temperature() {
-	unsigned int temp;
+	double virt_temp = 0.0;
+	int temp = 0;
 
-	temp = link_sensor->read_temperature();
+	link_sensor_t *link_sensor = link_sensors[0];
 
-	temp = temp * multiplier + offset;
+	if (link_sensor && !link_sensor->coeff && !link_sensor->offset) {
+		link_sensor_t *link_sensor = link_sensors[0];
 
-	thd_log_debug("cthd_sensor_virtual::read_temperature %u\n", temp);
+		temp = link_sensor->sensor->read_temperature();
+		temp = temp * multiplier + offset;
+		thd_log_debug("cthd_sensor_virtual::read_temperature %u\n", temp);
 
-	return temp;
+		return temp;
+
+	}
+
+	for (unsigned int i = 0; i < link_sensors.size(); ++i) {
+		link_sensor_t *link_sensor = link_sensors[i];
+
+		if (link_sensor->sensor) {
+			double avg;
+			double current_virt_temp;
+
+			temp = link_sensor->sensor->read_temperature();
+
+			if (!link_sensor->prev_avg)
+				link_sensor->prev_avg = (double)temp;
+
+			avg = link_sensor->offset * (double) temp  + ((1.0 - link_sensor->offset) * link_sensor->prev_avg);
+			current_virt_temp = link_sensor->coeff * avg;
+			link_sensor->prev_avg = avg;
+			thd_log_debug("%s-> %d %g %g\n", link_sensor->sensor->get_sensor_type().c_str(), temp, avg, current_virt_temp);
+			virt_temp += current_virt_temp;
+		}
+	}
+
+	thd_log_debug("virt temp:%g\n", virt_temp);
+
+	temp = static_cast<int>(std::round(virt_temp));
+
+	return (int) temp;
 }
 
 int cthd_sensor_virtual::sensor_update_param(const std::string& new_dep_sensor, double slope, double intercept)
 {
 	cthd_sensor *sensor = thd_engine->search_sensor(new_dep_sensor);
 
-	if (sensor)
-		link_sensor = sensor;
-	else
+
+	if (sensor) {
+		link_sensor_t *link_sensor = new (link_sensor_t);
+
+		link_sensor->sensor = sensor;
+		link_sensor->offset = 0;
+		link_sensor->coeff = 0;
+		link_sensor->prev_avg = 0.0;
+		link_sensors.push_back(link_sensor);
+
+	} else
 		return THD_ERROR;
 
 	multiplier = slope;
