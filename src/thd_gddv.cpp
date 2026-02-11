@@ -657,6 +657,86 @@ int cthd_gddv::parse_itmt3(char *name, char *buf, unsigned int len) {
 	return 0;
 }
 
+int cthd_gddv::parse_vspt(char *name, char *buf, int len)
+{
+	int offset = 0;
+	int version = get_uint64(buf, &offset);
+
+	if (version > 1) {
+		thd_log_warn("Found unsupported VSPT version %d\n", (int) version);
+		return THD_ERROR;
+	}
+
+	while (offset < len) {
+		struct vspt_entry vspt;
+
+		vspt.virtual_temp =	 get_uint64(buf, &offset);
+		vspt.virtual_temp = DECI_KELVIN_TO_CELSIUS(vspt.virtual_temp),
+		vspt.sample_period = get_uint64(buf, &offset) / 10;
+		vspts.push_back(vspt);
+	}
+
+	return THD_SUCCESS;
+}
+
+int cthd_gddv:: parse_vsct(char *name, char *buf, int len)
+{
+	if (name == NULL)
+		vscts_name = "vsct";
+	else
+		vscts_name = name;
+
+	thd_log_debug(" vsct name %s\n", vscts_name.c_str());
+	int offset = 0;
+	int version = get_uint64(buf, &offset);
+
+	if (version > 1) {
+		thd_log_warn("Found unsupported VSCT version %d\n", (int) version);
+		return THD_ERROR;
+	}
+
+	while (offset < len) {
+		struct vsct_entry vsct;
+
+		vsct.target = get_string(buf, &offset);
+		vsct.domain_type = get_uint64(buf, &offset);
+		vsct.coeff_type = get_uint64(buf, &offset);
+		vsct.coeff = get_uint64(buf, &offset);
+		vsct.operation = get_uint64(buf, &offset);
+		vsct.alpha = get_uint64(buf, &offset);
+		vsct.trigger_point = get_uint64(buf, &offset);
+		vscts.push_back(std::move(vsct));
+	}
+
+	return THD_SUCCESS;
+}
+
+void cthd_gddv::dump_vsct() {
+	thd_log_info("..vsct dump begin [%s]\n", vscts_name.c_str());
+
+	for (unsigned int i = 0; i < vscts.size(); ++i) {
+		struct vsct_entry vsct = vscts[i];
+			thd_log_info(
+					"\t target:%s domain_type:%d coeff_type:%d coeff:%d operation:%d alpha:%d trigger_point:%d\n",
+					vsct.target.c_str(), vsct.domain_type,
+					vsct.coeff_type, vsct.coeff,
+					vsct.operation, vsct.alpha, vsct.trigger_point
+					);
+	}
+	thd_log_info("vsct dump end\n");
+}
+
+void cthd_gddv::dump_vspt() {
+	thd_log_info("..vspt dump begin\n");
+
+	for (unsigned int i = 0; i < vspts.size(); ++i) {
+		struct vspt_entry vspt = vspts[i];
+			thd_log_info(
+					"\t sample_temp:%d polling period:%d\n", vspt.virtual_temp, vspt.sample_period);
+	}
+	thd_log_info("vspt dump end\n");
+}
+
 int cthd_gddv::parse_itmt(char *name, char *buf, int len) {
 	int offset = 0;
 	int version = get_uint64(buf, &offset);
@@ -997,6 +1077,20 @@ int cthd_gddv::parse_gddv_key(char *buf, int size, int *end_offset) {
 
 	if (type && strcmp(type, "_trt") == 0) {
 		parse_trt(val.get(), vallength);
+	}
+
+	if (type && strcmp(type, "vsct") == 0) {
+		if (point == NULL)
+			parse_vsct(name, val.get(), vallength);
+		else
+			parse_vsct(point, val.get(), vallength);
+	}
+
+	if (type && strcmp(type, "vspt") == 0) {
+		if (point == NULL)
+			parse_vspt(name, val.get(), vallength);
+		else
+			parse_vspt(point, val.get(), vallength);
 	}
 
 	return THD_SUCCESS;
@@ -1767,6 +1861,8 @@ skip_load:
 		dump_apct();
 		dump_idsps();
 		dump_trips();
+		dump_vsct();
+		dump_vspt();
 	} catch (std::exception &e) {
 		thd_log_warn("%s\n", e.what());
 		return THD_FATAL_ERROR;
