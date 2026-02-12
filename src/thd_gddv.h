@@ -190,6 +190,11 @@ struct vsct_entry {
 	int trigger_point;
 };
 
+struct vspt_entry {
+	int virtual_temp;
+	int sample_period;
+};
+
 class cthd_gddv {
 private:
 	std::vector<ppcc_t> ppccs;
@@ -224,6 +229,7 @@ private:
 	int parse_itmt(char *name, char *itmt, int len);
 	int parse_itmt3(char *name, char *itmt, unsigned int len);
 	int parse_vsct(char *name, char *psvt, int len);
+	int parse_vspt(char *name, char *psvt, int len);
 	int parse_trt(char *trt, int len);
 	void parse_idsp(char *name, char *idsp, int len);
 	void parse_trip_point(char *name, char *type, char *val, int len);
@@ -251,6 +257,7 @@ private:
 	void dump_idsps();
 	void dump_trips();
 	void dump_vsct();
+	void dump_vspt();
 #ifndef ANDROID
 	void setup_input_devices();
 #endif
@@ -275,6 +282,7 @@ public:
 
 	std::string vscts_name;
 	std::vector<struct vsct_entry> vscts;
+	std::vector<struct vspt_entry> vspts;
 
 	ppcc_t* get_ppcc_param(const std::string& name);
 	int gddv_init(std::string& base_path);

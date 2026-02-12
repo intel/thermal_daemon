@@ -28,7 +28,11 @@
 cthd_sensor_virtual::cthd_sensor_virtual(int _index, std::string _type_str,
 		std::string& _link_type_str, double _multiplier, double _offset) :
 		cthd_sensor(_index, "none", std::move(_type_str))
-				, multiplier(_multiplier), offset(_offset) {
+				, multiplier(_multiplier), offset(_offset), poll_thread(0) {
+
+	last_temp = 0;
+	polling = 0;
+	polling_period = def_polling_period;
 
 	if (!_link_type_str.empty()) {
 		link_sensor_t *link_sensor = new (link_sensor_t);
@@ -89,6 +93,13 @@ int cthd_sensor_virtual::sensor_update() {
 }
 
 unsigned int cthd_sensor_virtual::read_temperature() {
+	if (polling)
+		return last_temp;
+
+	return _read_temperature();
+}
+
+unsigned int cthd_sensor_virtual::_read_temperature() {
 	double virt_temp = 0.0;
 	int temp = 0;
 
@@ -120,14 +131,16 @@ unsigned int cthd_sensor_virtual::read_temperature() {
 			avg = link_sensor->offset * (double) temp  + ((1.0 - link_sensor->offset) * link_sensor->prev_avg);
 			current_virt_temp = link_sensor->coeff * avg;
 			link_sensor->prev_avg = avg;
-			thd_log_debug("%s-> %d %g %g\n", link_sensor->sensor->get_sensor_type().c_str(), temp, avg, current_virt_temp);
 			virt_temp += current_virt_temp;
+			thd_log_debug("%s-> power[%d] avg[%g] coeff[%g], result[%g] \n", link_sensor->sensor->get_sensor_type().c_str(), temp, avg, current_virt_temp, virt_temp);
 		}
 	}
 
 	thd_log_debug("virt temp:%g\n", virt_temp);
 
 	temp = static_cast<int>(std::round(virt_temp));
+
+	last_temp = temp;
 
 	return (int) temp;
 }
@@ -153,4 +166,57 @@ int cthd_sensor_virtual::sensor_update_param(const std::string& new_dep_sensor, 
 	offset = intercept;
 
 	return THD_SUCCESS;
+}
+
+void cthd_sensor_virtual::update_polling_table(struct polling_table_entry& entry)
+{
+		polling_table.push_back(entry);
+}
+
+static void *periodic_callback(void *data) {
+	cthd_sensor_virtual *sensor = (cthd_sensor_virtual *) data;
+
+	for (;;) {
+		sensor->_read_temperature();
+
+		int period = 0;
+		for (unsigned int i = sensor->polling_table.size() - 1; i > 0 ; --i) {
+				struct polling_table_entry entry = sensor->polling_table[i];
+
+				if (sensor->last_temp >= entry.virtual_temp) {
+					period = entry.sample_period;
+					break;
+				}
+		}
+
+		if (period) {
+			sensor->polling_period = period;
+			thd_log_debug("Update Sample period is set to %d seconds\n", period);
+		}
+
+		sleep(sensor->polling_period);
+	}
+
+	return NULL;
+}
+
+void cthd_sensor_virtual::enable_periodic_timer()
+{
+	int period = 0;
+	int invalid_poll = 100;
+
+	if (polling_table.size() >= 1) {
+		if (polling_table[0].sample_period < invalid_poll)
+			period = polling_table[0].sample_period;
+	}
+
+	if (period) {
+		polling_period = period;
+		thd_log_info("Sample period is set to %d seconds\n", polling_period);
+	}
+
+	pthread_attr_init(&thd_attr);
+	pthread_attr_setdetachstate(&thd_attr, PTHREAD_CREATE_DETACHED);
+	pthread_create(&poll_thread, &thd_attr, periodic_callback, (void*) this);
+	polling = 1;
 }

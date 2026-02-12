@@ -702,6 +702,17 @@ int cthd_engine_adaptive::thd_engine_init(bool ignore_cpuid_check,
 		std::unique_ptr<cthd_sensor_virtual> virt_sensor(new cthd_sensor_virtual(
 			current_sensor_index, dev_name, dummy, 0, 0));
 
+		for (unsigned int i = 0; i < gddv.vspts.size(); ++i) {
+			struct polling_table_entry entry;
+
+			entry.virtual_temp = gddv.vspts[i].virtual_temp;
+			entry.sample_period = gddv.vspts[i].sample_period;
+
+			virt_sensor->update_polling_table(entry);
+		}
+
+		virt_sensor->enable_periodic_timer();
+
 		for (unsigned int i = 0; i < gddv.vscts.size(); ++i) {
 			std::string target_name;
 
