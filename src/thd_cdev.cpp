@@ -112,7 +112,9 @@ int cthd_cdev::thd_cdev_exponential_controller(int set_point, int target_temp,
 			// This means this is a repeat call for activation
 			if (curr_pow == 0)
 				base_pow_state = _curr_state;
-			++curr_pow;
+
+			if (curr_pow < default_max_exponent)
+				++curr_pow;
 
 			if (inc_val)
 				_state = base_pow_state + int_2_pow(curr_pow) * inc_val;
