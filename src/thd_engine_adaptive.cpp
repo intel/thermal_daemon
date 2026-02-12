@@ -715,9 +715,11 @@ int cthd_engine_adaptive::thd_engine_init(bool ignore_cpuid_check,
 
 		for (unsigned int i = 0; i < gddv.vscts.size(); ++i) {
 			std::string target_name;
+			int power_sensor = 0;
 
 			if (gddv.vscts[i].coeff_type == 1) {
 				target_name = "rapl_pkg_power";
+				power_sensor = 1;
 			} else {
 				size_t pos = gddv.vscts[i].target.find_last_of('.');
 				if (pos == std::string::npos)
@@ -727,7 +729,7 @@ int cthd_engine_adaptive::thd_engine_init(bool ignore_cpuid_check,
 			}
 
 			virt_sensor->add_target(target_name, ((double) gddv.vscts[i].coeff) / 1000,
-						((double) gddv.vscts[i].alpha) / 1000);
+						((double) gddv.vscts[i].alpha) / 1000, power_sensor);
 		}
 
 		if (virt_sensor->sensor_update() != THD_SUCCESS) {

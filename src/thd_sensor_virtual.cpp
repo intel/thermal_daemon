@@ -58,7 +58,7 @@ cthd_sensor_virtual::~cthd_sensor_virtual() {
 	link_sensors.clear();
 }
 
-int cthd_sensor_virtual::add_target(std::string& _link_type_str, double coeff, double offset)
+int cthd_sensor_virtual::add_target(std::string& _link_type_str, double coeff, double offset, int power_sensor)
 {
 		cthd_sensor *sensor = thd_engine->search_sensor(_link_type_str);
 		if (sensor) {
@@ -70,6 +70,7 @@ int cthd_sensor_virtual::add_target(std::string& _link_type_str, double coeff, d
 			link_sensor->offset = offset;
 			link_sensor->coeff = coeff;
 			link_sensor->prev_avg = 0.0;
+			link_sensor->power_sensor = power_sensor;
 			link_sensors.push_back(link_sensor);
 		}
 
@@ -125,6 +126,9 @@ unsigned int cthd_sensor_virtual::_read_temperature() {
 
 			temp = link_sensor->sensor->read_temperature();
 
+			if (!link_sensor->power_sensor)
+				temp = temp / 1000; //convert to degree C
+
 			if (!link_sensor->prev_avg)
 				link_sensor->prev_avg = (double)temp;
 
@@ -140,7 +144,8 @@ unsigned int cthd_sensor_virtual::_read_temperature() {
 
 	temp = static_cast<int>(std::round(virt_temp));
 
-	last_temp = temp;
+	// always return in mC
+	last_temp = temp * 1000;
 
 	return (int) temp;
 }

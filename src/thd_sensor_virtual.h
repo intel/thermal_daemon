@@ -33,6 +33,7 @@ typedef struct _link_sensor_t {
 	double coeff;
 	double offset;
 	double prev_avg;
+	int power_sensor;
 } link_sensor_t;
 
 
@@ -61,7 +62,7 @@ public:
 			std::string& _link_type_str, double multiplier, double offset);
 	~cthd_sensor_virtual();
 
-	int add_target(std::string& _link_type_str, double coeff, double offset);
+	int add_target(std::string& _link_type_str, double coeff, double offset, int power_sensor);
 
 	int sensor_update();
 	unsigned int _read_temperature();
