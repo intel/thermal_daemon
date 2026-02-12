@@ -44,19 +44,19 @@ int cthd_cdev::thd_clamp_state_min(int _state, int temp_min_state)
 {
 	int _min_state = min_state;
 
-	if (_min_state > max_state) {
-		if (temp_min_state && temp_min_state < _min_state)
+	if (_min_state >= max_state) {
+		if (temp_min_state && temp_min_state <= _min_state)
 			_min_state = temp_min_state;
 	} else {
-		if (temp_min_state && temp_min_state > _min_state)
+		if (temp_min_state && temp_min_state >= _min_state)
 			_min_state = temp_min_state;
 	}
 
 	thd_log_debug("def_min_state:%d curr_min_state:%d\n", min_state,
 			_min_state);
 
-	if ((_min_state < max_state && _state < _min_state)
-			|| (_min_state > max_state && _state > _min_state))
+	if ((_min_state <= max_state && _state <= _min_state)
+			|| (_min_state >= max_state && _state >= _min_state))
 		return _min_state;
 	else
 		return _state;
@@ -67,19 +67,19 @@ int cthd_cdev::thd_clamp_state_max(int _state, int temp_max_state)
 {
 	int _max_state = max_state;
 
-	if (min_state > _max_state) {
-		if (temp_max_state && temp_max_state > _max_state)
+	if (min_state >= _max_state) {
+		if (temp_max_state && temp_max_state >= _max_state)
 			_max_state = temp_max_state;
 	} else {
-		if (temp_max_state && temp_max_state < _max_state)
+		if (temp_max_state && temp_max_state <= _max_state)
 			_max_state = temp_max_state;
 	}
 
 	thd_log_debug("def_max_state:%d temp_max_state:%d curr_max_state:%d\n",
 			max_state, temp_max_state, _max_state);
 
-	if ((min_state < _max_state && _state > _max_state)
-			|| (min_state > _max_state && _state < _max_state))
+	if ((min_state <= _max_state && _state >= _max_state)
+			|| (min_state >= _max_state && _state <= _max_state))
 		return _max_state;
 	else
 		return _state;
