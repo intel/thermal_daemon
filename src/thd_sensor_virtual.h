@@ -35,13 +35,28 @@ typedef struct _link_sensor_t {
 	double prev_avg;
 } link_sensor_t;
 
+
+struct polling_table_entry {
+	int virtual_temp;
+	int sample_period;
+};
+
 class cthd_sensor_virtual: public cthd_sensor {
 private:
 	std::vector <link_sensor_t *> link_sensors;
 	double multiplier;
 	double offset;
 
+	pthread_t poll_thread;
+	pthread_attr_t thd_attr;
+	int polling;
 public:
+	int last_temp;
+
+	static const int def_polling_period = 5; //seconds
+	int polling_period;
+	std::vector<struct polling_table_entry> polling_table;
+
 	cthd_sensor_virtual(int _index, std::string _type_str,
 			std::string& _link_type_str, double multiplier, double offset);
 	~cthd_sensor_virtual() override;
@@ -49,6 +64,7 @@ public:
 	int add_target(std::string& _link_type_str, double coeff, double offset);
 
 	int sensor_update();
+	unsigned int _read_temperature();
 	unsigned int read_temperature() override;
 	void sensor_dump() override {
 		thd_log_info("Sensor:%s \n", type_str.c_str());
@@ -63,7 +79,8 @@ public:
 	}
 
 	int sensor_update_param(const std::string& new_dep_sensor, double slope, double intercept);
-
+	void enable_periodic_timer();
+	void update_polling_table(struct polling_table_entry& entry);
 };
 
 #endif /* THD_SENSOR_VIRTUAL_H_ */
