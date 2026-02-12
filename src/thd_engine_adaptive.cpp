@@ -247,7 +247,7 @@ void cthd_engine_adaptive::psvt_consolidate() {
 
 #define DEFAULT_SAMPLE_TIME_SEC		5
 
-int cthd_engine_adaptive::install_itmt(struct itmt_entry *itmt_entry) {
+int cthd_engine_adaptive::install_itmt(struct itmt_entry *itmt_entry, int& pl1_max) {
 	std::string itmt_zone;
 
 	size_t pos = itmt_entry->target.find_last_of('.');
@@ -305,6 +305,7 @@ int cthd_engine_adaptive::install_itmt(struct itmt_entry *itmt_entry) {
 			buffer >> _max_state;
 			_max_state *= 1000;
 		}
+		pl1_max = _max_state;
 	}
 
 	if (itmt_entry->pl1_min.length()) {
@@ -377,8 +378,11 @@ int cthd_engine_adaptive::set_itmt_target(struct adaptive_target &target) {
 		}
 	}
 
+	int pl1_max = TRIP_PT_INVALID_TARGET_STATE;
 	for (int i = 0; i < (int) itmt->itmt_entries.size(); i++) {
-		install_itmt(&itmt->itmt_entries[i]);
+		install_itmt(&itmt->itmt_entries[i], pl1_max);
+		if (pl1_max < itmt_target_pl1_max)
+			itmt_target_pl1_max = pl1_max;
 	}
 
 	return THD_SUCCESS;
@@ -524,13 +528,20 @@ void cthd_engine_adaptive::execute_target(struct adaptive_target &target) {
 		return;
 	}
 	thd_log_info("target:%s %d\n", target.code.c_str(), argument);
-	if (cdev)
+	if (cdev) {
 		cdev->set_adaptive_target(target);
+		if (target.code == "PL1MAX") {
+			// store in mW
+			target_pl_max = std::stoi(target.argument, NULL);
+		}
+
+	}
 }
 
 void cthd_engine_adaptive::exec_fallback_target(int target) {
 	thd_log_debug("exec_fallback_target %d\n", target);
 	int3400_installed = 0;
+
 	for (int i = 0; i < (int) gddv.targets.size(); i++) {
 		if (gddv.targets[i].target_id != (uint64_t) target)
 			continue;
@@ -575,12 +586,33 @@ void cthd_engine_adaptive::update_engine_state() {
 	int3400_installed = 0;
 
 	if (target > 0) {
+		itmt_target_pl1_max = TRIP_PT_INVALID_TARGET_STATE;
+		target_pl_max = TRIP_PT_INVALID_TARGET_STATE;
+
 		for (int i = 0; i < (int) gddv.targets.size(); i++) {
 			if (gddv.targets[i].target_id != (uint64_t) target)
 				continue;
 			execute_target(gddv.targets[i]);
 		}
 		policy_active = 1;
+
+		if (itmt_target_pl1_max != TRIP_PT_INVALID_TARGET_STATE) {
+			int _pl1_val = itmt_target_pl1_max / 1000;
+
+			if (target_pl_max == TRIP_PT_INVALID_TARGET_STATE || target_pl_max > _pl1_val) {
+				struct adaptive_target adaptive_target;
+				cthd_cdev *cdev = search_cdev("rapl_controller_mmio");
+
+				if (!cdev) {
+					thd_log_info("RAPL MMIO device not found\n");
+					return;
+				}
+				thd_log_info("Set PL1 max based on ITMT :%d\n", itmt_target_pl1_max);
+				adaptive_target.code = "PL1MAX";
+				adaptive_target.argument = std::to_string(_pl1_val);
+				cdev->set_adaptive_target(adaptive_target);
+			}
+		}
 	}
 
 	if (!int3400_installed) {

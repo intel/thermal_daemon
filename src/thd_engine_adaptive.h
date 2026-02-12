@@ -48,9 +48,12 @@ protected:
 	int int3400_installed;
 	int current_matched_target;
 
+	int itmt_target_pl1_max;
+	int target_pl_max;
+
 	int set_itmt_target(struct adaptive_target &target);
 	int install_passive(struct psv *psv);
-	int install_itmt(struct itmt_entry *itmt_entry);
+	int install_itmt(struct itmt_entry *itmt_entry, int& max);
 	void psvt_consolidate();
 	void set_trip(const std::string& device, const std::string& argument);
 	void set_int3400_target(struct adaptive_target &target);
@@ -65,7 +68,8 @@ public:
 			cthd_engine_default("63BE270F-1C11-48FD-A6F7-3AF253FF3E2D"), policy_active(
 					0), fallback_id(-1), int3400_path(""), int3400_base_path(
 					""), passive_def_only(0), passive_def_processed(0),
-					power_slider(75), int3400_installed(0), current_matched_target(-1) {
+					power_slider(75), int3400_installed(0), current_matched_target(-1),
+					itmt_target_pl1_max(0), target_pl_max(0) {
 	}
 #else
 	cthd_engine_adaptive() :
