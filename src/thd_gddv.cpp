@@ -1478,7 +1478,7 @@ int cthd_gddv::evaluate_ac_condition(const struct condition& condition) {
 }
 #endif
 
-int cthd_gddv::evaluate_condition(struct condition condition) {
+int cthd_gddv::evaluate_condition(struct condition& condition) {
 	int ret = THD_ERROR;
 
 	if (condition.condition == Default)
@@ -1523,11 +1523,26 @@ int cthd_gddv::evaluate_condition(struct condition condition) {
 			ret = THD_SUCCESS;
 	}
 
-	if (ret) {
-		if (condition.time && condition.state_entry_time == 0) {
-			condition.state_entry_time = time(NULL);
+	if (!ret) {
+		// After a target is matched, periodically when the condition set
+		// is periodically checked, because of time component it will fail
+		// first and then match. This will result in switch of target
+		// back and forth, so don't check time for the current target
+		if (condition.target == current_target_matched)
+			return ret;
+
+		if (condition.time) {
+			thd_log_debug("time condition matched %ld \n", condition.state_entry_time);
+			if (condition.state_entry_time == 0) {
+				condition.state_entry_time = time(NULL);
+				return THD_ERROR;
+			} else {
+				ret = compare_time(condition);
+				thd_log_debug("compare time output %d\n", ret);
+				if (!ret)
+					condition.state_entry_time = 0;
+			}
 		}
-		ret = compare_time(condition);
 	} else {
 		condition.state_entry_time = 0;
 	}
@@ -1535,8 +1550,7 @@ int cthd_gddv::evaluate_condition(struct condition condition) {
 	return ret;
 }
 
-int cthd_gddv::evaluate_condition_set(
-		const std::vector<struct condition>& condition_set) {
+int cthd_gddv::evaluate_condition_set(std::vector<struct condition>& condition_set) {
 	for (int i = 0; i < (int) condition_set.size(); i++) {
 		thd_log_debug("evaluate condition.condition at index %d\n", i);
 		if (evaluate_condition(condition_set[i]) != 0)
@@ -1553,7 +1567,7 @@ int cthd_gddv::evaluate_conditions() {
 		if (evaluate_condition_set(conditions[i]) == THD_SUCCESS) {
 			target = conditions[i][0].target;
 			thd_log_debug("Condition Set matched:%d target:%d\n", i, target);
-
+			current_target_matched = target;
 			break;
 		}
 	}
