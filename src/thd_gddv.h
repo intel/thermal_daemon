@@ -199,7 +199,7 @@ private:
 #endif
 	std::string int3400_base_path;
 	int power_slider;
-
+	int current_target_matched;
 	void destroy_dynamic_sources();
 	int get_type(char *object, int *offset);
 	uint64_t get_uint64(char *object, int *offset);
@@ -230,8 +230,8 @@ private:
 	int evaluate_workload_condition(const struct condition& condition);
 	int evaluate_platform_type_condition(const struct condition& condition);
 	int evaluate_power_slider_condition(const struct condition& condition);
-	int evaluate_condition(struct condition condition);
-	int evaluate_condition_set(const std::vector<struct condition>& condition_set);
+	int evaluate_condition(struct condition& condition);
+	int evaluate_condition_set(std::vector<struct condition>& condition_set);
 	void exec_fallback_target(int target);
 	void dump_apat();
 	void dump_apct();
@@ -249,7 +249,7 @@ public:
 #ifndef ANDROID
 	cthd_gddv() :
 			upower_client(
-			nullptr), power_profiles_daemon(nullptr), tablet_dev(nullptr), lid_dev(nullptr), int3400_base_path(""), power_slider(75) {
+			nullptr), power_profiles_daemon(nullptr), tablet_dev(nullptr), lid_dev(nullptr), int3400_base_path(""), power_slider(75), current_target_matched(-1) {
 	}
 #else
 	cthd_gddv() :
