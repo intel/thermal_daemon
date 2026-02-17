@@ -39,6 +39,12 @@ struct _PrefObject {
 	GObject parent;
 };
 
+#ifdef THD_DBUS_WRITE_ALLOWED
+static int dbus_interface_ready_only;
+#else
+static int dbus_interface_ready_only = 1;
+#endif
+
 #define PREF_TYPE_OBJECT (pref_object_get_type())
 G_DECLARE_FINAL_TYPE(PrefObject, pref_object, PREF, OBJECT, GObject)
 
@@ -628,6 +634,11 @@ thd_dbus_handle_method_call(GDBusConnection       *connection,
 		gint max_state;
 		gint step;
 
+		if (dbus_interface_ready_only) {
+			g_dbus_method_invocation_return_error_literal (invocation, G_IO_ERROR, G_IO_ERROR_EXISTS, "Not Allowed");
+			return;
+		}
+
 		g_variant_get(parameters, "(ssiii)", &cdev_name, &path, &min_state,
 			      &max_state, &step);
 
@@ -645,6 +656,11 @@ thd_dbus_handle_method_call(GDBusConnection       *connection,
 	if (g_strcmp0(method_name, "AddSensor") == 0) {
 		g_autofree gchar *sensor_name = NULL;
 		g_autofree gchar *path = NULL;
+
+		if (dbus_interface_ready_only) {
+			g_dbus_method_invocation_return_error_literal (invocation, G_IO_ERROR, G_IO_ERROR_EXISTS, "Not Allowed");
+			return;
+		}
 
 		g_variant_get(parameters, "(ss)", &sensor_name, &path);
 
@@ -664,6 +680,11 @@ thd_dbus_handle_method_call(GDBusConnection       *connection,
 		g_autofree gchar *trip_point_sensor = NULL;
 		g_autofree gchar *trip_point_cdev = NULL;
 
+		if (dbus_interface_ready_only) {
+			g_dbus_method_invocation_return_error_literal (invocation, G_IO_ERROR, G_IO_ERROR_EXISTS, "Not Allowed");
+			return;
+		}
+
 		g_variant_get(parameters, "(suss)", &zone_name, &trip_point_temp,
 			       &trip_point_sensor, &trip_point_cdev);
 
@@ -682,6 +703,11 @@ thd_dbus_handle_method_call(GDBusConnection       *connection,
 		g_autofree gchar *dep_sensor = NULL;
 		gdouble slope;
 		gdouble intercept;
+
+		if (dbus_interface_ready_only) {
+			g_dbus_method_invocation_return_error_literal (invocation, G_IO_ERROR, G_IO_ERROR_EXISTS, "Not Allowed");
+			return;
+		}
 
 		g_variant_get(parameters, "(ssdd)", &sensor_name, &dep_sensor,
 			      &slope, &intercept);
@@ -703,6 +729,11 @@ thd_dbus_handle_method_call(GDBusConnection       *connection,
 		g_autofree gchar *trip_point_sensor = NULL;
 		g_autofree gchar *trip_point_cdev = NULL;
 
+		if (dbus_interface_ready_only) {
+			g_dbus_method_invocation_return_error_literal (invocation, G_IO_ERROR, G_IO_ERROR_EXISTS, "Not Allowed");
+			return;
+		}
+
 		g_variant_get(parameters, "(suss)", &zone_name, &trip_point_temp,
 			      &trip_point_sensor, &trip_point_cdev);
 		
@@ -721,6 +752,11 @@ thd_dbus_handle_method_call(GDBusConnection       *connection,
 		g_autofree gchar *zone_name = NULL;
 		guint trip_point_temp;
 
+		if (dbus_interface_ready_only) {
+			g_dbus_method_invocation_return_error_literal (invocation, G_IO_ERROR, G_IO_ERROR_EXISTS, "Not Allowed");
+			return;
+		}
+
 		g_variant_get(parameters, "(su)", &zone_name, &trip_point_temp);
 
 		thd_dbus_interface_delete_trip_point(obj, zone_name, &error);
@@ -736,6 +772,11 @@ thd_dbus_handle_method_call(GDBusConnection       *connection,
 	if (g_strcmp0(method_name, "DeleteZone") == 0) {
 		g_autofree gchar *zone_name = NULL;
 
+		if (dbus_interface_ready_only) {
+			g_dbus_method_invocation_return_error_literal (invocation, G_IO_ERROR, G_IO_ERROR_EXISTS, "Not Allowed");
+			return;
+		}
+
 		g_variant_get(parameters, "(s)", &zone_name);
 
 		thd_dbus_interface_delete_zone(obj, zone_name, &error);
@@ -750,6 +791,11 @@ thd_dbus_handle_method_call(GDBusConnection       *connection,
 
 	if (g_strcmp0(method_name, "DisableCoolingDevice") == 0) {
 		g_autofree gchar *cdev_name = NULL;
+
+		if (dbus_interface_ready_only) {
+			g_dbus_method_invocation_return_error_literal (invocation, G_IO_ERROR, G_IO_ERROR_EXISTS, "Not Allowed");
+			return;
+		}
 
 		g_variant_get(parameters, "(s)", &cdev_name);
 
@@ -1012,6 +1058,11 @@ thd_dbus_handle_method_call(GDBusConnection       *connection,
 	if (g_strcmp0(method_name, "Reinit") == 0) {
 		thd_dbus_interface_reinit(obj, &error);
 
+		if (dbus_interface_ready_only) {
+			g_dbus_method_invocation_return_error_literal (invocation, G_IO_ERROR, G_IO_ERROR_EXISTS, "Not Allowed");
+			return;
+		}
+
 		g_dbus_method_invocation_return_value(invocation,
 						      NULL);
 		return;
@@ -1020,6 +1071,11 @@ thd_dbus_handle_method_call(GDBusConnection       *connection,
 	if (g_strcmp0(method_name, "SetCurrentPreference") == 0) {
 		gboolean ret;
 		g_autofree gchar *pref = NULL;
+
+		if (dbus_interface_ready_only) {
+			g_dbus_method_invocation_return_error_literal (invocation, G_IO_ERROR, G_IO_ERROR_EXISTS, "Not Allowed");
+			return;
+		}
 
 		g_variant_get(parameters, "(s)", &pref);
 
@@ -1041,6 +1097,11 @@ thd_dbus_handle_method_call(GDBusConnection       *connection,
 		g_autofree gchar *zone_name = NULL;
 		guint user_set_point_in_milli_degree_celsius;
 
+		if (dbus_interface_ready_only) {
+			g_dbus_method_invocation_return_error_literal (invocation, G_IO_ERROR, G_IO_ERROR_EXISTS, "Not Allowed");
+			return;
+		}
+
 		g_variant_get(parameters, "(su)", &zone_name,
 			      &user_set_point_in_milli_degree_celsius);
 		
@@ -1059,6 +1120,11 @@ thd_dbus_handle_method_call(GDBusConnection       *connection,
 		gboolean ret;
 		g_autofree gchar *zone_name = NULL;
 		guint user_set_point_in_milli_degree_celsius;
+
+		if (dbus_interface_ready_only) {
+			g_dbus_method_invocation_return_error_literal (invocation, G_IO_ERROR, G_IO_ERROR_EXISTS, "Not Allowed");
+			return;
+		}
 
 		g_variant_get(parameters, "(su)", &zone_name,
 			      &user_set_point_in_milli_degree_celsius);
@@ -1080,6 +1146,11 @@ thd_dbus_handle_method_call(GDBusConnection       *connection,
 		g_autofree gchar *zone_name = NULL;
 		gint status;
 
+		if (dbus_interface_ready_only) {
+			g_dbus_method_invocation_return_error_literal (invocation, G_IO_ERROR, G_IO_ERROR_EXISTS, "Not Allowed");
+			return;
+		}
+
 		g_variant_get(parameters, "(si)", &zone_name, &status);
 
 		ret = thd_dbus_interface_set_zone_status(obj, zone_name, status,
@@ -1095,6 +1166,11 @@ thd_dbus_handle_method_call(GDBusConnection       *connection,
 	}
 
 	if (g_strcmp0(method_name, "Terminate") == 0) {
+		if (dbus_interface_ready_only) {
+			g_dbus_method_invocation_return_error_literal (invocation, G_IO_ERROR, G_IO_ERROR_EXISTS, "Not Allowed");
+			return;
+		}
+
 		g_dbus_method_invocation_return_value(invocation, NULL);
 		thd_dbus_interface_terminate(obj, &error);
 		return;
@@ -1107,6 +1183,11 @@ thd_dbus_handle_method_call(GDBusConnection       *connection,
 		gint min_state;
 		gint max_state;
 		gint step;
+
+		if (dbus_interface_ready_only) {
+			g_dbus_method_invocation_return_error_literal (invocation, G_IO_ERROR, G_IO_ERROR_EXISTS, "Not Allowed");
+			return;
+		}
 
 		g_variant_get(parameters, "(ssiii)", &cdev_name, &path, &min_state,
 			      &max_state, &step);
