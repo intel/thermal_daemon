@@ -439,8 +439,6 @@ void cthd_engine_adaptive::set_int3400_target(struct adaptive_target &target) {
 		thd_log_warn("Adaptive policy couldn't create any zones\n");
 		thd_log_warn("Possibly some sensors in the PSVT are missing\n");
 		thd_log_warn("Restart in non adaptive mode via systemd\n");
-		csys_fs sysfs("/tmp/ignore_adaptive");
-		sysfs.create();
 		exit(EXIT_FAILURE);
 	}
 
@@ -633,10 +631,6 @@ int cthd_engine_adaptive::thd_engine_init(bool ignore_cpuid_check,
 		}
 	}
 
-	csys_fs _sysfs("/tmp/ignore_adaptive");
-	if (_sysfs.exists()) {
-		return THD_ERROR;
-	}
 
 	if (set_int3400_base_path() != THD_SUCCESS)
 		return THD_ERROR;
