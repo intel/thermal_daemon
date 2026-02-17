@@ -48,10 +48,10 @@ public:
 					""), cpu_index(_cpu_index) {
 	}
 
-	int init();
-	void set_curr_state(int state, int arg);
-	int get_max_state();
-	int update();
+	int init() override;
+	void set_curr_state(int state, int arg) override;
+	int get_max_state() override;
+	int update() override;
 };
 
 #endif /* THD_CDEV_PSTATES_H_ */

@@ -35,9 +35,9 @@ private:
 public:
 	static const int min_backlight_percent = 25; // max percent from max
 	cthd_cdev_backlight(unsigned int _index, int _cpu_index);
-	void set_curr_state(int state, int arg);
-	int update();
-	int map_target_state(int target_valid, int target_state);
+	void set_curr_state(int state, int arg) override;
+	int update() override;
+	int map_target_state(int target_valid, int target_state) override;
 };
 
 #endif /* SRC_THD_CDEV_BACKLIGHT_H_ */

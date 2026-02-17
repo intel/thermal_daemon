@@ -67,11 +67,6 @@ typedef struct {
 	unsigned long msg[MAX_MSG_SIZE];
 } message_capsul_t;
 
-typedef struct {
-	unsigned int family;
-	unsigned int model;
-} supported_ids_t;
-
 class cthd_engine {
 
 protected:
@@ -100,7 +95,6 @@ private:
 	time_t thz_last_temp_ind_time;
 	time_t thz_last_update_event_time;
 	bool terminate;
-	int genuine_intel;
 	int has_invariant_tsc;
 	int has_aperf;
 	bool proc_list_matched;

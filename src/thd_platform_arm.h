@@ -1,7 +1,7 @@
 /*
- * thd_zone_generic.h: zone interface for xml conf
+ * thd_platform_arm.h: ARM platform-specific functionality
  *
- * Copyright (C) 2013 Intel Corporation. All rights reserved.
+ * Copyright (c) 2026 Qualcomm Innovation Center, Inc. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License version
@@ -17,28 +17,22 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301, USA.
  *
- *
- * Author Name <Srinivas.Pandruvada@linux.intel.com>
- *
+ * Author Name <priyansh.jain@oss.qualcomm.com>
  */
 
-#ifndef THD_ZONE_GENERIC_H_
-#define THD_ZONE_GENERIC_H_
+#ifndef THD_PLATFORM_ARM_H_
+#define THD_PLATFORM_ARM_H_
 
-#include "thd_zone.h"
+#include "thd_platform.h"
 
-class cthd_zone_generic: public cthd_zone {
-private:
-	int config_index;
-	std::vector<cthd_sensor *> sensor_list;
-
+class arm_platform : public cthd_platform {
 public:
+    arm_platform();
+    virtual ~arm_platform();
 
-	cthd_zone_generic(int index, int _config_index, std::string type);
-
-	int read_trip_points() override;
-	int read_cdev_trip_points() override;
-	int zone_bind_sensors() override;
+    // Override virtual methods from base class
+    void detect_platform() override;
+    int check_cpu_id(bool &proc_list_matched) override;
 };
 
-#endif /* THD_ZONE_GENERIC_H_ */
+#endif /* THD_PLATFORM_ARM_H_ */
