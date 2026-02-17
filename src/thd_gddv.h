@@ -168,6 +168,7 @@ struct trt_entry {
 };
 
 struct itmt {
+	int version;
 	std::string name;
 	std::vector<struct itmt_entry> itmt_entries;
 };
@@ -177,6 +178,21 @@ struct trippoint {
 	std::string type_str;
 	trip_point_type_t type;
 	int temp;
+};
+
+struct vsct_entry {
+	std::string target;
+	int domain_type;
+	int coeff_type;
+	int coeff;
+	int operation;
+	int alpha;
+	int trigger_point;
+};
+
+struct vspt_entry {
+	int virtual_temp;
+	int sample_period;
 };
 
 class cthd_gddv {
@@ -197,7 +213,7 @@ private:
 #endif
 	std::string int3400_base_path;
 	int power_slider;
-
+	int current_target_matched;
 	void destroy_dynamic_sources();
 	int get_type(char *object, int *offset);
 	uint64_t get_uint64(char *object, int *offset);
@@ -212,6 +228,8 @@ private:
 	int parse_psvt(char *name, char *psvt, int len);
 	int parse_itmt(char *name, char *itmt, int len);
 	int parse_itmt3(char *name, char *itmt, unsigned int len);
+	int parse_vsct(char *name, char *psvt, int len);
+	int parse_vspt(char *name, char *psvt, int len);
 	int parse_trt(char *trt, int len);
 	void parse_idsp(char *name, char *idsp, int len);
 	void parse_trip_point(char *name, char *type, char *val, int len);
@@ -228,8 +246,8 @@ private:
 	int evaluate_workload_condition(const struct condition& condition);
 	int evaluate_platform_type_condition(const struct condition& condition);
 	int evaluate_power_slider_condition(const struct condition& condition);
-	int evaluate_condition(struct condition condition);
-	int evaluate_condition_set(const std::vector<struct condition>& condition_set);
+	int evaluate_condition(struct condition& condition);
+	int evaluate_condition_set(std::vector<struct condition>& condition_set);
 	void exec_fallback_target(int target);
 	void dump_apat();
 	void dump_apct();
@@ -238,6 +256,8 @@ private:
 	void dump_itmt();
 	void dump_idsps();
 	void dump_trips();
+	void dump_vsct();
+	void dump_vspt();
 #ifndef ANDROID
 	void setup_input_devices();
 #endif
@@ -247,7 +267,7 @@ public:
 #ifndef ANDROID
 	cthd_gddv() :
 			upower_client(
-			NULL), power_profiles_daemon(NULL), tablet_dev(NULL), lid_dev(NULL), int3400_base_path(""), power_slider(75) {
+			NULL), power_profiles_daemon(NULL), tablet_dev(NULL), lid_dev(NULL), int3400_base_path(""), power_slider(75), current_target_matched(-1) {
 	}
 #else
 	cthd_gddv() :
@@ -259,6 +279,10 @@ public:
 
 	std::vector<std::vector<struct condition>> conditions;
 	std::vector<struct adaptive_target> targets;
+
+	std::string vscts_name;
+	std::vector<struct vsct_entry> vscts;
+	std::vector<struct vspt_entry> vspts;
 
 	ppcc_t* get_ppcc_param(const std::string& name);
 	int gddv_init(std::string& base_path);

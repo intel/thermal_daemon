@@ -1010,8 +1010,6 @@ void cthd_engine::check_for_rt_kernel() {
 }
 
 int cthd_engine::user_add_sensor(std::string name, std::string path) {
-	pthread_mutex_lock(&thd_engine_mutex);
-
 	if (path.empty())
 		return THD_ERROR;
 
@@ -1020,6 +1018,8 @@ int cthd_engine::user_add_sensor(std::string name, std::string path) {
 		thd_log_debug("Invalid path %s\n", path.c_str());
 		return THD_ERROR;
 	}
+
+	pthread_mutex_lock(&thd_engine_mutex);
 
 	for (unsigned int i = 0; i < sensors.size(); ++i) {
 		if (sensors[i]->get_sensor_type() == name) {
@@ -1069,7 +1069,7 @@ int cthd_engine::user_add_virtual_sensor(std::string name,
 	}
 	std::unique_ptr<cthd_sensor_virtual> virt_sensor(new cthd_sensor_virtual(
 			current_sensor_index, std::move(name),
-			std::move(dep_sensor), slope, intercept));
+			dep_sensor, slope, intercept));
 	if (virt_sensor->sensor_update() != THD_SUCCESS) {
 		pthread_mutex_unlock(&thd_engine_mutex);
 		return THD_ERROR;

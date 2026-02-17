@@ -29,6 +29,7 @@
 #include <linux/input.h>
 #include <sys/types.h>
 #include "thd_engine_adaptive.h"
+#include "thd_zone_dynamic.h"
 
 int cthd_engine_adaptive::install_passive(struct psv *psv) {
 	std::string psv_zone;
@@ -246,7 +247,7 @@ void cthd_engine_adaptive::psvt_consolidate() {
 
 #define DEFAULT_SAMPLE_TIME_SEC		5
 
-int cthd_engine_adaptive::install_itmt(struct itmt_entry *itmt_entry) {
+int cthd_engine_adaptive::install_itmt(struct itmt_entry *itmt_entry, int& pl1_max) {
 	std::string itmt_zone;
 
 	size_t pos = itmt_entry->target.find_last_of('.');
@@ -304,6 +305,7 @@ int cthd_engine_adaptive::install_itmt(struct itmt_entry *itmt_entry) {
 			buffer >> _max_state;
 			_max_state *= 1000;
 		}
+		pl1_max = _max_state;
 	}
 
 	if (itmt_entry->pl1_min.length()) {
@@ -376,8 +378,11 @@ int cthd_engine_adaptive::set_itmt_target(struct adaptive_target &target) {
 		}
 	}
 
+	int pl1_max = TRIP_PT_INVALID_TARGET_STATE;
 	for (int i = 0; i < (int) itmt->itmt_entries.size(); i++) {
-		install_itmt(&itmt->itmt_entries[i]);
+		install_itmt(&itmt->itmt_entries[i], pl1_max);
+		if (pl1_max < itmt_target_pl1_max)
+			itmt_target_pl1_max = pl1_max;
 	}
 
 	return THD_SUCCESS;
@@ -521,13 +526,20 @@ void cthd_engine_adaptive::execute_target(struct adaptive_target &target) {
 		return;
 	}
 	thd_log_info("target:%s %d\n", target.code.c_str(), argument);
-	if (cdev)
+	if (cdev) {
 		cdev->set_adaptive_target(target);
+		if (target.code == "PL1MAX") {
+			// store in mW
+			target_pl_max = std::stoi(target.argument, NULL);
+		}
+
+	}
 }
 
 void cthd_engine_adaptive::exec_fallback_target(int target) {
 	thd_log_debug("exec_fallback_target %d\n", target);
 	int3400_installed = 0;
+
 	for (int i = 0; i < (int) gddv.targets.size(); i++) {
 		if (gddv.targets[i].target_id != (uint64_t) target)
 			continue;
@@ -572,12 +584,33 @@ void cthd_engine_adaptive::update_engine_state() {
 	int3400_installed = 0;
 
 	if (target > 0) {
+		itmt_target_pl1_max = TRIP_PT_INVALID_TARGET_STATE;
+		target_pl_max = TRIP_PT_INVALID_TARGET_STATE;
+
 		for (int i = 0; i < (int) gddv.targets.size(); i++) {
 			if (gddv.targets[i].target_id != (uint64_t) target)
 				continue;
 			execute_target(gddv.targets[i]);
 		}
 		policy_active = 1;
+
+		if (itmt_target_pl1_max != TRIP_PT_INVALID_TARGET_STATE) {
+			int _pl1_val = itmt_target_pl1_max / 1000;
+
+			if (target_pl_max == TRIP_PT_INVALID_TARGET_STATE || target_pl_max > _pl1_val) {
+				struct adaptive_target adaptive_target;
+				cthd_cdev *cdev = search_cdev("rapl_controller_mmio");
+
+				if (!cdev) {
+					thd_log_info("RAPL MMIO device not found\n");
+					return;
+				}
+				thd_log_info("Set PL1 max based on ITMT :%d\n", itmt_target_pl1_max);
+				adaptive_target.code = "PL1MAX";
+				adaptive_target.argument = std::to_string(_pl1_val);
+				cdev->set_adaptive_target(adaptive_target);
+			}
+		}
 	}
 
 	if (!int3400_installed) {
@@ -680,6 +713,79 @@ int cthd_engine_adaptive::thd_engine_init(bool ignore_cpuid_check,
 	res = cthd_engine::thd_engine_init(ignore_cpuid_check, adaptive);
 	if (res != THD_SUCCESS)
 		return res;
+
+	if (gddv.vscts.size()) {
+		thd_log_info("Found virtual sensor [%s]\n", gddv.vscts_name.c_str());
+
+		std::string dev_name;
+		size_t pos = gddv.vscts_name.find_last_of('.');
+		if (pos == std::string::npos) {
+			dev_name = gddv.vscts_name;
+		} else {
+				dev_name = gddv.vscts_name;
+				dev_name.resize(pos);
+		}
+
+		if (dev_name.empty())
+			return THD_ERROR;
+
+		std::string dummy = "";
+
+		std::unique_ptr<cthd_sensor_virtual> virt_sensor(new cthd_sensor_virtual(
+			current_sensor_index, dev_name, dummy, 0, 0));
+
+		for (unsigned int i = 0; i < gddv.vspts.size(); ++i) {
+			struct polling_table_entry entry;
+
+			entry.virtual_temp = gddv.vspts[i].virtual_temp;
+			entry.sample_period = gddv.vspts[i].sample_period;
+
+			virt_sensor->update_polling_table(entry);
+		}
+
+		virt_sensor->enable_periodic_timer();
+
+		for (unsigned int i = 0; i < gddv.vscts.size(); ++i) {
+			std::string target_name;
+			int power_sensor = 0;
+
+			if (gddv.vscts[i].coeff_type == 1) {
+				target_name = "rapl_pkg_power";
+				power_sensor = 1;
+			} else {
+				size_t pos = gddv.vscts[i].target.find_last_of('.');
+				if (pos == std::string::npos)
+					target_name = gddv.vscts[0].target;
+				else
+					target_name = gddv.vscts[0].target.substr(pos + 1);
+			}
+
+			virt_sensor->add_target(target_name, ((double) gddv.vscts[i].coeff) / 1000,
+						((double) gddv.vscts[i].alpha) / 1000, power_sensor);
+		}
+
+		if (virt_sensor->sensor_update() != THD_SUCCESS) {
+			return THD_ERROR;
+		}
+
+		sensors.push_back(std::move(virt_sensor));
+		++current_sensor_index;
+
+		std::unique_ptr<cthd_zone_dynamic> zone(new cthd_zone_dynamic(current_zone_index,
+				dev_name, 0xffffffff, PASSIVE, dev_name, "intel_powerclamp"));
+		if (!zone) {
+			return THD_ERROR;
+		}
+
+		if (zone->zone_update() != THD_SUCCESS) {			// sensor will be deleted when all elements of sensors are deleted from sensors[]
+			return 0;
+		}
+
+		zone->set_zone_active();
+		zone->zone_dump();
+		zones.push_back(std::move(zone));
+		++current_zone_index;
+	}
 
 	return THD_SUCCESS;
 }

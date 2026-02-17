@@ -626,6 +626,8 @@ int cthd_gddv::parse_itmt3(char *name, char *buf, unsigned int len) {
 	else
 		itmt.name = name;
 
+	itmt.version = 3;
+
 	if (len < sizeof(struct itmt3_header))
 		return THD_ERROR;
 
@@ -655,6 +657,86 @@ int cthd_gddv::parse_itmt3(char *name, char *buf, unsigned int len) {
 	return 0;
 }
 
+int cthd_gddv::parse_vspt(char *name, char *buf, int len)
+{
+	int offset = 0;
+	int version = get_uint64(buf, &offset);
+
+	if (version > 1) {
+		thd_log_warn("Found unsupported VSPT version %d\n", (int) version);
+		return THD_ERROR;
+	}
+
+	while (offset < len) {
+		struct vspt_entry vspt;
+
+		vspt.virtual_temp =	 get_uint64(buf, &offset);
+		vspt.virtual_temp = DECI_KELVIN_TO_CELSIUS(vspt.virtual_temp),
+		vspt.sample_period = get_uint64(buf, &offset) / 10;
+		vspts.push_back(vspt);
+	}
+
+	return THD_SUCCESS;
+}
+
+int cthd_gddv:: parse_vsct(char *name, char *buf, int len)
+{
+	if (name == NULL)
+		vscts_name = "vsct";
+	else
+		vscts_name = name;
+
+	thd_log_debug(" vsct name %s\n", vscts_name.c_str());
+	int offset = 0;
+	int version = get_uint64(buf, &offset);
+
+	if (version > 1) {
+		thd_log_warn("Found unsupported VSCT version %d\n", (int) version);
+		return THD_ERROR;
+	}
+
+	while (offset < len) {
+		struct vsct_entry vsct;
+
+		vsct.target = get_string(buf, &offset);
+		vsct.domain_type = get_uint64(buf, &offset);
+		vsct.coeff_type = get_uint64(buf, &offset);
+		vsct.coeff = get_uint64(buf, &offset);
+		vsct.operation = get_uint64(buf, &offset);
+		vsct.alpha = get_uint64(buf, &offset);
+		vsct.trigger_point = get_uint64(buf, &offset);
+		vscts.push_back(std::move(vsct));
+	}
+
+	return THD_SUCCESS;
+}
+
+void cthd_gddv::dump_vsct() {
+	thd_log_info("..vsct dump begin [%s]\n", vscts_name.c_str());
+
+	for (unsigned int i = 0; i < vscts.size(); ++i) {
+		struct vsct_entry vsct = vscts[i];
+			thd_log_info(
+					"\t target:%s domain_type:%d coeff_type:%d coeff:%d operation:%d alpha:%d trigger_point:%d\n",
+					vsct.target.c_str(), vsct.domain_type,
+					vsct.coeff_type, vsct.coeff,
+					vsct.operation, vsct.alpha, vsct.trigger_point
+					);
+	}
+	thd_log_info("vsct dump end\n");
+}
+
+void cthd_gddv::dump_vspt() {
+	thd_log_info("..vspt dump begin\n");
+
+	for (unsigned int i = 0; i < vspts.size(); ++i) {
+		struct vspt_entry vspt = vspts[i];
+			thd_log_info(
+					"\t sample_temp:%d polling period:%d\n", vspt.virtual_temp, vspt.sample_period);
+	}
+	thd_log_info("vspt dump end\n");
+}
+
 int cthd_gddv::parse_itmt(char *name, char *buf, int len) {
 	int offset = 0;
 	int version = get_uint64(buf, &offset);
@@ -671,6 +753,8 @@ int cthd_gddv::parse_itmt(char *name, char *buf, int len) {
 		itmt.name = "Default";
 	else
 		itmt.name = name;
+
+	itmt.version = 1;
 
 	while (offset < len) {
 		struct itmt_entry itmt_entry;
@@ -709,6 +793,7 @@ void cthd_gddv::dump_itmt() {
 		std::vector<struct itmt_entry> itmt = itmts[i].itmt_entries;
 
 		thd_log_info("Name :%s\n", itmts[i].name.c_str());
+		thd_log_info("version :%d\n", itmts[i].version);
 		for (unsigned int j = 0; j < itmt.size(); ++j) {
 			thd_log_info("\t target:%s  trip_temp:%d pl1_min:%s pl1.max:%s\n",
 					itmt[j].target.c_str(),
@@ -992,6 +1077,20 @@ int cthd_gddv::parse_gddv_key(char *buf, int size, int *end_offset) {
 
 	if (type && strcmp(type, "_trt") == 0) {
 		parse_trt(val.get(), vallength);
+	}
+
+	if (type && strcmp(type, "vsct") == 0) {
+		if (point == NULL)
+			parse_vsct(name, val.get(), vallength);
+		else
+			parse_vsct(point, val.get(), vallength);
+	}
+
+	if (type && strcmp(type, "vspt") == 0) {
+		if (point == NULL)
+			parse_vspt(name, val.get(), vallength);
+		else
+			parse_vspt(point, val.get(), vallength);
 	}
 
 	return THD_SUCCESS;
@@ -1379,7 +1478,7 @@ int cthd_gddv::evaluate_ac_condition(const struct condition& condition) {
 }
 #endif
 
-int cthd_gddv::evaluate_condition(struct condition condition) {
+int cthd_gddv::evaluate_condition(struct condition& condition) {
 	int ret = THD_ERROR;
 
 	if (condition.condition == Default)
@@ -1424,11 +1523,26 @@ int cthd_gddv::evaluate_condition(struct condition condition) {
 			ret = THD_SUCCESS;
 	}
 
-	if (ret) {
-		if (condition.time && condition.state_entry_time == 0) {
-			condition.state_entry_time = time(NULL);
+	if (!ret) {
+		// After a target is matched, periodically when the condition set
+		// is periodically checked, because of time component it will fail
+		// first and then match. This will result in switch of target
+		// back and forth, so don't check time for the current target
+		if (condition.target == current_target_matched)
+			return ret;
+
+		if (condition.time) {
+			thd_log_debug("time condition matched %ld \n", condition.state_entry_time);
+			if (condition.state_entry_time == 0) {
+				condition.state_entry_time = time(NULL);
+				return THD_ERROR;
+			} else {
+				ret = compare_time(condition);
+				thd_log_debug("compare time output %d\n", ret);
+				if (!ret)
+					condition.state_entry_time = 0;
+			}
 		}
-		ret = compare_time(condition);
 	} else {
 		condition.state_entry_time = 0;
 	}
@@ -1436,8 +1550,7 @@ int cthd_gddv::evaluate_condition(struct condition condition) {
 	return ret;
 }
 
-int cthd_gddv::evaluate_condition_set(
-		const std::vector<struct condition>& condition_set) {
+int cthd_gddv::evaluate_condition_set(std::vector<struct condition>& condition_set) {
 	for (int i = 0; i < (int) condition_set.size(); i++) {
 		thd_log_debug("evaluate condition.condition at index %d\n", i);
 		if (evaluate_condition(condition_set[i]) != 0)
@@ -1454,7 +1567,7 @@ int cthd_gddv::evaluate_conditions() {
 		if (evaluate_condition_set(conditions[i]) == THD_SUCCESS) {
 			target = conditions[i][0].target;
 			thd_log_debug("Condition Set matched:%d target:%d\n", i, target);
-
+			current_target_matched = target;
 			break;
 		}
 	}
@@ -1474,6 +1587,22 @@ struct psvt* cthd_gddv::find_psvt(const std::string& name) {
 
 struct itmt* cthd_gddv::find_itmt(const std::string& name) {
 	for (int i = 0; i < (int) itmts.size(); i++) {
+		int matched;
+
+		if (itmts[i].version == 3) {
+			matched = thd_engine->search_idsp("4215267F-F429-4776-9D84-D6C5992848A4");
+			if (matched != THD_SUCCESS) {
+				thd_log_info("Found version == 3; but no IDSP support\n");
+				continue;
+			}
+		} else if (itmts[i].version < 3) {
+			matched = thd_engine->search_idsp("6BD40D2D-98AA-A44B-1A92-D22BDE3117F1");
+			if (matched != THD_SUCCESS) {
+				thd_log_info("Found version < 3; but no IDSP support\n");
+				continue;
+			}
+		}
+
 		if (!strcasecmp(itmts[i].name.c_str(), name.c_str())) {
 			return &itmts[i];
 		}
@@ -1745,6 +1874,8 @@ skip_load:
 		dump_apct();
 		dump_idsps();
 		dump_trips();
+		dump_vsct();
+		dump_vspt();
 	} catch (std::exception &e) {
 		thd_log_warn("%s\n", e.what());
 		return THD_FATAL_ERROR;
