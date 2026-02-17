@@ -210,8 +210,6 @@ int main(int argc, char *argv[]) {
 					"log severity: info level and up"), nullptr },
 			{ "loglevel=debug", 0, 0, G_OPTION_ARG_NONE, &log_debug, N_(
 					"log severity: debug level and up: Max logging"), nullptr },
-			{ "test-mode", 0, 0, G_OPTION_ARG_NONE, &test_mode, N_(
-					"Test Mode only: Allow non root user"), nullptr },
 			{ "adaptive", 0, 0, G_OPTION_ARG_NONE, &adaptive, N_(
 					"adaptive mode: use adaptive performance tables if available"), nullptr },
 			{ "poll-interval", 0, 0, G_OPTION_ARG_INT, &poll_interval,
@@ -286,7 +284,7 @@ int main(int argc, char *argv[]) {
 		exit(EXIT_SUCCESS);
 	}
 
-	if (getuid() != 0 && !test_mode) {
+	if (getuid() != 0) {
 		fprintf(stderr, "You must be root to run thermald!\n");
 		exit(EXIT_FAILURE);
 	}
