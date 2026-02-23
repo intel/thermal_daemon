@@ -12,9 +12,6 @@ Prerequisites:
 			Intel RAPL-mmio power capping driver: Available from 5.3-rc1
 
 Companion tools
-	ThermalMonitor
-		Graphical front end for monitoring and control.
-		Source code is as part of tools folder in this git repository.
 	dptfxtract
 		Download from: https://github.com/intel/dptfxtract
 		This generates configuration files for thermald on some systems.
