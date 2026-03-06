@@ -26,6 +26,7 @@
 #define THD_ENGINE_H_
 
 #include <memory>
+#include <mutex>
 #include <pthread.h>
 #include <poll.h>
 #include <time.h>
@@ -108,7 +109,7 @@ private:
 	pthread_t thd_engine;
 	pthread_attr_t thd_attr;
 
-	pthread_mutex_t thd_engine_mutex;
+	std::mutex thd_engine_mutex;
 
 	std::vector<std::string> zone_preferences;
 	static const int thz_notify_debounce_interval = 3;
@@ -265,11 +266,11 @@ public:
 	}
 
 	void thd_engine_lock() {
-		pthread_mutex_lock(&thd_engine_mutex);
+		thd_engine_mutex.lock();
 	}
 
 	void thd_engine_unlock() {
-		pthread_mutex_unlock(&thd_engine_mutex);
+		thd_engine_mutex.unlock();
 	}
 
 	// User/External messages
