@@ -98,9 +98,9 @@ for flag in \
                           [CXXFLAGS="$CXXFLAGS ${flag}"])
 done
 
-# Check for c++0x support.
-AX_CHECK_COMPILE_FLAG([-std=c++0x],
-                      [CXXFLAGS="$CXXFLAGS -std=c++0x"])
+# Check for c++11 support.
+AX_CHECK_COMPILE_FLAG([-std=c++11],
+                      [CXXFLAGS="$CXXFLAGS -std=c++11"])
 ], [AC_MSG_ERROR([AX_CHECK_COMPILE_FLAG not found, you'll need to install autoconf-archive])])
 
 AC_ARG_ENABLE(werror, AS_HELP_STRING([--disable-werror], [Disable -Werror]))
