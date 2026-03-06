@@ -42,6 +42,7 @@
 #include "thd_zone_rapl_power.h"
 #include "thd_platform.h"
 #include "thd_platform_intel.h"
+#include "thd_util.h"
 
 
 // Default CPU cooling devices, which are not part of thermal sysfs
@@ -207,8 +208,7 @@ int cthd_engine_default::read_thermal_sensors() {
 					}
 					sensor_new = std::move(sensor_virt);
 				} else {
-					std::string start("/sys/");
-					if (sensor_config->path.substr(0, start.length()) != start) {
+					if (starts_with(sensor_config->path, "/sys/")) {
 						thd_log_debug( "Invalid sysfs path or allowed path %s\n",
 								sensor_config->path.c_str());
 						continue;
