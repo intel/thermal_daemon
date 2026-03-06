@@ -1013,8 +1013,7 @@ int cthd_engine::user_add_sensor(std::string name, std::string path) {
 	if (path.empty())
 		pthread_mutex_unlock(&thd_engine_mutex);
 
-	std::string start("/sys/");
-	if (path.substr(0, start.length()) != start) {
+	if (starts_with(path, "/sys/")) {
 		thd_log_debug("Invalid path %s\n", path.c_str());
 		return THD_ERROR;
 	}
