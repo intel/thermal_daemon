@@ -23,6 +23,7 @@
 #ifndef THD_PLATFORM_H_
 #define THD_PLATFORM_H_
 
+#include <memory>
 #include <string>
 #include <sys/utsname.h>
 
@@ -54,7 +55,7 @@ public:
     std::string get_machine_type();
 
     // Factory method to create appropriate platform instance
-    static cthd_platform* create_platform();
+    static std::unique_ptr<cthd_platform> create_platform();
 };
 
 #endif /* THD_PLATFORM_H_ */
