@@ -28,6 +28,7 @@
 #include <vector>
 #include "thd_common.h"
 #include "thd_sys_fs.h"
+#include "thd_util.h"
 
 #define SENSOR_TYPE_THERMAL_SYSFS	0
 #define SENSOR_TYPE_RAW				1
@@ -69,8 +70,7 @@ public:
 	int set_threshold(int index, int temp);
 	;
 	void update_path(std::string str) {
-		std::string start("/sys/");
-		if (str.substr(0, start.length()) != start) {
+		if (starts_with(str, "/sys/")) {
 			thd_log_debug("Invalid path %s\n", str.c_str());
 			return;
 		}

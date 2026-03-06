@@ -47,6 +47,7 @@
 #include "thd_platform.h"
 #include "thd_platform_intel.h"
 #include "thd_platform_arm.h"
+#include "thd_util.h"
 
 static void *cthd_engine_thread(void *arg);
 
@@ -1009,8 +1010,7 @@ int cthd_engine::user_add_sensor(std::string name, std::string path) {
 	if (path.empty())
 		thd_engine_mutex.unlock();
 
-	std::string start("/sys/");
-	if (path.substr(0, start.length()) != start) {
+	if (starts_with(path, "/sys/")) {
 		thd_log_debug("Invalid path %s\n", path.c_str());
 		return THD_ERROR;
 	}
