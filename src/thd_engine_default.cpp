@@ -207,8 +207,7 @@ int cthd_engine_default::read_thermal_sensors() {
 					}
 					sensor_new = std::move(sensor_virt);
 				} else {
-					std::string start("/sys/");
-					if (sensor_config->path.substr(0, start.length()) != start) {
+					if (starts_with(sensor_config->path, "/sys/")) {
 						thd_log_debug( "Invalid sysfs path or allowed path %s\n",
 								sensor_config->path.c_str());
 						continue;

@@ -32,6 +32,12 @@
 #define SENSOR_TYPE_THERMAL_SYSFS	0
 #define SENSOR_TYPE_RAW				1
 
+// Replacement for C++ std::string::starts_with
+static bool starts_with(const std::string& s, const char *prefix) {
+    size_t len = strlen(prefix);
+    return s.size() >= len && s.compare(0, s.size(), prefix);
+}
+
 class cthd_sensor {
 protected:
 	int index;
@@ -69,8 +75,7 @@ public:
 	int set_threshold(int index, int temp);
 	;
 	void update_path(std::string str) {
-		std::string start("/sys/");
-		if (str.substr(0, start.length()) != start) {
+		if (starts_with(str, "/sys/")) {
 			thd_log_debug("Invalid path %s\n", str.c_str());
 			return;
 		}

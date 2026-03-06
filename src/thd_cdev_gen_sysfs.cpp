@@ -23,12 +23,12 @@
  */
 
 #include "thd_cdev_gen_sysfs.h"
+#include "thd_sensor.h"
 
 int cthd_gen_sysfs_cdev::update() {
 	if (cdev_sysfs.exists()) {
 		std::string base_path = cdev_sysfs.get_base_path();
-		std::string start("/sys/");
-		if (base_path.substr(0, start.length()) != start) {
+		if (starts_with(base_path, "/sys")) {
 			thd_log_debug( "cthd_gen_sysfs_cdev::update: Invalid sysfs path or allowed path %s\n",
 					base_path.c_str());
 			return THD_ERROR;
