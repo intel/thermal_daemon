@@ -23,16 +23,8 @@ service_edit = sed \
 
 endif # HAVE_SYSTEMD
 
-dbusservice_edit = sed \
-	-e 's|@dbusservicepowergrp[@]|$(dbusservicepowergrp)|g'
-
-org.freedesktop.thermald.conf: org.freedesktop.thermald.conf.in
-	@$(dbusservice_edit) $< >$@
-
-dbusservicepowergrp = $(DBUS_POWER_GROUP)
 dbusservicedir = $(DBUS_SYS_DIR)
-dbusservice_in_files = org.freedesktop.thermald.conf.in
-dbusservice_DATA = $(dbusservice_in_files:.conf.in=.conf)
+dbusservice_DATA = org.freedesktop.thermald.conf
 
 tdconfigdir = $(tdconfdir)
 tdconfig_DATA = \
