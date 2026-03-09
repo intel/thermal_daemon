@@ -11,11 +11,6 @@ Prerequisites:
 			Intel INT340X drivers
 			Intel RAPL-mmio power capping driver: Available from 5.3-rc1
 
-Companion tools
-	dptfxtract
-		Download from: https://github.com/intel/dptfxtract
-		This generates configuration files for thermald on some systems.
-
 Building and executing on Fedora
 1.
 Install
