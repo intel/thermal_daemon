@@ -21,6 +21,7 @@
  * Author Name <Srinivas.Pandruvada@linux.intel.com>
  *
  */
+#include <cstdint>
 #include <dirent.h>
 #include "thd_common.h"
 #include "thd_sys_fs.h"
@@ -51,7 +52,7 @@ const sub_string_t target_substitue_strings[] = { { "B0D4", "rapl_controller" },
 const sub_string_t sensor_substitue_strings[] = { { "TPCH", "pch_wildcat_point" }, {
 		nullptr, nullptr } };
 
-typedef enum {
+typedef enum : uint8_t {
 	TARGET_DEV, SOURCE_DEV, SENSOR_DEV
 } sub_type_t;
 

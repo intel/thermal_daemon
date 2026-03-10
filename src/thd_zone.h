@@ -45,7 +45,7 @@ typedef struct {
 // Either the are independent, means that each has own set of trip points
 // Or related. In this case one trip point. Here we take max of the sensor reading
 // and then apply trip
-typedef enum {
+typedef enum : uint8_t {
 	SENSOR_INDEPENDENT, SENSORS_CORELATED
 } sensor_relate_t;
 
