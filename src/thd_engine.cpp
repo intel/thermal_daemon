@@ -98,11 +98,13 @@ void cthd_engine::thd_engine_thread() {
 				thd_log_msg("Thermal Daemon is disabled\n");
 				continue;
 			}
-			std::lock_guard guard(thd_engine_mutex);
-			// Polling mode enabled. Trigger a temp change message
-			for (i = 0; i < zones.size(); ++i) {
-				cthd_zone *zone = zones[i].get();
-				zone->zone_temperature_notification(0, 0);
+			{
+				std::lock_guard guard(thd_engine_mutex);
+				// Polling mode enabled. Trigger a temp change message
+				for (i = 0; i < zones.size(); ++i) {
+					cthd_zone *zone = zones[i].get();
+					zone->zone_temperature_notification(0, 0);
+				}
 			}
 			thz_last_temp_ind_time = tm;
 		}
@@ -143,8 +145,10 @@ void cthd_engine::thd_engine_thread() {
 		}
 
 		if ((tm - thz_last_update_event_time) >= thd_poll_interval) {
-			std::lock_guard guard(thd_engine_mutex);
-			update_engine_state();
+			{
+				std::lock_guard guard(thd_engine_mutex);
+				update_engine_state();
+			}
 			thz_last_update_event_time = tm;
 		}
 
