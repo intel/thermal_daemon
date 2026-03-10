@@ -31,8 +31,9 @@
 #include <sstream>
 #include <iostream>
 #include <fstream>
+#include <cstdint>
 
-enum {
+enum : uint8_t {
 	PREF_ENERGY_CONSERVE, PREF_PERFORMANCE, PREF_DISABLED
 };
 

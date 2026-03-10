@@ -18,5 +18,4 @@ Checks: '
     modernize-use-nullptr,
     modernize-use-override,
     performance-*,
-    -performance-enum-size,
     -performance-no-int-to-ptr'

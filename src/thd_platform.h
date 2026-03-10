@@ -23,11 +23,12 @@
 #ifndef THD_PLATFORM_H_
 #define THD_PLATFORM_H_
 
+#include <cstdint>
 #include <memory>
 #include <string>
 #include <sys/utsname.h>
 
-typedef enum {
+typedef enum : uint8_t {
     PLATFORM_UNKNOWN = 0,
     PLATFORM_INTEL_X86,
     PLATFORM_ARM64,
