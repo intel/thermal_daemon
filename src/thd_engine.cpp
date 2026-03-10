@@ -1017,7 +1017,7 @@ int cthd_engine::user_add_sensor(std::string name, std::string path) {
 		return THD_ERROR;
 	}
 
-	std::lock_guard guard(thd_engine_mutex);
+	std::lock_guard<std::mutex> guard(thd_engine_mutex);
 	for (unsigned int i = 0; i < sensors.size(); ++i) {
 		if (sensors[i]->get_sensor_type() == name) {
 			cthd_sensor *sensor = sensors[i].get();
@@ -1043,7 +1043,7 @@ int cthd_engine::user_add_virtual_sensor(std::string name,
 	cthd_sensor *sensor;
 	int ret;
 
-	std::lock_guard guard(thd_engine_mutex);
+	std::lock_guard<std::mutex> guard(thd_engine_mutex);
 
 	for (unsigned int i = 0; i < sensors.size(); ++i) {
 		if (sensors[i]->get_sensor_type() == name) {
@@ -1099,7 +1099,7 @@ int cthd_engine::user_set_psv_temp(const std::string& name, unsigned int temp) {
 	cthd_zone *zone;
 	int ret;
 
-	std::lock_guard guard(thd_engine_mutex);
+	std::lock_guard<std::mutex> guard(thd_engine_mutex);
 	zone = get_zone(name);
 	if (!zone) {
 		thd_log_warn("user_set_psv_temp\n");
@@ -1115,7 +1115,7 @@ int cthd_engine::user_set_max_temp(const std::string& name, unsigned int temp) {
 	cthd_zone *zone;
 	int ret;
 
-	std::lock_guard guard(thd_engine_mutex);
+	std::lock_guard<std::mutex> guard(thd_engine_mutex);
 	zone = get_zone(name);
 	if (!zone) {
 		thd_log_warn("user_set_max_temp\n");
@@ -1129,7 +1129,7 @@ int cthd_engine::user_set_max_temp(const std::string& name, unsigned int temp) {
 
 int cthd_engine::user_add_zone(std::string zone_name, unsigned int trip_temp,
 		std::string sensor_name, std::string cdev_name) {
-	std::lock_guard guard(thd_engine_mutex);
+	std::lock_guard<std::mutex> guard(thd_engine_mutex);
 	int ret = THD_SUCCESS;
 
 	std::unique_ptr<cthd_zone_dynamic> zone(new cthd_zone_dynamic(current_zone_index,
@@ -1155,7 +1155,7 @@ int cthd_engine::user_add_zone(std::string zone_name, unsigned int trip_temp,
 int cthd_engine::user_set_zone_status(const std::string& name, int status) {
 	cthd_zone *zone;
 
-	std::lock_guard guard(thd_engine_mutex);
+	std::lock_guard<std::mutex> guard(thd_engine_mutex);
 	zone = get_zone(name);
 	if (!zone) {
 		return THD_ERROR;
@@ -1173,7 +1173,7 @@ int cthd_engine::user_set_zone_status(const std::string& name, int status) {
 int cthd_engine::user_get_zone_status(const std::string& name, int *status) {
 	cthd_zone *zone;
 
-	std::lock_guard guard(thd_engine_mutex);
+	std::lock_guard<std::mutex> guard(thd_engine_mutex);
 	zone = get_zone(name);
 	if (!zone) {
 		return THD_ERROR;
@@ -1188,7 +1188,7 @@ int cthd_engine::user_get_zone_status(const std::string& name, int *status) {
 }
 
 int cthd_engine::user_delete_zone(const std::string& name) {
-	std::lock_guard guard(thd_engine_mutex);
+	std::lock_guard<std::mutex> guard(thd_engine_mutex);
 	for (unsigned int i = 0; i < zones.size(); ++i) {
 		if (zones[i]->get_zone_type() == name) {
 			zones.erase(zones.begin() + i);
@@ -1207,7 +1207,7 @@ int cthd_engine::user_add_cdev(std::string cdev_name, std::string cdev_path,
 		int min_state, int max_state, int step) {
 	cthd_cdev *cdev;
 
-	std::lock_guard guard(thd_engine_mutex);
+	std::lock_guard<std::mutex> guard(thd_engine_mutex);
 	// Check if there is existing cdev with this name and path
 	cdev = search_cdev(cdev_name);
 	if (!cdev) {
