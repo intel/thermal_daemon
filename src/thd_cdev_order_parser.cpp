@@ -72,7 +72,7 @@ int cthd_cdev_order_parse::parse_new_cdev(xmlNode * a_node, xmlDoc *doc) {
 			if (tmp_value) {
 				thd_log_info("node type: Element, name: %s value: %s\n",
 						cur_node->name, tmp_value);
-				cdev_order_list.push_back(tmp_value);
+				cdev_order_list.emplace_back(tmp_value);
 				xmlFree(tmp_value);
 			}
 		}
