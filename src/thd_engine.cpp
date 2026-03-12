@@ -98,12 +98,13 @@ void cthd_engine::thd_engine_thread() {
 				thd_log_msg("Thermal Daemon is disabled\n");
 				continue;
 			}
-			std::lock_guard guard(thd_engine_mutex);
+			thd_engine_lock();
 			// Polling mode enabled. Trigger a temp change message
 			for (i = 0; i < zones.size(); ++i) {
 				cthd_zone *zone = zones[i].get();
 				zone->zone_temperature_notification(0, 0);
 			}
+			thd_engine_unlock();
 			thz_last_temp_ind_time = tm;
 		}
 		if (uevent_fd >= 0 && (poll_fds[uevent_fd].revents & POLLIN)) {
@@ -115,11 +116,12 @@ void cthd_engine::thd_engine_thread() {
 				thd_log_debug("kobj uevent for thermal\n");
 				if ((tm - thz_last_uevent_time)
 						>= thz_notify_debounce_interval) {
-					std::lock_guard guard(thd_engine_mutex);
+					thd_engine_lock();
 					for (i = 0; i < zones.size(); ++i) {
 						cthd_zone *zone = zones[i].get();
 						zone->zone_temperature_notification(0, 0);
 					}
+					thd_engine_unlock();
 				} else {
 					thd_log_debug("IGNORE THZ kevent\n");
 				}
@@ -143,8 +145,9 @@ void cthd_engine::thd_engine_thread() {
 		}
 
 		if ((tm - thz_last_update_event_time) >= thd_poll_interval) {
-			std::lock_guard guard(thd_engine_mutex);
+			thd_engine_lock();
 			update_engine_state();
+			thd_engine_unlock();
 			thz_last_update_event_time = tm;
 		}
 
