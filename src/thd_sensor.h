@@ -70,7 +70,7 @@ public:
 	int set_threshold(int index, int temp);
 	;
 	void update_path(std::string str) {
-		if (starts_with(str, "/sys/")) {
+		if (!starts_with(str, "/sys/")) {
 			thd_log_debug("Invalid path %s\n", str.c_str());
 			return;
 		}
