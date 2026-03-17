@@ -29,6 +29,7 @@
 #include <linux/input.h>
 #include <sys/types.h>
 #include "thd_engine_adaptive.h"
+#include "thd_sensor_rapl_power.h"
 #include "thd_zone_dynamic.h"
 
 int cthd_engine_adaptive::install_passive(struct psv *psv) {
@@ -732,8 +733,10 @@ int cthd_engine_adaptive::thd_engine_init(bool ignore_cpuid_check,
 				dev_name.resize(pos);
 		}
 
-		if (dev_name.empty())
-			return THD_ERROR;
+		if (dev_name.empty()) {
+			thd_log_info("Can't parse virtual sensor name\n");
+			return THD_SUCCESS;
+		}
 
 		std::string dummy = "";
 
@@ -757,6 +760,16 @@ int cthd_engine_adaptive::thd_engine_init(bool ignore_cpuid_check,
 
 			if (gddv.vscts[i].coeff_type == 1) {
 				target_name = "rapl_pkg_power";
+				if (!search_sensor(target_name)){
+					std::unique_ptr<cthd_sensor_rapl_power> rapl_power(new cthd_sensor_rapl_power(current_sensor_index));
+					if (rapl_power->sensor_update() == THD_SUCCESS) {
+						sensors.push_back(std::move(rapl_power));
+						++current_sensor_index;
+					} else {
+						thd_log_info("Can't add power as virtual sensor\n");
+						return THD_SUCCESS;
+					}
+				}
 				power_sensor = 1;
 			} else {
 				size_t pos = gddv.vscts[i].target.find_last_of('.');
@@ -771,7 +784,8 @@ int cthd_engine_adaptive::thd_engine_init(bool ignore_cpuid_check,
 		}
 
 		if (virt_sensor->sensor_update() != THD_SUCCESS) {
-			return THD_ERROR;
+			thd_log_info("Can't add virtual sensor\n");
+			return THD_SUCCESS;
 		}
 
 		sensors.push_back(std::move(virt_sensor));
@@ -780,11 +794,14 @@ int cthd_engine_adaptive::thd_engine_init(bool ignore_cpuid_check,
 		std::unique_ptr<cthd_zone_dynamic> zone(new cthd_zone_dynamic(current_zone_index,
 				dev_name, 0xffffffff, PASSIVE, dev_name, "intel_powerclamp"));
 		if (!zone) {
-			return THD_ERROR;
+			thd_log_info("Can't add virtual sensor\n");
+			return THD_SUCCESS;
 		}
 
-		if (zone->zone_update() != THD_SUCCESS) {			// sensor will be deleted when all elements of sensors are deleted from sensors[]
-			return 0;
+		if (zone->zone_update() != THD_SUCCESS) {
+			// sensor will be deleted when all elements of sensors are deleted from sensors[]
+			thd_log_info("Can't add virtual sensor\n");
+			return THD_SUCCESS;
 		}
 
 		zone->set_zone_active();
