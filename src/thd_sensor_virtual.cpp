@@ -126,6 +126,7 @@ unsigned int cthd_sensor_virtual::_read_temperature() {
 
 			temp = link_sensor->sensor->read_temperature();
 
+			//temp = 70000;
 			if (!link_sensor->power_sensor)
 				temp = temp / 1000; //convert to degree C
 

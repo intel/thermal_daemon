@@ -342,9 +342,19 @@ int cthd_engine_adaptive::install_itmt(struct itmt_entry *itmt_entry, int& pl1_m
 	 * Which is opposite of the argument order in the
 	 * thd_trip_point_add_cdev()
 	 */
+
+if (itmt_zone == "BSKN") {
+	trip_pt.thd_trip_point_add_cdev(*cdev, cthd_trip_point::default_influence,
+	DEFAULT_SAMPLE_TIME_SEC, 0, 0,
+	NULL, 1, 50000000, 30000000);
+
+} else  {
+
+	
 	trip_pt.thd_trip_point_add_cdev(*cdev, cthd_trip_point::default_influence,
 	DEFAULT_SAMPLE_TIME_SEC, 0, 0,
 	NULL, 1, _max_state, _min_state);
+}
 
 	zone->add_trip(trip_pt, 1);
 	zone->zone_cdev_set_binded();
@@ -598,6 +608,7 @@ void cthd_engine_adaptive::update_engine_state() {
 		policy_active = 1;
 
 		if (itmt_target_pl1_max != TRIP_PT_INVALID_TARGET_STATE) {
+			itmt_target_pl1_max = 50000000;
 			int _pl1_val = itmt_target_pl1_max / 1000;
 
 			if (target_pl_max == TRIP_PT_INVALID_TARGET_STATE || target_pl_max > _pl1_val) {
@@ -608,6 +619,7 @@ void cthd_engine_adaptive::update_engine_state() {
 					thd_log_info("RAPL MMIO device not found\n");
 					return;
 				}
+
 				thd_log_info("Set PL1 max based on ITMT :%d\n", itmt_target_pl1_max);
 				adaptive_target.code = "PL1MAX";
 				adaptive_target.argument = std::to_string(_pl1_val);
