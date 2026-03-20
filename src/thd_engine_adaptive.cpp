@@ -41,7 +41,7 @@ int cthd_engine_adaptive::install_passive(struct psv *psv) {
 	else
 		psv_zone = psv->target.substr(pos + 1);
 
-	while (psv_zone.back() == '_') {
+	while (!psv_zone.empty() && psv_zone.back() == '_') {
 		psv_zone.pop_back();
 	}
 
@@ -72,7 +72,7 @@ int cthd_engine_adaptive::install_passive(struct psv *psv) {
 	else
 		psv_cdev = psv->source.substr(pos + 1);
 
-	while (psv_cdev.back() == '_') {
+	while (!psv_cdev.empty() && psv_cdev.back() == '_') {
 		psv_cdev.pop_back();
 	}
 
@@ -136,7 +136,7 @@ void cthd_engine_adaptive::set_trip(const std::string& target, const std::string
 	else
 		psv_zone = target.substr(pos + 1);
 
-	while (psv_zone.back() == '_') {
+	while (!psv_zone.empty() && psv_zone.back() == '_') {
 		psv_zone.pop_back();
 	}
 
@@ -257,7 +257,7 @@ int cthd_engine_adaptive::install_itmt(struct itmt_entry *itmt_entry) {
 	else
 		itmt_zone = itmt_entry->target.substr(pos + 1);
 
-	while (itmt_zone.back() == '_') {
+	while (!itmt_zone.empty() && itmt_zone.back() == '_') {
 		itmt_zone.pop_back();
 	}
 
