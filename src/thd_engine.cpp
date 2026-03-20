@@ -413,7 +413,7 @@ static void *cthd_engine_thread(void *arg) {
 
 	obj->thd_engine_thread();
 
-	return NULL;
+	return nullptr;
 }
 
 void cthd_engine::send_message(message_name_t msg_id, int size,
@@ -457,7 +457,7 @@ void cthd_engine::process_pref_change() {
 }
 
 void cthd_engine::thd_engine_terminate() {
-	send_message(TERMINATE, 0, NULL);
+	send_message(TERMINATE, 0, nullptr);
 	sleep(1);
 	process_terminate();
 }
@@ -608,7 +608,7 @@ cthd_cdev *cthd_engine::thd_get_cdev_at_index(int index) {
 		if (cdevs[i]->thd_cdev_get_index() == index)
 			return cdevs[i].get();
 	}
-	return NULL;
+	return nullptr;
 }
 
 void cthd_engine::takeover_thermal_control() {
@@ -623,8 +623,8 @@ void cthd_engine::takeover_thermal_control() {
 
 	int3400.set_default_uuid();
 
-	if ((dir = opendir(base_path.c_str())) != NULL) {
-		while ((entry = readdir(dir)) != NULL) {
+	if ((dir = opendir(base_path.c_str())) != nullptr) {
+		while ((entry = readdir(dir)) != nullptr) {
 			if (!strncmp(entry->d_name, "thermal_zone",
 					strlen("thermal_zone"))) {
 				int i;
@@ -676,8 +676,8 @@ void cthd_engine::giveup_thermal_control() {
 	struct dirent *entry;
 	const std::string base_path = "/sys/class/thermal/";
 	int cnt = 0;
-	if ((dir = opendir(base_path.c_str())) != NULL) {
-		while ((entry = readdir(dir)) != NULL) {
+	if ((dir = opendir(base_path.c_str())) != nullptr) {
+		while ((entry = readdir(dir)) != nullptr) {
 			if (!strncmp(entry->d_name, "thermal_zone",
 					strlen("thermal_zone"))) {
 				int i;
@@ -767,7 +767,7 @@ void cthd_engine::thd_read_default_thermal_sensors() {
 	const std::string base_path = "/sys/class/thermal/";
 	int max_index = 0;
 
-	if ((dir = opendir("/sys/class/thermal/thermal_zone1/")) == NULL) {
+	if ((dir = opendir("/sys/class/thermal/thermal_zone1/")) == nullptr) {
 		thd_log_info("Waiting for thermal sysfs to be ready\n");
 		sleep(2);
 	} else {
@@ -775,8 +775,8 @@ void cthd_engine::thd_read_default_thermal_sensors() {
 	}
 
 	thd_log_debug("thd_read_default_thermal_sensors\n");
-	if ((dir = opendir(base_path.c_str())) != NULL) {
-		while ((entry = readdir(dir)) != NULL) {
+	if ((dir = opendir(base_path.c_str())) != nullptr) {
+		while ((entry = readdir(dir)) != nullptr) {
 			if (!strncmp(entry->d_name, "thermal_zone",
 					strlen("thermal_zone"))) {
 				int i;
@@ -807,8 +807,8 @@ void cthd_engine::thd_read_default_thermal_zones() {
 	int max_index = 0;
 
 	thd_log_debug("thd_read_default_thermal_zones\n");
-	if ((dir = opendir(base_path.c_str())) != NULL) {
-		while ((entry = readdir(dir)) != NULL) {
+	if ((dir = opendir(base_path.c_str())) != nullptr) {
+		while ((entry = readdir(dir)) != nullptr) {
 			if (!strncmp(entry->d_name, "thermal_zone",
 					strlen("thermal_zone"))) {
 				int i;
@@ -841,8 +841,8 @@ void cthd_engine::thd_read_default_cooling_devices() {
 	int max_index = 0;
 
 	thd_log_debug("thd_read_default_cooling devices\n");
-	if ((dir = opendir(base_path.c_str())) != NULL) {
-		while ((entry = readdir(dir)) != NULL) {
+	if ((dir = opendir(base_path.c_str())) != nullptr) {
+		while ((entry = readdir(dir)) != nullptr) {
 			if (!strncmp(entry->d_name, "cooling_device",
 					strlen("cooling_device"))) {
 				int i;
@@ -888,7 +888,7 @@ cthd_zone* cthd_engine::search_zone(const std::string& name) {
 		}
 	}
 
-	return NULL;
+	return nullptr;
 }
 
 cthd_cdev* cthd_engine::search_cdev(const std::string& name) {
@@ -904,7 +904,7 @@ cthd_cdev* cthd_engine::search_cdev(const std::string& name) {
 			return cdev;
 	}
 
-	return NULL;
+	return nullptr;
 }
 
 // Partial match instead of full match
@@ -922,7 +922,7 @@ cthd_cdev* cthd_engine::match_cdev(const std::string& name) {
 		}
 	}
 
-	return NULL;
+	return nullptr;
 }
 
 cthd_sensor* cthd_engine::search_sensor(const std::string& name) {
@@ -944,14 +944,14 @@ cthd_sensor* cthd_engine::search_sensor(const std::string& name) {
 
 	}
 
-	return NULL;
+	return nullptr;
 }
 
 cthd_sensor* cthd_engine::get_sensor(int index) {
 	if (index >= 0 && index < (int) sensors.size())
 		return sensors[index].get();
 	else
-		return NULL;
+		return nullptr;
 }
 
 int cthd_engine::get_sensor_temperature(int index, unsigned int *temperature) {
@@ -964,11 +964,11 @@ int cthd_engine::get_sensor_temperature(int index, unsigned int *temperature) {
 
 cthd_zone* cthd_engine::get_zone(int index) {
 	if (index == -1)
-		return NULL;
+		return nullptr;
 	if (index >= 0 && index < (int) zones.size())
 		return zones[index].get();
 	else
-		return NULL;
+		return nullptr;
 }
 
 cthd_zone* cthd_engine::get_zone(const std::string& type) {
@@ -980,21 +980,21 @@ cthd_zone* cthd_engine::get_zone(const std::string& type) {
 			return zone;
 	}
 
-	return NULL;
+	return nullptr;
 }
 
 // Code copied from
 // https://web.archive.org/web/20130822155153/https://rt.wiki.kernel.org/index.php/RT_PREEMPT_HOWTO#Runtime_detection_of_an_RT-PREEMPT_Kernel
 void cthd_engine::check_for_rt_kernel() {
 	struct utsname _uname;
-	char *crit1 = NULL;
+	char *crit1 = nullptr;
 	int crit2 = 0;
 	FILE *fd;
 
 	uname(&_uname);
 	crit1 = strcasestr(_uname.version, "PREEMPT RT");
 
-	if ((fd = fopen("/sys/kernel/realtime", "r")) != NULL) {
+	if ((fd = fopen("/sys/kernel/realtime", "r")) != nullptr) {
 		int flag;
 		crit2 = ((fscanf(fd, "%d", &flag) == 1) && (flag == 1));
 		fclose(fd);
@@ -1033,7 +1033,7 @@ int cthd_engine::user_add_sensor(std::string name, std::string path) {
 	sensors.push_back(std::move(sensor));
 	++current_sensor_index;
 
-	send_message(WAKEUP, 0, 0);
+	send_message(WAKEUP, 0, nullptr);
 
 	return THD_SUCCESS;
 }
@@ -1068,7 +1068,7 @@ int cthd_engine::user_add_virtual_sensor(std::string name,
 	sensors.push_back(std::move(virt_sensor));
 	++current_sensor_index;
 
-	send_message(WAKEUP, 0, 0);
+	send_message(WAKEUP, 0, nullptr);
 
 	return THD_SUCCESS;
 }
@@ -1078,21 +1078,21 @@ cthd_sensor *cthd_engine::user_get_sensor(unsigned int index) {
 	if (index < sensors.size())
 		return sensors[index].get();
 	else
-		return NULL;
+		return nullptr;
 }
 
 cthd_zone *cthd_engine::user_get_zone(unsigned int index) {
 	if (index < zones.size())
 		return zones[index].get();
 	else
-		return NULL;
+		return nullptr;
 }
 
 cthd_cdev *cthd_engine::user_get_cdev(unsigned int index) {
 	if (index < cdevs.size())
 		return cdevs[index].get();
 	else
-		return NULL;
+		return nullptr;
 }
 
 int cthd_engine::user_set_psv_temp(const std::string& name, unsigned int temp) {

@@ -248,7 +248,7 @@ public:
 #ifndef ANDROID
 	cthd_gddv() :
 			upower_client(
-			NULL), power_profiles_daemon(NULL), tablet_dev(NULL), lid_dev(NULL), int3400_base_path(""), power_slider(75) {
+			nullptr), power_profiles_daemon(nullptr), tablet_dev(nullptr), lid_dev(nullptr), int3400_base_path(""), power_slider(75) {
 	}
 #else
 	cthd_gddv() :

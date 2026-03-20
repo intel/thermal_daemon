@@ -329,7 +329,7 @@ void cthd_sysfs_cdev_rapl::set_tcc(int tcc) {
 }
 
 void cthd_sysfs_cdev_rapl::set_adaptive_target(struct adaptive_target &target) {
-	int argument = std::stoi(target.argument, NULL);
+	int argument = std::stoi(target.argument, nullptr);
 	if (target.code == "PL1MAX") {
 		int pl1_rapl;
 

@@ -106,8 +106,8 @@ int cthd_engine_default::read_thermal_sensors() {
 	// Default CPU temperature zone
 	// Find path to read DTS temperature
 	for (i = 0; i < 2; ++i) {
-		if ((dir = opendir(base_path[i].c_str())) != NULL) {
-			while ((entry = readdir(dir)) != NULL) {
+		if ((dir = opendir(base_path[i].c_str())) != nullptr) {
+			while ((entry = readdir(dir)) != nullptr) {
 				if (!strncmp(entry->d_name, "coretemp.", strlen("coretemp."))
 						|| !strncmp(entry->d_name, "hwmon", strlen("hwmon"))) {
 
@@ -136,8 +136,8 @@ int cthd_engine_default::read_thermal_sensors() {
 					int len_temp_dir_entry = 0;
 					int len_input = strlen("_input");
 
-					if ((temp_dir = opendir(temp_dir_path.c_str())) != NULL) {
-						while ((temp_dir_entry = readdir(temp_dir)) != NULL) {
+					if ((temp_dir = opendir(temp_dir_path.c_str())) != nullptr) {
+						while ((temp_dir_entry = readdir(temp_dir)) != nullptr) {
 							len_temp_dir_entry = strlen(temp_dir_entry->d_name);
 							if ((len_temp_dir_entry >= len_input
 									&& !strcmp(
@@ -243,7 +243,7 @@ bool cthd_engine_default::add_int340x_processor_dev(void)
 		return false;
 
 	/* Specialized processor thermal device names */
-	cthd_zone *processor_thermal = NULL, *acpi_thermal = NULL;
+	cthd_zone *processor_thermal = nullptr, *acpi_thermal = nullptr;
 	cthd_INT3400 int3400(uuid);
 	unsigned int passive, new_passive = 0, critical = 0;
 
@@ -368,8 +368,8 @@ int cthd_engine_default::read_thermal_zones() {
 		// Default CPU temperature zone
 		// Find path to read DTS temperature
 		for (i = 0; i < 2; ++i) {
-			if ((dir = opendir(base_path[i].c_str())) != NULL) {
-				while ((entry = readdir(dir)) != NULL) {
+			if ((dir = opendir(base_path[i].c_str())) != nullptr) {
+				while ((entry = readdir(dir)) != nullptr) {
 					if (!strncmp(entry->d_name, "coretemp.",
 							strlen("coretemp."))
 							|| !strncmp(entry->d_name, "hwmon",

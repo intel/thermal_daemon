@@ -41,15 +41,15 @@ typedef struct {
 
 
 const sub_string_t source_substitue_strings[] = { { "TPCH", "pch_wildcat_point" }, {
-		NULL, NULL } };
+		nullptr, nullptr } };
 
 const sub_string_t target_substitue_strings[] = { { "B0D4", "rapl_controller" }, {
 		"DPLY", "LCD" }, { "DISP", "LCD" }, { "TMEM", "rapl_controller_dram" },
-		{ "TCPU", "rapl_controller" }, { "B0DB", "rapl_controller" }, { NULL,
-		NULL } };
+		{ "TCPU", "rapl_controller" }, { "B0DB", "rapl_controller" }, { nullptr,
+		nullptr } };
 
 const sub_string_t sensor_substitue_strings[] = { { "TPCH", "pch_wildcat_point" }, {
-		NULL, NULL } };
+		nullptr, nullptr } };
 
 typedef enum {
 	TARGET_DEV, SOURCE_DEV, SENSOR_DEV
@@ -66,8 +66,8 @@ static void associate_device(sub_type_t type, string &name) {
 	struct dirent *entry;
 	std::string base_path = "/sys/bus/platform/devices/";
 
-	if ((dir = opendir(base_path.c_str())) != NULL) {
-		while ((entry = readdir(dir)) != NULL) {
+	if ((dir = opendir(base_path.c_str())) != nullptr) {
+		while ((entry = readdir(dir)) != nullptr) {
 			if (!strncmp(entry->d_name, "INT340", strlen("INT340"))) {
 				char buf[256];
 				int ret;
