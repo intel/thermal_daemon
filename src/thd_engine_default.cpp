@@ -795,6 +795,9 @@ int thd_engine_create_default_engine(bool ignore_cpuid_check,
 
 void cthd_engine_default::workarounds()
 {
+	if (!workaround_enabled)
+		return;
+
 	// Every 30 seconds repeat
 	if (!disable_active_power && !workaround_interval) {
 		// Create platform instance and call workaround
