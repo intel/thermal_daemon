@@ -165,14 +165,14 @@ public:
 		if (index < sensors.size())
 			return sensors[index];
 		else
-			return NULL;
+			return nullptr;
 	}
 
 	cthd_trip_point *get_trip_at_index(unsigned int index) {
 		if (index < trip_points.size())
 			return &trip_points[index];
 		else
-			return NULL;
+			return nullptr;
 	}
 #ifdef ANDROID
 	void trip_delete_all() {

@@ -34,7 +34,7 @@ int _temp, unsigned int _hyst, int _zone_id, int _sensor_id,
 		trip_control_type_t _control_type) :
 		index(_index), type(_type), temp(_temp), hyst(_hyst), control_type(
 				_control_type), zone_id(_zone_id), sensor_id(_sensor_id), trip_on(
-				false), poll_on(false), depend_cdev(NULL), depend_cdev_state(0), depend_cdev_state_rel(
+				false), poll_on(false), depend_cdev(nullptr), depend_cdev_state(0), depend_cdev_state_rel(
 				EQUAL), crit_trip_count(0) {
 	thd_log_debug("Add trip pt %d:%d:0x%x:%d:%d\n", type, zone_id, sensor_id,
 			temp, hyst);

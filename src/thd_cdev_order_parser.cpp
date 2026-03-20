@@ -26,7 +26,7 @@
 #include "thd_sys_fs.h"
 
 cthd_cdev_order_parse::cthd_cdev_order_parse() :
-		doc(NULL), root_element(NULL) {
+		doc(nullptr), root_element(nullptr) {
 	std::string name = TDCONFDIR;
 	filename = name + "/" "thermal-cpu-cdev-order.xml";
 }
@@ -37,14 +37,14 @@ int cthd_cdev_order_parse::parser_init() {
 	if (stat(filename.c_str(), &s))
 		return THD_ERROR;
 
-	doc = xmlReadFile(filename.c_str(), NULL, 0);
-	if (doc == NULL) {
+	doc = xmlReadFile(filename.c_str(), nullptr, 0);
+	if (doc == nullptr) {
 		thd_log_msg("error: could not parse file %s\n", filename.c_str());
 		return THD_ERROR;
 	}
 	root_element = xmlDocGetRootElement(doc);
 
-	if (root_element == NULL) {
+	if (root_element == nullptr) {
 		thd_log_warn("error: could not get root element\n");
 		return THD_ERROR;
 	}
@@ -63,7 +63,7 @@ void cthd_cdev_order_parse::parser_deinit() {
 }
 
 int cthd_cdev_order_parse::parse_new_cdev(xmlNode * a_node, xmlDoc *doc) {
-	xmlNode *cur_node = NULL;
+	xmlNode *cur_node = nullptr;
 	char *tmp_value;
 	for (cur_node = a_node; cur_node; cur_node = cur_node->next) {
 		if (cur_node->type == XML_ELEMENT_NODE) {
@@ -82,7 +82,7 @@ int cthd_cdev_order_parse::parse_new_cdev(xmlNode * a_node, xmlDoc *doc) {
 }
 
 int cthd_cdev_order_parse::parse(xmlNode * a_node, xmlDoc *doc) {
-	xmlNode *cur_node = NULL;
+	xmlNode *cur_node = nullptr;
 
 	for (cur_node = a_node; cur_node; cur_node = cur_node->next) {
 		if (cur_node->type == XML_ELEMENT_NODE) {

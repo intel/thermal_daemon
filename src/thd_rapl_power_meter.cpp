@@ -36,7 +36,7 @@ static void *rapl_periodic_callback(void *data) {
 		sleep(rapl_cl->rapl_callback_timeout);
 	}
 
-	return NULL;
+	return nullptr;
 }
 
 cthd_rapl_power_meter::cthd_rapl_power_meter(unsigned int mask) :
@@ -48,7 +48,7 @@ cthd_rapl_power_meter::cthd_rapl_power_meter(unsigned int mask) :
 	if (rapl_sysfs.exists()) {
 		thd_log_debug("RAPL sysfs present\n");
 		rapl_present = true;
-		last_time = time(NULL);
+		last_time = time(nullptr);
 		rapl_read_domains(rapl_sysfs.get_base_path().c_str());
 	} else {
 		thd_log_warn("NO RAPL sysfs present\n");
@@ -64,8 +64,8 @@ void cthd_rapl_power_meter::rapl_read_domains(const char *dir_name) {
 		DIR *dir;
 		struct dirent *dir_entry;
 		thd_log_debug("RAPL base path %s\n", dir_name);
-		if ((dir = opendir(dir_name)) != NULL) {
-			while ((dir_entry = readdir(dir)) != NULL) {
+		if ((dir = opendir(dir_name)) != nullptr) {
+			while ((dir_entry = readdir(dir)) != nullptr) {
 				std::string buffer;
 				std::ostringstream path;
 				int status;
@@ -141,7 +141,7 @@ bool cthd_rapl_power_meter::rapl_energy_loop() {
 	if (!enable_measurement)
 		return false;
 
-	curr_time = time(NULL);
+	curr_time = time(nullptr);
 	if ((curr_time - last_time) <= 0)
 		return true;
 	for (unsigned int i = 0; i < domain_list.size(); ++i) {

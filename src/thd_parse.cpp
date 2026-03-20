@@ -46,7 +46,7 @@ char *cthd_parse::char_trim(char *str) {
 	int i;
 
 	if (!str)
-		return NULL;
+		return nullptr;
 	if (str[0] == '\0')
 		return str;
 	while (isspace(*str))
@@ -59,7 +59,7 @@ char *cthd_parse::char_trim(char *str) {
 }
 
 cthd_parse::cthd_parse() :
-		matched_thermal_info_index(-1), doc(NULL), root_element(NULL), auto_config(
+		matched_thermal_info_index(-1), doc(nullptr), root_element(nullptr), auto_config(
 				0) {
 	std::string name_conf = TDCONFDIR;
 	std::string name_run = TDRUNDIR;
@@ -137,14 +137,14 @@ int cthd_parse::parser_init(const std::string& config_file) {
 	}
 
 	thd_log_msg("Using config file %s\n", xml_config_file);
-	doc = xmlReadFile(xml_config_file, NULL, 0);
-	if (doc == NULL) {
+	doc = xmlReadFile(xml_config_file, nullptr, 0);
+	if (doc == nullptr) {
 		thd_log_warn("error: could not parse file %s\n", xml_config_file);
 		return THD_ERROR;
 	}
 	root_element = xmlDocGetRootElement(doc);
 
-	if (root_element == NULL) {
+	if (root_element == nullptr) {
 		thd_log_warn("error: could not get root element\n");
 		xmlFreeDoc(doc);
 		return THD_ERROR;
@@ -155,7 +155,7 @@ int cthd_parse::parser_init(const std::string& config_file) {
 
 int cthd_parse::parse_dependency_values(xmlNode * a_node, xmlDoc *doc,
 		trip_cdev_depend_t *dependency) {
-	xmlNode *cur_node = NULL;
+	xmlNode *cur_node = nullptr;
 	char *tmp_value;
 
 	for (cur_node = a_node; cur_node; cur_node = cur_node->next) {
@@ -184,7 +184,7 @@ int cthd_parse::parse_dependency_values(xmlNode * a_node, xmlDoc *doc,
 
 int cthd_parse::parse_new_trip_cdev(xmlNode * a_node, xmlDoc *doc,
 		trip_cdev_t *trip_cdev) {
-	xmlNode *cur_node = NULL;
+	xmlNode *cur_node = nullptr;
 	char *tmp_value;
 
 	for (cur_node = a_node; cur_node; cur_node = cur_node->next) {
@@ -225,7 +225,7 @@ int cthd_parse::parse_new_trip_cdev(xmlNode * a_node, xmlDoc *doc,
 
 int cthd_parse::parse_new_trip_point(xmlNode * a_node, xmlDoc *doc,
 		trip_point_t *trip_pt) {
-	xmlNode *cur_node = NULL;
+	xmlNode *cur_node = nullptr;
 	char *tmp_value;
 
 	trip_cdev_t trip_cdev;
@@ -300,7 +300,7 @@ int cthd_parse::parse_new_trip_point(xmlNode * a_node, xmlDoc *doc,
 
 int cthd_parse::parse_trip_points(xmlNode * a_node, xmlDoc *doc,
 		thermal_zone_t *info_ptr) {
-	xmlNode *cur_node = NULL;
+	xmlNode *cur_node = nullptr;
 
 	for (cur_node = a_node; cur_node; cur_node = cur_node->next) {
 		if (cur_node->type == XML_ELEMENT_NODE) {
@@ -326,7 +326,7 @@ int cthd_parse::parse_trip_points(xmlNode * a_node, xmlDoc *doc,
 
 int cthd_parse::parse_pid_values(xmlNode * a_node, xmlDoc *doc,
 		pid_control_t *pid_ptr) {
-	xmlNode *cur_node = NULL;
+	xmlNode *cur_node = nullptr;
 	char *tmp_value;
 
 	pid_ptr->Kp = 0.0005;
@@ -356,7 +356,7 @@ int cthd_parse::parse_pid_values(xmlNode * a_node, xmlDoc *doc,
 
 int cthd_parse::parse_new_zone(xmlNode * a_node, xmlDoc *doc,
 		thermal_zone_t *info_ptr) {
-	xmlNode *cur_node = NULL;
+	xmlNode *cur_node = nullptr;
 	char *tmp_value;
 
 	for (cur_node = a_node; cur_node; cur_node = cur_node->next) {
@@ -381,7 +381,7 @@ int cthd_parse::parse_new_zone(xmlNode * a_node, xmlDoc *doc,
 
 int cthd_parse::parse_new_cooling_dev(xmlNode * a_node, xmlDoc *doc,
 		cooling_dev_t *cdev) {
-	xmlNode *cur_node = NULL;
+	xmlNode *cur_node = nullptr;
 	char *tmp_value;
 
 	cdev->max_state = cdev->min_state = 0;
@@ -452,7 +452,7 @@ int cthd_parse::parse_new_cooling_dev(xmlNode * a_node, xmlDoc *doc,
 
 int cthd_parse::parse_cooling_devs(xmlNode * a_node, xmlDoc *doc,
 		thermal_info_t *info_ptr) {
-	xmlNode *cur_node = NULL;
+	xmlNode *cur_node = nullptr;
 	cooling_dev_t cdev;
 
 	for (cur_node = a_node; cur_node; cur_node = cur_node->next) {
@@ -475,7 +475,7 @@ int cthd_parse::parse_cooling_devs(xmlNode * a_node, xmlDoc *doc,
 
 int cthd_parse::parse_thermal_zones(xmlNode * a_node, xmlDoc *doc,
 		thermal_info_t *info_ptr) {
-	xmlNode *cur_node = NULL;
+	xmlNode *cur_node = nullptr;
 	thermal_zone_t zone;
 
 	for (cur_node = a_node; cur_node; cur_node = cur_node->next) {
@@ -495,7 +495,7 @@ int cthd_parse::parse_thermal_zones(xmlNode * a_node, xmlDoc *doc,
 int cthd_parse::parse_new_sensor_link(xmlNode * a_node, xmlDoc *doc,
 		thermal_sensor_link_t *info_ptr) {
 
-	xmlNode *cur_node = NULL;
+	xmlNode *cur_node = nullptr;
 	char *tmp_value;
 
 	for (cur_node = a_node; cur_node; cur_node = cur_node->next) {
@@ -523,7 +523,7 @@ int cthd_parse::parse_new_sensor_link(xmlNode * a_node, xmlDoc *doc,
 
 int cthd_parse::parse_new_sensor(xmlNode * a_node, xmlDoc *doc,
 		thermal_sensor_t *info_ptr) {
-	xmlNode *cur_node = NULL;
+	xmlNode *cur_node = nullptr;
 	char *tmp_value;
 
 	for (cur_node = a_node; cur_node; cur_node = cur_node->next) {
@@ -560,7 +560,7 @@ int cthd_parse::parse_new_sensor(xmlNode * a_node, xmlDoc *doc,
 
 int cthd_parse::parse_thermal_sensors(xmlNode * a_node, xmlDoc *doc,
 		thermal_info_t *info_ptr) {
-	xmlNode *cur_node = NULL;
+	xmlNode *cur_node = nullptr;
 	thermal_sensor_t sensor;
 
 	for (cur_node = a_node; cur_node; cur_node = cur_node->next) {
@@ -583,7 +583,7 @@ int cthd_parse::parse_thermal_sensors(xmlNode * a_node, xmlDoc *doc,
 
 int cthd_parse::parse_new_platform_info(xmlNode * a_node, xmlDoc *doc,
 		thermal_info_t *info_ptr) {
-	xmlNode *cur_node = NULL;
+	xmlNode *cur_node = nullptr;
 	char *tmp_value;
 
 	info_ptr->default_preference = PREF_ENERGY_CONSERVE;
@@ -645,7 +645,7 @@ int cthd_parse::parse_new_platform_info(xmlNode * a_node, xmlDoc *doc,
 
 int cthd_parse::parse_new_platform(xmlNode * a_node, xmlDoc *doc,
 		thermal_info_t *info_ptr) {
-	xmlNode *cur_node = NULL;
+	xmlNode *cur_node = nullptr;
 	unsigned char *tmp_value;
 	thermal_info_t info = {};
 
@@ -672,7 +672,7 @@ int cthd_parse::parse_new_platform(xmlNode * a_node, xmlDoc *doc,
 }
 
 int cthd_parse::parse_ppcc(xmlNode * a_node, xmlDoc *doc, ppcc_t *ppcc) {
-	xmlNode *cur_node = NULL;
+	xmlNode *cur_node = nullptr;
 	char *tmp_value;
 
 	for (cur_node = a_node; cur_node; cur_node = cur_node->next) {
@@ -707,7 +707,7 @@ int cthd_parse::parse_ppcc(xmlNode * a_node, xmlDoc *doc, ppcc_t *ppcc) {
 
 int cthd_parse::parse_new_thermal_conf(xmlNode * a_node, xmlDoc *doc,
 		thermal_info_t *info_ptr) {
-	xmlNode *cur_node = NULL;
+	xmlNode *cur_node = nullptr;
 
 	for (cur_node = a_node; cur_node; cur_node = cur_node->next) {
 		if (cur_node->type == XML_ELEMENT_NODE) {
@@ -723,7 +723,7 @@ int cthd_parse::parse_new_thermal_conf(xmlNode * a_node, xmlDoc *doc,
 }
 
 int cthd_parse::parse(xmlNode * a_node, xmlDoc *doc) {
-	xmlNode *cur_node = NULL;
+	xmlNode *cur_node = nullptr;
 	thermal_info_t info;
 
 	for (cur_node = a_node; cur_node; cur_node = cur_node->next) {
@@ -976,9 +976,9 @@ trip_point_t* cthd_parse::get_trip_point(unsigned int zone_index,
 		if (trip_index
 				< thermal_info_list[matched_thermal_info_index].zones[zone_index].trip_pts.size())
 			return &thermal_info_list[matched_thermal_info_index].zones[zone_index].trip_pts[trip_index];
-		return NULL;
+		return nullptr;
 	} else
-		return NULL;
+		return nullptr;
 
 }
 
@@ -988,7 +988,7 @@ cooling_dev_t* cthd_parse::get_cool_dev_index(unsigned int cdev_index) {
 			< thermal_info_list[matched_thermal_info_index].cooling_devs.size())
 		return &thermal_info_list[matched_thermal_info_index].cooling_devs[cdev_index];
 	else
-		return NULL;
+		return nullptr;
 }
 
 thermal_sensor_t* cthd_parse::get_sensor_dev_index(unsigned int sensor_index) {
@@ -997,25 +997,25 @@ thermal_sensor_t* cthd_parse::get_sensor_dev_index(unsigned int sensor_index) {
 			< thermal_info_list[matched_thermal_info_index].sensors.size())
 		return &thermal_info_list[matched_thermal_info_index].sensors[sensor_index];
 	else
-		return NULL;
+		return nullptr;
 }
 
 thermal_zone_t *cthd_parse::get_zone_dev_index(unsigned int zone_index) {
 	if (zone_index < thermal_info_list[matched_thermal_info_index].zones.size())
 		return &thermal_info_list[matched_thermal_info_index].zones[zone_index];
 	else
-		return NULL;
+		return nullptr;
 
 }
 
 ppcc_t *cthd_parse::get_ppcc_param(const std::string& name) {
 	if (name != "TCPU.D0")
-		return NULL;
+		return nullptr;
 
 	if (matched_thermal_info_index >= 0 && thermal_info_list[matched_thermal_info_index].ppcc.valid)
 		return &thermal_info_list[matched_thermal_info_index].ppcc;
 
-	return NULL;
+	return nullptr;
 }
 
 bool cthd_parse::pid_status(int cdev_index) {

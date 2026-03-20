@@ -68,7 +68,7 @@ public:
 	int max_state;
 
 	trip_pt_cdev_t() {
-		cdev = 0;
+		cdev = nullptr;
 		influence = 0;
 		sampling_priod = 0;
 		last_op_time = 0;
@@ -146,7 +146,7 @@ public:
 	void thd_trip_point_add_cdev(cthd_cdev &cdev, int influence,
 			int sampling_period = 0, int target_state_valid = 0,
 			int target_state =
-			TRIP_PT_INVALID_TARGET_STATE, pid_param_t *pid_param = NULL,
+			TRIP_PT_INVALID_TARGET_STATE, pid_param_t *pid_param = nullptr,
 			int min_max_valid = 0, int min_state = 0, int max_state = 0);
 
 	void delete_cdevs() {
@@ -228,7 +228,7 @@ public:
 
 	cthd_cdev* get_first_cdev() {
 		if (!cdevs.size())
-			return NULL;
+			return nullptr;
 
 		return cdevs[0].cdev;
 	}
