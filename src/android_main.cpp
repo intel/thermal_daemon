@@ -101,15 +101,15 @@ static void daemonize(char *rundir, char *pidfile) {
 	sigaddset(&sig_set, SIGTSTP);
 	sigaddset(&sig_set, SIGTTOU);
 	sigaddset(&sig_set, SIGTTIN);
-	sigprocmask(SIG_BLOCK, &sig_set, NULL);
+	sigprocmask(SIG_BLOCK, &sig_set, nullptr);
 
 	sig_actions.sa_handler = signal_handler;
 	sigemptyset(&sig_actions.sa_mask);
 	sig_actions.sa_flags = 0;
 
-	sigaction(SIGHUP, &sig_actions, NULL);
-	sigaction(SIGTERM, &sig_actions, NULL);
-	sigaction(SIGINT, &sig_actions, NULL);
+	sigaction(SIGHUP, &sig_actions, nullptr);
+	sigaction(SIGTERM, &sig_actions, nullptr);
+	sigaction(SIGINT, &sig_actions, nullptr);
 
 	pid = fork();
 	if (pid < 0) {
@@ -182,7 +182,7 @@ int main(int argc, char *argv[]) {
 	bool exclusive_control = false;
 	bool test_mode = false;
 	bool is_privileged_user = false;
-	char *conf_file = NULL;
+	char *conf_file = nullptr;
 	bool ignore_cpuid_check = false;
 	bool adaptive = false;
 	int ret;
@@ -199,7 +199,7 @@ int main(int argc, char *argv[]) {
 			{ "ignore-cpuid-check", no_argument, 0, 'i'},
 			{ "ignore-default-control", no_argument, 0, 'd'},
 			{ "adaptive", no_argument, 0, 'a'},
-			{ NULL, 0, NULL, 0 } };
+			{ nullptr, 0, nullptr, 0 } };
 
 	if (argc > 1) {
 		while ((c = getopt_long(argc, argv, short_options, long_options,

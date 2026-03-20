@@ -37,7 +37,7 @@ int cthd_sysfs_cdev_rapl_dram::update() {
 	if (!dir)
 		return THD_ERROR;
 
-	while ((entry = readdir(dir)) != NULL) {
+	while ((entry = readdir(dir)) != nullptr) {
 		std::string temp_str;
 
 		temp_str = base + entry->d_name + "/" + "name";

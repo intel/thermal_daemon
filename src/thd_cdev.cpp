@@ -503,7 +503,7 @@ int cthd_cdev::thd_cdev_set_state(int set_point, int target_temp,
 int cthd_cdev::thd_cdev_set_min_state(int zone_id, int trip_id) {
 	trend_increase = false;
 	cthd_pid unused;
-	thd_cdev_set_state(0, 0, 0, 0, 0, zone_id, trip_id, 1, min_state, NULL,
+	thd_cdev_set_state(0, 0, 0, 0, 0, zone_id, trip_id, 1, min_state, nullptr,
 			unused, true, 0, 0, 0);
 
 	return THD_SUCCESS;

@@ -26,7 +26,7 @@
 
 cthd_sensor_virtual::cthd_sensor_virtual(int _index, std::string _type_str,
 		std::string _link_type_str, double _multiplier, double _offset) :
-		cthd_sensor(_index, "none", std::move(_type_str)), link_sensor(NULL), link_type_str(
+		cthd_sensor(_index, "none", std::move(_type_str)), link_sensor(nullptr), link_type_str(
 				std::move(_link_type_str)), multiplier(_multiplier), offset(_offset) {
 	virtual_sensor = true;
 }

@@ -98,7 +98,7 @@ int cthd_zone_generic::zone_bind_sensors() {
 
 	if (!zone_config)
 		return THD_ERROR;
-	sensor = NULL;
+	sensor = nullptr;
 	for (unsigned int i = 0; i < zone_config->trip_pts.size(); ++i) {
 		trip_point_t &trip_pt_config = zone_config->trip_pts[i];
 		sensor = thd_engine->search_sensor(trip_pt_config.sensor_type);
