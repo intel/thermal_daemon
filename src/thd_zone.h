@@ -173,7 +173,8 @@ public:
 
 	int bind_cooling_device(trip_point_type_t type, unsigned int trip_temp,
 			cthd_cdev *cdev, int influence, int sampling_period = 0,
-			int target_state_valid = 0, int target_state = 0);
+			int target_state_valid = 0, int target_state = 0,
+			int min_max_valid = 0, int min_state = 0, int max_state = 0);
 
 	int get_sensor_count() {
 		return sensors.size();

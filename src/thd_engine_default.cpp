@@ -527,7 +527,10 @@ int cthd_engine_default::read_thermal_zones() {
 										trip_pt_config.cdev_trips[j].sampling_period,
 										trip_pt_config.cdev_trips[j].target_state_valid,
 										trip_pt_config.cdev_trips[j].target_state,
-										&trip_pt_config.cdev_trips[j].pid_param);
+									&trip_pt_config.cdev_trips[j].pid_param,
+									trip_pt_config.cdev_trips[j].min_max_valid,
+									trip_pt_config.cdev_trips[j].target_min_state,
+									trip_pt_config.cdev_trips[j].target_max_state);
 								zone->zone_cdev_set_binded();
 								activate = true;
 							}
@@ -553,7 +556,10 @@ int cthd_engine_default::read_thermal_zones() {
 										trip_pt_config.cdev_trips[j].influence,
 										trip_pt_config.cdev_trips[j].sampling_period,
 										trip_pt_config.cdev_trips[j].target_state_valid,
-										trip_pt_config.cdev_trips[j].target_state) == THD_SUCCESS) {
+									trip_pt_config.cdev_trips[j].target_state,
+									trip_pt_config.cdev_trips[j].min_max_valid,
+									trip_pt_config.cdev_trips[j].target_min_state,
+									trip_pt_config.cdev_trips[j].target_max_state) == THD_SUCCESS) {
 									thd_log_debug(
 											"bind %s to trip to sensor %s\n",
 											cdev->get_cdev_type().c_str(),

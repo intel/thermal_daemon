@@ -205,6 +205,14 @@ int cthd_parse::parse_new_trip_cdev(xmlNode * a_node, xmlDoc *doc,
 						"TargetState")) {
 					trip_cdev->target_state = atoi(tmp_value);
 					trip_cdev->target_state_valid = 1;
+				} else if (!strcasecmp((const char*) cur_node->name,
+						"TargetMinState")) {
+					trip_cdev->target_min_state = atoi(tmp_value);
+					trip_cdev->min_max_valid = 1;
+				} else if (!strcasecmp((const char*) cur_node->name,
+						"TargetMaxState")) {
+					trip_cdev->target_max_state = atoi(tmp_value);
+					trip_cdev->min_max_valid = 1;
 				} else if(!strcasecmp((const char*) cur_node->name,
 						"PidControl")) {
 					pid_control_t pid_params;
@@ -255,6 +263,9 @@ int cthd_parse::parse_new_trip_point(xmlNode * a_node, xmlDoc *doc,
 				trip_cdev.sampling_period = 0;
 				trip_cdev.target_state_valid = 0;
 				trip_cdev.target_state = 0;
+				trip_cdev.min_max_valid = 0;
+				trip_cdev.target_min_state = 0;
+				trip_cdev.target_max_state = 0;
 				trip_cdev.type.clear();
 
 				trip_cdev.pid_param.valid = 0;
@@ -923,6 +934,10 @@ void cthd_parse::dump_thermal_conf() {
 					if (thermal_info_list[i].zones[j].trip_pts[k].cdev_trips[l].target_state_valid)
 						thd_log_info("\t\t\t  TargetState %d\n",
 								thermal_info_list[i].zones[j].trip_pts[k].cdev_trips[l].target_state);
+					if (thermal_info_list[i].zones[j].trip_pts[k].cdev_trips[l].min_max_valid)
+						thd_log_info("\t\t\t  TargetMinState %d TargetMaxState %d\n",
+								thermal_info_list[i].zones[j].trip_pts[k].cdev_trips[l].target_min_state,
+								thermal_info_list[i].zones[j].trip_pts[k].cdev_trips[l].target_max_state);
 					if (thermal_info_list[i].zones[j].trip_pts[k].cdev_trips[l].pid_param.valid)
 						thd_log_info("\t\t\t  PID values %f:%f:%f\n",
 								thermal_info_list[i].zones[j].trip_pts[k].cdev_trips[l].pid_param.kp,

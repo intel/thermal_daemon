@@ -95,6 +95,9 @@ typedef struct {
 	int target_state_valid;
 	int target_state;
 	pid_param_t pid_param;
+	int min_max_valid;
+	int target_min_state;
+	int target_max_state;
 } trip_cdev_t;
 
 typedef struct {
