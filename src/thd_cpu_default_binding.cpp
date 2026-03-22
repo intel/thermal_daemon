@@ -48,7 +48,7 @@ private:
 	bool start;
 
 public:
-	static const int max_state = 0x01;
+	static constexpr int max_state = 0x01;
 	cthd_gating_cdev(int _id, cthd_cpu_default_binding *_def_bind_ref,
 			cpu_zone_binding_t *_bind_zone, bool _start) :
 			cthd_cdev(_id, ""), def_bind_ref(_def_bind_ref), bind_zone(

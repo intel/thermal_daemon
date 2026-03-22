@@ -49,10 +49,10 @@ protected:
 	bool pkg_temp_poll_enable;
 
 public:
-	static const int max_dts_sensors = 16;
-	static const int def_hystersis = 0;
-	static const int def_offset_from_critical = 10000;
-	static const int def_critical_temp = 100000;
+	static constexpr int max_dts_sensors = 16;
+	static constexpr int def_hystersis = 0;
+	static constexpr int def_offset_from_critical = 10000;
+	static constexpr int def_critical_temp = 100000;
 
 	cthd_zone_cpu(int count, std::string path, int package_id);
 	int load_cdev_xml(cthd_trip_point &trip_pt, std::vector<std::string> &list);

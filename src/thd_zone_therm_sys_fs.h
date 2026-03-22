@@ -33,8 +33,8 @@ private:
 	std::vector<int> initial_trip_values;
 
 public:
-	static const int max_trip_points = 50;
-	static const int max_cool_devs = 50;
+	static constexpr int max_trip_points = 50;
+	static constexpr int max_cool_devs = 50;
 
 	cthd_sysfs_zone(int count, std::string path);
 	~cthd_sysfs_zone() override;

@@ -36,9 +36,9 @@ private:
 	void set_turbo_disable_status(bool enable);
 
 public:
-	static const int intel_pstate_limit_ratio = 2;
-	static const int default_max_state = 10;
-	static const int turbo_disable_percent = 70;
+	static constexpr int intel_pstate_limit_ratio = 2;
+	static constexpr int default_max_state = 10;
+	static constexpr int turbo_disable_percent = 70;
 	cthd_intel_p_state_cdev(unsigned int _index) :
 			cthd_cdev(_index, "/sys/devices/system/cpu/intel_pstate/"), unit_value(
 					1), min_compensation(0), turbo_status(false) {
