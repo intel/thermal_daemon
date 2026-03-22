@@ -219,6 +219,11 @@ current virtual temperature.
               <!-- Set a specific state of this cooling device when this
                    trip is violated. -->
               <TargetState> 6 </TargetState>
+                <!-- Optional per-trip clamp range. Use one or both.
+                  When omitted, cooling device MinState/MaxState is
+                  used. -->
+                <TargetMinState> 2 </TargetMinState>
+                <TargetMaxState> 8 </TargetMaxState>
             </CoolingDevice>
           </TripPoint>
         </TripPoints>

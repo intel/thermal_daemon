@@ -158,6 +158,11 @@ use "man thermal-conf.xml" for details
 						too actually cool a zone
 						-->
 						<SamplingPeriod> 12 </SamplingPeriod>
+						<!-- Optional per-trip clamp range. Use one or both.
+							When omitted, cooling device MinState/MaxState is used.
+						-->
+						<TargetMinState> 10 </TargetMinState>
+						<TargetMaxState> 40 </TargetMaxState>
 					</CoolingDevice>
 				</TripPoint>
 
