@@ -33,7 +33,7 @@ private:
 	int ref_backlight_state;
 	int min_back_light;
 public:
-	static const int min_backlight_percent = 25; // max percent from max
+	static constexpr int min_backlight_percent = 25; // max percent from max
 	cthd_cdev_backlight(unsigned int _index, int _cpu_index);
 	void set_curr_state(int state, int arg) override;
 	int update() override;

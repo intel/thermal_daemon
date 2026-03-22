@@ -134,8 +134,8 @@ private:
 	}
 
 public:
-	static const int default_influence = 0;
-	static const int consecutive_critical_events = 4;
+	static constexpr int default_influence = 0;
+	static constexpr int consecutive_critical_events = 4;
 
 	cthd_trip_point(int _index, trip_point_type_t _type, unsigned int _temp,
 			unsigned int _hyst, int _zone_id, int _sensor_id,

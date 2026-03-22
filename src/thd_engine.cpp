@@ -1258,8 +1258,7 @@ void cthd_engine::parser_deinit() {
 }
 
 int cthd_engine::debug_mode_on(void) {
-	static const char *debug_mode = TDRUNDIR
-	"/debug_mode";
+	static constexpr char debug_mode[] = TDRUNDIR "/debug_mode";
 	struct stat s;
 
 	if (stat(debug_mode, &s))

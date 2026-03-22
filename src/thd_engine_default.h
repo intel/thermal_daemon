@@ -47,7 +47,7 @@ private:
 protected:
 	bool force_mmio_rapl;
 public:
-	static const int power_clamp_reduction_percent = 5;
+	static constexpr int power_clamp_reduction_percent = 5;
 	cthd_gddv gddv;
 
 #ifndef ANDROID

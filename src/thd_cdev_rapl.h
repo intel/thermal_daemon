@@ -67,13 +67,13 @@ private:
 	int rapl_read_enable_status();
 
 public:
-	static const int rapl_no_time_windows = 6;
-	static const long def_rapl_time_window = 1000000; // micro seconds
-	static const int rapl_min_default_step = 500000; //0.5W
-	static const int rapl_max_sane_phy_max = 1000000000; // Sane upper bound in uW (1000W)
+	static constexpr int rapl_no_time_windows = 6;
+	static constexpr long def_rapl_time_window = 1000000; // micro seconds
+	static constexpr int rapl_min_default_step = 500000; //0.5W
+	static constexpr int rapl_max_sane_phy_max = 1000000000; // Sane upper bound in uW (1000W)
 
-	static const int rapl_low_limit_percent = 50;
-	static const int rapl_power_dec_percent = 5;
+	static constexpr int rapl_low_limit_percent = 50;
+	static constexpr int rapl_power_dec_percent = 5;
 
 	cthd_sysfs_cdev_rapl(unsigned int _index, int package) :
             cthd_sysfs_cdev_rapl(_index, package, "")

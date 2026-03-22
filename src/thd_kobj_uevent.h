@@ -38,7 +38,7 @@
 
 class cthd_kobj_uevent {
 private:
-	static const int max_buffer_size = 512;
+	static constexpr int max_buffer_size = 512;
 
 	struct sockaddr_nl nls;
 	int fd;
