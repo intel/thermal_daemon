@@ -75,7 +75,9 @@ use "man thermal-conf.xml" for details
 				depends on other real sensor or
 				virtual sensor.
 				E.g. here the temp will be
-				 temp of example_sensor_1 * 0.5 + 10
+				 temp of example_sensor_1 * 0.5 + 10.
+				For SensorLink the formula is:
+				 virtual_temp = linked_sensor * Multiplier + Offset
 			-->
 			<Type>example_virtual_sensor</Type>
 			<Virtual>1</Virtual>
@@ -84,6 +86,40 @@ use "man thermal-conf.xml" for details
 				<Multiplier> 0.5 </Multiplier>
 				<Offset> 10 </Offset>
 			</SensorLink>
+		</ThermalSensor>
+		<ThermalSensor>
+			<!-- Advanced virtual sensor using multiple linked sensors
+				and optional polling-table entries.
+				For each LinkSensor entry the calculation is:
+				 avg = Offset * current_sample + (1 - Offset) * previous_average
+				 contribution = Coeff * avg
+				 virtual_temp = sum of all contributions
+				When PowerSensor is 0, the linked thermal sensor value is
+				converted from milli-degree C to degree C before applying
+				the above formula.
+			-->
+			<Type>example_virtual_sensor_advanced</Type>
+			<Virtual>1</Virtual>
+			<LinkSensor>
+				<SensorType>example_sensor_1</SensorType>
+				<Coeff> 0.7 </Coeff>
+				<Offset> 0.2 </Offset>
+				<PowerSensor> 0 </PowerSensor>
+			</LinkSensor>
+			<LinkSensor>
+				<SensorType>rapl_pkg_power</SensorType>
+				<Coeff> 0.3 </Coeff>
+				<Offset> 0.5 </Offset>
+				<PowerSensor> 1 </PowerSensor>
+			</LinkSensor>
+			<PollingTableEntry>
+				<VirtualTemp> 45000 </VirtualTemp>
+				<SamplePeriod> 10 </SamplePeriod>
+			</PollingTableEntry>
+			<PollingTableEntry>
+				<VirtualTemp> 70000 </VirtualTemp>
+				<SamplePeriod> 2 </SamplePeriod>
+			</PollingTableEntry>
 		</ThermalSensor>
 
 	</ThermalSensors>

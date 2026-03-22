@@ -198,14 +198,61 @@ int cthd_engine_default::read_thermal_sensors() {
 			} else {
 				std::unique_ptr<cthd_sensor> sensor_new;
 				if (sensor_config->virtual_sensor) {
-					std::unique_ptr<cthd_sensor_virtual> sensor_virt(new cthd_sensor_virtual(
-							index, sensor_config->name,
-							sensor_config->sensor_link.name,
-							sensor_config->sensor_link.multiplier,
-							sensor_config->sensor_link.offset));
+					std::unique_ptr<cthd_sensor_virtual> sensor_virt;
+					std::string dummy = "";
+
+					if (!sensor_config->link_sensors.empty()) {
+						sensor_virt.reset(new cthd_sensor_virtual(index,
+								sensor_config->name, dummy, 0, 0));
+
+						for (unsigned int j = 0;
+								j < sensor_config->link_sensors.size(); ++j) {
+							std::string target_name = sensor_config->link_sensors[j].name;
+
+							if (sensor_config->link_sensors[j].power_sensor) {
+								std::string name = "rapl_pkg_power";
+								if (!search_sensor(name)) {
+									std::unique_ptr<cthd_sensor_rapl_power> rapl_power(new cthd_sensor_rapl_power(index));
+									if (rapl_power->sensor_update() == THD_SUCCESS) {
+										sensors.push_back(std::move(rapl_power));
+										++index;
+									}
+								}
+							}
+
+							if (sensor_virt->add_target(target_name,
+									sensor_config->link_sensors[j].coeff,
+									sensor_config->link_sensors[j].offset,
+									sensor_config->link_sensors[j].power_sensor)
+									!= THD_SUCCESS) {
+								sensor_virt.reset();
+								break;
+							}
+						}
+					} else {
+						sensor_virt.reset(new cthd_sensor_virtual(index,
+								sensor_config->name,
+								sensor_config->sensor_link.name,
+								sensor_config->sensor_link.multiplier,
+								sensor_config->sensor_link.offset));
+					}
+
+					if (!sensor_virt)
+						continue;
+
+					for (unsigned int j = 0;
+							j < sensor_config->polling_table.size(); ++j) {
+						struct polling_table_entry entry;
+
+						entry.virtual_temp = sensor_config->polling_table[j].virtual_temp;
+						entry.sample_period = sensor_config->polling_table[j].sample_period;
+						sensor_virt->update_polling_table(entry);
+					}
 					if (sensor_virt->sensor_update() != THD_SUCCESS) {
 						continue;
 					}
+					if (sensor_config->polling_table.empty())
+						thd_log_info("No polling interval is defined\n");
 					sensor_new = std::move(sensor_virt);
 				} else {
 					if (!starts_with(sensor_config->path, "/sys/")) {
