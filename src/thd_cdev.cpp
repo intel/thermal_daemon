@@ -521,8 +521,13 @@ int cthd_cdev::thd_cdev_set_state(int set_point, int target_temp,
 				index, get_curr_state(), max_state);
 		ret = THD_SUCCESS;
 	} else {
-		ret = thd_cdev_exponential_controller(set_point, target_temp,
-				temperature, state, zone_id, _min_state, _max_state);
+		if (state)
+			ret = thd_cdev_exponential_controller(set_point, target_temp,
+					temperature, state, zone_id, _min_state, _max_state);
+		else
+			ret = thd_cdev_exponential_controller(set_point, target_temp,
+					temperature, state, zone_id, 0, 0);
+
 	}
 	if (curr_state == get_max_state()) {
 		control_end();
