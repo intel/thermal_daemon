@@ -352,7 +352,8 @@ void cthd_sysfs_cdev_rapl::set_adaptive_target(struct adaptive_target &target) {
 	} else if (target.code == "PL1TimeWindow") {
 		pl0_min_window = argument * 1000;
 	} else if (target.code == "PL1PowerLimit") {
-		set_curr_state(argument * 1000, 1);
+		rapl_update_pl1(argument * 1000);
+		//set_curr_state(argument * 1000, 1);
 	} else if (target.code == "PL2PowerLimit") {
 		rapl_update_pl2(argument * 1000);
 	} else if (target.code == "TccOffset") {
