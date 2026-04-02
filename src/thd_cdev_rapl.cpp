@@ -108,8 +108,14 @@ int cthd_sysfs_cdev_rapl::get_curr_state() {
 // Return the current power, using this the controller can choose the next state
 int cthd_sysfs_cdev_rapl::get_curr_state(bool read_again) {
 	if (dynamic_phy_max_enable) {
+		int pl1, power;
+
 		thd_engine->rapl_power_meter.rapl_start_measure_power();
-		return thd_engine->rapl_power_meter.rapl_action_get_power(PACKAGE);
+		power = thd_engine->rapl_power_meter.rapl_action_get_power(PACKAGE);
+		pl1 = rapl_read_pl1();
+		if (pl1 != THD_ERROR && pl1 < power)
+			return pl1;
+		return power;
 	}
 	return curr_state;
 }
