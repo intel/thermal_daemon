@@ -320,7 +320,7 @@ int cthd_engine_adaptive::install_itmt(struct itmt_entry *itmt_entry) {
 		}
 	}
 
-	cthd_trip_point trip_pt(zone->get_trip_count(), PASSIVE, temp, 0,
+	cthd_trip_point trip_pt(zone->get_trip_count(), PASSIVE, temp, itmt_hyst,
 			zone->get_zone_index(), sensor->get_index(), SEQUENTIAL);
 
 	/*

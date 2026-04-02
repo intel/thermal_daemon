@@ -60,6 +60,7 @@ protected:
 	int set_int3400_base_path();
 
 public:
+	 static const int itmt_hyst = 2000;
 #ifndef ANDROID
 	cthd_engine_adaptive() :
 			cthd_engine_default("63BE270F-1C11-48FD-A6F7-3AF253FF3E2D"), policy_active(
