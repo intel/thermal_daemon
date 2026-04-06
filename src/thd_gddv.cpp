@@ -405,7 +405,8 @@ static const char * const condition_names[] = {
 		"CMPP",
 		"Battery_percentage",
 		"Battery_count",
-		"Power_slider"
+		"Power_slider",
+		"OS_Type",
 };
 
 static const char * const comp_strs[] = {
@@ -436,6 +437,8 @@ void cthd_gddv::dump_apct() {
 
 				msg << "Oem" << (condition_set[j].condition - 0x1000 + 6);
 				cond_name = msg.str();
+			} else if (condition_set[j].condition == OS_type) {
+				cond_name = "OS_Type";
 			} else {
 				std::ostringstream msg;
 
@@ -1205,6 +1208,8 @@ int cthd_gddv::verify_condition(const struct condition& condition) {
 		return 0;
 	if (condition.condition == Power_slider)
 		return 0;
+	if (condition.condition == OS_type)
+		return 0;
 
 	if ( condition.condition >=  ARRAY_SIZE(condition_names))
 		cond_name = "UNKNOWN";
@@ -1478,6 +1483,11 @@ int cthd_gddv::evaluate_ac_condition(const struct condition& condition) {
 }
 #endif
 
+int cthd_gddv::evaluate_os_type_condition(const struct condition& condition) {
+	/* Match Linux, which is 3 */
+        return compare_condition(condition, 3);
+}
+
 int cthd_gddv::evaluate_condition(struct condition& condition) {
 	int ret = THD_ERROR;
 
@@ -1485,6 +1495,10 @@ int cthd_gddv::evaluate_condition(struct condition& condition) {
 		return THD_SUCCESS;
 
 	thd_log_debug("evaluate condition.condition %" PRIu64 "\n", condition.condition);
+
+	if (condition.condition == OS_type) {
+		ret = evaluate_os_type_condition(condition);
+	}
 
 	if ((condition.condition >= Oem0 && condition.condition <= Oem5)
 			|| (condition.condition >= (adaptive_condition) 0x1000

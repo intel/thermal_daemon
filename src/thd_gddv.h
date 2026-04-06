@@ -96,7 +96,8 @@ enum adaptive_condition {
 	CMPP,
 	Battery_percentage,
 	Battery_count,
-	Power_slider
+	Power_slider,
+	OS_type = 86
 };
 
 enum adaptive_comparison {
@@ -247,6 +248,7 @@ private:
 	int evaluate_workload_condition(const struct condition& condition);
 	int evaluate_platform_type_condition(const struct condition& condition);
 	int evaluate_power_slider_condition(const struct condition& condition);
+	int evaluate_os_type_condition(const struct condition& condition);
 	int evaluate_condition(struct condition& condition);
 	int evaluate_condition_set(std::vector<struct condition>& condition_set);
 	void exec_fallback_target(int target);
