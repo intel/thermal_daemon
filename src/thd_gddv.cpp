@@ -29,6 +29,7 @@
 #include "thd_lzma_dec.h"
 #include <linux/input.h>
 #include <memory>
+#include <sstream>
 #include <sys/types.h>
 #include "thd_gddv.h"
 
@@ -1729,7 +1730,63 @@ void cthd_gddv::setup_input_devices() {
 }
 #endif
 
-//#define GDDV_LOAD_FROM_FILE
+
+// From
+// https://elixir.bootlin.com/linux/v6.19.8/source/tools/pcmcia/crc32hash.c
+
+unsigned int cthd_gddv::crc32(char const *p, unsigned int len)
+{
+	int i;
+	unsigned int crc = 0;
+	while (len--) {
+		crc ^= *p++;
+		for (i = 0; i < 8; i++)
+			crc = (crc >> 1) ^ ((crc & 1) ? 0xedb88320 : 0);
+	}
+	return crc;
+}
+
+int cthd_gddv::format_dv_filename(std::stringstream& file_name)
+{
+	std::string sys_vendor;
+	std::ifstream product_sys_vendor("/sys/class/dmi/id/sys_vendor");
+	if (!product_sys_vendor || !getline(product_sys_vendor, sys_vendor)) {
+		thd_log_info("Can't read sys_vendor\n");
+		return THD_ERROR;
+	}
+
+	std::string product_name;
+	std::ifstream product_product_name("/sys/class/dmi/id/product_name");
+	if (!product_product_name || !getline(product_product_name, product_name)) {
+		thd_log_info("Can't read product_name\n");
+		return THD_ERROR;
+	}
+
+	std::string product_family;
+	std::ifstream product_product_family("/sys/class/dmi/id/product_family");
+	if (!product_product_family || !getline(product_product_family, product_family)) {
+		thd_log_info("Can't read product_family\n");
+		return THD_ERROR;
+	}
+
+	std::string product_sku;
+	std::ifstream product_product_sku("/sys/class/dmi/id/product_sku");
+	if (!product_product_sku || !getline(product_product_sku, product_sku)) {
+		thd_log_info("Can't read product_sku\n");
+		return THD_ERROR;
+	}
+
+	//format:
+	// dtt_data_vault_${SYS_VENDOR_CRC32}_${PRODUCT_FAMILY_CRC32}_${PRODUCT_NAME_CRC32}_${PRODUCT_SKU_CRC32}.bin
+	file_name << "/lib/firmware/intel/dtt/dtt_data_vault_" << crc32(sys_vendor.c_str(), sys_vendor.length()) << "_" <<
+		crc32(product_family.c_str(), product_family.length()) << "_" <<
+		crc32(product_name.c_str(), product_name.length()) << "_" <<
+		crc32(product_sku.c_str(), product_sku.length()) << ".bin";
+
+	thd_log_info("Look for File name:%s\n", file_name.str().c_str());
+
+	return THD_SUCCESS;
+}
 
 // Load a data_vault file from file system.
 // Two formats are supported:
@@ -1740,35 +1797,22 @@ void cthd_gddv::setup_input_devices() {
 // This is for test only and hence conditionally compiled
 // This file is stored at TDCONFDIR
 
-#ifdef GDDV_LOAD_FROM_FILE
 #define MAX_GDDV_FILE_SIZE	(4 * 1024)
 
 std::unique_ptr<char[]> cthd_gddv::gddv_load(size_t *size)
 {
-	std::string dir_name = TDCONFDIR;
-	std::string file_name;
-	ssize_t line_size;
-	char *line_buffer = nullptr;
-	size_t line_buffer_size = 0;
 	size_t data_buffer_index = 0;
 	FILE *fp;
 	std::unique_ptr<char[]> data_buffer(new char[MAX_GDDV_FILE_SIZE]);
 
-	file_name = dir_name + "/" + "data_vault.bin";
+	*size = 0;
 
-	fp = fopen(file_name.c_str(), "r");
-	if (fp) {
-
-		while (!feof(fp)) {
-			unsigned char x;
-
-			x = fgetc(fp);
-			data_buffer[data_buffer_index++] = x;
-		}
-		fclose(fp);
-		*size = data_buffer_index;
-		return data_buffer;
-	}
+#ifdef GDDV_LOAD_FROM_FILE
+	std::string dir_name = TDCONFDIR;
+	char *file_name;
+	ssize_t line_size;
+	char *line_buffer = nullptr;
+	size_t line_buffer_size = 0;
 
 	file_name = dir_name + "/" + "data_vault.hex";
 
@@ -1792,8 +1836,8 @@ std::unique_ptr<char[]> cthd_gddv::gddv_load(size_t *size)
 			break;
 		}
 
-		while (token != nullptr) {
-			token = strtok(nullptr, s);
+		while (token != NULL) {
+			token = strtok(NULL, s);
 			if (token) {
 				int byte;
 
@@ -1812,28 +1856,55 @@ std::unique_ptr<char[]> cthd_gddv::gddv_load(size_t *size)
 
 	*size = data_buffer_index;
 	return data_buffer;
-}
+#endif
 
-#else
+	std::stringstream file_name_str;
 
-std::unique_ptr<char[]> cthd_gddv::gddv_load(size_t *size)
-{
-	*size = 0;
+	if (format_dv_filename(file_name_str) == THD_ERROR)
+		return {};
+
+	fp = fopen(file_name_str.str().c_str(), "r");
+	if (fp) {
+		int x;
+
+		while ((x = fgetc(fp)) != EOF) {
+			if (data_buffer_index >= MAX_GDDV_FILE_SIZE) {
+				thd_log_warn("GDDV file too large, max supported size is %d bytes\n",
+						MAX_GDDV_FILE_SIZE);
+				fclose(fp);
+				*size = 0;
+				return {};
+			}
+
+			data_buffer[data_buffer_index++] = static_cast<char>(x);
+		}
+
+		if (ferror(fp)) {
+			thd_log_warn("Failed while reading GDDV file\n");
+			fclose(fp);
+			*size = 0;
+			return {};
+		}
+
+		fclose(fp);
+		*size = data_buffer_index;
+		return data_buffer;
+	}
+
 	return {};
 }
-
-#endif
 
 int cthd_gddv::gddv_init(std::string& base_path) {
 	csys_fs sysfs("");
 	size_t size;
+
+	int3400_base_path = base_path;
+
 	std::unique_ptr<char[]> buf = gddv_load(&size);
 	if (size > 0) {
 		thd_log_info("Loading data vault from a file\n");
 		goto skip_load;
 	}
-
-	int3400_base_path = base_path;
 
 	if (sysfs.read(int3400_base_path + "firmware_node/path",
 			int3400_path) < 0) {

@@ -220,6 +220,10 @@ private:
 	int get_type(char *object, int *offset);
 	uint64_t get_uint64(char *object, int *offset);
 	char* get_string(char *object, int *offset);
+
+	unsigned int crc32(char const *p, unsigned int len);
+	int format_dv_filename(std::stringstream& filename);
+
 	int merge_custom(struct custom_condition *custom,
 			struct condition *condition);
 	int merge_appc(void);
