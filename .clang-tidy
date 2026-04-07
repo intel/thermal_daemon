@@ -16,7 +16,6 @@ Checks: '
     -clang-diagnostic-missing-field-initializers,
     modernize-use-emplace,
     modernize-use-override,
-    modernize-use-nullptr,
     performance-*,
     -performance-enum-size,
     -performance-no-int-to-ptr'
