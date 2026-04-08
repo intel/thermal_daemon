@@ -58,7 +58,7 @@ int cthd_INT3400::match_supported_uuid() {
 	if (base_path == "")
 		return THD_ERROR;
 
-	std::string filename = base_path + "available_uuids";
+	std::string filename = base_path + "uuids/" + "available_uuids";
 
 	std::ifstream ifs(filename.c_str(), std::ifstream::in);
 	if (ifs.good()) {
@@ -81,7 +81,7 @@ void cthd_INT3400::set_default_uuid(void) {
 	if (base_path == "")
 		return;
 
-	std::string filename = base_path + "current_uuid";
+	std::string filename = base_path + "uuids/" + "current_uuid";
 
 	std::ofstream ofs(filename.c_str(), std::ofstream::out);
 	if (ofs.good()) {
@@ -94,7 +94,7 @@ int cthd_INT3400::set_policy_osc(void) {
 	if (base_path == "")
 		return THD_ERROR;
 
-	std::string filename = base_path + "available_uuids";
+	std::string filename = base_path + "uuids/" + "available_uuids";
 
 	std::ifstream ifs(filename.c_str(), std::ifstream::in);
 	if (ifs.good()) {
@@ -102,7 +102,7 @@ int cthd_INT3400::set_policy_osc(void) {
 		if (std::getline(ifs, line)) {
 			thd_log_debug("available uuids: %s\n", line.c_str());
 			if (line == "UNKNOWN") {
-				std::string _filename = base_path + "current_uuid";
+				std::string _filename = base_path + "uuids/" + "current_uuid";
 
 				std::ofstream ofs(_filename.c_str(), std::ofstream::out);
 				if (ofs.good()) {
