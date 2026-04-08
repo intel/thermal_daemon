@@ -91,6 +91,6 @@ CLEANFILES = $(BUILT_SOURCES)
 clang-tidy:
 	clang-tidy -extra-arg-before=-xc++ \
 		$(filter-out src/7zTypes.h src/LzmaDec.h,$(wildcard src/*.h)) \
-		$(filter-out src/LzmaDec.c,$(thermald_SOURCES)) \
+		$(filter-out src/LzmaDec.c thermald-resource.c,$(thermald_SOURCES)) \
 		-- $(filter-out -Wclobbered,$(AM_CXXFLAGS)) \
 		$(thermald_CPPFLAGS) -I .
