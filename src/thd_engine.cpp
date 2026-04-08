@@ -1061,7 +1061,7 @@ int cthd_engine::user_add_virtual_sensor(std::string name,
 	}
 	std::unique_ptr<cthd_sensor_virtual> virt_sensor(new cthd_sensor_virtual(
 			current_sensor_index, std::move(name),
-			std::move(dep_sensor), slope, intercept));
+			dep_sensor, slope, intercept));
 	if (virt_sensor->sensor_update() != THD_SUCCESS) {
 		return THD_ERROR;
 	}

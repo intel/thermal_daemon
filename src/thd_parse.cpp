@@ -205,6 +205,14 @@ int cthd_parse::parse_new_trip_cdev(xmlNode * a_node, xmlDoc *doc,
 						"TargetState")) {
 					trip_cdev->target_state = atoi(tmp_value);
 					trip_cdev->target_state_valid = 1;
+				} else if (!strcasecmp((const char*) cur_node->name,
+						"TargetMinState")) {
+					trip_cdev->target_min_state = atoi(tmp_value);
+					trip_cdev->min_max_valid = 1;
+				} else if (!strcasecmp((const char*) cur_node->name,
+						"TargetMaxState")) {
+					trip_cdev->target_max_state = atoi(tmp_value);
+					trip_cdev->min_max_valid = 1;
 				} else if(!strcasecmp((const char*) cur_node->name,
 						"PidControl")) {
 					pid_control_t pid_params;
@@ -255,6 +263,9 @@ int cthd_parse::parse_new_trip_point(xmlNode * a_node, xmlDoc *doc,
 				trip_cdev.sampling_period = 0;
 				trip_cdev.target_state_valid = 0;
 				trip_cdev.target_state = 0;
+				trip_cdev.min_max_valid = 0;
+				trip_cdev.target_min_state = 0;
+				trip_cdev.target_max_state = 0;
 				trip_cdev.type.clear();
 
 				trip_cdev.pid_param.valid = 0;
@@ -521,6 +532,59 @@ int cthd_parse::parse_new_sensor_link(xmlNode * a_node, xmlDoc *doc,
 	return THD_SUCCESS;
 }
 
+int cthd_parse::parse_new_virtual_sensor_target(xmlNode * a_node, xmlDoc *doc,
+		thermal_sensor_target_t *info_ptr) {
+	xmlNode *cur_node = nullptr;
+	char *tmp_value;
+
+	for (cur_node = a_node; cur_node; cur_node = cur_node->next) {
+		if (cur_node->type == XML_ELEMENT_NODE) {
+			DEBUG_PARSER_PRINT("node type: Element, name: %s value: %s\n", cur_node->name, xmlNodeListGetString(doc, cur_node->xmlChildrenNode, 1));
+			tmp_value = (char*) xmlNodeListGetString(doc,
+					cur_node->xmlChildrenNode, 1);
+			if (tmp_value) {
+				if (!strcasecmp((const char*) cur_node->name, "SensorType")) {
+					info_ptr->name.assign(tmp_value);
+					string_trim(info_ptr->name);
+				} else if (!strcasecmp((const char*) cur_node->name, "Coeff")) {
+					info_ptr->coeff = atof(tmp_value);
+				} else if (!strcasecmp((const char*) cur_node->name, "Offset")) {
+					info_ptr->offset = atof(tmp_value);
+				} else if (!strcasecmp((const char*) cur_node->name, "PowerSensor")) {
+					info_ptr->power_sensor = atoi(tmp_value);
+				}
+				xmlFree(tmp_value);
+			}
+		}
+	}
+
+	return THD_SUCCESS;
+}
+
+int cthd_parse::parse_new_virtual_sensor_polling(xmlNode * a_node, xmlDoc *doc,
+		thermal_sensor_polling_t *info_ptr) {
+	xmlNode *cur_node = nullptr;
+	char *tmp_value;
+
+	for (cur_node = a_node; cur_node; cur_node = cur_node->next) {
+		if (cur_node->type == XML_ELEMENT_NODE) {
+			DEBUG_PARSER_PRINT("node type: Element, name: %s value: %s\n", cur_node->name, xmlNodeListGetString(doc, cur_node->xmlChildrenNode, 1));
+			tmp_value = (char*) xmlNodeListGetString(doc,
+					cur_node->xmlChildrenNode, 1);
+			if (tmp_value) {
+				if (!strcasecmp((const char*) cur_node->name, "VirtualTemp")) {
+					info_ptr->virtual_temp = atoi(tmp_value);
+				} else if (!strcasecmp((const char*) cur_node->name, "SamplePeriod")) {
+					info_ptr->sample_period = atoi(tmp_value);
+				}
+				xmlFree(tmp_value);
+			}
+		}
+	}
+
+	return THD_SUCCESS;
+}
+
 int cthd_parse::parse_new_sensor(xmlNode * a_node, xmlDoc *doc,
 		thermal_sensor_t *info_ptr) {
 	xmlNode *cur_node = nullptr;
@@ -549,6 +613,26 @@ int cthd_parse::parse_new_sensor(xmlNode * a_node, xmlDoc *doc,
 						"SensorLink")) {
 					parse_new_sensor_link(cur_node->children, doc,
 							&info_ptr->sensor_link);
+				} else if (!strcasecmp((const char*) cur_node->name,
+						"LinkSensor")) {
+					thermal_sensor_target_t link_sensor;
+
+					link_sensor.name.clear();
+					link_sensor.coeff = 0.0;
+					link_sensor.offset = 0.0;
+					link_sensor.power_sensor = 0;
+					parse_new_virtual_sensor_target(cur_node->children, doc,
+							&link_sensor);
+					info_ptr->link_sensors.push_back(std::move(link_sensor));
+				} else if (!strcasecmp((const char*) cur_node->name,
+						"PollingTableEntry")) {
+					thermal_sensor_polling_t polling_entry;
+
+					polling_entry.virtual_temp = 0;
+					polling_entry.sample_period = 0;
+					parse_new_virtual_sensor_polling(cur_node->children, doc,
+							&polling_entry);
+					info_ptr->polling_table.push_back(polling_entry);
 				}
 				xmlFree(tmp_value);
 			}
@@ -572,6 +656,11 @@ int cthd_parse::parse_thermal_sensors(xmlNode * a_node, xmlDoc *doc,
 				sensor.async_capable = false;
 				sensor.mask = 0;
 				sensor.virtual_sensor = false;
+				sensor.sensor_link.name.clear();
+				sensor.sensor_link.multiplier = 0.0;
+				sensor.sensor_link.offset = 0.0;
+				sensor.link_sensors.clear();
+				sensor.polling_table.clear();
 				parse_new_sensor(cur_node->children, doc, &sensor);
 				info_ptr->sensors.push_back(sensor);
 			}
@@ -787,12 +876,28 @@ void cthd_parse::dump_thermal_conf() {
 			thd_log_info("\t Virtual: %d\n",
 					thermal_info_list[i].sensors[j].virtual_sensor);
 			if (thermal_info_list[i].sensors[j].virtual_sensor) {
-				thd_log_info("\t\t Link type: %s\n",
-						thermal_info_list[i].sensors[j].sensor_link.name.c_str());
-				thd_log_info("\t\t Link mult: %f\n",
-						thermal_info_list[i].sensors[j].sensor_link.multiplier);
-				thd_log_info("\t\t Link offset: %f\n",
-						thermal_info_list[i].sensors[j].sensor_link.offset);
+				if (!thermal_info_list[i].sensors[j].sensor_link.name.empty()) {
+					thd_log_info("\t\t Link type: %s\n",
+							thermal_info_list[i].sensors[j].sensor_link.name.c_str());
+					thd_log_info("\t\t Link mult: %f\n",
+							thermal_info_list[i].sensors[j].sensor_link.multiplier);
+					thd_log_info("\t\t Link offset: %f\n",
+							thermal_info_list[i].sensors[j].sensor_link.offset);
+				}
+				for (unsigned int k = 0;
+						k < thermal_info_list[i].sensors[j].link_sensors.size(); ++k) {
+					thd_log_info("\t\t Target sensor: %s coeff:%f offset:%f power:%d\n",
+							thermal_info_list[i].sensors[j].link_sensors[k].name.c_str(),
+							thermal_info_list[i].sensors[j].link_sensors[k].coeff,
+							thermal_info_list[i].sensors[j].link_sensors[k].offset,
+							thermal_info_list[i].sensors[j].link_sensors[k].power_sensor);
+				}
+				for (unsigned int k = 0;
+						k < thermal_info_list[i].sensors[j].polling_table.size(); ++k) {
+					thd_log_info("\t\t Polling entry: temp:%d period:%d\n",
+							thermal_info_list[i].sensors[j].polling_table[k].virtual_temp,
+							thermal_info_list[i].sensors[j].polling_table[k].sample_period);
+				}
 			}
 		}
 		for (unsigned int j = 0; j < thermal_info_list[i].zones.size(); ++j) {
@@ -829,6 +934,10 @@ void cthd_parse::dump_thermal_conf() {
 					if (thermal_info_list[i].zones[j].trip_pts[k].cdev_trips[l].target_state_valid)
 						thd_log_info("\t\t\t  TargetState %d\n",
 								thermal_info_list[i].zones[j].trip_pts[k].cdev_trips[l].target_state);
+					if (thermal_info_list[i].zones[j].trip_pts[k].cdev_trips[l].min_max_valid)
+						thd_log_info("\t\t\t  TargetMinState %d TargetMaxState %d\n",
+								thermal_info_list[i].zones[j].trip_pts[k].cdev_trips[l].target_min_state,
+								thermal_info_list[i].zones[j].trip_pts[k].cdev_trips[l].target_max_state);
 					if (thermal_info_list[i].zones[j].trip_pts[k].cdev_trips[l].pid_param.valid)
 						thd_log_info("\t\t\t  PID values %f:%f:%f\n",
 								thermal_info_list[i].zones[j].trip_pts[k].cdev_trips[l].pid_param.kp,

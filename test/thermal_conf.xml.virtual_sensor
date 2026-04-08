@@ -1,0 +1,69 @@
+<?xml version="1.0"?>
+<ThermalConfiguration>
+  <Platform>
+    <Name>Example Laptop</Name>
+    <ProductName>*</ProductName>
+    <Preference>QUIET</Preference>
+    <PPCC>
+                <PowerLimitIndex>0</PowerLimitIndex>
+                <PowerLimitMinimum>10000</PowerLimitMinimum>
+                <PowerLimitMaximum>25000</PowerLimitMaximum>
+                <TimeWindowMinimum>28000</TimeWindowMinimum>
+                <TimeWindowMaximum>28000</TimeWindowMaximum>
+                <StepSize>250</StepSize>
+     </PPCC>
+
+    <ThermalSensors>
+      <ThermalSensor>
+       <Type>virtual_sensor</Type>
+        <Virtual>1</Virtual>
+        <LinkSensor>
+          <SensorType>CONSTANT</SensorType>
+          <Coeff> -3.591 </Coeff>
+          <Offset> 1.0 </Offset>
+          <PowerSensor> 0 </PowerSensor>
+        </LinkSensor>
+        <LinkSensor>
+          <SensorType>SEN4</SensorType>
+          <Coeff> -0.165 </Coeff>
+          <Offset> 0.076 </Offset>
+          <PowerSensor> 0 </PowerSensor>
+        </LinkSensor>
+        <LinkSensor>
+          <SensorType>SEN5</SensorType>
+          <Coeff> 1.140 </Coeff>
+          <Offset> 0.09 </Offset>
+          <PowerSensor> 0 </PowerSensor>
+        </LinkSensor>
+        <PollingTableEntry>
+          <VirtualTemp> 30000 </VirtualTemp>
+          <SamplePeriod> 2 </SamplePeriod>
+        </PollingTableEntry>
+        <PollingTableEntry>
+          <VirtualTemp> 40000 </VirtualTemp>
+          <SamplePeriod> 1 </SamplePeriod>
+        </PollingTableEntry>
+      </ThermalSensor>
+     </ThermalSensors>
+
+    <ThermalZones>
+      <ThermalZone>
+        <Type>_cpu</Type>
+        <TripPoints>
+          <TripPoint>
+            <SensorType>virtual_sensor</SensorType>
+            <Temperature>50000</Temperature>
+            <type>passive</type>
+            <ControlType>SEQUENTIAL</ControlType>
+            <CoolingDevice>
+              <index>1</index>
+              <type>rapl_controller_mmio</type>
+              <influence>100</influence>
+              <SamplingPeriod>1</SamplingPeriod>
+            </CoolingDevice>
+          </TripPoint>
+        </TripPoints>
+      </ThermalZone>
+    </ThermalZones>
+  </Platform>
+</ThermalConfiguration>

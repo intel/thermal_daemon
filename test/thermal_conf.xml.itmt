@@ -1,0 +1,78 @@
+<?xml version="1.0"?>
+<ThermalConfiguration>
+  <Platform>
+    <Name>Example Laptop</Name>
+    <ProductName>*</ProductName>
+    <Preference>QUIET</Preference>
+    <PPCC>
+                <PowerLimitIndex>0</PowerLimitIndex>
+                <PowerLimitMinimum>5000</PowerLimitMinimum>
+                <PowerLimitMaximum>40000</PowerLimitMaximum>
+                <TimeWindowMinimum>28000</TimeWindowMinimum>
+                <TimeWindowMaximum>28000</TimeWindowMaximum>
+                <StepSize>500</StepSize>
+     </PPCC>
+
+    <ThermalZones>
+      <ThermalZone>
+        <Type>SEN3</Type>
+        <TripPoints>
+
+          <TripPoint>
+            <SensorType>SEN3</SensorType>
+            <Temperature>50000</Temperature>
+            <type>passive</type>
+            <CoolingDevice>
+              <index>1</index>
+              <type>rapl_controller_mmio</type>
+              <influence>100</influence>
+              <SamplingPeriod> 4 </SamplingPeriod>
+               <TargetMinState> 35000000 </TargetMinState>
+               <TargetMaxState> 10000000 </TargetMaxState>
+            </CoolingDevice>
+          </TripPoint>
+        </TripPoints>
+      </ThermalZone>
+
+      <ThermalZone>
+        <Type>SEN4</Type>
+        <TripPoints>
+
+          <TripPoint>
+            <SensorType>SEN4</SensorType>
+            <Temperature>40000</Temperature>
+            <type>passive</type>
+            <CoolingDevice>
+              <index>1</index>
+              <type>rapl_controller_mmio</type>
+              <influence>100</influence>
+              <SamplingPeriod> 4 </SamplingPeriod>
+               <TargetMinState> 30000000 </TargetMinState>
+               <TargetMaxState> 15000000 </TargetMaxState>
+            </CoolingDevice>
+          </TripPoint>
+        </TripPoints>
+      </ThermalZone>
+
+      <ThermalZone>
+        <Type>SEN5</Type>
+        <TripPoints>
+          <TripPoint>
+            <SensorType>SEN5</SensorType>
+            <Temperature>59000</Temperature>
+            <type>passive</type>
+            <CoolingDevice>
+              <index>1</index>
+              <type>rapl_controller_mmio</type>
+              <influence>100</influence>
+              <SamplingPeriod> 4 </SamplingPeriod>
+               <TargetMinState> 40000000 </TargetMinState>
+               <TargetMaxState> 18000000 </TargetMaxState>
+            </CoolingDevice>
+          </TripPoint>
+
+        </TripPoints>
+      </ThermalZone>
+    </ThermalZones>
+  </Platform>
+</ThermalConfiguration>

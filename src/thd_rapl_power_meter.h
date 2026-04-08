@@ -76,6 +76,7 @@ public:
 
 	// return in micro units to be compatible with kernel ABI
 	unsigned long long rapl_action_get_energy(domain_type type);
+	unsigned int rapl_action_get_last_power(domain_type type);
 	unsigned int rapl_action_get_power(domain_type type);
 	unsigned int rapl_action_get_power(domain_type type,
 			unsigned int *max_power, unsigned int *min_power);

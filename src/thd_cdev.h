@@ -98,10 +98,11 @@ private:
 	int thd_cdev_exponential_controller(int set_point, int target_temp,
 			int temperature, int state, int arg, int temp_min_state = 0,
 			int temp_max_state = 0);
-	int thd_clamp_state_min(int _state, int temp_min_state = 0);
-	int thd_clamp_state_max(int _state, int temp_max_state = 0);
+	int thd_clamp_state_min(int _state, int temp_min_state = 0, int temp_max_state = 0);
+	int thd_clamp_state_max(int _state, int temp_min_state = 0, int temp_max_state = 0);
 public:
 	static constexpr int default_debounce_interval = 2; // In seconds
+	static constexpr int default_max_exponent = 20; // Max 2 power (x) is raised
 	cthd_cdev(unsigned int _index, std::string control_path) :
 			index(_index), cdev_sysfs(std::move(control_path)), trip_point(0), max_state(
 					0), min_state(0), curr_state(0), curr_pow(0), base_pow_state(

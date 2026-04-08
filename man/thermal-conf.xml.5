@@ -82,6 +82,34 @@ define the relative influence for apply compensation.
 .SH FILE FORMAT
 The configuration file format conforms to XML specifications. A set of tags
 defined to define platform, sensors, zones, cooling devices and trip points.
+.PP
+Virtual sensors support two XML forms:
+.IP \(bu 2
+.B SensorLink
+defines a simple linear transform using one linked sensor:
+.RS 2
+virtual_temp = linked_sensor * Multiplier + Offset
+.RE
+.IP \(bu 2
+.B LinkSensor
+defines one contribution to an advanced virtual sensor. Multiple LinkSensor
+entries may be provided and their contributions are summed. For each entry:
+.RS 2
+avg = Offset * current_sample + (1 - Offset) * previous_average
+
+contribution = Coeff * avg
+
+virtual_temp = sum of all contributions
+.RE
+.PP
+For advanced virtual sensors, when
+.B PowerSensor
+is 0, the linked sensor temperature is converted from milli-degree Celsius to
+degree Celsius before the averaging and coefficient calculations are applied.
+Optional
+.B PollingTableEntry
+elements can be used to change the virtual sensor polling period based on the
+current virtual temperature.
 .sp 1
 .EX
 <ThermalConfiguration>
@@ -112,6 +140,52 @@ defined to define platform, sensors, zones, cooling devices and trip points.
         <Type>example_thermal_sysfs_sensor</Type>
         <!-- If async capable, then we don't need to poll. -->
         <AsyncCapable>1</AsyncCapable>
+      </ThermalSensor>
+      <ThermalSensor>
+        <!-- Simple virtual sensor form. Result is:
+             example_sensor_1 * 0.5 + 10.
+             Formula:
+             virtual_temp = linked_sensor * Multiplier + Offset. -->
+        <Type>example_virtual_sensor</Type>
+        <Virtual>1</Virtual>
+        <SensorLink>
+          <SensorType>example_sensor_1</SensorType>
+          <Multiplier> 0.5 </Multiplier>
+          <Offset> 10 </Offset>
+        </SensorLink>
+      </ThermalSensor>
+      <ThermalSensor>
+        <!-- Advanced virtual sensor form using multiple linked
+             sensors and optional polling-table entries.
+             For each LinkSensor entry:
+             avg = Offset * current_sample + (1 - Offset) * previous_average
+             contribution = Coeff * avg
+             virtual_temp = sum of all contributions.
+             When PowerSensor is 0, the linked thermal sensor value is
+             converted from milli-degree C to degree C before applying
+             the formula. -->
+        <Type>example_virtual_sensor_advanced</Type>
+        <Virtual>1</Virtual>
+        <LinkSensor>
+          <SensorType>example_sensor_1</SensorType>
+          <Coeff> 0.7 </Coeff>
+          <Offset> 0.2 </Offset>
+          <PowerSensor> 0 </PowerSensor>
+        </LinkSensor>
+        <LinkSensor>
+          <SensorType>rapl_pkg_power</SensorType>
+          <Coeff> 0.3 </Coeff>
+          <Offset> 0.5 </Offset>
+          <PowerSensor> 1 </PowerSensor>
+        </LinkSensor>
+        <PollingTableEntry>
+          <VirtualTemp> 45000 </VirtualTemp>
+          <SamplePeriod> 10 </SamplePeriod>
+        </PollingTableEntry>
+        <PollingTableEntry>
+          <VirtualTemp> 70000 </VirtualTemp>
+          <SamplePeriod> 2 </SamplePeriod>
+        </PollingTableEntry>
       </ThermalSensor>
     </ThermalSensors>
     <ThermalZones>
@@ -145,6 +219,11 @@ defined to define platform, sensors, zones, cooling devices and trip points.
               <!-- Set a specific state of this cooling device when this
                    trip is violated. -->
               <TargetState> 6 </TargetState>
+                <!-- Optional per-trip clamp range. Use one or both.
+                  When omitted, cooling device MinState/MaxState is
+                  used. -->
+                <TargetMinState> 2 </TargetMinState>
+                <TargetMaxState> 8 </TargetMaxState>
             </CoolingDevice>
           </TripPoint>
         </TripPoints>

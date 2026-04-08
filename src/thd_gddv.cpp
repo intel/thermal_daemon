@@ -29,6 +29,7 @@
 #include "thd_lzma_dec.h"
 #include <linux/input.h>
 #include <memory>
+#include <sstream>
 #include <sys/types.h>
 #include "thd_gddv.h"
 
@@ -405,7 +406,8 @@ static const char * const condition_names[] = {
 		"CMPP",
 		"Battery_percentage",
 		"Battery_count",
-		"Power_slider"
+		"Power_slider",
+		"OS_Type",
 };
 
 static const char * const comp_strs[] = {
@@ -436,6 +438,8 @@ void cthd_gddv::dump_apct() {
 
 				msg << "Oem" << (condition_set[j].condition - 0x1000 + 6);
 				cond_name = msg.str();
+			} else if (condition_set[j].condition == OS_type) {
+				cond_name = "OS_Type";
 			} else {
 				std::ostringstream msg;
 
@@ -626,6 +630,8 @@ int cthd_gddv::parse_itmt3(char *name, char *buf, unsigned int len) {
 	else
 		itmt.name = name;
 
+	itmt.version = 3;
+
 	if (len < sizeof(struct itmt3_header))
 		return THD_ERROR;
 
@@ -655,6 +661,86 @@ int cthd_gddv::parse_itmt3(char *name, char *buf, unsigned int len) {
 	return 0;
 }
 
+int cthd_gddv::parse_vspt(char *name, char *buf, int len)
+{
+	int offset = 0;
+	int version = get_uint64(buf, &offset);
+
+	if (version > 1) {
+		thd_log_warn("Found unsupported VSPT version %d\n", (int) version);
+		return THD_ERROR;
+	}
+
+	while (offset < len) {
+		struct vspt_entry vspt;
+
+		vspt.virtual_temp =	 get_uint64(buf, &offset);
+		vspt.virtual_temp = DECI_KELVIN_TO_CELSIUS(vspt.virtual_temp),
+		vspt.sample_period = get_uint64(buf, &offset) / 10;
+		vspts.push_back(vspt);
+	}
+
+	return THD_SUCCESS;
+}
+
+int cthd_gddv:: parse_vsct(char *name, char *buf, int len)
+{
+	if (name == nullptr)
+		vscts_name = "vsct";
+	else
+		vscts_name = name;
+
+	thd_log_debug(" vsct name %s\n", vscts_name.c_str());
+	int offset = 0;
+	int version = get_uint64(buf, &offset);
+
+	if (version > 1) {
+		thd_log_warn("Found unsupported VSCT version %d\n", (int) version);
+		return THD_ERROR;
+	}
+
+	while (offset < len) {
+		struct vsct_entry vsct;
+
+		vsct.target = get_string(buf, &offset);
+		vsct.domain_type = get_uint64(buf, &offset);
+		vsct.coeff_type = get_uint64(buf, &offset);
+		vsct.coeff = get_uint64(buf, &offset);
+		vsct.operation = get_uint64(buf, &offset);
+		vsct.alpha = get_uint64(buf, &offset);
+		vsct.trigger_point = get_uint64(buf, &offset);
+		vscts.push_back(std::move(vsct));
+	}
+
+	return THD_SUCCESS;
+}
+
+void cthd_gddv::dump_vsct() {
+	thd_log_info("..vsct dump begin [%s]\n", vscts_name.c_str());
+
+	for (unsigned int i = 0; i < vscts.size(); ++i) {
+		struct vsct_entry vsct = vscts[i];
+			thd_log_info(
+					"\t target:%s domain_type:%d coeff_type:%d coeff:%d operation:%d alpha:%d trigger_point:%d\n",
+					vsct.target.c_str(), vsct.domain_type,
+					vsct.coeff_type, vsct.coeff,
+					vsct.operation, vsct.alpha, vsct.trigger_point
+					);
+	}
+	thd_log_info("vsct dump end\n");
+}
+
+void cthd_gddv::dump_vspt() {
+	thd_log_info("..vspt dump begin\n");
+
+	for (unsigned int i = 0; i < vspts.size(); ++i) {
+		struct vspt_entry vspt = vspts[i];
+			thd_log_info(
+					"\t sample_temp:%d polling period:%d\n", vspt.virtual_temp, vspt.sample_period);
+	}
+	thd_log_info("vspt dump end\n");
+}
+
 int cthd_gddv::parse_itmt(char *name, char *buf, int len) {
 	int offset = 0;
 	int version = get_uint64(buf, &offset);
@@ -671,6 +757,8 @@ int cthd_gddv::parse_itmt(char *name, char *buf, int len) {
 		itmt.name = "Default";
 	else
 		itmt.name = name;
+
+	itmt.version = 1;
 
 	while (offset < len) {
 		struct itmt_entry itmt_entry;
@@ -709,6 +797,7 @@ void cthd_gddv::dump_itmt() {
 		std::vector<struct itmt_entry> itmt = itmts[i].itmt_entries;
 
 		thd_log_info("Name :%s\n", itmts[i].name.c_str());
+		thd_log_info("version :%d\n", itmts[i].version);
 		for (unsigned int j = 0; j < itmt.size(); ++j) {
 			thd_log_info("\t target:%s  trip_temp:%d pl1_min:%s pl1.max:%s\n",
 					itmt[j].target.c_str(),
@@ -994,6 +1083,20 @@ int cthd_gddv::parse_gddv_key(char *buf, int size, int *end_offset) {
 		parse_trt(val.get(), vallength);
 	}
 
+	if (type && strcmp(type, "vsct") == 0) {
+		if (point == nullptr)
+			parse_vsct(name, val.get(), vallength);
+		else
+			parse_vsct(point, val.get(), vallength);
+	}
+
+	if (type && strcmp(type, "vspt") == 0) {
+		if (point == nullptr)
+			parse_vspt(name, val.get(), vallength);
+		else
+			parse_vspt(point, val.get(), vallength);
+	}
+
 	return THD_SUCCESS;
 }
 
@@ -1105,6 +1208,8 @@ int cthd_gddv::verify_condition(const struct condition& condition) {
 	if (condition.condition == Platform_type)
 		return 0;
 	if (condition.condition == Power_slider)
+		return 0;
+	if (condition.condition == OS_type)
 		return 0;
 
 	if ( condition.condition >=  ARRAY_SIZE(condition_names))
@@ -1379,13 +1484,22 @@ int cthd_gddv::evaluate_ac_condition(const struct condition& condition) {
 }
 #endif
 
-int cthd_gddv::evaluate_condition(struct condition condition) {
+int cthd_gddv::evaluate_os_type_condition(const struct condition& condition) {
+	/* Match Linux, which is 3 */
+        return compare_condition(condition, 3);
+}
+
+int cthd_gddv::evaluate_condition(struct condition& condition) {
 	int ret = THD_ERROR;
 
 	if (condition.condition == Default)
 		return THD_SUCCESS;
 
 	thd_log_debug("evaluate condition.condition %" PRIu64 "\n", condition.condition);
+
+	if (condition.condition == OS_type) {
+		ret = evaluate_os_type_condition(condition);
+	}
 
 	if ((condition.condition >= Oem0 && condition.condition <= Oem5)
 			|| (condition.condition >= (adaptive_condition) 0x1000
@@ -1424,11 +1538,26 @@ int cthd_gddv::evaluate_condition(struct condition condition) {
 			ret = THD_SUCCESS;
 	}
 
-	if (ret) {
-		if (condition.time && condition.state_entry_time == 0) {
-			condition.state_entry_time = time(nullptr);
+	if (!ret) {
+		// After a target is matched, periodically when the condition set
+		// is periodically checked, because of time component it will fail
+		// first and then match. This will result in switch of target
+		// back and forth, so don't check time for the current target
+		if (condition.target == current_target_matched)
+			return ret;
+
+		if (condition.time) {
+			thd_log_debug("time condition matched %ld \n", condition.state_entry_time);
+			if (condition.state_entry_time == 0) {
+				condition.state_entry_time = time(nullptr);
+				return THD_ERROR;
+			} else {
+				ret = compare_time(condition);
+				thd_log_debug("compare time output %d\n", ret);
+				if (!ret)
+					condition.state_entry_time = 0;
+			}
 		}
-		ret = compare_time(condition);
 	} else {
 		condition.state_entry_time = 0;
 	}
@@ -1436,8 +1565,7 @@ int cthd_gddv::evaluate_condition(struct condition condition) {
 	return ret;
 }
 
-int cthd_gddv::evaluate_condition_set(
-		const std::vector<struct condition>& condition_set) {
+int cthd_gddv::evaluate_condition_set(std::vector<struct condition>& condition_set) {
 	for (int i = 0; i < (int) condition_set.size(); i++) {
 		thd_log_debug("evaluate condition.condition at index %d\n", i);
 		if (evaluate_condition(condition_set[i]) != 0)
@@ -1454,7 +1582,7 @@ int cthd_gddv::evaluate_conditions() {
 		if (evaluate_condition_set(conditions[i]) == THD_SUCCESS) {
 			target = conditions[i][0].target;
 			thd_log_debug("Condition Set matched:%d target:%d\n", i, target);
-
+			current_target_matched = target;
 			break;
 		}
 	}
@@ -1474,6 +1602,22 @@ struct psvt* cthd_gddv::find_psvt(const std::string& name) {
 
 struct itmt* cthd_gddv::find_itmt(const std::string& name) {
 	for (int i = 0; i < (int) itmts.size(); i++) {
+		int matched;
+
+		if (itmts[i].version == 3) {
+			matched = thd_engine->search_idsp("4215267F-F429-4776-9D84-D6C5992848A4");
+			if (matched != THD_SUCCESS) {
+				thd_log_info("Found version == 3; but no IDSP support\n");
+				continue;
+			}
+		} else if (itmts[i].version < 3) {
+			matched = thd_engine->search_idsp("6BD40D2D-98AA-A44B-1A92-D22BDE3117F1");
+			if (matched != THD_SUCCESS) {
+				thd_log_info("Found version < 3; but no IDSP support\n");
+				continue;
+			}
+		}
+
 		if (!strcasecmp(itmts[i].name.c_str(), name.c_str())) {
 			return &itmts[i];
 		}
@@ -1586,7 +1730,63 @@ void cthd_gddv::setup_input_devices() {
 }
 #endif
 
-//#define GDDV_LOAD_FROM_FILE
+
+// From
+// https://elixir.bootlin.com/linux/v6.19.8/source/tools/pcmcia/crc32hash.c
+
+unsigned int cthd_gddv::crc32(char const *p, unsigned int len)
+{
+	int i;
+	unsigned int crc = 0;
+	while (len--) {
+		crc ^= *p++;
+		for (i = 0; i < 8; i++)
+			crc = (crc >> 1) ^ ((crc & 1) ? 0xedb88320 : 0);
+	}
+	return crc;
+}
+
+int cthd_gddv::format_dv_filename(std::stringstream& file_name)
+{
+	std::string sys_vendor;
+	std::ifstream product_sys_vendor("/sys/class/dmi/id/sys_vendor");
+	if (!product_sys_vendor || !getline(product_sys_vendor, sys_vendor)) {
+		thd_log_info("Can't read sys_vendor\n");
+		return THD_ERROR;
+	}
+
+	std::string product_name;
+	std::ifstream product_product_name("/sys/class/dmi/id/product_name");
+	if (!product_product_name || !getline(product_product_name, product_name)) {
+		thd_log_info("Can't read product_name\n");
+		return THD_ERROR;
+	}
+
+	std::string product_family;
+	std::ifstream product_product_family("/sys/class/dmi/id/product_family");
+	if (!product_product_family || !getline(product_product_family, product_family)) {
+		thd_log_info("Can't read product_family\n");
+		return THD_ERROR;
+	}
+
+	std::string product_sku;
+	std::ifstream product_product_sku("/sys/class/dmi/id/product_sku");
+	if (!product_product_sku || !getline(product_product_sku, product_sku)) {
+		thd_log_info("Can't read product_sku\n");
+		return THD_ERROR;
+	}
+
+	//format:
+	// dtt_data_vault_${SYS_VENDOR_CRC32}_${PRODUCT_FAMILY_CRC32}_${PRODUCT_NAME_CRC32}_${PRODUCT_SKU_CRC32}.bin
+	file_name << "/lib/firmware/intel/dtt/dtt_data_vault_" << crc32(sys_vendor.c_str(), sys_vendor.length()) << "_" <<
+		crc32(product_family.c_str(), product_family.length()) << "_" <<
+		crc32(product_name.c_str(), product_name.length()) << "_" <<
+		crc32(product_sku.c_str(), product_sku.length()) << ".bin";
+
+	thd_log_info("Look for File name:%s\n", file_name.str().c_str());
+
+	return THD_SUCCESS;
+}
 
 // Load a data_vault file from file system.
 // Two formats are supported:
@@ -1597,35 +1797,22 @@ void cthd_gddv::setup_input_devices() {
 // This is for test only and hence conditionally compiled
 // This file is stored at TDCONFDIR
 
-#ifdef GDDV_LOAD_FROM_FILE
 #define MAX_GDDV_FILE_SIZE	(4 * 1024)
 
 std::unique_ptr<char[]> cthd_gddv::gddv_load(size_t *size)
 {
-	std::string dir_name = TDCONFDIR;
-	std::string file_name;
-	ssize_t line_size;
-	char *line_buffer = nullptr;
-	size_t line_buffer_size = 0;
 	size_t data_buffer_index = 0;
 	FILE *fp;
 	std::unique_ptr<char[]> data_buffer(new char[MAX_GDDV_FILE_SIZE]);
 
-	file_name = dir_name + "/" + "data_vault.bin";
+	*size = 0;
 
-	fp = fopen(file_name.c_str(), "r");
-	if (fp) {
-
-		while (!feof(fp)) {
-			unsigned char x;
-
-			x = fgetc(fp);
-			data_buffer[data_buffer_index++] = x;
-		}
-		fclose(fp);
-		*size = data_buffer_index;
-		return data_buffer;
-	}
+#ifdef GDDV_LOAD_FROM_FILE
+	std::string dir_name = TDCONFDIR;
+	char *file_name;
+	ssize_t line_size;
+	char *line_buffer = nullptr;
+	size_t line_buffer_size = 0;
 
 	file_name = dir_name + "/" + "data_vault.hex";
 
@@ -1649,8 +1836,8 @@ std::unique_ptr<char[]> cthd_gddv::gddv_load(size_t *size)
 			break;
 		}
 
-		while (token != nullptr) {
-			token = strtok(nullptr, s);
+		while (token != NULL) {
+			token = strtok(NULL, s);
 			if (token) {
 				int byte;
 
@@ -1669,28 +1856,55 @@ std::unique_ptr<char[]> cthd_gddv::gddv_load(size_t *size)
 
 	*size = data_buffer_index;
 	return data_buffer;
-}
+#endif
 
-#else
+	std::stringstream file_name_str;
 
-std::unique_ptr<char[]> cthd_gddv::gddv_load(size_t *size)
-{
-	*size = 0;
+	if (format_dv_filename(file_name_str) == THD_ERROR)
+		return {};
+
+	fp = fopen(file_name_str.str().c_str(), "r");
+	if (fp) {
+		int x;
+
+		while ((x = fgetc(fp)) != EOF) {
+			if (data_buffer_index >= MAX_GDDV_FILE_SIZE) {
+				thd_log_warn("GDDV file too large, max supported size is %d bytes\n",
+						MAX_GDDV_FILE_SIZE);
+				fclose(fp);
+				*size = 0;
+				return {};
+			}
+
+			data_buffer[data_buffer_index++] = static_cast<char>(x);
+		}
+
+		if (ferror(fp)) {
+			thd_log_warn("Failed while reading GDDV file\n");
+			fclose(fp);
+			*size = 0;
+			return {};
+		}
+
+		fclose(fp);
+		*size = data_buffer_index;
+		return data_buffer;
+	}
+
 	return {};
 }
-
-#endif
 
 int cthd_gddv::gddv_init(std::string& base_path) {
 	csys_fs sysfs("");
 	size_t size;
+
+	int3400_base_path = base_path;
+
 	std::unique_ptr<char[]> buf = gddv_load(&size);
 	if (size > 0) {
 		thd_log_info("Loading data vault from a file\n");
 		goto skip_load;
 	}
-
-	int3400_base_path = base_path;
 
 	if (sysfs.read(int3400_base_path + "firmware_node/path",
 			int3400_path) < 0) {
@@ -1732,6 +1946,8 @@ skip_load:
 		dump_apct();
 		dump_idsps();
 		dump_trips();
+		dump_vsct();
+		dump_vspt();
 	} catch (std::exception &e) {
 		thd_log_warn("%s\n", e.what());
 		return THD_FATAL_ERROR;
