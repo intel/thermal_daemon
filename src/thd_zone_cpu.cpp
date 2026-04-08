@@ -38,7 +38,7 @@
 #include "thd_cdev_order_parser.h"
 
 const char * const def_cooling_devices[] = { "rapl_controller", "intel_pstate",
-		"intel_powerclamp", "cpufreq", "Processor", NULL };
+		"intel_powerclamp", "cpufreq", "Processor", nullptr };
 
 cthd_zone_cpu::cthd_zone_cpu(int index, std::string path, int package_id) :
 		cthd_zone(index, path, SENSORS_CORELATED), dts_sysfs(std::move(path)), critical_temp(

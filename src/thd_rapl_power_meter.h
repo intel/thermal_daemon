@@ -60,7 +60,7 @@ private:
 	bool enable_measurement;
 
 public:
-	static const int rapl_callback_timeout = 10; //seconds
+	static constexpr int rapl_callback_timeout = 10; //seconds
 	cthd_rapl_power_meter(unsigned int mask = PACKAGE | DRAM);
 
 	void rapl_read_domains(const char *base_path);

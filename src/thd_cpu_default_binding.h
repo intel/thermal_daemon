@@ -50,8 +50,8 @@ private:
 	bool blacklist_match(std::string name);
 
 public:
-	static const int def_gating_cdev_sampling_period = 30;
-	static const unsigned int def_starting_power_differential = 4000000;
+	static constexpr int def_gating_cdev_sampling_period = 30;
+	static constexpr unsigned int def_starting_power_differential = 4000000;
 
 	std::vector<std::unique_ptr<cpu_zone_binding_t>> cdev_list;
 

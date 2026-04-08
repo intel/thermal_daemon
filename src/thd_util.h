@@ -1,7 +1,7 @@
 /*
- * thd_platform_intel.h: Intel platform-specific functionality
+ * thd_sensor.h: thermal sensor class interface
  *
- * Copyright (c) 2026 Qualcomm Innovation Center, Inc. All rights reserved.
+ * Copyright (C) 2013 Intel Corporation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License version
@@ -17,22 +17,23 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301, USA.
  *
+ *
+ * Author Name Andrew Gaul <andrew@gaul.org>
+ *
  */
 
-#ifndef THD_PLATFORM_INTEL_H_
-#define THD_PLATFORM_INTEL_H_
+#ifndef THD_UTIL_H_
+#define THD_UTIL_H_
 
-#include "thd_platform.h"
+#include <string>
+#include <cstring>
 
-class intel_platform : public cthd_platform {
-public:
-    intel_platform();
-    ~intel_platform() override;
+// Replacement for C++20 std::string::starts_with
+static bool starts_with(const std::string& s, const char *prefix)__attribute__((unused));
 
-    // Override virtual methods from base class
-    void detect_platform() override;
-    int check_cpu_id(bool &proc_list_matched) override;
-    void workaround_rapl_mmio_power() override;
-};
+static bool starts_with(const std::string& s, const char *prefix) {
+    size_t len = strlen(prefix);
+    return s.size() >= len && s.compare(0, s.size(), prefix);
+}
 
-#endif /* THD_PLATFORM_INTEL_H_ */
+#endif /* THD_UTIL_H_ */

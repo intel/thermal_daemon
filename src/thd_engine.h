@@ -26,6 +26,7 @@
 #define THD_ENGINE_H_
 
 #include <memory>
+#include <mutex>
 #include <pthread.h>
 #include <poll.h>
 #include <time.h>
@@ -108,10 +109,10 @@ private:
 	pthread_t thd_engine;
 	pthread_attr_t thd_attr;
 
-	pthread_mutex_t thd_engine_mutex;
+	std::mutex thd_engine_mutex;
 
 	std::vector<std::string> zone_preferences;
-	static const int thz_notify_debounce_interval = 3;
+	static constexpr int thz_notify_debounce_interval = 3;
 
 	struct pollfd poll_fds[THD_NUM_OF_POLL_FDS];
 	int poll_fd_cnt;
@@ -126,10 +127,10 @@ private:
 	void check_for_rt_kernel();
 
 public:
-	static const int max_thermal_zones = 10;
-	static const int max_cool_devs = 50;
-	static const int def_poll_interval = 4000;
-	static const int soft_cdev_start_index = 100;
+	static constexpr int max_thermal_zones = 10;
+	static constexpr int max_cool_devs = 50;
+	static constexpr int def_poll_interval = 4000;
+	static constexpr int soft_cdev_start_index = 100;
 
 	cthd_parse parser;
 	cthd_rapl_power_meter rapl_power_meter;
@@ -197,7 +198,7 @@ public:
 		return parse_thermal_cdev_success;
 	}
 
-	static const int max_cpu_count = 64;
+	static constexpr int max_cpu_count = 64;
 
 	time_t last_cpu_update[max_cpu_count];
 	virtual bool apply_cpu_operation(int cpu) {
@@ -229,7 +230,7 @@ public:
 		return config_file;
 	}
 	virtual ppcc_t *get_ppcc_param(const std::string& name);
-	virtual int search_idsp(std::string name) {
+	virtual int search_idsp(const std::string& name) {
 		return THD_ERROR;
 	}
 	cthd_zone *search_zone(const std::string& name);
@@ -265,11 +266,11 @@ public:
 	}
 
 	void thd_engine_lock() {
-		pthread_mutex_lock(&thd_engine_mutex);
+		thd_engine_mutex.lock();
 	}
 
 	void thd_engine_unlock() {
-		pthread_mutex_unlock(&thd_engine_mutex);
+		thd_engine_mutex.unlock();
 	}
 
 	// User/External messages

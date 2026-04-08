@@ -114,7 +114,7 @@ int cthd_engine_adaptive::install_passive(struct psv *psv) {
 			zone->get_zone_index(), sensor->get_index(), SEQUENTIAL);
 	trip_pt.thd_trip_point_add_cdev(*cdev, cthd_trip_point::default_influence,
 			psv->sample_period / 10, target_state ? 1 : 0, target_state,
-			NULL, 0, 0, 0);
+			nullptr, 0, 0, 0);
 	zone->add_trip(trip_pt, 1);
 	zone->zone_cdev_set_binded();
 	zone->set_zone_active();
@@ -124,7 +124,7 @@ int cthd_engine_adaptive::install_passive(struct psv *psv) {
 
 void cthd_engine_adaptive::set_trip(const std::string& target, const std::string& argument) {
 	std::string psv_zone;
-	float float_temp = stof(argument, NULL);
+	float float_temp = stof(argument, nullptr);
 	int temp = (int) (float_temp * 1000);
 
 	size_t pos = target.find_last_of('.');
@@ -146,7 +146,7 @@ void cthd_engine_adaptive::set_trip(const std::string& target, const std::string
 
 	int index = 0;
 	cthd_trip_point *trip = zone->get_trip_at_index(index);
-	while (trip != NULL) {
+	while (trip != nullptr) {
 		if (trip->get_trip_type() == PASSIVE) {
 			trip->update_trip_temp(temp);
 			return;
@@ -341,7 +341,7 @@ int cthd_engine_adaptive::install_itmt(struct itmt_entry *itmt_entry) {
 	 */
 	trip_pt.thd_trip_point_add_cdev(*cdev, cthd_trip_point::default_influence,
 	DEFAULT_SAMPLE_TIME_SEC, 0, 0,
-	NULL, 1, _max_state, _min_state);
+	nullptr, 1, _max_state, _min_state);
 
 	zone->add_trip(trip_pt, 1);
 	zone->zone_cdev_set_binded();
@@ -516,7 +516,7 @@ void cthd_engine_adaptive::execute_target(struct adaptive_target &target) {
 	}
 
 	try {
-		argument = std::stoi(target.argument, NULL);
+		argument = std::stoi(target.argument, nullptr);
 	} catch (...) {
 		thd_log_info("Invalid target target:%s %s\n", target.code.c_str(),
 				target.argument.c_str());
@@ -597,8 +597,8 @@ int cthd_engine_adaptive::set_int3400_base_path()
 		DIR *dir;
 		struct dirent *entry;
 
-		if ((dir = opendir (base_path)) != NULL) {
-			while ((entry = readdir (dir)) != NULL) {
+		if ((dir = opendir (base_path)) != nullptr) {
+			while ((entry = readdir (dir)) != nullptr) {
 				if (!strncmp (entry->d_name, "INT", strlen ("INT"))) {
 					int3400_base_path = "/sys/bus/platform/devices/";
 					int3400_base_path += entry->d_name;
@@ -743,7 +743,7 @@ int cthd_engine_adaptive::thd_engine_start() {
 }
 
 int thd_engine_create_adaptive_engine(bool ignore_cpuid_check, bool test_mode) {
-	thd_engine = new cthd_engine_adaptive();
+	thd_engine.reset(new cthd_engine_adaptive());
 
 	thd_engine->set_poll_interval(thd_poll_interval);
 

@@ -1,0 +1,34 @@
+name: thermald CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            autoconf \
+            autoconf-archive \
+            automake \
+            clang \
+            clang-tidy \
+            g++ \
+            gtk-doc-tools \
+            libevdev-dev \
+            libglib2.0-dev \
+            libupower-glib-dev \
+            libxml2-dev
+
+      - name: Build
+        run: |
+          ./autogen.sh
+          make -j$(nproc)
+          make clang-tidy

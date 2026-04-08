@@ -13,7 +13,7 @@
 void *MyAlloc(size_t size)
 {
   if (size == 0)
-    return NULL;
+    return nullptr;
   #ifdef _SZ_ALLOC_DEBUG
   {
     void *p = malloc(size);
@@ -74,10 +74,10 @@ int  lzma_decompress(
 )
 {
         int rc = THD_ERROR;
-        struct LzmaHeader *header = NULL;
+        struct LzmaHeader *header = nullptr;
 
-        // NULL dest = Return Required Buffer Size
-        if (dest == NULL && destLen && src && srcLen > sizeof(*header)) {
+        // nullptr dest = Return Required Buffer Size
+        if (dest == nullptr && destLen && src && srcLen > sizeof(*header)) {
                 header = (struct LzmaHeader *)src;
                 unsigned char encoded_signature[] = ENCODED_SIGNATURE;
 

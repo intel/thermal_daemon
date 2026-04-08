@@ -68,8 +68,8 @@ protected:
 private:
 	void sort_and_update_poll_trip();
 public:
-	static const unsigned int def_async_trip_offset = 5000;
-	static const unsigned int def_async_trip_offset_pct = 10;
+	static constexpr unsigned int def_async_trip_offset = 5000;
+	static constexpr unsigned int def_async_trip_offset_pct = 10;
 
 	cthd_zone(int _index, std::string control_path, sensor_relate_t rel =
 			SENSOR_INDEPENDENT);
@@ -121,7 +121,7 @@ public:
 	}
 
 	void set_zone_type(std::string type) {
-		type_str = type;
+		type_str = std::move(type);
 	}
 
 	void bind_sensor(cthd_sensor *sensor) {
@@ -165,14 +165,14 @@ public:
 		if (index < sensors.size())
 			return sensors[index];
 		else
-			return NULL;
+			return nullptr;
 	}
 
 	cthd_trip_point *get_trip_at_index(unsigned int index) {
 		if (index < trip_points.size())
 			return &trip_points[index];
 		else
-			return NULL;
+			return nullptr;
 	}
 #ifdef ANDROID
 	void trip_delete_all() {

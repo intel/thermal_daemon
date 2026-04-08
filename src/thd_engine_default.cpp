@@ -42,6 +42,7 @@
 #include "thd_zone_rapl_power.h"
 #include "thd_platform.h"
 #include "thd_platform_intel.h"
+#include "thd_util.h"
 
 
 // Default CPU cooling devices, which are not part of thermal sysfs
@@ -105,8 +106,8 @@ int cthd_engine_default::read_thermal_sensors() {
 	// Default CPU temperature zone
 	// Find path to read DTS temperature
 	for (i = 0; i < 2; ++i) {
-		if ((dir = opendir(base_path[i].c_str())) != NULL) {
-			while ((entry = readdir(dir)) != NULL) {
+		if ((dir = opendir(base_path[i].c_str())) != nullptr) {
+			while ((entry = readdir(dir)) != nullptr) {
 				if (!strncmp(entry->d_name, "coretemp.", strlen("coretemp."))
 						|| !strncmp(entry->d_name, "hwmon", strlen("hwmon"))) {
 
@@ -135,8 +136,8 @@ int cthd_engine_default::read_thermal_sensors() {
 					int len_temp_dir_entry = 0;
 					int len_input = strlen("_input");
 
-					if ((temp_dir = opendir(temp_dir_path.c_str())) != NULL) {
-						while ((temp_dir_entry = readdir(temp_dir)) != NULL) {
+					if ((temp_dir = opendir(temp_dir_path.c_str())) != nullptr) {
+						while ((temp_dir_entry = readdir(temp_dir)) != nullptr) {
 							len_temp_dir_entry = strlen(temp_dir_entry->d_name);
 							if ((len_temp_dir_entry >= len_input
 									&& !strcmp(
@@ -207,8 +208,7 @@ int cthd_engine_default::read_thermal_sensors() {
 					}
 					sensor_new = std::move(sensor_virt);
 				} else {
-					std::string start("/sys/");
-					if (sensor_config->path.substr(0, start.length()) != start) {
+					if (!starts_with(sensor_config->path, "/sys/")) {
 						thd_log_debug( "Invalid sysfs path or allowed path %s\n",
 								sensor_config->path.c_str());
 						continue;
@@ -243,7 +243,7 @@ bool cthd_engine_default::add_int340x_processor_dev(void)
 		return false;
 
 	/* Specialized processor thermal device names */
-	cthd_zone *processor_thermal = NULL, *acpi_thermal = NULL;
+	cthd_zone *processor_thermal = nullptr, *acpi_thermal = nullptr;
 	cthd_INT3400 int3400(uuid);
 	unsigned int passive, new_passive = 0, critical = 0;
 
@@ -368,8 +368,8 @@ int cthd_engine_default::read_thermal_zones() {
 		// Default CPU temperature zone
 		// Find path to read DTS temperature
 		for (i = 0; i < 2; ++i) {
-			if ((dir = opendir(base_path[i].c_str())) != NULL) {
-				while ((entry = readdir(dir)) != NULL) {
+			if ((dir = opendir(base_path[i].c_str())) != nullptr) {
+				while ((entry = readdir(dir)) != nullptr) {
 					if (!strncmp(entry->d_name, "coretemp.",
 							strlen("coretemp."))
 							|| !strncmp(entry->d_name, "hwmon",
@@ -593,8 +593,8 @@ int cthd_engine_default::add_replace_cdev(const cooling_dev_t *config) {
 		if (tmp->update() != THD_SUCCESS) {
 			return THD_ERROR;
 		}
-		cdev = tmp.get();
 		cdevs.push_back(std::move(tmp));
+		cdev = cdevs.back().get();
 		++current_cdev_index;
 	}
 
@@ -757,12 +757,12 @@ int cthd_engine_default::read_cooling_devices() {
 }
 
 // Thermal engine
-cthd_engine *thd_engine;
+std::unique_ptr<cthd_engine> thd_engine;
 
 int thd_engine_create_default_engine(bool ignore_cpuid_check,
 		bool exclusive_control, const char *conf_file) {
 	int res;
-	thd_engine = new cthd_engine_default();
+	thd_engine.reset(new cthd_engine_default());
 	if (!thd_engine)
 		return THD_ERROR;
 
@@ -798,10 +798,9 @@ void cthd_engine_default::workarounds()
 	// Every 30 seconds repeat
 	if (!disable_active_power && !workaround_interval) {
 		// Create platform instance and call workaround
-		cthd_platform *platform = cthd_platform::create_platform();
+		std::unique_ptr<cthd_platform> platform = cthd_platform::create_platform();
 		if (platform) {
 			platform->workaround_rapl_mmio_power();
-			delete platform;
 		}
 
 		workaround_tcc_offset();

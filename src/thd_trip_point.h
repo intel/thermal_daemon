@@ -68,7 +68,7 @@ public:
 	int max_state;
 
 	trip_pt_cdev_t() {
-		cdev = 0;
+		cdev = nullptr;
 		influence = 0;
 		sampling_priod = 0;
 		last_op_time = 0;
@@ -134,8 +134,8 @@ private:
 	}
 
 public:
-	static const int default_influence = 0;
-	static const int consecutive_critical_events = 4;
+	static constexpr int default_influence = 0;
+	static constexpr int consecutive_critical_events = 4;
 
 	cthd_trip_point(int _index, trip_point_type_t _type, unsigned int _temp,
 			unsigned int _hyst, int _zone_id, int _sensor_id,
@@ -146,7 +146,7 @@ public:
 	void thd_trip_point_add_cdev(cthd_cdev &cdev, int influence,
 			int sampling_period = 0, int target_state_valid = 0,
 			int target_state =
-			TRIP_PT_INVALID_TARGET_STATE, pid_param_t *pid_param = NULL,
+			TRIP_PT_INVALID_TARGET_STATE, pid_param_t *pid_param = nullptr,
 			int min_max_valid = 0, int min_state = 0, int max_state = 0);
 
 	void delete_cdevs() {
@@ -167,7 +167,7 @@ public:
 	trip_point_type_t get_trip_type() {
 		return type;
 	}
-	unsigned int get_trip_temp() {
+	unsigned int get_trip_temp() const {
 		return temp;
 	}
 	unsigned int get_trip_hyst() {
@@ -228,7 +228,7 @@ public:
 
 	cthd_cdev* get_first_cdev() {
 		if (!cdevs.size())
-			return NULL;
+			return nullptr;
 
 		return cdevs[0].cdev;
 	}
@@ -302,8 +302,4 @@ public:
 		}
 	}
 };
-
-static inline bool trip_sort(cthd_trip_point trip1, cthd_trip_point trip2) {
-	return (trip1.get_trip_temp() < trip2.get_trip_temp());
-}
 #endif

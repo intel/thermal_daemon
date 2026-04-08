@@ -174,7 +174,7 @@ void intel_platform::workaround_rapl_mmio_power(void) {
         return;
 
     // Check if RAPL MMIO controller is already being used
-    extern cthd_engine *thd_engine;
+    extern std::unique_ptr<cthd_engine> thd_engine;
     if (thd_engine) {
         cthd_cdev *cdev = thd_engine->search_cdev("rapl_controller_mmio");
         if (cdev) {
@@ -220,7 +220,7 @@ void intel_platform::workaround_rapl_mmio_power(void) {
     if (map_fd < 0)
         return;
 
-    rapl_mem = mmap(NULL, 4096, PROT_READ | PROT_WRITE, MAP_SHARED, map_fd,
+    rapl_mem = mmap(nullptr, 4096, PROT_READ | PROT_WRITE, MAP_SHARED, map_fd,
             0xfed15000);
     if (!rapl_mem || rapl_mem == MAP_FAILED) {
         close(map_fd);

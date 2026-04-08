@@ -31,6 +31,7 @@
 #include <upower.h>
 #endif
 
+#include <memory>
 #include "thd_engine.h"
 #include "thd_trt_art_reader.h"
 
@@ -247,7 +248,7 @@ public:
 #ifndef ANDROID
 	cthd_gddv() :
 			upower_client(
-			NULL), power_profiles_daemon(NULL), tablet_dev(NULL), lid_dev(NULL), int3400_base_path(""), power_slider(75) {
+			nullptr), power_profiles_daemon(nullptr), tablet_dev(nullptr), lid_dev(nullptr), int3400_base_path(""), power_slider(75) {
 	}
 #else
 	cthd_gddv() :
@@ -262,7 +263,7 @@ public:
 
 	ppcc_t* get_ppcc_param(const std::string& name);
 	int gddv_init(std::string& base_path);
-	size_t gddv_load(char **buf);
+	std::unique_ptr<char[]> gddv_load(size_t *size);
 	void gddv_free(void);
 	int verify_conditions();
 	int evaluate_conditions();

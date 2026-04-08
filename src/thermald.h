@@ -24,6 +24,7 @@
 #ifndef THD_THERMALD_H
 #define THD_THERMALD_H
 
+#include <memory>
 #include <stdio.h>
 #include <getopt.h>
 #include <locale.h>
@@ -84,7 +85,7 @@ extern gboolean log_debug;
 		if (G_UNLIKELY (!g_log_writer_default_would_drop (G_LOG_LEVEL_DEBUG, G_LOG_DOMAIN)) || log_debug) \
 			g_debug(__VA_ARGS__); \
 	} while (0)
-#define thd_log_info(...)	g_log(NULL, G_LOG_LEVEL_INFO, __VA_ARGS__)
+#define thd_log_info(...)	g_log(nullptr, G_LOG_LEVEL_INFO, __VA_ARGS__)
 #else
 static int dummy_printf(const char *__restrict __format, ...) {
 	return 0;
@@ -110,7 +111,7 @@ static int dummy_printf(const char *__restrict __format, ...) {
 
 class cthd_engine;
 class cthd_engine_therm_sysfs;
-extern cthd_engine *thd_engine;
+extern std::unique_ptr<cthd_engine> thd_engine;
 extern int thd_poll_interval;
 extern bool thd_ignore_default_control;
 extern bool workaround_enabled;

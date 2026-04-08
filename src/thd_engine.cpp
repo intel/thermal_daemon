@@ -37,6 +37,7 @@
 #include <sys/utsname.h>
 #include <locale>
 #include <memory>
+#include <mutex>
 #include "thd_engine.h"
 #include "thd_cdev_therm_sys_fs.h"
 #include "thd_zone_therm_sys_fs.h"
@@ -46,6 +47,7 @@
 #include "thd_platform.h"
 #include "thd_platform_intel.h"
 #include "thd_platform_arm.h"
+#include "thd_util.h"
 
 static void *cthd_engine_thread(void *arg);
 
@@ -61,8 +63,6 @@ cthd_engine::cthd_engine(std::string _uuid) :
 				parser_init_done(false) {
 	thd_engine = pthread_t();
 	thd_attr = pthread_attr_t();
-
-	pthread_mutex_init(&thd_engine_mutex, NULL);
 
 	memset(poll_fds, 0, sizeof(poll_fds));
 	memset(last_cpu_update, 0, sizeof(last_cpu_update));
@@ -99,13 +99,13 @@ void cthd_engine::thd_engine_thread() {
 				thd_log_msg("Thermal Daemon is disabled\n");
 				continue;
 			}
-			pthread_mutex_lock(&thd_engine_mutex);
+			thd_engine_lock();
 			// Polling mode enabled. Trigger a temp change message
 			for (i = 0; i < zones.size(); ++i) {
 				cthd_zone *zone = zones[i].get();
 				zone->zone_temperature_notification(0, 0);
 			}
-			pthread_mutex_unlock(&thd_engine_mutex);
+			thd_engine_unlock();
 			thz_last_temp_ind_time = tm;
 		}
 		if (uevent_fd >= 0 && (poll_fds[uevent_fd].revents & POLLIN)) {
@@ -117,12 +117,12 @@ void cthd_engine::thd_engine_thread() {
 				thd_log_debug("kobj uevent for thermal\n");
 				if ((tm - thz_last_uevent_time)
 						>= thz_notify_debounce_interval) {
-					pthread_mutex_lock(&thd_engine_mutex);
+					thd_engine_lock();
 					for (i = 0; i < zones.size(); ++i) {
 						cthd_zone *zone = zones[i].get();
 						zone->zone_temperature_notification(0, 0);
 					}
-					pthread_mutex_unlock(&thd_engine_mutex);
+					thd_engine_unlock();
 				} else {
 					thd_log_debug("IGNORE THZ kevent\n");
 				}
@@ -146,9 +146,9 @@ void cthd_engine::thd_engine_thread() {
 		}
 
 		if ((tm - thz_last_update_event_time) >= thd_poll_interval) {
-			pthread_mutex_lock(&thd_engine_mutex);
+			thd_engine_lock();
 			update_engine_state();
-			pthread_mutex_unlock(&thd_engine_mutex);
+			thd_engine_unlock();
 			thz_last_update_event_time = tm;
 		}
 
@@ -413,7 +413,7 @@ static void *cthd_engine_thread(void *arg) {
 
 	obj->thd_engine_thread();
 
-	return NULL;
+	return nullptr;
 }
 
 void cthd_engine::send_message(message_name_t msg_id, int size,
@@ -457,7 +457,7 @@ void cthd_engine::process_pref_change() {
 }
 
 void cthd_engine::thd_engine_terminate() {
-	send_message(TERMINATE, 0, NULL);
+	send_message(TERMINATE, 0, nullptr);
 	sleep(1);
 	process_terminate();
 }
@@ -608,7 +608,7 @@ cthd_cdev *cthd_engine::thd_get_cdev_at_index(int index) {
 		if (cdevs[i]->thd_cdev_get_index() == index)
 			return cdevs[i].get();
 	}
-	return NULL;
+	return nullptr;
 }
 
 void cthd_engine::takeover_thermal_control() {
@@ -623,8 +623,8 @@ void cthd_engine::takeover_thermal_control() {
 
 	int3400.set_default_uuid();
 
-	if ((dir = opendir(base_path.c_str())) != NULL) {
-		while ((entry = readdir(dir)) != NULL) {
+	if ((dir = opendir(base_path.c_str())) != nullptr) {
+		while ((entry = readdir(dir)) != nullptr) {
 			if (!strncmp(entry->d_name, "thermal_zone",
 					strlen("thermal_zone"))) {
 				int i;
@@ -676,8 +676,8 @@ void cthd_engine::giveup_thermal_control() {
 	struct dirent *entry;
 	const std::string base_path = "/sys/class/thermal/";
 	int cnt = 0;
-	if ((dir = opendir(base_path.c_str())) != NULL) {
-		while ((entry = readdir(dir)) != NULL) {
+	if ((dir = opendir(base_path.c_str())) != nullptr) {
+		while ((entry = readdir(dir)) != nullptr) {
 			if (!strncmp(entry->d_name, "thermal_zone",
 					strlen("thermal_zone"))) {
 				int i;
@@ -745,7 +745,7 @@ void cthd_engine::thd_engine_reload_zones() {
 
 int cthd_engine::check_cpu_id() {
 	// Create platform instance using factory method
-	cthd_platform *platform = cthd_platform::create_platform();
+	std::unique_ptr<cthd_platform> platform = cthd_platform::create_platform();
 	if (!platform) {
 		thd_log_error("Failed to create platform instance\n");
 		proc_list_matched = false;
@@ -758,7 +758,6 @@ int cthd_engine::check_cpu_id() {
 	// Call platform-specific CPU ID check
 	int ret = platform->check_cpu_id(proc_list_matched);
 
-	delete platform;
 	return ret;
 }
 
@@ -768,7 +767,7 @@ void cthd_engine::thd_read_default_thermal_sensors() {
 	const std::string base_path = "/sys/class/thermal/";
 	int max_index = 0;
 
-	if ((dir = opendir("/sys/class/thermal/thermal_zone1/")) == NULL) {
+	if ((dir = opendir("/sys/class/thermal/thermal_zone1/")) == nullptr) {
 		thd_log_info("Waiting for thermal sysfs to be ready\n");
 		sleep(2);
 	} else {
@@ -776,8 +775,8 @@ void cthd_engine::thd_read_default_thermal_sensors() {
 	}
 
 	thd_log_debug("thd_read_default_thermal_sensors\n");
-	if ((dir = opendir(base_path.c_str())) != NULL) {
-		while ((entry = readdir(dir)) != NULL) {
+	if ((dir = opendir(base_path.c_str())) != nullptr) {
+		while ((entry = readdir(dir)) != nullptr) {
 			if (!strncmp(entry->d_name, "thermal_zone",
 					strlen("thermal_zone"))) {
 				int i;
@@ -808,8 +807,8 @@ void cthd_engine::thd_read_default_thermal_zones() {
 	int max_index = 0;
 
 	thd_log_debug("thd_read_default_thermal_zones\n");
-	if ((dir = opendir(base_path.c_str())) != NULL) {
-		while ((entry = readdir(dir)) != NULL) {
+	if ((dir = opendir(base_path.c_str())) != nullptr) {
+		while ((entry = readdir(dir)) != nullptr) {
 			if (!strncmp(entry->d_name, "thermal_zone",
 					strlen("thermal_zone"))) {
 				int i;
@@ -842,8 +841,8 @@ void cthd_engine::thd_read_default_cooling_devices() {
 	int max_index = 0;
 
 	thd_log_debug("thd_read_default_cooling devices\n");
-	if ((dir = opendir(base_path.c_str())) != NULL) {
-		while ((entry = readdir(dir)) != NULL) {
+	if ((dir = opendir(base_path.c_str())) != nullptr) {
+		while ((entry = readdir(dir)) != nullptr) {
 			if (!strncmp(entry->d_name, "cooling_device",
 					strlen("cooling_device"))) {
 				int i;
@@ -889,7 +888,7 @@ cthd_zone* cthd_engine::search_zone(const std::string& name) {
 		}
 	}
 
-	return NULL;
+	return nullptr;
 }
 
 cthd_cdev* cthd_engine::search_cdev(const std::string& name) {
@@ -905,7 +904,7 @@ cthd_cdev* cthd_engine::search_cdev(const std::string& name) {
 			return cdev;
 	}
 
-	return NULL;
+	return nullptr;
 }
 
 // Partial match instead of full match
@@ -923,7 +922,7 @@ cthd_cdev* cthd_engine::match_cdev(const std::string& name) {
 		}
 	}
 
-	return NULL;
+	return nullptr;
 }
 
 cthd_sensor* cthd_engine::search_sensor(const std::string& name) {
@@ -945,14 +944,14 @@ cthd_sensor* cthd_engine::search_sensor(const std::string& name) {
 
 	}
 
-	return NULL;
+	return nullptr;
 }
 
 cthd_sensor* cthd_engine::get_sensor(int index) {
 	if (index >= 0 && index < (int) sensors.size())
 		return sensors[index].get();
 	else
-		return NULL;
+		return nullptr;
 }
 
 int cthd_engine::get_sensor_temperature(int index, unsigned int *temperature) {
@@ -965,11 +964,11 @@ int cthd_engine::get_sensor_temperature(int index, unsigned int *temperature) {
 
 cthd_zone* cthd_engine::get_zone(int index) {
 	if (index == -1)
-		return NULL;
+		return nullptr;
 	if (index >= 0 && index < (int) zones.size())
 		return zones[index].get();
 	else
-		return NULL;
+		return nullptr;
 }
 
 cthd_zone* cthd_engine::get_zone(const std::string& type) {
@@ -981,21 +980,21 @@ cthd_zone* cthd_engine::get_zone(const std::string& type) {
 			return zone;
 	}
 
-	return NULL;
+	return nullptr;
 }
 
 // Code copied from
 // https://web.archive.org/web/20130822155153/https://rt.wiki.kernel.org/index.php/RT_PREEMPT_HOWTO#Runtime_detection_of_an_RT-PREEMPT_Kernel
 void cthd_engine::check_for_rt_kernel() {
 	struct utsname _uname;
-	char *crit1 = NULL;
+	char *crit1 = nullptr;
 	int crit2 = 0;
 	FILE *fd;
 
 	uname(&_uname);
 	crit1 = strcasestr(_uname.version, "PREEMPT RT");
 
-	if ((fd = fopen("/sys/kernel/realtime", "r")) != NULL) {
+	if ((fd = fopen("/sys/kernel/realtime", "r")) != nullptr) {
 		int flag;
 		crit2 = ((fscanf(fd, "%d", &flag) == 1) && (flag == 1));
 		fclose(fd);
@@ -1011,34 +1010,30 @@ void cthd_engine::check_for_rt_kernel() {
 
 int cthd_engine::user_add_sensor(std::string name, std::string path) {
 	if (path.empty())
-		pthread_mutex_unlock(&thd_engine_mutex);
+		thd_engine_mutex.unlock();
 
-	std::string start("/sys/");
-	if (path.substr(0, start.length()) != start) {
+	if (!starts_with(path, "/sys/")) {
 		thd_log_debug("Invalid path %s\n", path.c_str());
 		return THD_ERROR;
 	}
 
-	pthread_mutex_lock(&thd_engine_mutex);
+	std::lock_guard<std::mutex> guard(thd_engine_mutex);
 	for (unsigned int i = 0; i < sensors.size(); ++i) {
 		if (sensors[i]->get_sensor_type() == name) {
 			cthd_sensor *sensor = sensors[i].get();
 			sensor->update_path(std::move(path));
-			pthread_mutex_unlock(&thd_engine_mutex);
 			return THD_SUCCESS;
 		}
 	}
 
 	std::unique_ptr<cthd_sensor> sensor(new cthd_sensor(current_sensor_index, std::move(path), std::move(name), SENSOR_TYPE_RAW));
 	if (sensor->sensor_update() != THD_SUCCESS) {
-		pthread_mutex_unlock(&thd_engine_mutex);
 		return THD_ERROR;
 	}
 	sensors.push_back(std::move(sensor));
 	++current_sensor_index;
-	pthread_mutex_unlock(&thd_engine_mutex);
 
-	send_message(WAKEUP, 0, 0);
+	send_message(WAKEUP, 0, nullptr);
 
 	return THD_SUCCESS;
 }
@@ -1048,7 +1043,7 @@ int cthd_engine::user_add_virtual_sensor(std::string name,
 	cthd_sensor *sensor;
 	int ret;
 
-	pthread_mutex_lock(&thd_engine_mutex);
+	std::lock_guard<std::mutex> guard(thd_engine_mutex);
 
 	for (unsigned int i = 0; i < sensors.size(); ++i) {
 		if (sensors[i]->get_sensor_type() == name) {
@@ -1059,10 +1054,8 @@ int cthd_engine::user_add_virtual_sensor(std::string name,
 				ret = virt_sensor->sensor_update_param(dep_sensor, slope,
 						intercept);
 			} else {
-				pthread_mutex_unlock(&thd_engine_mutex);
 				return THD_ERROR;
 			}
-			pthread_mutex_unlock(&thd_engine_mutex);
 			return ret;
 		}
 	}
@@ -1070,14 +1063,12 @@ int cthd_engine::user_add_virtual_sensor(std::string name,
 			current_sensor_index, std::move(name),
 			std::move(dep_sensor), slope, intercept));
 	if (virt_sensor->sensor_update() != THD_SUCCESS) {
-		pthread_mutex_unlock(&thd_engine_mutex);
 		return THD_ERROR;
 	}
 	sensors.push_back(std::move(virt_sensor));
 	++current_sensor_index;
-	pthread_mutex_unlock(&thd_engine_mutex);
 
-	send_message(WAKEUP, 0, 0);
+	send_message(WAKEUP, 0, nullptr);
 
 	return THD_SUCCESS;
 }
@@ -1087,37 +1078,35 @@ cthd_sensor *cthd_engine::user_get_sensor(unsigned int index) {
 	if (index < sensors.size())
 		return sensors[index].get();
 	else
-		return NULL;
+		return nullptr;
 }
 
 cthd_zone *cthd_engine::user_get_zone(unsigned int index) {
 	if (index < zones.size())
 		return zones[index].get();
 	else
-		return NULL;
+		return nullptr;
 }
 
 cthd_cdev *cthd_engine::user_get_cdev(unsigned int index) {
 	if (index < cdevs.size())
 		return cdevs[index].get();
 	else
-		return NULL;
+		return nullptr;
 }
 
 int cthd_engine::user_set_psv_temp(const std::string& name, unsigned int temp) {
 	cthd_zone *zone;
 	int ret;
 
-	pthread_mutex_lock(&thd_engine_mutex);
+	std::lock_guard<std::mutex> guard(thd_engine_mutex);
 	zone = get_zone(name);
 	if (!zone) {
-		pthread_mutex_unlock(&thd_engine_mutex);
 		thd_log_warn("user_set_psv_temp\n");
 		return THD_ERROR;
 	}
 	thd_log_info("Setting psv %u\n", temp);
 	ret = zone->update_psv_temperature(temp);
-	pthread_mutex_unlock(&thd_engine_mutex);
 
 	return ret;
 }
@@ -1126,22 +1115,21 @@ int cthd_engine::user_set_max_temp(const std::string& name, unsigned int temp) {
 	cthd_zone *zone;
 	int ret;
 
-	pthread_mutex_lock(&thd_engine_mutex);
+	std::lock_guard<std::mutex> guard(thd_engine_mutex);
 	zone = get_zone(name);
 	if (!zone) {
-		pthread_mutex_unlock(&thd_engine_mutex);
 		thd_log_warn("user_set_max_temp\n");
 		return THD_ERROR;
 	}
 	thd_log_info("Setting max %u\n", temp);
 	ret = zone->update_max_temperature(temp);
-	pthread_mutex_unlock(&thd_engine_mutex);
 
 	return ret;
 }
 
 int cthd_engine::user_add_zone(std::string zone_name, unsigned int trip_temp,
 		std::string sensor_name, std::string cdev_name) {
+	std::lock_guard<std::mutex> guard(thd_engine_mutex);
 	int ret = THD_SUCCESS;
 
 	std::unique_ptr<cthd_zone_dynamic> zone(new cthd_zone_dynamic(current_zone_index,
@@ -1150,11 +1138,9 @@ int cthd_engine::user_add_zone(std::string zone_name, unsigned int trip_temp,
 		return THD_ERROR;
 	}
 	if (zone->zone_update() == THD_SUCCESS) {
-		pthread_mutex_lock(&thd_engine_mutex);
 		zone->set_zone_active();
 		zones.push_back(std::move(zone));
 		++current_zone_index;
-		pthread_mutex_unlock(&thd_engine_mutex);
 	} else {
 		return THD_ERROR;
 	}
@@ -1169,10 +1155,9 @@ int cthd_engine::user_add_zone(std::string zone_name, unsigned int trip_temp,
 int cthd_engine::user_set_zone_status(const std::string& name, int status) {
 	cthd_zone *zone;
 
-	pthread_mutex_lock(&thd_engine_mutex);
+	std::lock_guard<std::mutex> guard(thd_engine_mutex);
 	zone = get_zone(name);
 	if (!zone) {
-		pthread_mutex_unlock(&thd_engine_mutex);
 		return THD_ERROR;
 	}
 
@@ -1182,18 +1167,15 @@ int cthd_engine::user_set_zone_status(const std::string& name, int status) {
 	else
 		zone->set_zone_inactive();
 
-	pthread_mutex_unlock(&thd_engine_mutex);
-
 	return THD_SUCCESS;
 }
 
 int cthd_engine::user_get_zone_status(const std::string& name, int *status) {
 	cthd_zone *zone;
 
-	pthread_mutex_lock(&thd_engine_mutex);
+	std::lock_guard<std::mutex> guard(thd_engine_mutex);
 	zone = get_zone(name);
 	if (!zone) {
-		pthread_mutex_unlock(&thd_engine_mutex);
 		return THD_ERROR;
 	}
 
@@ -1202,20 +1184,17 @@ int cthd_engine::user_get_zone_status(const std::string& name, int *status) {
 	else
 		*status = 0;
 
-	pthread_mutex_unlock(&thd_engine_mutex);
-
 	return THD_SUCCESS;
 }
 
 int cthd_engine::user_delete_zone(const std::string& name) {
-	pthread_mutex_lock(&thd_engine_mutex);
+	std::lock_guard<std::mutex> guard(thd_engine_mutex);
 	for (unsigned int i = 0; i < zones.size(); ++i) {
 		if (zones[i]->get_zone_type() == name) {
 			zones.erase(zones.begin() + i);
 			break;
 		}
 	}
-	pthread_mutex_unlock(&thd_engine_mutex);
 
 	for (unsigned int i = 0; i < zones.size(); ++i) {
 		zones[i]->zone_dump();
@@ -1228,28 +1207,25 @@ int cthd_engine::user_add_cdev(std::string cdev_name, std::string cdev_path,
 		int min_state, int max_state, int step) {
 	cthd_cdev *cdev;
 
-	pthread_mutex_lock(&thd_engine_mutex);
+	std::lock_guard<std::mutex> guard(thd_engine_mutex);
 	// Check if there is existing cdev with this name and path
 	cdev = search_cdev(cdev_name);
 	if (!cdev) {
 		std::unique_ptr<cthd_gen_sysfs_cdev> cdev_sysfs(new cthd_gen_sysfs_cdev(current_cdev_index, std::move(cdev_path)));
 		if (!cdev_sysfs) {
-			pthread_mutex_unlock(&thd_engine_mutex);
 			return THD_ERROR;
 		}
 		cdev_sysfs->set_cdev_type(std::move(cdev_name));
 		if (cdev_sysfs->update() != THD_SUCCESS) {
-			pthread_mutex_unlock(&thd_engine_mutex);
 			return THD_ERROR;
 		}
-		cdev = cdev_sysfs.get();
 		cdevs.push_back(std::move(cdev_sysfs));
+		cdev = cdevs.back().get();
 		++current_cdev_index;
 	}
 	cdev->set_min_state(min_state);
 	cdev->set_max_state(max_state);
 	cdev->set_inc_dec_value(step);
-	pthread_mutex_unlock(&thd_engine_mutex);
 
 	for (unsigned int i = 0; i < cdevs.size(); ++i) {
 		cdevs[i]->cdev_dump();
@@ -1282,8 +1258,7 @@ void cthd_engine::parser_deinit() {
 }
 
 int cthd_engine::debug_mode_on(void) {
-	static const char *debug_mode = TDRUNDIR
-	"/debug_mode";
+	static constexpr char debug_mode[] = TDRUNDIR "/debug_mode";
 	struct stat s;
 
 	if (stat(debug_mode, &s))

@@ -38,8 +38,8 @@ cthd_INT3400::cthd_INT3400(std::string _uuid) : uuid(std::move(_uuid)), base_pat
 		DIR *dir;
 		struct dirent *entry;
 
-		if ((dir = opendir (int3400_base_path)) != NULL) {
-			while ((entry = readdir (dir)) != NULL) {
+		if ((dir = opendir (int3400_base_path)) != nullptr) {
+			while ((entry = readdir (dir)) != nullptr) {
 				if (!strncmp (entry->d_name, "INT", strlen ("INT"))) {
 					base_path = "/sys/bus/platform/devices/";
 					base_path += entry->d_name;
