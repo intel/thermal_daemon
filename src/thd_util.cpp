@@ -1,5 +1,5 @@
 /*
- * thd_util.h: Common utility functions
+ * thd_util.cpp: Common utility functions
  *
  * Copyright (C) 2026 Intel Corporation. All rights reserved.
  *
@@ -22,13 +22,10 @@
  *
  */
 
-#ifndef THD_UTIL_H_
-#define THD_UTIL_H_
+#include "thd_util.h"
 
-#include <string>
-#include <cstring>
-
-// Replacement for C++20 std::string::starts_with
-bool starts_with(const std::string& s, const char *prefix)__attribute__((unused));
-
-#endif /* THD_UTIL_H_ */
+bool starts_with(const std::string& s, const char *prefix)
+{
+    size_t len = strlen(prefix);
+    return s.size() >= len && s.compare(0, s.size(), prefix);
+}

@@ -78,7 +78,8 @@ thermald_SOURCES = \
 	src/LzmaDec.c \
 	src/thd_platform.cpp \
 	src/thd_platform_intel.cpp \
-	src/thd_platform_arm.cpp
+	src/thd_platform_arm.cpp \
+	src/thd_util.cpp
 
 man5_MANS = man/thermal-conf.xml.5
 man8_MANS = man/thermald.8
