@@ -27,8 +27,13 @@
 
 #include <string>
 #include <cstring>
+#include <strings.h>
 
 // Replacement for C++20 std::string::starts_with
 bool starts_with(const std::string& s, const char *prefix)__attribute__((unused));
+
+size_t thd_cmp_len(const char *param1, const char *param2);
+int thd_strcmp_n(const char *param1, const char *param2);
+int thd_strcasecmp_n(const char *param1, const char *param2);
 
 #endif /* THD_UTIL_H_ */

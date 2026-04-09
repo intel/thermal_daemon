@@ -187,6 +187,7 @@ gboolean thd_dbus_interface_get_current_preference(PrefObject *obj,
 		return FALSE;
 	}
 	strncpy(pref_str, value_out, MAX_DBUS_REPLY_STR_LEN);
+	pref_str[MAX_DBUS_REPLY_STR_LEN - 1] = '\0';
 	free(value_out);
 	thd_log_debug("thd_dbus_interface_get_current_preference out :%s\n",
 			pref_str);

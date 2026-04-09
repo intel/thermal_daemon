@@ -140,7 +140,7 @@ int cthd_engine_default::read_thermal_sensors() {
 						while ((temp_dir_entry = readdir(temp_dir)) != nullptr) {
 							len_temp_dir_entry = strlen(temp_dir_entry->d_name);
 							if ((len_temp_dir_entry >= len_input
-									&& !strcmp(
+									&& !thd_strcmp_n(
 											temp_dir_entry->d_name
 													+ len_temp_dir_entry
 													- len_input, "_input"))

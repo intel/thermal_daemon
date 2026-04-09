@@ -182,7 +182,8 @@ void cthd_cpu_default_binding::update_zone_stat(std::string zone_name,
 	} else
 		fileout.seekp(0, std::ios::end);
 
-	strncpy(obj.zone_name, zone_name.c_str(), 50);
+	strncpy(obj.zone_name, zone_name.c_str(), sizeof(obj.zone_name) - 1);
+	obj.zone_name[sizeof(obj.zone_name) - 1] = '\0';
 	obj.failures = fail_cnt;
 	fileout.write((char *) &obj, sizeof(obj));
 	fileout.close();
