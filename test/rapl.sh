@@ -8,7 +8,7 @@ dbus-send --system --dest=org.freedesktop.thermald --print-reply /org/freedeskto
 sleep 5
 
 THD0_ZONE=$(grep -r . /sys/class/thermal/* 2>/tmp/err.txt | grep  type:x86_pkg_temp | sed 's/\/type.*//')
-#rapl_max_power=$(cat /sys/class/powercap/intel-rapl/intel-rapl\:0/constraint_0_max_power_uw)
+#rapl_max_power=$(cat /sys/class/powercap/intel-rapl-mmio/intel-rapl-mmio\:0/constraint_0_max_power_uw)
 #rapl_min_power=$(expr $rapl_max_power / 2 )
 rapl_max_power=25000000
 rapl_min_power=10000000
@@ -24,7 +24,7 @@ cat ${THD0_ZONE}/temp
 
 COUNTER=0
 while [  $COUNTER -lt 20 ]; do
-	curr_power_limit=$(cat /sys/class/powercap/intel-rapl/intel-rapl\:0/constraint_0_power_limit_uw)
+	curr_power_limit=$(cat /sys/class/powercap/intel-rapl-mmio/intel-rapl-mmio\:0/constraint_0_power_limit_uw)
 	echo "current state " ${curr_power_limit}
 	if [ $curr_power_limit -le $rapl_min_power ]; then
 		echo "Reached Min State"
@@ -45,7 +45,7 @@ echo 69000 > ${THD0_ZONE}/emul_temp
 
 COUNTER=0
 while [  $COUNTER -lt 20 ]; do
-	curr_power_limit=$(cat /sys/class/powercap/intel-rapl/intel-rapl\:0/constraint_0_power_limit_uw)
+	curr_power_limit=$(cat /sys/class/powercap/intel-rapl-mmio/intel-rapl-mmio\:0/constraint_0_power_limit_uw)
 	echo "current state " ${curr_power_limit}
 	if [ $curr_power_limit -ge $rapl_max_power ]; then
 		echo "Reached Max State"
@@ -68,7 +68,7 @@ cat ${THD0_ZONE}/temp
 
 COUNTER=0
 while [  $COUNTER -lt 20 ]; do
-	curr_power_limit=$(cat /sys/class/powercap/intel-rapl/intel-rapl\:0/constraint_0_power_limit_uw)
+	curr_power_limit=$(cat /sys/class/powercap/intel-rapl-mmio/intel-rapl-mmio\:0/constraint_0_power_limit_uw)
 	echo "current state " ${curr_power_limit}
 	if [ $curr_power_limit -le $rapl_min_power ]; then
 		echo "Reached Min State"
@@ -89,7 +89,7 @@ echo 0 > ${THD0_ZONE}/emul_temp
 
 COUNTER=0
 while [  $COUNTER -lt 20 ]; do
-	curr_power_limit=$(cat /sys/class/powercap/intel-rapl/intel-rapl\:0/constraint_0_power_limit_uw)
+	curr_power_limit=$(cat /sys/class/powercap/intel-rapl-mmio/intel-rapl-mmio\:0/constraint_0_power_limit_uw)
 	echo "current state " ${curr_power_limit}
 	if [ $curr_power_limit -ge $rapl_max_power ]; then
 		echo "Reached Max State"

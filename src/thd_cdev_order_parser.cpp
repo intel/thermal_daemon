@@ -24,6 +24,7 @@
 
 #include "thd_cdev_order_parser.h"
 #include "thd_sys_fs.h"
+#include "thd_util.h"
 
 cthd_cdev_order_parse::cthd_cdev_order_parse() :
 		doc(nullptr), root_element(nullptr) {
@@ -86,7 +87,7 @@ int cthd_cdev_order_parse::parse(xmlNode * a_node, xmlDoc *doc) {
 
 	for (cur_node = a_node; cur_node; cur_node = cur_node->next) {
 		if (cur_node->type == XML_ELEMENT_NODE) {
-			if (!strcmp((const char*) cur_node->name, "CoolingDeviceOrder")) {
+			if (!thd_strcmp_n((const char*) cur_node->name, "CoolingDeviceOrder")) {
 				parse_new_cdev(cur_node->children, doc);
 			}
 		}

@@ -1022,37 +1022,37 @@ int cthd_gddv::parse_gddv_key(char *buf, int size, int *end_offset) {
 		/* Ignore */
 		return THD_SUCCESS;
 	}
-	if (strcmp(str, "participants") == 0) {
+	if (thd_strcmp_n(str, "participants") == 0) {
 		name = strtok(nullptr, "/");
 		type = strtok(nullptr, "/");
 		point = strtok(nullptr, "/");
-	} else if (strcmp(str, "shared") == 0) {
+	} else if (thd_strcmp_n(str, "shared") == 0) {
 		ns = strtok(nullptr, "/");
 		type = strtok(nullptr, "/");
-		if (strcmp(ns, "tables") == 0) {
+		if (thd_strcmp_n(ns, "tables") == 0) {
 			point = strtok(nullptr, "/");
 		}
 	}
-	if (name && type && strcmp(type, "ppcc") == 0) {
+	if (name && type && thd_strcmp_n(type, "ppcc") == 0) {
 		parse_ppcc(name, val.get(), vallength);
 	}
 
-	if (type && strcmp(type, "psvt") == 0) {
+	if (type && thd_strcmp_n(type, "psvt") == 0) {
 		if (point == nullptr)
 			parse_psvt(name, val.get(), vallength);
 		else
 			parse_psvt(point, val.get(), vallength);
 	}
 
-	if (type && strcmp(type, "appc") == 0) {
+	if (type && thd_strcmp_n(type, "appc") == 0) {
 		parse_appc(val.get(), vallength);
 	}
 
-	if (type && strcmp(type, "apct") == 0) {
+	if (type && thd_strcmp_n(type, "apct") == 0) {
 		parse_apct(val.get(), vallength);
 	}
 
-	if (type && strcmp(type, "apat") == 0) {
+	if (type && thd_strcmp_n(type, "apat") == 0) {
 		parse_apat(val.get(), vallength);
 	}
 
@@ -1064,33 +1064,33 @@ int cthd_gddv::parse_gddv_key(char *buf, int size, int *end_offset) {
 			parse_itmt3(point, val.get(), vallength);
 	}
 
-	if (type && strcmp(type, "itmt") == 0) {
+	if (type && thd_strcmp_n(type, "itmt") == 0) {
 		if (point == nullptr)
 			parse_itmt(name, val.get(), vallength);
 		else
 			parse_itmt(point, val.get(), vallength);
 	}
 
-	if (name && type && strcmp(type, "idsp") == 0) {
+	if (name && type && thd_strcmp_n(type, "idsp") == 0) {
 		parse_idsp(name, val.get(), vallength);
 	}
 
-	if (name && type && point && strcmp(type, "trippoint") == 0) {
+	if (name && type && point && thd_strcmp_n(type, "trippoint") == 0) {
 		parse_trip_point(name, point, val.get(), vallength);
 	}
 
-	if (type && strcmp(type, "_trt") == 0) {
+	if (type && thd_strcmp_n(type, "_trt") == 0) {
 		parse_trt(val.get(), vallength);
 	}
 
-	if (type && strcmp(type, "vsct") == 0) {
+	if (type && thd_strcmp_n(type, "vsct") == 0) {
 		if (point == nullptr)
 			parse_vsct(name, val.get(), vallength);
 		else
 			parse_vsct(point, val.get(), vallength);
 	}
 
-	if (type && strcmp(type, "vspt") == 0) {
+	if (type && thd_strcmp_n(type, "vspt") == 0) {
 		if (point == nullptr)
 			parse_vspt(name, val.get(), vallength);
 		else
@@ -1133,6 +1133,8 @@ int cthd_gddv::parse_gddv(char *buf, int size, int *end_offset) {
 
 		strncpy(name, header->v2.segmentid, sizeof(name) - 1);
 		strncpy(comment, header->v2.comment, sizeof(comment) - 1);
+		name[sizeof(name) - 1] = '\0';
+		comment[sizeof(comment) - 1] = '\0';
 
 		thd_log_debug("DV name: %s\n", name);
 		thd_log_debug("DV comment: %s\n", comment);
@@ -1592,7 +1594,7 @@ int cthd_gddv::evaluate_conditions() {
 
 struct psvt* cthd_gddv::find_psvt(const std::string& name) {
 	for (int i = 0; i < (int) psvts.size(); i++) {
-		if (!strcasecmp(psvts[i].name.c_str(), name.c_str())) {
+		if (!thd_strcasecmp_n(psvts[i].name.c_str(), name.c_str())) {
 			return &psvts[i];
 		}
 	}
@@ -1618,7 +1620,7 @@ struct itmt* cthd_gddv::find_itmt(const std::string& name) {
 			}
 		}
 
-		if (!strcasecmp(itmts[i].name.c_str(), name.c_str())) {
+		if (!thd_strcasecmp_n(itmts[i].name.c_str(), name.c_str())) {
 			return &itmts[i];
 		}
 	}
@@ -1663,11 +1665,11 @@ void cthd_gddv::update_power_slider()
 	if (active_profile_v && g_variant_is_of_type (active_profile_v, G_VARIANT_TYPE_STRING)) {
 		const char *active_profile = g_variant_get_string (active_profile_v, nullptr);
 
-		if (strcmp (active_profile, "power-saver") == 0)
+		if (thd_strcmp_n(active_profile, "power-saver") == 0)
 			power_slider = 25; /* battery saver */
-		else if (strcmp (active_profile, "balanced") == 0)
+		else if (thd_strcmp_n(active_profile, "balanced") == 0)
 			power_slider = 75; /* better performance */
-		else if (strcmp (active_profile, "performance") == 0)
+		else if (thd_strcmp_n(active_profile, "performance") == 0)
 			power_slider = 100; /* best performance */
 		else
 			power_slider = 75;

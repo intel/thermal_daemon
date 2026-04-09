@@ -26,7 +26,7 @@
 #include "thd_common.h"
 #include <cstring>
 #include <iostream>
-
+#include "thd_util.h"
 cthd_platform::cthd_platform() : detected_platform(PLATFORM_UNKNOWN), machine_type("") {
 }
 
@@ -44,11 +44,11 @@ void cthd_platform::detect_platform() {
     machine_type = std::string(sysinfo.machine);
     thd_log_info("Detected machine architecture: %s\n", machine_type.c_str());
 
-    if (strcmp(sysinfo.machine, "x86_64") == 0) {
+    if (thd_strcmp_n(sysinfo.machine, "x86_64") == 0) {
         detected_platform = PLATFORM_INTEL_X86;
-    } else if (strcmp(sysinfo.machine, "aarch64") == 0) {
+    } else if (thd_strcmp_n(sysinfo.machine, "aarch64") == 0) {
         detected_platform = PLATFORM_ARM64;
-    } else if (strcmp(sysinfo.machine, "arm") == 0) {
+    } else if (thd_strcmp_n(sysinfo.machine, "arm") == 0) {
         detected_platform = PLATFORM_ARM32;
     } else {
         detected_platform = PLATFORM_OTHER;
@@ -110,10 +110,10 @@ std::unique_ptr<cthd_platform> cthd_platform::create_platform() {
     }
 
     // Create appropriate platform instance based on architecture
-    if (strcmp(sysinfo.machine, "x86_64") == 0) {
+    if (thd_strcmp_n(sysinfo.machine, "x86_64") == 0) {
         thd_log_info("Creating Intel platform instance\n");
         return std::unique_ptr<cthd_platform>(new intel_platform());
-    } else if (strcmp(sysinfo.machine, "aarch64") == 0 || strcmp(sysinfo.machine, "arm") == 0) {
+    } else if (thd_strcmp_n(sysinfo.machine, "aarch64") == 0 || thd_strcmp_n(sysinfo.machine, "arm") == 0) {
         thd_log_info("Creating ARM platform instance\n");
         return std::unique_ptr<cthd_platform>(new arm_platform());
     } else {

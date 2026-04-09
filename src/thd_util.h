@@ -1,7 +1,7 @@
 /*
- * thd_sensor.h: thermal sensor class interface
+ * thd_util.h: Common utility functions
  *
- * Copyright (C) 2013 Intel Corporation. All rights reserved.
+ * Copyright (C) 2026 Intel Corporation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License version
@@ -27,13 +27,13 @@
 
 #include <string>
 #include <cstring>
+#include <strings.h>
 
 // Replacement for C++20 std::string::starts_with
-static bool starts_with(const std::string& s, const char *prefix)__attribute__((unused));
+bool starts_with(const std::string& s, const char *prefix)__attribute__((unused));
 
-static bool starts_with(const std::string& s, const char *prefix) {
-    size_t len = strlen(prefix);
-    return s.size() >= len && s.compare(0, s.size(), prefix);
-}
+size_t thd_cmp_len(const char *param1, const char *param2);
+int thd_strcmp_n(const char *param1, const char *param2);
+int thd_strcasecmp_n(const char *param1, const char *param2);
 
 #endif /* THD_UTIL_H_ */

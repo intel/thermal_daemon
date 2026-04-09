@@ -26,6 +26,7 @@
 #include <dirent.h>
 #include <fnmatch.h>
 #include <time.h>
+#include "thd_util.h"
 
 static void *rapl_periodic_callback(void *data) {
 	cthd_rapl_power_meter *rapl_cl = (cthd_rapl_power_meter*) data;
@@ -81,8 +82,8 @@ void cthd_rapl_power_meter::rapl_read_domains(const char *dir_name) {
 				domain.min_power = 0;
 				domain.type = INVALID;
 
-				if (!strcmp(dir_entry->d_name, ".")
-						|| !strcmp(dir_entry->d_name, ".."))
+				if (!thd_strcmp_n(dir_entry->d_name, ".")
+						|| !thd_strcmp_n(dir_entry->d_name, ".."))
 					continue;
 				thd_log_debug("RAPL domain dir %s\n", dir_entry->d_name);
 				path << dir_name << dir_entry->d_name << "/" << "name";

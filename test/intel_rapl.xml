@@ -24,7 +24,7 @@
             <ControlType>SEQUENTIAL</ControlType>
             <CoolingDevice>
               <index>1</index>
-              <type>rapl_controller</type>
+              <type>rapl_controller_mmio</type>
               <influence>100</influence>
               <SamplingPeriod>1</SamplingPeriod>
             </CoolingDevice>
