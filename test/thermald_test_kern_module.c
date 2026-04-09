@@ -141,7 +141,7 @@ static int set_cur_state(struct thermal_cooling_device *cdev,
 	return 0;
 }
 
-static constexpr struct thermal_cooling_device_ops cdev_ops = {
+static const struct thermal_cooling_device_ops cdev_ops = {
 	.get_max_state = get_max_state,
 	.get_cur_state = get_cur_state,
 	.set_cur_state = set_cur_state,
