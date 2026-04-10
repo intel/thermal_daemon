@@ -20,6 +20,11 @@
 #include <linux/kobject.h>
 #include <linux/sysfs.h>
 #include <linux/thermal.h>
+#include <linux/moduleparam.h>
+
+static char *zone_name = "none";
+module_param(zone_name, charp, 0644);
+MODULE_PARM_DESC(zone_name, "Add a test zone name");
 
 #define SENSOR_COUNT	12
 #define CDEV_COUNT	12
@@ -227,10 +232,21 @@ static struct attribute_group attr_group = {
 
 static struct kobject *thermal_control_kobj;
 
+static struct thermald_sensor *test_sensor;
+
 static int __init thermald_init(void)
 {
 	int i;
 	int ret;
+
+	if (strcmp(zone_name, "none")) {
+		pr_info("create a zone:%s\n", zone_name);
+		test_sensor = create_test_tzone(0, zone_name);
+		if (test_sensor)
+			return 0;
+
+		return -EINVAL;
+	}
 
 	thermal_control_kobj = kobject_create_and_add("thermald_test",
 						      kernel_kobj);
@@ -261,6 +277,11 @@ static int __init thermald_init(void)
 static void __exit thermald_exit(void)
 {
 	int i;
+
+	if (test_sensor) {
+		destroy_test_tzone(test_sensor);
+		return;
+	}
 
 	for (i = 0; i < SENSOR_COUNT; ++i) {
 		destroy_test_tzone(sensors[i]);
