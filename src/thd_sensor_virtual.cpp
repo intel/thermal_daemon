@@ -159,7 +159,7 @@ unsigned int cthd_sensor_virtual::_read_temperature() {
 
 	}
 
-//	thd_log_debug("virt temp:%g\n", virt_temp);
+	thd_log_debug("virt temp:%g\n", virt_temp);
 
 	temp = static_cast<int>(std::round(virt_temp));
 
