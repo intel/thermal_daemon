@@ -27,7 +27,7 @@
 bool starts_with(const std::string& s, const char *prefix)
 {
     size_t len = strlen(prefix);
-    return s.size() >= len && s.compare(0, s.size(), prefix);
+    return s.size() >= len && s.compare(0, len, prefix) == 0;
 }
 
 
