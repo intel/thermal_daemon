@@ -997,7 +997,7 @@ void cthd_gddv::dump_trips() {
 int cthd_gddv::get_trip_temp(const std::string& name, trip_point_type_t type) {
 	std::string search_name = name + ".D0";
 	for (unsigned int i = 0; i < trippoints.size(); ++i) {
-		if (!trippoints[i].name.compare(search_name)
+		if (trippoints[i].name == search_name
 				&& trippoints[i].type == type)
 			return trippoints[i].temp;
 	}
