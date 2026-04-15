@@ -22,4 +22,5 @@ Checks: '
     modernize-use-nullptr,
     modernize-use-override,
     performance-*,
-    -performance-no-int-to-ptr'
+    -performance-no-int-to-ptr,
+    readability-string-compare'
