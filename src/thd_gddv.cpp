@@ -599,6 +599,13 @@ void cthd_gddv::dump_psvt() {
 
 struct psvt* cthd_gddv::find_def_psvt() {
 	for (unsigned int i = 0; i < psvts.size(); ++i) {
+		if (psvts[i].name == "generic_os") {
+			thd_log_info("Found generic_os table\n");
+			return &psvts[i];
+		}
+	}
+
+	for (unsigned int i = 0; i < psvts.size(); ++i) {
 		if (psvts[i].name == "IETM.D0") {
 			return &psvts[i];
 		}
