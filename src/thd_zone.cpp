@@ -316,7 +316,7 @@ void cthd_zone::update_highest_trip_temp(cthd_trip_point &trip)
 {
 	if (trip_points.size()) {
 		thd_log_info("trip_points.size():%zu\n", trip_points.size());
-		for (unsigned int j = trip_points.size() - 1;; --j) {
+		for (int j = trip_points.size() - 1; j >= 0; --j) {
 			if (trip_points[j].get_trip_type() == trip.get_trip_type()) {
 				thd_log_info("updating existing trip temp\n");
 				trip_points[j].update_trip_temp(trip.get_trip_temp());
