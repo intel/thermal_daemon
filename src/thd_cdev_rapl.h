@@ -76,7 +76,7 @@ public:
 	static constexpr int rapl_power_dec_percent = 5;
 
 	cthd_sysfs_cdev_rapl(unsigned int _index, int package) :
-            cthd_sysfs_cdev_rapl(_index, package, "")
+            cthd_sysfs_cdev_rapl(_index, package, "/sys/devices/virtual/powercap/intel-rapl/intel-rapl:0/")
 	{
 	}
 	cthd_sysfs_cdev_rapl(unsigned int _index, int package,
