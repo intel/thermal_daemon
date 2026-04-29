@@ -116,7 +116,7 @@ typedef struct {
 	std::vector<trip_point_t> trip_pts;
 } thermal_zone_t;
 
-typedef enum {
+typedef enum : uint8_t {
 	ABSOULUTE_VALUE, RELATIVE_PERCENTAGES
 } unit_value_t;
 

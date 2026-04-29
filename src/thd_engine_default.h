@@ -48,6 +48,8 @@ protected:
 	bool force_mmio_rapl;
 public:
 	static constexpr int power_clamp_reduction_percent = 5;
+	static constexpr int processor_thermal_min_passive = 90000;
+
 	cthd_gddv gddv;
 
 #ifndef ANDROID

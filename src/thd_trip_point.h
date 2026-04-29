@@ -38,18 +38,18 @@
 #include <algorithm>    // std::sort
 #include <stdexcept>
 
-typedef enum {
+typedef enum : uint8_t {
 	CRITICAL, HOT, MAX, PASSIVE, ACTIVE, POLLING, INVALID_TRIP_TYPE
 } trip_point_type_t;
 
-typedef enum {
+typedef enum : uint8_t {
 	PARALLEL,  // All associated cdevs are activated together
 	SEQUENTIAL  // one after other once the previous cdev reaches its max state
 } trip_control_type_t;
 
 #define TRIP_PT_INVALID_TARGET_STATE	INT32_MAX
 
-typedef enum {
+typedef enum : uint8_t {
 	EQUAL, GREATER, LESSER, LESSER_OR_EQUAL, GREATER_OR_EQUAL
 } trip_point_cdev_depend_rel_t;
 

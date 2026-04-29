@@ -27,9 +27,10 @@
 
 #include "thd_common.h"
 #include "thd_sys_fs.h"
+#include <cstdint>
 #include <vector>
 
-typedef enum {
+typedef enum : uint8_t {
 	INVALID = 0, PACKAGE = 0x01, DRAM = 0x02, CORE = 0x04, UNCORE = 0x08
 } domain_type;
 

@@ -44,7 +44,7 @@
 #define MAX_MSG_SIZE 		512
 #define THD_NUM_OF_POLL_FDS	10
 
-typedef enum {
+typedef enum : uint8_t {
 	WAKEUP,
 	TERMINATE,
 	PREF_CHANGED,
@@ -58,7 +58,7 @@ typedef enum {
 
 // This defines whether the thermal control is entirely done by
 // this daemon or it just complements, what is done in kernel
-typedef enum {
+typedef enum : uint8_t {
 	COMPLEMENTRY, EXCLUSIVE,
 } control_mode_t;
 
