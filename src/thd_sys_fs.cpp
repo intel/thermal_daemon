@@ -38,7 +38,7 @@ int csys_fs::get_cached_fd(const std::string &full_path) {
 	if (it != fd_cache.end())
 		return it->second;
 
-	int fd = ::open(full_path.c_str(), O_RDONLY);
+	int fd = ::open(full_path.c_str(), O_RDONLY | O_NOFOLLOW);
 	if (fd >= 0)
 		fd_cache[full_path] = fd;
 	return fd;
@@ -60,7 +60,7 @@ int csys_fs::check_non_symbolic_path(const std::string& path)
 
 int csys_fs::write(const std::string &path, const std::string &buf) {
 	std::string p = base_path + path;
-	int fd = ::open(p.c_str(), O_WRONLY);
+	int fd = ::open(p.c_str(), O_WRONLY | O_NOFOLLOW);
 	if (fd < 0) {
 		thd_log_info("sysfs write failed %s\n", p.c_str());
 		return -errno;
@@ -78,7 +78,7 @@ int csys_fs::write(const std::string &path, const std::string &buf) {
 int csys_fs::write(const std::string &path, unsigned int position, unsigned
 long long data) {
 	std::string p = base_path + path;
-	int fd = ::open(p.c_str(), O_WRONLY);
+	int fd = ::open(p.c_str(), O_WRONLY | O_NOFOLLOW);
 	if (fd < 0) {
 		thd_log_info("sysfs write failed %s\n", p.c_str());
 		return -errno;
@@ -186,6 +186,12 @@ int csys_fs::read(const std::string &path, std::string &buf) {
 #ifndef ANDROID
 	try {
 #endif
+		int ret = check_non_symbolic_path(p);
+		if (ret == THD_ERROR) {
+			thd_log_info("sysfs read failed [path is symbolic link] %s\n", p.c_str());
+			return -EINVAL;
+		}
+
 		std::ifstream f(p.c_str(), std::fstream::in);
 		if (f.fail()) {
 			thd_log_info("sysfs read failed %s\n", p.c_str());
@@ -223,6 +229,7 @@ size_t csys_fs::size(const std::string &path) {
 }
 
 int csys_fs::create(int flags, mode_t mode) {
+	mode_t _mode = mode | O_NOFOLLOW;
 
 	thd_log_debug("create :%s\n", base_path.c_str());
 
@@ -252,7 +259,7 @@ int csys_fs::create(int flags, mode_t mode) {
 		}
 	}
 
-	int fd = ::open(base_path.c_str(), flags, mode);
+	int fd = ::open(base_path.c_str(), flags, _mode);
 	if (fd < 0) {
 		thd_log_info("sysfs create failed %s\n", base_path.c_str());
 		return -errno;
