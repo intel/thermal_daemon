@@ -308,8 +308,8 @@ bool cthd_engine_default::add_int340x_processor_dev(void)
 		for (unsigned int i = 0; i < processor_thermal->get_trip_count(); ++i) {
 			cthd_trip_point *trip = processor_thermal->get_trip_at_index(i);
 			if (trip && trip->get_trip_type() == PASSIVE
-					&& (passive = trip->get_trip_temp())) {
-
+					&& (passive = trip->get_trip_temp())
+					&& passive > processor_thermal_min_passive) {
 				/* Need to honor ACPI _CRT, otherwise the system could be shut down by Linux kernel */
 				acpi_thermal = search_zone("acpitz");
 				if (acpi_thermal) {
