@@ -79,7 +79,8 @@ thermald_SOURCES = \
 	src/thd_platform.cpp \
 	src/thd_platform_intel.cpp \
 	src/thd_platform_arm.cpp \
-	src/thd_util.cpp
+	src/thd_util.cpp \
+	src/thd_features_parse.cpp
 
 man5_MANS = man/thermal-conf.xml.5
 man8_MANS = man/thermald.8
