@@ -629,6 +629,8 @@ int cthd_engine_adaptive::thd_engine_init(bool ignore_cpuid_check,
 			return THD_FATAL_ERROR;
 	}
 
+	thd_parse_features();
+
 	parser_disabled = true;
 	force_mmio_rapl = true;
 

@@ -40,6 +40,7 @@
 #include "thd_parse.h"
 #include "thd_kobj_uevent.h"
 #include "thd_rapl_power_meter.h"
+#include "thd_features_parse.h"
 
 #define MAX_MSG_SIZE 		512
 #define THD_NUM_OF_POLL_FDS	10
@@ -133,6 +134,8 @@ public:
 	static constexpr int soft_cdev_start_index = 100;
 
 	cthd_parse parser;
+	cthd_features_parse features_parser;
+
 	cthd_rapl_power_meter rapl_power_meter;
 
 	cthd_engine(std::string _uuid);
@@ -147,6 +150,7 @@ public:
 	void thd_engine_thread();
 	virtual int thd_engine_init(bool ignore_cpuid_check, bool adaptive = false);
 	virtual int thd_engine_start();
+	void thd_parse_features();
 	int thd_engine_stop();
 	int check_cpu_id();
 
@@ -299,6 +303,13 @@ public:
 	int debug_mode_on(void);
 
 	int check_acpi_platform_profile();
+
+	int check_feature(thermald_feature_names_t feature) {
+		if (feature >= MAX_FEATURE) {
+			return THD_ERROR;
+		}
+		return features_parser.feature_list[feature];
+	}
 };
 
 #endif /* THD_ENGINE_H_ */

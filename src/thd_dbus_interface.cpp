@@ -622,6 +622,16 @@ thd_dbus_handle_method_call(GDBusConnection       *connection,
 	
 	thd_log_debug("Dbus method called %s %s.\n", interface_name, method_name);
 
+	if (thd_engine->check_feature(DBUS_CONTROL) == 0) {
+		thd_log_info("Dbus control support is disabled by config file\n");
+		GError *error = g_error_new(G_DBUS_ERROR,
+                            G_DBUS_ERROR_FAILED,
+                            "DBUS control support is disabled by config file");
+		g_dbus_method_invocation_return_gerror(invocation, error);
+		g_error_free(error);
+		return;
+	}
+
 	if (g_strcmp0(method_name, "AddCoolingDevice") == 0) {
 		g_autofree gchar *cdev_name = nullptr;
 		g_autofree gchar *path = nullptr;
