@@ -199,8 +199,9 @@ int csys_fs::read(const std::string &path, std::string &buf) {
 		}
 		f >> buf;
 		if (f.bad()) {
+			f.close();
 			thd_log_info("sysfs read failed %s\n", p.c_str());
-			ret = -EIO;
+			return -EIO;
 		}
 		f.close();
 #ifndef ANDROID
