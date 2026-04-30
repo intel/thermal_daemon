@@ -1816,6 +1816,11 @@ std::unique_ptr<char[]> cthd_gddv::gddv_load(size_t *size)
 
 	*size = 0;
 
+	if (thd_engine->check_feature(DATA_VAULT_FS) == 0) {
+		thd_log_debug("Data vault filesystem loading is not allowed by config\n");
+		return {};
+	}
+
 #ifdef GDDV_LOAD_FROM_FILE
 	std::string dir_name = TDCONFDIR;
 	char *file_name;

@@ -625,6 +625,8 @@ int cthd_engine_adaptive::thd_engine_init(bool ignore_cpuid_check,
 	size_t size;
 	int res;
 
+	thd_parse_features();
+
 	parser_disabled = true;
 	force_mmio_rapl = true;
 
