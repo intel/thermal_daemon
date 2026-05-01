@@ -23,6 +23,10 @@
  */
 
 #include "thd_preference.h"
+#include <fcntl.h>
+#include <unistd.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 
 cthd_preference::cthd_preference() :
 		preference(PREF_ENERGY_CONSERVE), old_preference(0) {
@@ -68,7 +72,7 @@ int cthd_preference::string_pref_to_int(std::string &pref_str) {
 	else if (pref_str == "DISABLE")
 		pref = PREF_DISABLED;
 	else
-		pref = PREF_PERFORMANCE;
+		pref = -1;
 
 	return pref;
 }
@@ -101,27 +105,48 @@ bool cthd_preference::set_preference(const char *pref_str) {
 	std::string str(pref_str);
 	int pref = string_pref_to_int(str);
 
+	/* Reject unknown preference values rather than silently coercing
+	 * them, so a misbehaving caller cannot blindly switch the daemon
+	 * into PERFORMANCE mode. */
+	if (pref < 0)
+		return false;
+
 	std::ostringstream filename;
 	filename << TDRUNDIR << "/" << "thd_preference.conf";
 
-	std::ofstream fout(filename.str().c_str());
-	if (!fout.good()) {
+	/* Open with O_NOFOLLOW so that a symlink planted in TDRUNDIR cannot
+	 * redirect the write to an arbitrary file. O_TRUNC ensures we don't
+	 * leave stale bytes from a longer prior value. */
+	int fd = ::open(filename.str().c_str(),
+			O_WRONLY | O_CREAT | O_TRUNC | O_NOFOLLOW, 0600);
+	if (fd < 0)
 		return false;
-	}
-	fout << pref;
-	fout.close();
+
+	std::ostringstream pref_buf;
+	pref_buf << pref;
+	const std::string &pref_data = pref_buf.str();
+	ssize_t w = ::write(fd, pref_data.c_str(), pref_data.size());
+	::close(fd);
+	if (w != (ssize_t) pref_data.size())
+		return false;
 
 	// Save the old preference
 	old_preference = preference;
 	std::ostringstream filename_save;
 	filename_save << TDRUNDIR << "/" << "thd_preference.conf.save";
 
-	std::ofstream fout_save(filename_save.str().c_str());
-	if (!fout_save.good()) {
+	int fd_save = ::open(filename_save.str().c_str(),
+			O_WRONLY | O_CREAT | O_TRUNC | O_NOFOLLOW, 0600);
+	if (fd_save < 0)
 		return false;
-	}
-	fout_save << old_preference;
-	fout_save.close();
+
+	std::ostringstream save_buf;
+	save_buf << old_preference;
+	const std::string &save_data = save_buf.str();
+	ssize_t w_save = ::write(fd_save, save_data.c_str(), save_data.size());
+	::close(fd_save);
+	if (w_save != (ssize_t) save_data.size())
+		return false;
 
 	std::ifstream ifs(filename.str().c_str(), std::ifstream::in);
 	if (!ifs.good()) {
