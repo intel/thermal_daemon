@@ -173,7 +173,7 @@ gboolean thd_dbus_interface_get_current_preference(PrefObject *obj,
 	thd_log_debug("thd_dbus_interface_get_current_preference\n");
 	g_assert(obj != nullptr);
 	gchar *value_out;
-	static char *pref_str;
+	char *pref_str;
 
 	pref_str = g_new(char, MAX_DBUS_REPLY_STR_LEN);
 
