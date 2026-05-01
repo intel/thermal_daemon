@@ -152,10 +152,11 @@ int csys_fs::read(const std::string &path, int *ptr_val) {
 		thd_log_info("sysfs open failed %s\n", p.c_str());
 		return -errno;
 	}
-	int ret = ::pread(fd, str, sizeof(str), 0);
-	if (ret > 0)
+	int ret = ::pread(fd, str, sizeof(str) - 1, 0);
+	if (ret > 0) {
+		str[ret] = '\0';
 		*ptr_val = atoi(str);
-	else
+	} else
 		thd_log_info("sysfs read failed %s\n", p.c_str());
 
 	return ret;
@@ -170,10 +171,11 @@ int csys_fs::read(const std::string &path, unsigned long *ptr_val) {
 		thd_log_info("sysfs read failed %s\n", p.c_str());
 		return -errno;
 	}
-	int ret = ::pread(fd, str, sizeof(str), 0);
-	if (ret > 0)
+	int ret = ::pread(fd, str, sizeof(str) - 1, 0);
+	if (ret > 0) {
+		str[ret] = '\0';
 		*ptr_val = atol(str);
-	else
+	} else
 		thd_log_info("sysfs read failed %s\n", p.c_str());
 
 	return ret;
