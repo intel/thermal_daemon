@@ -216,6 +216,13 @@ private:
 	std::string int3400_base_path;
 	int power_slider;
 	int current_target_matched;
+	/*
+	 * Length of the buffer currently being parsed by get_type/
+	 * get_uint64/get_string. Each parse_* helper assigns this from its
+	 * own `len` parameter on entry so that bounds checks in the readers
+	 * cannot walk off the end of attacker-controlled buffers.
+	 */
+	int gddv_cur_buf_len;
 	void destroy_dynamic_sources();
 	int get_type(char *object, int *offset);
 	uint64_t get_uint64(char *object, int *offset);
@@ -274,7 +281,7 @@ public:
 #ifndef ANDROID
 	cthd_gddv() :
 			upower_client(
-			nullptr), power_profiles_daemon(nullptr), tablet_dev(nullptr), lid_dev(nullptr), int3400_base_path(""), power_slider(75), current_target_matched(-1) {
+			nullptr), power_profiles_daemon(nullptr), tablet_dev(nullptr), lid_dev(nullptr), int3400_base_path(""), power_slider(75), current_target_matched(-1), gddv_cur_buf_len(0) {
 	}
 #else
 	cthd_gddv() :
