@@ -26,6 +26,7 @@
 #include <dirent.h>
 #include <errno.h>
 #include <inttypes.h>
+#include <limits.h>
 #include "thd_lzma_dec.h"
 #include <linux/input.h>
 #include <memory>
@@ -99,11 +100,25 @@ cthd_gddv::~cthd_gddv() {
 }
 
 int cthd_gddv::get_type(char *object, int *offset) {
+	if (!object || !offset || *offset < 0 ||
+			*offset + (int) sizeof(uint32_t) > gddv_cur_buf_len) {
+		thd_log_warn("GDDV: get_type out of bounds (off=%d len=%d)\n",
+				offset ? *offset : -1, gddv_cur_buf_len);
+		throw gddv_exception;
+	}
 	return *(uint32_t*) (object + *offset);
 }
 
 uint64_t cthd_gddv::get_uint64(char *object, int *offset) {
 	uint64_t value;
+
+	if (!object || !offset || *offset < 0 ||
+			*offset + (int) sizeof(uint32_t) > gddv_cur_buf_len) {
+		thd_log_warn("GDDV: get_uint64 type read out of bounds (off=%d len=%d)\n",
+				offset ? *offset : -1, gddv_cur_buf_len);
+		throw gddv_exception;
+	}
+
 	int type = *(uint32_t*) (object + *offset);
 
 	if (type != 4) {
@@ -112,6 +127,12 @@ uint64_t cthd_gddv::get_uint64(char *object, int *offset) {
 	}
 	*offset += 4;
 
+	if (*offset + (int) sizeof(uint64_t) > gddv_cur_buf_len) {
+		thd_log_warn("GDDV: get_uint64 value read out of bounds (off=%d len=%d)\n",
+				*offset, gddv_cur_buf_len);
+		throw gddv_exception;
+	}
+
 	value = *(uint64_t*) (object + *offset);
 	*offset += 8;
 
@@ -119,9 +140,17 @@ uint64_t cthd_gddv::get_uint64(char *object, int *offset) {
 }
 
 char* cthd_gddv::get_string(char *object, int *offset) {
-	int type = *(uint32_t*) (object + *offset);
 	uint64_t length;
 	char *value;
+
+	if (!object || !offset || *offset < 0 ||
+			*offset + (int) sizeof(uint32_t) > gddv_cur_buf_len) {
+		thd_log_warn("GDDV: get_string type read out of bounds (off=%d len=%d)\n",
+				offset ? *offset : -1, gddv_cur_buf_len);
+		throw gddv_exception;
+	}
+
+	int type = *(uint32_t*) (object + *offset);
 
 	if (type != 8) {
 		thd_log_warn("Found object of type %d, expecting 8\n", type);
@@ -129,8 +158,24 @@ char* cthd_gddv::get_string(char *object, int *offset) {
 	}
 	*offset += 4;
 
+	if (*offset + (int) sizeof(uint64_t) > gddv_cur_buf_len) {
+		thd_log_warn("GDDV: get_string length read out of bounds (off=%d len=%d)\n",
+				*offset, gddv_cur_buf_len);
+		throw gddv_exception;
+	}
+
 	length = *(uint64_t*) (object + *offset);
 	*offset += 8;
+
+	/* Reject lengths that would overflow the int offset arithmetic
+	 * or read past the buffer. */
+	if (length > (uint64_t) INT_MAX ||
+			*offset + (int) length > gddv_cur_buf_len) {
+		thd_log_warn("GDDV: get_string value out of bounds (off=%d len=%d need=%llu)\n",
+				*offset, gddv_cur_buf_len,
+				(unsigned long long) length);
+		throw gddv_exception;
+	}
 
 	value = &object[*offset];
 	*offset += length;
@@ -164,7 +209,9 @@ int cthd_gddv::parse_appc(char *appc, int len) {
 	int offset = 0;
 	uint64_t version;
 
-	if (appc[0] != 4) {
+	gddv_cur_buf_len = len;
+
+	if (len < 1 || appc[0] != 4) {
 		thd_log_info("Found malformed APPC table, ignoring\n");
 		return 0;
 	}
@@ -194,6 +241,7 @@ int cthd_gddv::parse_appc(char *appc, int len) {
 
 int cthd_gddv::parse_apat(char *apat, int len) {
 	int offset = 0;
+	gddv_cur_buf_len = len;
 	uint64_t version = get_uint64(apat, &offset);
 
 	if (version != 2) {
@@ -231,6 +279,7 @@ void cthd_gddv::dump_apat()
 int cthd_gddv::parse_apct(char *apct, int len) {
 	int i;
 	int offset = 0;
+	gddv_cur_buf_len = len;
 	uint64_t version = get_uint64(apct, &offset);
 
 	if (version == 1) {
@@ -488,6 +537,12 @@ ppcc_t* cthd_gddv::get_ppcc_param(const std::string& name) {
 int cthd_gddv::parse_ppcc(char *name, char *buf, int len) {
 	ppcc_t ppcc;
 
+	/* The first block reads up to offset 84 (76 + sizeof(uint64_t)). */
+	if (len < 84) {
+		thd_log_warn("PPCC table too small (%d), ignoring\n", len);
+		return 0;
+	}
+
 	ppcc.name = name;
 	ppcc.power_limit_min = *(uint64_t*) (buf + 28);
 	ppcc.power_limit_max = *(uint64_t*) (buf + 40);
@@ -538,6 +593,7 @@ void cthd_gddv::dump_ppcc()
 
 int cthd_gddv::parse_psvt(char *name, char *buf, int len) {
 	int offset = 0;
+	gddv_cur_buf_len = len;
 	int version = get_uint64(buf, &offset);
 	struct psvt psvt;
 
@@ -632,6 +688,8 @@ int cthd_gddv::parse_itmt3(char *name, char *buf, unsigned int len) {
 	unsigned int offset = 0;
 	struct itmt itmt;
 
+	gddv_cur_buf_len = (int) len;
+
 	if (name == nullptr)
 		itmt.name = "Default";
 	else
@@ -671,6 +729,7 @@ int cthd_gddv::parse_itmt3(char *name, char *buf, unsigned int len) {
 int cthd_gddv::parse_vspt(char *name, char *buf, int len)
 {
 	int offset = 0;
+	gddv_cur_buf_len = len;
 	int version = get_uint64(buf, &offset);
 
 	if (version > 1) {
@@ -699,6 +758,7 @@ int cthd_gddv:: parse_vsct(char *name, char *buf, int len)
 
 	thd_log_debug(" vsct name %s\n", vscts_name.c_str());
 	int offset = 0;
+	gddv_cur_buf_len = len;
 	int version = get_uint64(buf, &offset);
 
 	if (version > 1) {
@@ -750,6 +810,7 @@ void cthd_gddv::dump_vspt() {
 
 int cthd_gddv::parse_itmt(char *name, char *buf, int len) {
 	int offset = 0;
+	gddv_cur_buf_len = len;
 	int version = get_uint64(buf, &offset);
 	struct itmt itmt;
 
@@ -819,6 +880,9 @@ void cthd_gddv::parse_idsp(char *name, char *start, int length) {
 	int len, i = 0;
 	unsigned char *str = (unsigned char*) start;
 
+	if (length < 0)
+		return;
+
 	while (i < length) {
 		char idsp[64];
 		std::string idsp_str;
@@ -835,6 +899,12 @@ void cthd_gddv::parse_idsp(char *name, char *start, int length) {
 		i += 4;
 
 		len = *(int*) str;
+		/* Reject negative or absurd lengths from untrusted input */
+		if (len < 16 || len > (length - i - 8)) {
+			thd_log_warn("IDSP entry has invalid length %d (remaining %d)\n",
+					len, length - i - 8);
+			return;
+		}
 		str += 8; // Get to actual contents
 		i += 8;
 
@@ -875,6 +945,11 @@ int cthd_gddv::search_idsp(const std::string& name)
 void cthd_gddv::parse_trip_point(char *name, char *type, char *val, int len)
 {
 	struct trippoint trip;
+
+	if (len < (int) sizeof(int)) {
+		thd_log_warn("trip point payload too small (%d)\n", len);
+		return;
+	}
 
 	trip.name = name;
 	trip.type_str = type;
@@ -917,6 +992,8 @@ int cthd_gddv::parse_trt(char *buf, int len)
 {
 	int offset = 0;
 
+	gddv_cur_buf_len = len;
+
 	thd_log_debug("TRT len:%d\n", len);
 
 	if (len > 0) {
@@ -954,40 +1031,47 @@ int cthd_gddv::parse_trt(char *buf, int len)
 #define ESIFDV_ITEM_KEYS_REV0_SIGNATURE	0xA0D8
 
 int cthd_gddv::handle_compressed_gddv(char *buf, int size) {
+
+	if (!buf || !size || size <= (int)sizeof(struct header))
+		return THD_ERROR;
+
 	struct header *header = (struct header*) buf;
-	uint64_t payload_output_size;
+	if (header->headersize > size)
+		return THD_ERROR;
+
 	uint64_t output_size;
 	int res;
 	size_t destlen=0;
 
-	payload_output_size = *(uint64_t*) (buf + header->headersize + 5);
-	output_size = header->headersize + payload_output_size;
-	std::unique_ptr<unsigned char[]> decompressed(new unsigned char[output_size]);
+	res = lzma_decompress(nullptr, &destlen, (const unsigned char*) (buf + header->headersize),
+				size - header->headersize);
+	if (res)
+		return THD_ERROR;
 
+	output_size = header->headersize + destlen;
+	std::unique_ptr<unsigned char[]> decompressed(new unsigned char[output_size]);
 	if (!decompressed) {
 		thd_log_warn("Failed to allocate buffer for decompressed output\n");
-		throw gddv_exception;
+		return THD_ERROR;
 	}
+	thd_log_debug("output size =%lu\n", output_size);
 
-	res=lzma_decompress(nullptr,&destlen, (const unsigned char*) (buf + header->headersize), size-header->headersize);
+	res=lzma_decompress((unsigned char*)(decompressed.get() + header->headersize),
+				&destlen,
+				(const unsigned char*) (buf + header->headersize),
+				size - header->headersize);
 
-	thd_log_debug("decompress result =%d\n",res);
-
-	res=lzma_decompress(( unsigned char*)(decompressed.get() + header->headersize),
-	                &destlen,
-	                (const unsigned char*) (buf + header->headersize),
-	                size-header->headersize);
-
-	thd_log_debug("decompress result =%d\n",res);
+	if (res)
+		return THD_ERROR;
 
 	/* Copy and update header.
 	 * This will contain one or more nested repositories usually. */
 	memcpy (decompressed.get(), buf, header->headersize);
 	header = (struct header*) decompressed.get();
 	header->v2.flags &= ~ESIF_SERVICE_CONFIG_COMPRESSED;
-	header->v2.payload_size = payload_output_size;
+	header->v2.payload_size = destlen;
 
-	res = parse_gddv((char*) decompressed.get(), output_size, nullptr);
+	res = parse_gddv((char*)decompressed.get(), output_size, nullptr);
 
 	return res;
 }
@@ -1004,19 +1088,57 @@ int cthd_gddv::parse_gddv_key(char *buf, int size, int *end_offset) {
 	char *point = nullptr;
 	char *ns = nullptr;
 
+	if (size < 0 || (size_t) size < sizeof(keyflags) + sizeof(keylength)) {
+		thd_log_warn("GDDV key truncated (size=%d)\n", size);
+		throw gddv_exception;
+	}
+
 	memcpy(&keyflags, buf + offset, sizeof(keyflags));
 	offset += sizeof(keyflags);
 	memcpy(&keylength, buf + offset, sizeof(keylength));
 	offset += sizeof(keylength);
-	std::unique_ptr<char[]> key(new char[keylength]);
+
+	/* Validate keylength against remaining buffer; reserve one byte for
+	 * a NUL terminator so subsequent strtok() cannot walk off the end
+	 * if the on-disk key is not NUL-terminated. */
+	if (keylength == 0 || keylength >= (uint32_t) INT_MAX ||
+		offset + (int) keylength > size) {
+		thd_log_warn("GDDV keylength %u rejected (offset=%d size=%d)\n",
+				keylength, offset, size);
+		throw gddv_exception;
+	}
+	std::unique_ptr<char[]> key(new char[(size_t) keylength + 1]);
+	if (!key) {
+		thd_log_warn("Mem alloc failed for key\n");
+		throw gddv_exception;
+	}
 	memcpy(key.get(), buf + offset, keylength);
+	key[keylength] = '\0';
 	offset += keylength;
+
+	if (offset + (int) (sizeof(valtype) + sizeof(vallength)) > size) {
+		thd_log_warn("GDDV value header truncated (offset=%d size=%d)\n",
+				offset, size);
+		throw gddv_exception;
+	}
 	memcpy(&valtype, buf + offset, sizeof(valtype));
 	offset += sizeof(valtype);
 	memcpy(&vallength, buf + offset, sizeof(vallength));
 	offset += sizeof(vallength);
-	std::unique_ptr<char[]> val(new char[vallength]);
+
+	if (vallength >= (uint32_t) INT_MAX ||
+			offset + (int) vallength > size) {
+		thd_log_warn("GDDV vallength %u rejected (offset=%d size=%d)\n",
+				vallength, offset, size);
+		throw gddv_exception;
+	}
+	std::unique_ptr<char[]> val(new char[(size_t) vallength + 1]);
+	if (!val) {
+		thd_log_warn("Mem alloc failed for val\n");
+		throw gddv_exception;
+	}
 	memcpy(val.get(), buf + offset, vallength);
+	val[vallength] = '\0';
 	offset += vallength;
 
 	if (end_offset)
@@ -1147,7 +1269,7 @@ int cthd_gddv::parse_gddv(char *buf, int size, int *end_offset) {
 		thd_log_debug("DV comment: %s\n", comment);
 
 		thd_log_debug("Got payload of size %d (data length: %d)\n", size, header->v2.payload_size);
-		size = header->v2.payload_size;
+		//size = header->v2.payload_size;
 	}
 
 	while ((offset + header->headersize) < size) {
