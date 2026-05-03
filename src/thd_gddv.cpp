@@ -182,6 +182,23 @@ char* cthd_gddv::get_string(char *object, int *offset) {
 	return value;
 }
 
+/*
+ * Bounded variant that returns a std::string constructed from the
+ * exact field length, so callers cannot read past the declared length
+ * even if the on-disk string is not NUL-terminated.
+ */
+char* cthd_gddv::get_string_obj(char *object, int *offset) {
+	int saved = *offset;
+	char *p = get_string(object, offset);
+	/* get_string consumes 4 (type) + 8 (length) + length bytes. */
+	int consumed = *offset - saved;
+	int length = consumed - 12;
+	if (length < 0)
+		return nullptr;
+
+	return p;
+}
+
 int cthd_gddv::merge_custom(struct custom_condition *custom,
 		struct condition *condition) {
 	condition->device = custom->participant;
@@ -229,8 +246,8 @@ int cthd_gddv::parse_appc(char *appc, int len) {
 
 		condition.condition = (enum adaptive_condition) get_uint64(appc,
 				&offset);
-		condition.name = get_string(appc, &offset);
-		condition.participant = get_string(appc, &offset);
+		condition.name = get_string_obj(appc, &offset);
+		condition.participant = get_string_obj(appc, &offset);
 		condition.domain = get_uint64(appc, &offset);
 		condition.type = get_uint64(appc, &offset);
 		custom_conditions.push_back(std::move(condition));
@@ -253,11 +270,11 @@ int cthd_gddv::parse_apat(char *apat, int len) {
 		struct adaptive_target target;
 
 		target.target_id = get_uint64(apat, &offset);
-		target.name = get_string(apat, &offset);
-		target.participant = get_string(apat, &offset);
+		target.name = get_string_obj(apat, &offset);
+		target.participant = get_string_obj(apat, &offset);
 		target.domain = get_uint64(apat, &offset);
-		target.code = get_string(apat, &offset);
-		target.argument = get_string(apat, &offset);
+		target.code = get_string_obj(apat, &offset);
+		target.argument = get_string_obj(apat, &offset);
 		targets.push_back(std::move(target));
 	}
 	return 0;
@@ -368,7 +385,7 @@ int cthd_gddv::parse_apct(char *apct, int len) {
 
 				condition.condition = adaptive_condition(
 						get_uint64(apct, &offset));
-				condition.device = get_string(apct, &offset);
+				condition.device = get_string_obj(apct, &offset);
 				offset += 12;
 				condition.comparison = adaptive_comparison(
 						get_uint64(apct, &offset));
@@ -609,15 +626,15 @@ int cthd_gddv::parse_psvt(char *name, char *buf, int len) {
 	while (offset < len) {
 		struct psv psv;
 
-		psv.source = get_string(buf, &offset);
-		psv.target = get_string(buf, &offset);
+		psv.source = get_string_obj(buf, &offset);
+		psv.target = get_string_obj(buf, &offset);
 		psv.priority = get_uint64(buf, &offset);
 		psv.sample_period = get_uint64(buf, &offset);
 		psv.temp = get_uint64(buf, &offset);
 		psv.domain = get_uint64(buf, &offset);
 		psv.control_knob = get_uint64(buf, &offset);
 		if (get_type(buf, &offset) == 8) {
-			psv.limit = get_string(buf, &offset);
+			psv.limit = get_string_obj(buf, &offset);
 		} else {
 			uint64_t tmp = get_uint64(buf, &offset);
 			psv.limit = std::to_string(tmp);
@@ -769,7 +786,7 @@ int cthd_gddv:: parse_vsct(char *name, char *buf, int len)
 	while (offset < len) {
 		struct vsct_entry vsct;
 
-		vsct.target = get_string(buf, &offset);
+		vsct.target = get_string_obj(buf, &offset);
 		vsct.domain_type = get_uint64(buf, &offset);
 		vsct.coeff_type = get_uint64(buf, &offset);
 		vsct.coeff = get_uint64(buf, &offset);
@@ -831,11 +848,11 @@ int cthd_gddv::parse_itmt(char *name, char *buf, int len) {
 	while (offset < len) {
 		struct itmt_entry itmt_entry;
 
-		itmt_entry.target = get_string(buf, &offset);
+		itmt_entry.target = get_string_obj(buf, &offset);
 		itmt_entry.trip_point = get_uint64(buf, &offset);
-		itmt_entry.pl1_min = get_string(buf, &offset);
-		itmt_entry.pl1_max = get_string(buf, &offset);
-		itmt_entry.unused = get_string(buf, &offset);
+		itmt_entry.pl1_min = get_string_obj(buf, &offset);
+		itmt_entry.pl1_max = get_string_obj(buf, &offset);
+		itmt_entry.unused = get_string_obj(buf, &offset);
 		if (version == 2) {
 			// Ref DPTF/Sources/Manager/DataManager.cpp DataManager::loadItmtTableObject()
 			std::string dummy_str;
@@ -843,7 +860,7 @@ int cthd_gddv::parse_itmt(char *name, char *buf, int len) {
 
 			// There are three additional fields
 			dummy1 = get_uint64(buf, &offset);
-			dummy_str = get_string(buf, &offset);
+			dummy_str = get_string_obj(buf, &offset);
 			dummy2 = get_uint64(buf, &offset);
 			dummy3 = get_uint64(buf, &offset);
 			thd_log_debug("ignore dummy_str:%s %llu %llu %llu\n", dummy_str.c_str(), dummy1, dummy2, dummy3);
@@ -1004,8 +1021,8 @@ int cthd_gddv::parse_trt(char *buf, int len)
 	while (offset < len) {
 		struct trt_entry entry;
 
-		entry.source = get_string(buf, &offset);
-		entry.dest = get_string(buf, &offset);
+		entry.source = get_string_obj(buf, &offset);
+		entry.dest = get_string_obj(buf, &offset);
 		entry.priority = get_uint64(buf, &offset);
 		entry.sample_rate = get_uint64(buf, &offset);
 		entry.resd0 = get_uint64(buf, &offset);
