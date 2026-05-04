@@ -1949,10 +1949,6 @@ int cthd_gddv::format_dv_filename(std::stringstream& file_name)
 
 std::unique_ptr<char[]> cthd_gddv::gddv_load(size_t *size)
 {
-	size_t data_buffer_index = 0;
-	FILE *fp;
-	std::unique_ptr<char[]> data_buffer(new char[MAX_GDDV_FILE_SIZE]);
-
 	*size = 0;
 
 	if (thd_engine->check_feature(DATA_VAULT_FS) == 0) {
@@ -1960,22 +1956,30 @@ std::unique_ptr<char[]> cthd_gddv::gddv_load(size_t *size)
 		return {};
 	}
 
+	std::stringstream file_name_str;
+	std::unique_ptr<char[]> data_buffer(new char[MAX_GDDV_FILE_SIZE]);
+	if (!data_buffer) {
+		thd_log_error("Unable to allocate memory for GDDV file load");
+		return {};
+	}
+
 #ifdef GDDV_LOAD_FROM_FILE
 	std::string dir_name = TDCONFDIR;
-	char *file_name;
 	ssize_t line_size;
 	char *line_buffer = nullptr;
 	size_t line_buffer_size = 0;
+	size_t data_buffer_index = 0;
+	FILE *fp;
 
-	file_name = dir_name + "/" + "data_vault.hex";
+	file_name_str << dir_name << "/data_vault.hex";
 
-	fp = fopen(file_name.c_str(), "r");
+	fp = fopen(file_name_str.str().c_str(), "r");
 	if (!fp) {
 		*size = 0;
 		return {};
 	}
 
-	thd_log_debug("Found data_vault %s\n", file_name.c_str());
+	thd_log_debug("Found data_vault %s\n", file_name_str.str().c_str());
 
 	line_size = getline(&line_buffer, &line_buffer_size, fp);
 
@@ -1990,6 +1994,9 @@ std::unique_ptr<char[]> cthd_gddv::gddv_load(size_t *size)
 		}
 
 		while (token != NULL) {
+			if (data_buffer_index >= MAX_GDDV_FILE_SIZE)
+				break;
+
 			token = strtok(NULL, s);
 			if (token) {
 				int byte;
@@ -2011,11 +2018,8 @@ std::unique_ptr<char[]> cthd_gddv::gddv_load(size_t *size)
 	return data_buffer;
 #endif
 
-	std::stringstream file_name_str;
-
 	if (format_dv_filename(file_name_str) == THD_ERROR)
 		return {};
-
 
 	struct stat file_stat;
 
@@ -2035,45 +2039,28 @@ std::unique_ptr<char[]> cthd_gddv::gddv_load(size_t *size)
 		return {};
 	}
 
-	// Check if file is not a symbolic link
-	if (lstat(file_name_str.str().c_str(), &file_stat) == -1) {
+	csys_fs sysfs("");
+
+	size_t _size = sysfs.size(file_name_str.str().c_str());
+	if (_size == 0) {
+		thd_log_debug("Unable to open GDDV data vault\n");
 		return {};
 	}
 
-	if (S_ISLNK(file_stat.st_mode)) {
-		thd_log_info("Config file %s is a symbolic link\n", file_name_str.str().c_str());
+	if (_size > MAX_GDDV_FILE_SIZE)
+		_size = MAX_GDDV_FILE_SIZE;
+
+	thd_log_debug("Found data vault file %s of size %zu\n", file_name_str.str().c_str(), _size);
+
+	if (sysfs.read(file_name_str.str().c_str(), data_buffer.get(), _size)
+			< int(_size)) {
+		thd_log_debug("Unable to read GDDV data vault\n");
 		return {};
 	}
 
-	fp = fopen(file_name_str.str().c_str(), "r");
-	if (fp) {
-		int x;
+	*size = _size;
 
-		while ((x = fgetc(fp)) != EOF) {
-			if (data_buffer_index >= MAX_GDDV_FILE_SIZE) {
-				thd_log_warn("GDDV file too large, max supported size is %d bytes\n",
-						MAX_GDDV_FILE_SIZE);
-				fclose(fp);
-				*size = 0;
-				return {};
-			}
-
-			data_buffer[data_buffer_index++] = static_cast<char>(x);
-		}
-
-		if (ferror(fp)) {
-			thd_log_warn("Failed while reading GDDV file\n");
-			fclose(fp);
-			*size = 0;
-			return {};
-		}
-
-		fclose(fp);
-		*size = data_buffer_index;
-		return data_buffer;
-	}
-
-	return {};
+	return data_buffer;
 }
 
 int cthd_gddv::gddv_init(std::string& base_path) {
