@@ -625,6 +625,10 @@ int cthd_engine_adaptive::thd_engine_init(bool ignore_cpuid_check,
 	size_t size;
 	int res;
 
+	if (check_acpi_platform_profile() != THD_SUCCESS) {
+			return THD_FATAL_ERROR;
+	}
+
 	parser_disabled = true;
 	force_mmio_rapl = true;
 

@@ -235,8 +235,30 @@ void cthd_engine::enable_power_floor_event()
 	++current_zone_index;
 }
 
+int cthd_engine::check_acpi_platform_profile() {
+	// Check PM profile and fail to start for non mobile platforms
+	csys_fs pm_profile_fs("/sys/firmware/acpi/pm_profile");
+	if (pm_profile_fs.exists()) {
+		std::string pm_profile;
+		pm_profile_fs.read("", pm_profile);
+		thd_log_info("PM profile is %s\n", pm_profile.c_str());
+		if (pm_profile != "2" && pm_profile != "8") {
+			thd_log_error("Non mobile platform, exiting..\n");
+			return THD_FATAL_ERROR;
+		}
+	} else {
+		thd_log_info("PM profile is not available, skipping check\n");
+	}
+
+	return THD_SUCCESS;
+}
+
 int cthd_engine::thd_engine_init(bool ignore_cpuid_check, bool adaptive) {
 	int ret;
+
+	if (check_acpi_platform_profile() != THD_SUCCESS) {
+		return THD_FATAL_ERROR;
+	}
 
 	adaptive_mode = adaptive;
 
