@@ -833,6 +833,8 @@ int thd_engine_create_default_engine(bool ignore_cpuid_check,
 			thd_log_error("THD engine init failed\n");
 		else
 			thd_log_msg("THD engine init failed\n");
+
+		return res;
 	}
 
 	res = thd_engine->thd_engine_start();

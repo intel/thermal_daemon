@@ -143,6 +143,7 @@ public:
 	control_mode_t get_control_mode() {
 		return control_mode;
 	}
+
 	void thd_engine_thread();
 	virtual int thd_engine_init(bool ignore_cpuid_check, bool adaptive = false);
 	virtual int thd_engine_start();
@@ -296,6 +297,8 @@ public:
 	int parser_init();
 	void parser_deinit();
 	int debug_mode_on(void);
+
+	int check_acpi_platform_profile();
 };
 
 #endif /* THD_ENGINE_H_ */
