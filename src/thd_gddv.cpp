@@ -1872,6 +1872,35 @@ std::unique_ptr<char[]> cthd_gddv::gddv_load(size_t *size)
 	if (format_dv_filename(file_name_str) == THD_ERROR)
 		return {};
 
+
+	struct stat file_stat;
+
+	if (stat(file_name_str.str().c_str(), &file_stat) == -1) {
+		thd_log_info("Could not get file status for %s\n", file_name_str.str().c_str());
+		return {};
+	}
+
+	// Make sure file is owned by root and not writable by group/others
+	if (file_stat.st_uid != 0) {
+		thd_log_info("Config file %s is not owned by root\n", file_name_str.str().c_str());
+		return {};
+	}
+
+	if (file_stat.st_mode & (S_IWGRP | S_IWOTH)) {
+		thd_log_info("Config file %s is group, other writable\n", file_name_str.str().c_str());
+		return {};
+	}
+
+	// Check if file is not a symbolic link
+	if (lstat(file_name_str.str().c_str(), &file_stat) == -1) {
+		return {};
+	}
+
+	if (S_ISLNK(file_stat.st_mode)) {
+		thd_log_info("Config file %s is a symbolic link\n", file_name_str.str().c_str());
+		return {};
+	}
+
 	fp = fopen(file_name_str.str().c_str(), "r");
 	if (fp) {
 		int x;
