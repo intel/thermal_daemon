@@ -1010,7 +1010,7 @@ void cthd_engine::check_for_rt_kernel() {
 
 int cthd_engine::user_add_sensor(std::string name, std::string path) {
 	if (path.empty())
-		thd_engine_mutex.unlock();
+		return THD_ERROR;
 
 	if (!starts_with(path, "/sys/")) {
 		thd_log_debug("Invalid path %s\n", path.c_str());
