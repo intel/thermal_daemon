@@ -84,7 +84,7 @@ static supported_ids_t intel_id_table[] = {
     { 0, 0 } // Last Invalid entry
 };
 
-std::vector<std::string> blocklist_paths {
+static constexpr const char *blocklist_paths[] {
     /* Some Lenovo machines have in-firmware thermal management,
      * avoid having two entities trying to manage things.
      * We may want to change this to dytc_perfmode once that is
@@ -151,12 +151,12 @@ int intel_platform::check_cpu_id(bool &proc_list_matched) {
         thd_log_msg(" Need Linux PowerCap sysfs\n");
     }
 
-    for (const std::string& path : blocklist_paths) {
+    for (const char *path : blocklist_paths) {
         struct stat s;
 
-        if (!stat(path.c_str(), &s)) {
+        if (!stat(path, &s)) {
             proc_list_matched = false;
-            thd_log_warn("[%s] present: Thermald can't run on this platform\n", path.c_str());
+            thd_log_warn("[%s] present: Thermald can't run on this platform\n", path);
             break;
         }
     }
