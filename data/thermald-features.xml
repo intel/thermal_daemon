@@ -1,0 +1,11 @@
+<!--
+Enable/disable some features
+-->
+
+<ThermaldFeatures>
+	<DbusControl> 0 </DbusControl>
+	<XMLThermalConfig> 1 </XMLThermalConfig>
+	<DataVaultFromFileSystem> 1 </DataVaultFromFileSystem>
+	<KobjectUeventSupport> 1 </KobjectUeventSupport>
+</ThermaldFeatures>
+

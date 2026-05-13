@@ -41,7 +41,7 @@ int cthd_engine_adaptive::install_passive(struct psv *psv) {
 	else
 		psv_zone = psv->target.substr(pos + 1);
 
-	while (psv_zone.back() == '_') {
+	while (!psv_zone.empty() && psv_zone.back() == '_') {
 		psv_zone.pop_back();
 	}
 
@@ -72,7 +72,7 @@ int cthd_engine_adaptive::install_passive(struct psv *psv) {
 	else
 		psv_cdev = psv->source.substr(pos + 1);
 
-	while (psv_cdev.back() == '_') {
+	while (!psv_cdev.empty() && psv_cdev.back() == '_') {
 		psv_cdev.pop_back();
 	}
 
@@ -136,7 +136,7 @@ void cthd_engine_adaptive::set_trip(const std::string& target, const std::string
 	else
 		psv_zone = target.substr(pos + 1);
 
-	while (psv_zone.back() == '_') {
+	while (!psv_zone.empty() && psv_zone.back() == '_') {
 		psv_zone.pop_back();
 	}
 
@@ -257,7 +257,7 @@ int cthd_engine_adaptive::install_itmt(struct itmt_entry *itmt_entry) {
 	else
 		itmt_zone = itmt_entry->target.substr(pos + 1);
 
-	while (itmt_zone.back() == '_') {
+	while (!itmt_zone.empty() && itmt_zone.back() == '_') {
 		itmt_zone.pop_back();
 	}
 
@@ -443,7 +443,10 @@ void cthd_engine_adaptive::set_int3400_target(struct adaptive_target &target) {
 		thd_log_warn("Adaptive policy couldn't create any zones\n");
 		thd_log_warn("Possibly some sensors in the PSVT are missing\n");
 		thd_log_warn("Restart in non adaptive mode via systemd\n");
-		csys_fs sysfs("/tmp/ignore_adaptive");
+
+		std::ostringstream filename;
+		filename << TDRUNDIR << "/" << "ignore_adaptive";
+		csys_fs sysfs(filename.str().c_str());
 		sysfs.create();
 		exit(EXIT_FAILURE);
 	}
@@ -629,6 +632,8 @@ int cthd_engine_adaptive::thd_engine_init(bool ignore_cpuid_check,
 			return THD_FATAL_ERROR;
 	}
 
+	thd_parse_features();
+
 	parser_disabled = true;
 	force_mmio_rapl = true;
 
@@ -641,7 +646,9 @@ int cthd_engine_adaptive::thd_engine_init(bool ignore_cpuid_check,
 		}
 	}
 
-	csys_fs _sysfs("/tmp/ignore_adaptive");
+	std::ostringstream filename;
+	filename << TDRUNDIR << "/" << "ignore_adaptive";
+	csys_fs _sysfs(filename.str().c_str());
 	if (_sysfs.exists()) {
 		return THD_ERROR;
 	}

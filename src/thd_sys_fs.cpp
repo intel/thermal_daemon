@@ -27,6 +27,23 @@
 #include <stdlib.h>
 #include <vector>
 
+csys_fs::~csys_fs() {
+	for (auto &entry : fd_cache)
+		close(entry.second);
+}
+
+
+int csys_fs::get_cached_fd(const std::string &full_path) {
+	auto it = fd_cache.find(full_path);
+	if (it != fd_cache.end())
+		return it->second;
+
+	int fd = ::open(full_path.c_str(), O_RDONLY | O_NOFOLLOW);
+	if (fd >= 0)
+		fd_cache[full_path] = fd;
+	return fd;
+}
+
 int csys_fs::check_non_symbolic_path(const std::string& path)
 {
 	struct stat stat;
@@ -43,7 +60,7 @@ int csys_fs::check_non_symbolic_path(const std::string& path)
 
 int csys_fs::write(const std::string &path, const std::string &buf) {
 	std::string p = base_path + path;
-	int fd = ::open(p.c_str(), O_WRONLY);
+	int fd = ::open(p.c_str(), O_WRONLY | O_NOFOLLOW);
 	if (fd < 0) {
 		thd_log_info("sysfs write failed %s\n", p.c_str());
 		return -errno;
@@ -61,7 +78,7 @@ int csys_fs::write(const std::string &path, const std::string &buf) {
 int csys_fs::write(const std::string &path, unsigned int position, unsigned
 long long data) {
 	std::string p = base_path + path;
-	int fd = ::open(p.c_str(), O_WRONLY);
+	int fd = ::open(p.c_str(), O_WRONLY | O_NOFOLLOW);
 	if (fd < 0) {
 		thd_log_info("sysfs write failed %s\n", p.c_str());
 		return -errno;
@@ -90,23 +107,23 @@ int csys_fs::read(const std::string &path, char *buf, int len) {
 		return -EINVAL;
 
 	std::string p = base_path + path;
-	int fd = ::open(p.c_str(), O_RDONLY);
+	int fd = get_cached_fd(p);
 	size_t curr_len = len;
+	off_t offset = 0;
 	if (fd < 0) {
 		thd_log_info("sysfs read failed %s\n", p.c_str());
 		return -errno;
 	}
 	while (curr_len > 0) {
-		ssize_t ret = ::read(fd, buf, curr_len);
+		ssize_t ret = ::pread(fd, buf, curr_len, offset);
 		if (ret <= 0 || ret > len || ret >= INT_MAX) {
 			thd_log_info("sysfs read failed %s\n", p.c_str());
-			close(fd);
 			return -1;
 		}
 		buf += (int) ret;
+		offset += ret;
 		curr_len -= ret;
 	}
-	close(fd);
 
 	return len;
 }
@@ -114,20 +131,14 @@ int csys_fs::read(const std::string &path, char *buf, int len) {
 int csys_fs::read(const std::string &path, unsigned int position, char *buf,
 		int len) {
 	std::string p = base_path + path;
-	int fd = ::open(p.c_str(), O_RDONLY);
+	int fd = get_cached_fd(p);
 	if (fd < 0) {
 		thd_log_info("sysfs read failed %s\n", p.c_str());
 		return -errno;
 	}
-	if (::lseek(fd, position, SEEK_CUR) == -1) {
-		thd_log_info("sysfs read failed %s\n", p.c_str());
-		close(fd);
-		return -errno;
-	}
-	int ret = ::read(fd, buf, len);
+	int ret = ::pread(fd, buf, len, position);
 	if (ret < 0)
 		thd_log_info("sysfs read failed %s\n", p.c_str());
-	close(fd);
 
 	return ret;
 }
@@ -135,19 +146,18 @@ int csys_fs::read(const std::string &path, unsigned int position, char *buf,
 int csys_fs::read(const std::string &path, int *ptr_val) {
 	std::string p = base_path + path;
 	char str[16];
-	int ret;
 
-	int fd = ::open(p.c_str(), O_RDONLY);
+	int fd = get_cached_fd(p);
 	if (fd < 0) {
 		thd_log_info("sysfs open failed %s\n", p.c_str());
 		return -errno;
 	}
-	ret = ::read(fd, str, sizeof(str));
-	if (ret > 0)
+	int ret = ::pread(fd, str, sizeof(str) - 1, 0);
+	if (ret > 0) {
+		str[ret] = '\0';
 		*ptr_val = atoi(str);
-	else
+	} else
 		thd_log_info("sysfs read failed %s\n", p.c_str());
-	close(fd);
 
 	return ret;
 }
@@ -155,19 +165,18 @@ int csys_fs::read(const std::string &path, int *ptr_val) {
 int csys_fs::read(const std::string &path, unsigned long *ptr_val) {
 	std::string p = base_path + path;
 	char str[32];
-	int ret;
 
-	int fd = ::open(p.c_str(), O_RDONLY);
+	int fd = get_cached_fd(p);
 	if (fd < 0) {
 		thd_log_info("sysfs read failed %s\n", p.c_str());
 		return -errno;
 	}
-	ret = ::read(fd, str, sizeof(str));
-	if (ret > 0)
+	int ret = ::pread(fd, str, sizeof(str) - 1, 0);
+	if (ret > 0) {
+		str[ret] = '\0';
 		*ptr_val = atol(str);
-	else
+	} else
 		thd_log_info("sysfs read failed %s\n", p.c_str());
-	close(fd);
 
 	return ret;
 }
@@ -179,6 +188,12 @@ int csys_fs::read(const std::string &path, std::string &buf) {
 #ifndef ANDROID
 	try {
 #endif
+		int ret = check_non_symbolic_path(p);
+		if (ret == THD_ERROR) {
+			thd_log_info("sysfs read failed [path is symbolic link] %s\n", p.c_str());
+			return -EINVAL;
+		}
+
 		std::ifstream f(p.c_str(), std::fstream::in);
 		if (f.fail()) {
 			thd_log_info("sysfs read failed %s\n", p.c_str());
@@ -186,8 +201,9 @@ int csys_fs::read(const std::string &path, std::string &buf) {
 		}
 		f >> buf;
 		if (f.bad()) {
+			f.close();
 			thd_log_info("sysfs read failed %s\n", p.c_str());
-			ret = -EIO;
+			return -EIO;
 		}
 		f.close();
 #ifndef ANDROID
@@ -216,6 +232,7 @@ size_t csys_fs::size(const std::string &path) {
 }
 
 int csys_fs::create(int flags, mode_t mode) {
+	mode_t _mode = mode | O_NOFOLLOW;
 
 	thd_log_debug("create :%s\n", base_path.c_str());
 
@@ -245,7 +262,7 @@ int csys_fs::create(int flags, mode_t mode) {
 		}
 	}
 
-	int fd = ::open(base_path.c_str(), flags, mode);
+	int fd = ::open(base_path.c_str(), flags, _mode);
 	if (fd < 0) {
 		thd_log_info("sysfs create failed %s\n", base_path.c_str());
 		return -errno;

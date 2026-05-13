@@ -253,6 +253,23 @@ int cthd_engine::check_acpi_platform_profile() {
 	return THD_SUCCESS;
 }
 
+void cthd_engine::thd_parse_features()
+{
+	features_parser.parser_init();
+	if (features_parser.start_parse() == THD_SUCCESS) {
+		thd_log_debug("Parsed features from XML config file\n");
+		int ret = features_parser.start_parse();
+		if (ret == THD_SUCCESS) {
+			thd_log_debug("Features parsed successfully from XML config file\n");
+		} else {
+			thd_log_debug("Failed to parse features from XML config file\n");
+		}
+		features_parser.parser_deinit();
+	} else {
+		thd_log_debug("No features parsed from XML config file\n");
+	}
+}
+
 int cthd_engine::thd_engine_init(bool ignore_cpuid_check, bool adaptive) {
 	int ret;
 
@@ -368,6 +385,11 @@ int cthd_engine::thd_engine_start() {
 		}
 		if (i == zones.size()) {
 			thd_log_info("Proceed without polling mode!\n");
+		}
+
+		if (check_feature(KOBJECT_UEVENT_SUPPORT) == 0) {
+			thd_log_info("Kobject uevent support is disabled by config file\n");
+			goto skip_kobj;
 		}
 
 		uevent_fd = poll_fd_cnt;
@@ -1257,6 +1279,11 @@ int cthd_engine::user_add_cdev(std::string cdev_name, std::string cdev_path,
 }
 
 int cthd_engine::parser_init() {
+	if (check_feature(XML_THERMAL_CONFIG) == 0) {
+		thd_log_info("Parser is disabled by config file\n");
+		parser_disabled = true;
+	}
+
 	if (parser_disabled)
 		return THD_ERROR;
 	if (parser_init_done)

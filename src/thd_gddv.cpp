@@ -26,6 +26,7 @@
 #include <dirent.h>
 #include <errno.h>
 #include <inttypes.h>
+#include <limits.h>
 #include "thd_lzma_dec.h"
 #include <linux/input.h>
 #include <memory>
@@ -99,11 +100,25 @@ cthd_gddv::~cthd_gddv() {
 }
 
 int cthd_gddv::get_type(char *object, int *offset) {
+	if (!object || !offset || *offset < 0 ||
+			*offset + (int) sizeof(uint32_t) > gddv_cur_buf_len) {
+		thd_log_warn("GDDV: get_type out of bounds (off=%d len=%d)\n",
+				offset ? *offset : -1, gddv_cur_buf_len);
+		throw gddv_exception;
+	}
 	return *(uint32_t*) (object + *offset);
 }
 
 uint64_t cthd_gddv::get_uint64(char *object, int *offset) {
 	uint64_t value;
+
+	if (!object || !offset || *offset < 0 ||
+			*offset + (int) sizeof(uint32_t) > gddv_cur_buf_len) {
+		thd_log_warn("GDDV: get_uint64 type read out of bounds (off=%d len=%d)\n",
+				offset ? *offset : -1, gddv_cur_buf_len);
+		throw gddv_exception;
+	}
+
 	int type = *(uint32_t*) (object + *offset);
 
 	if (type != 4) {
@@ -112,6 +127,12 @@ uint64_t cthd_gddv::get_uint64(char *object, int *offset) {
 	}
 	*offset += 4;
 
+	if (*offset + (int) sizeof(uint64_t) > gddv_cur_buf_len) {
+		thd_log_warn("GDDV: get_uint64 value read out of bounds (off=%d len=%d)\n",
+				*offset, gddv_cur_buf_len);
+		throw gddv_exception;
+	}
+
 	value = *(uint64_t*) (object + *offset);
 	*offset += 8;
 
@@ -119,9 +140,17 @@ uint64_t cthd_gddv::get_uint64(char *object, int *offset) {
 }
 
 char* cthd_gddv::get_string(char *object, int *offset) {
-	int type = *(uint32_t*) (object + *offset);
 	uint64_t length;
 	char *value;
+
+	if (!object || !offset || *offset < 0 ||
+			*offset + (int) sizeof(uint32_t) > gddv_cur_buf_len) {
+		thd_log_warn("GDDV: get_string type read out of bounds (off=%d len=%d)\n",
+				offset ? *offset : -1, gddv_cur_buf_len);
+		throw gddv_exception;
+	}
+
+	int type = *(uint32_t*) (object + *offset);
 
 	if (type != 8) {
 		thd_log_warn("Found object of type %d, expecting 8\n", type);
@@ -129,12 +158,45 @@ char* cthd_gddv::get_string(char *object, int *offset) {
 	}
 	*offset += 4;
 
+	if (*offset + (int) sizeof(uint64_t) > gddv_cur_buf_len) {
+		thd_log_warn("GDDV: get_string length read out of bounds (off=%d len=%d)\n",
+				*offset, gddv_cur_buf_len);
+		throw gddv_exception;
+	}
+
 	length = *(uint64_t*) (object + *offset);
 	*offset += 8;
+
+	/* Reject lengths that would overflow the int offset arithmetic
+	 * or read past the buffer. */
+	if (length > (uint64_t) INT_MAX ||
+			*offset + (int) length > gddv_cur_buf_len) {
+		thd_log_warn("GDDV: get_string value out of bounds (off=%d len=%d need=%llu)\n",
+				*offset, gddv_cur_buf_len,
+				(unsigned long long) length);
+		throw gddv_exception;
+	}
 
 	value = &object[*offset];
 	*offset += length;
 	return value;
+}
+
+/*
+ * Bounded variant that returns a std::string constructed from the
+ * exact field length, so callers cannot read past the declared length
+ * even if the on-disk string is not NUL-terminated.
+ */
+char* cthd_gddv::get_string_obj(char *object, int *offset) {
+	int saved = *offset;
+	char *p = get_string(object, offset);
+	/* get_string consumes 4 (type) + 8 (length) + length bytes. */
+	int consumed = *offset - saved;
+	int length = consumed - 12;
+	if (length < 0)
+		return nullptr;
+
+	return p;
 }
 
 int cthd_gddv::merge_custom(struct custom_condition *custom,
@@ -164,7 +226,9 @@ int cthd_gddv::parse_appc(char *appc, int len) {
 	int offset = 0;
 	uint64_t version;
 
-	if (appc[0] != 4) {
+	gddv_cur_buf_len = len;
+
+	if (len < 1 || appc[0] != 4) {
 		thd_log_info("Found malformed APPC table, ignoring\n");
 		return 0;
 	}
@@ -182,8 +246,8 @@ int cthd_gddv::parse_appc(char *appc, int len) {
 
 		condition.condition = (enum adaptive_condition) get_uint64(appc,
 				&offset);
-		condition.name = get_string(appc, &offset);
-		condition.participant = get_string(appc, &offset);
+		condition.name = get_string_obj(appc, &offset);
+		condition.participant = get_string_obj(appc, &offset);
 		condition.domain = get_uint64(appc, &offset);
 		condition.type = get_uint64(appc, &offset);
 		custom_conditions.push_back(std::move(condition));
@@ -194,6 +258,7 @@ int cthd_gddv::parse_appc(char *appc, int len) {
 
 int cthd_gddv::parse_apat(char *apat, int len) {
 	int offset = 0;
+	gddv_cur_buf_len = len;
 	uint64_t version = get_uint64(apat, &offset);
 
 	if (version != 2) {
@@ -205,11 +270,11 @@ int cthd_gddv::parse_apat(char *apat, int len) {
 		struct adaptive_target target;
 
 		target.target_id = get_uint64(apat, &offset);
-		target.name = get_string(apat, &offset);
-		target.participant = get_string(apat, &offset);
+		target.name = get_string_obj(apat, &offset);
+		target.participant = get_string_obj(apat, &offset);
 		target.domain = get_uint64(apat, &offset);
-		target.code = get_string(apat, &offset);
-		target.argument = get_string(apat, &offset);
+		target.code = get_string_obj(apat, &offset);
+		target.argument = get_string_obj(apat, &offset);
 		targets.push_back(std::move(target));
 	}
 	return 0;
@@ -231,6 +296,7 @@ void cthd_gddv::dump_apat()
 int cthd_gddv::parse_apct(char *apct, int len) {
 	int i;
 	int offset = 0;
+	gddv_cur_buf_len = len;
 	uint64_t version = get_uint64(apct, &offset);
 
 	if (version == 1) {
@@ -319,7 +385,7 @@ int cthd_gddv::parse_apct(char *apct, int len) {
 
 				condition.condition = adaptive_condition(
 						get_uint64(apct, &offset));
-				condition.device = get_string(apct, &offset);
+				condition.device = get_string_obj(apct, &offset);
 				offset += 12;
 				condition.comparison = adaptive_comparison(
 						get_uint64(apct, &offset));
@@ -488,6 +554,12 @@ ppcc_t* cthd_gddv::get_ppcc_param(const std::string& name) {
 int cthd_gddv::parse_ppcc(char *name, char *buf, int len) {
 	ppcc_t ppcc;
 
+	/* The first block reads up to offset 84 (76 + sizeof(uint64_t)). */
+	if (len < 84) {
+		thd_log_warn("PPCC table too small (%d), ignoring\n", len);
+		return 0;
+	}
+
 	ppcc.name = name;
 	ppcc.power_limit_min = *(uint64_t*) (buf + 28);
 	ppcc.power_limit_max = *(uint64_t*) (buf + 40);
@@ -538,6 +610,7 @@ void cthd_gddv::dump_ppcc()
 
 int cthd_gddv::parse_psvt(char *name, char *buf, int len) {
 	int offset = 0;
+	gddv_cur_buf_len = len;
 	int version = get_uint64(buf, &offset);
 	struct psvt psvt;
 
@@ -553,15 +626,15 @@ int cthd_gddv::parse_psvt(char *name, char *buf, int len) {
 	while (offset < len) {
 		struct psv psv;
 
-		psv.source = get_string(buf, &offset);
-		psv.target = get_string(buf, &offset);
+		psv.source = get_string_obj(buf, &offset);
+		psv.target = get_string_obj(buf, &offset);
 		psv.priority = get_uint64(buf, &offset);
 		psv.sample_period = get_uint64(buf, &offset);
 		psv.temp = get_uint64(buf, &offset);
 		psv.domain = get_uint64(buf, &offset);
 		psv.control_knob = get_uint64(buf, &offset);
 		if (get_type(buf, &offset) == 8) {
-			psv.limit = get_string(buf, &offset);
+			psv.limit = get_string_obj(buf, &offset);
 		} else {
 			uint64_t tmp = get_uint64(buf, &offset);
 			psv.limit = std::to_string(tmp);
@@ -632,6 +705,8 @@ int cthd_gddv::parse_itmt3(char *name, char *buf, unsigned int len) {
 	unsigned int offset = 0;
 	struct itmt itmt;
 
+	gddv_cur_buf_len = (int) len;
+
 	if (name == nullptr)
 		itmt.name = "Default";
 	else
@@ -671,6 +746,7 @@ int cthd_gddv::parse_itmt3(char *name, char *buf, unsigned int len) {
 int cthd_gddv::parse_vspt(char *name, char *buf, int len)
 {
 	int offset = 0;
+	gddv_cur_buf_len = len;
 	int version = get_uint64(buf, &offset);
 
 	if (version > 1) {
@@ -699,6 +775,7 @@ int cthd_gddv:: parse_vsct(char *name, char *buf, int len)
 
 	thd_log_debug(" vsct name %s\n", vscts_name.c_str());
 	int offset = 0;
+	gddv_cur_buf_len = len;
 	int version = get_uint64(buf, &offset);
 
 	if (version > 1) {
@@ -709,7 +786,7 @@ int cthd_gddv:: parse_vsct(char *name, char *buf, int len)
 	while (offset < len) {
 		struct vsct_entry vsct;
 
-		vsct.target = get_string(buf, &offset);
+		vsct.target = get_string_obj(buf, &offset);
 		vsct.domain_type = get_uint64(buf, &offset);
 		vsct.coeff_type = get_uint64(buf, &offset);
 		vsct.coeff = get_uint64(buf, &offset);
@@ -750,6 +827,7 @@ void cthd_gddv::dump_vspt() {
 
 int cthd_gddv::parse_itmt(char *name, char *buf, int len) {
 	int offset = 0;
+	gddv_cur_buf_len = len;
 	int version = get_uint64(buf, &offset);
 	struct itmt itmt;
 
@@ -770,11 +848,11 @@ int cthd_gddv::parse_itmt(char *name, char *buf, int len) {
 	while (offset < len) {
 		struct itmt_entry itmt_entry;
 
-		itmt_entry.target = get_string(buf, &offset);
+		itmt_entry.target = get_string_obj(buf, &offset);
 		itmt_entry.trip_point = get_uint64(buf, &offset);
-		itmt_entry.pl1_min = get_string(buf, &offset);
-		itmt_entry.pl1_max = get_string(buf, &offset);
-		itmt_entry.unused = get_string(buf, &offset);
+		itmt_entry.pl1_min = get_string_obj(buf, &offset);
+		itmt_entry.pl1_max = get_string_obj(buf, &offset);
+		itmt_entry.unused = get_string_obj(buf, &offset);
 		if (version == 2) {
 			// Ref DPTF/Sources/Manager/DataManager.cpp DataManager::loadItmtTableObject()
 			std::string dummy_str;
@@ -782,7 +860,7 @@ int cthd_gddv::parse_itmt(char *name, char *buf, int len) {
 
 			// There are three additional fields
 			dummy1 = get_uint64(buf, &offset);
-			dummy_str = get_string(buf, &offset);
+			dummy_str = get_string_obj(buf, &offset);
 			dummy2 = get_uint64(buf, &offset);
 			dummy3 = get_uint64(buf, &offset);
 			thd_log_debug("ignore dummy_str:%s %llu %llu %llu\n", dummy_str.c_str(), dummy1, dummy2, dummy3);
@@ -819,6 +897,9 @@ void cthd_gddv::parse_idsp(char *name, char *start, int length) {
 	int len, i = 0;
 	unsigned char *str = (unsigned char*) start;
 
+	if (length < 0)
+		return;
+
 	while (i < length) {
 		char idsp[64];
 		std::string idsp_str;
@@ -835,6 +916,12 @@ void cthd_gddv::parse_idsp(char *name, char *start, int length) {
 		i += 4;
 
 		len = *(int*) str;
+		/* Reject negative or absurd lengths from untrusted input */
+		if (len < 16 || len > (length - i - 8)) {
+			thd_log_warn("IDSP entry has invalid length %d (remaining %d)\n",
+					len, length - i - 8);
+			return;
+		}
 		str += 8; // Get to actual contents
 		i += 8;
 
@@ -876,6 +963,11 @@ void cthd_gddv::parse_trip_point(char *name, char *type, char *val, int len)
 {
 	struct trippoint trip;
 
+	if (len < (int) sizeof(int)) {
+		thd_log_warn("trip point payload too small (%d)\n", len);
+		return;
+	}
+
 	trip.name = name;
 	trip.type_str = type;
 	if (!trip.type_str.compare(0, 2, "_c"))
@@ -905,7 +997,7 @@ void cthd_gddv::dump_trips() {
 int cthd_gddv::get_trip_temp(const std::string& name, trip_point_type_t type) {
 	std::string search_name = name + ".D0";
 	for (unsigned int i = 0; i < trippoints.size(); ++i) {
-		if (!trippoints[i].name.compare(search_name)
+		if (trippoints[i].name == search_name
 				&& trippoints[i].type == type)
 			return trippoints[i].temp;
 	}
@@ -917,6 +1009,8 @@ int cthd_gddv::parse_trt(char *buf, int len)
 {
 	int offset = 0;
 
+	gddv_cur_buf_len = len;
+
 	thd_log_debug("TRT len:%d\n", len);
 
 	if (len > 0) {
@@ -927,8 +1021,8 @@ int cthd_gddv::parse_trt(char *buf, int len)
 	while (offset < len) {
 		struct trt_entry entry;
 
-		entry.source = get_string(buf, &offset);
-		entry.dest = get_string(buf, &offset);
+		entry.source = get_string_obj(buf, &offset);
+		entry.dest = get_string_obj(buf, &offset);
 		entry.priority = get_uint64(buf, &offset);
 		entry.sample_rate = get_uint64(buf, &offset);
 		entry.resd0 = get_uint64(buf, &offset);
@@ -954,40 +1048,47 @@ int cthd_gddv::parse_trt(char *buf, int len)
 #define ESIFDV_ITEM_KEYS_REV0_SIGNATURE	0xA0D8
 
 int cthd_gddv::handle_compressed_gddv(char *buf, int size) {
+
+	if (!buf || !size || size <= (int)sizeof(struct header))
+		return THD_ERROR;
+
 	struct header *header = (struct header*) buf;
-	uint64_t payload_output_size;
+	if (header->headersize > size)
+		return THD_ERROR;
+
 	uint64_t output_size;
 	int res;
 	size_t destlen=0;
 
-	payload_output_size = *(uint64_t*) (buf + header->headersize + 5);
-	output_size = header->headersize + payload_output_size;
-	std::unique_ptr<unsigned char[]> decompressed(new unsigned char[output_size]);
+	res = lzma_decompress(nullptr, &destlen, (const unsigned char*) (buf + header->headersize),
+				size - header->headersize);
+	if (res)
+		return THD_ERROR;
 
+	output_size = header->headersize + destlen;
+	std::unique_ptr<unsigned char[]> decompressed(new unsigned char[output_size]);
 	if (!decompressed) {
 		thd_log_warn("Failed to allocate buffer for decompressed output\n");
-		throw gddv_exception;
+		return THD_ERROR;
 	}
+	thd_log_debug("output size =%lu\n", output_size);
 
-	res=lzma_decompress(nullptr,&destlen, (const unsigned char*) (buf + header->headersize), size-header->headersize);
+	res=lzma_decompress((unsigned char*)(decompressed.get() + header->headersize),
+				&destlen,
+				(const unsigned char*) (buf + header->headersize),
+				size - header->headersize);
 
-	thd_log_debug("decompress result =%d\n",res);
-
-	res=lzma_decompress(( unsigned char*)(decompressed.get() + header->headersize),
-	                &destlen,
-	                (const unsigned char*) (buf + header->headersize),
-	                size-header->headersize);
-
-	thd_log_debug("decompress result =%d\n",res);
+	if (res)
+		return THD_ERROR;
 
 	/* Copy and update header.
 	 * This will contain one or more nested repositories usually. */
 	memcpy (decompressed.get(), buf, header->headersize);
 	header = (struct header*) decompressed.get();
 	header->v2.flags &= ~ESIF_SERVICE_CONFIG_COMPRESSED;
-	header->v2.payload_size = payload_output_size;
+	header->v2.payload_size = destlen;
 
-	res = parse_gddv((char*) decompressed.get(), output_size, nullptr);
+	res = parse_gddv((char*)decompressed.get(), output_size, nullptr);
 
 	return res;
 }
@@ -1004,19 +1105,57 @@ int cthd_gddv::parse_gddv_key(char *buf, int size, int *end_offset) {
 	char *point = nullptr;
 	char *ns = nullptr;
 
+	if (size < 0 || (size_t) size < sizeof(keyflags) + sizeof(keylength)) {
+		thd_log_warn("GDDV key truncated (size=%d)\n", size);
+		throw gddv_exception;
+	}
+
 	memcpy(&keyflags, buf + offset, sizeof(keyflags));
 	offset += sizeof(keyflags);
 	memcpy(&keylength, buf + offset, sizeof(keylength));
 	offset += sizeof(keylength);
-	std::unique_ptr<char[]> key(new char[keylength]);
+
+	/* Validate keylength against remaining buffer; reserve one byte for
+	 * a NUL terminator so subsequent strtok() cannot walk off the end
+	 * if the on-disk key is not NUL-terminated. */
+	if (keylength == 0 || keylength >= (uint32_t) INT_MAX ||
+		offset + (int) keylength > size) {
+		thd_log_warn("GDDV keylength %u rejected (offset=%d size=%d)\n",
+				keylength, offset, size);
+		throw gddv_exception;
+	}
+	std::unique_ptr<char[]> key(new char[(size_t) keylength + 1]);
+	if (!key) {
+		thd_log_warn("Mem alloc failed for key\n");
+		throw gddv_exception;
+	}
 	memcpy(key.get(), buf + offset, keylength);
+	key[keylength] = '\0';
 	offset += keylength;
+
+	if (offset + (int) (sizeof(valtype) + sizeof(vallength)) > size) {
+		thd_log_warn("GDDV value header truncated (offset=%d size=%d)\n",
+				offset, size);
+		throw gddv_exception;
+	}
 	memcpy(&valtype, buf + offset, sizeof(valtype));
 	offset += sizeof(valtype);
 	memcpy(&vallength, buf + offset, sizeof(vallength));
 	offset += sizeof(vallength);
-	std::unique_ptr<char[]> val(new char[vallength]);
+
+	if (vallength >= (uint32_t) INT_MAX ||
+			offset + (int) vallength > size) {
+		thd_log_warn("GDDV vallength %u rejected (offset=%d size=%d)\n",
+				vallength, offset, size);
+		throw gddv_exception;
+	}
+	std::unique_ptr<char[]> val(new char[(size_t) vallength + 1]);
+	if (!val) {
+		thd_log_warn("Mem alloc failed for val\n");
+		throw gddv_exception;
+	}
 	memcpy(val.get(), buf + offset, vallength);
+	val[vallength] = '\0';
 	offset += vallength;
 
 	if (end_offset)
@@ -1147,7 +1286,7 @@ int cthd_gddv::parse_gddv(char *buf, int size, int *end_offset) {
 		thd_log_debug("DV comment: %s\n", comment);
 
 		thd_log_debug("Got payload of size %d (data length: %d)\n", size, header->v2.payload_size);
-		size = header->v2.payload_size;
+		//size = header->v2.payload_size;
 	}
 
 	while ((offset + header->headersize) < size) {
@@ -1810,28 +1949,37 @@ int cthd_gddv::format_dv_filename(std::stringstream& file_name)
 
 std::unique_ptr<char[]> cthd_gddv::gddv_load(size_t *size)
 {
-	size_t data_buffer_index = 0;
-	FILE *fp;
-	std::unique_ptr<char[]> data_buffer(new char[MAX_GDDV_FILE_SIZE]);
-
 	*size = 0;
+
+	if (thd_engine->check_feature(DATA_VAULT_FS) == 0) {
+		thd_log_debug("Data vault filesystem loading is not allowed by config\n");
+		return {};
+	}
+
+	std::stringstream file_name_str;
+	std::unique_ptr<char[]> data_buffer(new char[MAX_GDDV_FILE_SIZE]);
+	if (!data_buffer) {
+		thd_log_error("Unable to allocate memory for GDDV file load");
+		return {};
+	}
 
 #ifdef GDDV_LOAD_FROM_FILE
 	std::string dir_name = TDCONFDIR;
-	char *file_name;
 	ssize_t line_size;
 	char *line_buffer = nullptr;
 	size_t line_buffer_size = 0;
+	size_t data_buffer_index = 0;
+	FILE *fp;
 
-	file_name = dir_name + "/" + "data_vault.hex";
+	file_name_str << dir_name << "/data_vault.hex";
 
-	fp = fopen(file_name.c_str(), "r");
+	fp = fopen(file_name_str.str().c_str(), "r");
 	if (!fp) {
 		*size = 0;
 		return {};
 	}
 
-	thd_log_debug("Found data_vault %s\n", file_name.c_str());
+	thd_log_debug("Found data_vault %s\n", file_name_str.str().c_str());
 
 	line_size = getline(&line_buffer, &line_buffer_size, fp);
 
@@ -1846,6 +1994,9 @@ std::unique_ptr<char[]> cthd_gddv::gddv_load(size_t *size)
 		}
 
 		while (token != NULL) {
+			if (data_buffer_index >= MAX_GDDV_FILE_SIZE)
+				break;
+
 			token = strtok(NULL, s);
 			if (token) {
 				int byte;
@@ -1867,11 +2018,8 @@ std::unique_ptr<char[]> cthd_gddv::gddv_load(size_t *size)
 	return data_buffer;
 #endif
 
-	std::stringstream file_name_str;
-
 	if (format_dv_filename(file_name_str) == THD_ERROR)
 		return {};
-
 
 	struct stat file_stat;
 
@@ -1891,45 +2039,28 @@ std::unique_ptr<char[]> cthd_gddv::gddv_load(size_t *size)
 		return {};
 	}
 
-	// Check if file is not a symbolic link
-	if (lstat(file_name_str.str().c_str(), &file_stat) == -1) {
+	csys_fs sysfs("");
+
+	size_t _size = sysfs.size(file_name_str.str().c_str());
+	if (_size == 0) {
+		thd_log_debug("Unable to open GDDV data vault\n");
 		return {};
 	}
 
-	if (S_ISLNK(file_stat.st_mode)) {
-		thd_log_info("Config file %s is a symbolic link\n", file_name_str.str().c_str());
+	if (_size > MAX_GDDV_FILE_SIZE)
+		_size = MAX_GDDV_FILE_SIZE;
+
+	thd_log_debug("Found data vault file %s of size %zu\n", file_name_str.str().c_str(), _size);
+
+	if (sysfs.read(file_name_str.str().c_str(), data_buffer.get(), _size)
+			< int(_size)) {
+		thd_log_debug("Unable to read GDDV data vault\n");
 		return {};
 	}
 
-	fp = fopen(file_name_str.str().c_str(), "r");
-	if (fp) {
-		int x;
+	*size = _size;
 
-		while ((x = fgetc(fp)) != EOF) {
-			if (data_buffer_index >= MAX_GDDV_FILE_SIZE) {
-				thd_log_warn("GDDV file too large, max supported size is %d bytes\n",
-						MAX_GDDV_FILE_SIZE);
-				fclose(fp);
-				*size = 0;
-				return {};
-			}
-
-			data_buffer[data_buffer_index++] = static_cast<char>(x);
-		}
-
-		if (ferror(fp)) {
-			thd_log_warn("Failed while reading GDDV file\n");
-			fclose(fp);
-			*size = 0;
-			return {};
-		}
-
-		fclose(fp);
-		*size = data_buffer_index;
-		return data_buffer;
-	}
-
-	return {};
+	return data_buffer;
 }
 
 int cthd_gddv::gddv_init(std::string& base_path) {

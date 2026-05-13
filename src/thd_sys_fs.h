@@ -34,10 +34,14 @@
 #include <iostream>
 #include <sstream>
 #include <string>
+#include <unordered_map>
 
 class csys_fs {
 private:
 	std::string base_path;
+	std::unordered_map<std::string, int> fd_cache;
+
+	int get_cached_fd(const std::string &full_path);
 
 public:
 	csys_fs() :
@@ -46,6 +50,11 @@ public:
 	csys_fs(std::string path) :
 			base_path(std::move(path)) {
 	}
+	~csys_fs();
+	csys_fs(const csys_fs &) = delete;
+	csys_fs &operator=(const csys_fs &) = delete;
+	csys_fs(csys_fs &&) = delete;
+	csys_fs &operator=(csys_fs &&) = delete;
 
 	/* write data to base path (dir) + provided path */
 	int write(const std::string &path, const std::string &buf);

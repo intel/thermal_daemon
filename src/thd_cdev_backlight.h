@@ -29,7 +29,6 @@
 
 class cthd_cdev_backlight: public cthd_cdev {
 private:
-	static const std::string backlight_devices[];
 	int ref_backlight_state;
 	int min_back_light;
 public:

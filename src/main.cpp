@@ -147,7 +147,7 @@ void clean_up_lockfile(void) {
 
 bool check_thermald_running() {
 
-	lock_file_handle = open(lock_file, O_RDWR | O_CREAT, 0600);
+	lock_file_handle = open(lock_file, O_RDWR | O_CREAT | O_NOFOLLOW, 0600);
 	if (lock_file_handle == -1) {
 		/* Couldn't open lock file */
 		thd_log_error("Could not open PID lock file %s, exiting\n", lock_file);
