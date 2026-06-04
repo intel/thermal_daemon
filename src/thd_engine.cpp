@@ -1109,6 +1109,17 @@ int cthd_engine::user_add_virtual_sensor(std::string name,
 	cthd_sensor *sensor;
 	int ret;
 
+	if (!is_valid_thermal_object_name(name)) {
+		thd_log_warn("Invalid virtual sensor name %s\n", name.c_str());
+		return THD_ERROR;
+	}
+
+	if (!is_valid_finite_value(slope, -1000.0, 1000.0)
+			|| !is_valid_finite_value(intercept, -1000.0, 1000.0)) {
+		thd_log_warn("Invalid virtual sensor parameters for %s\n", name.c_str());
+		return THD_ERROR;
+	}
+
 	std::lock_guard<std::mutex> guard(thd_engine_mutex);
 
 	for (unsigned int i = 0; i < sensors.size(); ++i) {
@@ -1165,6 +1176,9 @@ int cthd_engine::user_set_psv_temp(const std::string& name, unsigned int temp) {
 	cthd_zone *zone;
 	int ret;
 
+	if (!is_valid_thermal_object_name(name))
+		return THD_ERROR;
+
 	std::lock_guard<std::mutex> guard(thd_engine_mutex);
 	zone = get_zone(name);
 	if (!zone) {
@@ -1181,6 +1195,9 @@ int cthd_engine::user_set_max_temp(const std::string& name, unsigned int temp) {
 	cthd_zone *zone;
 	int ret;
 
+	if (!is_valid_thermal_object_name(name))
+		return THD_ERROR;
+
 	std::lock_guard<std::mutex> guard(thd_engine_mutex);
 	zone = get_zone(name);
 	if (!zone) {
@@ -1195,6 +1212,11 @@ int cthd_engine::user_set_max_temp(const std::string& name, unsigned int temp) {
 
 int cthd_engine::user_add_zone(std::string zone_name, unsigned int trip_temp,
 		std::string sensor_name, std::string cdev_name) {
+	if (!is_valid_thermal_object_name(zone_name)) {
+		thd_log_warn("Invalid zone name %s\n", zone_name.c_str());
+		return THD_ERROR;
+	}
+
 	std::lock_guard<std::mutex> guard(thd_engine_mutex);
 	int ret = THD_SUCCESS;
 
@@ -1221,6 +1243,9 @@ int cthd_engine::user_add_zone(std::string zone_name, unsigned int trip_temp,
 int cthd_engine::user_set_zone_status(const std::string& name, int status) {
 	cthd_zone *zone;
 
+	if (!is_valid_thermal_object_name(name))
+		return THD_ERROR;
+
 	std::lock_guard<std::mutex> guard(thd_engine_mutex);
 	zone = get_zone(name);
 	if (!zone) {
@@ -1239,6 +1264,9 @@ int cthd_engine::user_set_zone_status(const std::string& name, int status) {
 int cthd_engine::user_get_zone_status(const std::string& name, int *status) {
 	cthd_zone *zone;
 
+	if (!is_valid_thermal_object_name(name))
+		return THD_ERROR;
+
 	std::lock_guard<std::mutex> guard(thd_engine_mutex);
 	zone = get_zone(name);
 	if (!zone) {
@@ -1254,6 +1282,9 @@ int cthd_engine::user_get_zone_status(const std::string& name, int *status) {
 }
 
 int cthd_engine::user_delete_zone(const std::string& name) {
+	if (!is_valid_thermal_object_name(name))
+		return THD_ERROR;
+
 	std::lock_guard<std::mutex> guard(thd_engine_mutex);
 	for (unsigned int i = 0; i < zones.size(); ++i) {
 		if (zones[i]->get_zone_type() == name) {

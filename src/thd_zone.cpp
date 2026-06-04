@@ -33,6 +33,7 @@
 
 #include "thd_zone.h"
 #include "thd_engine.h"
+#include "thd_util.h"
 
 cthd_zone::cthd_zone(int _index, std::string control_path, sensor_relate_t rel) :
 		index(_index), zone_sysfs(std::move(control_path)), zone_temp(0), zone_active(
@@ -90,6 +91,9 @@ void cthd_zone::update_zone_preference() {
 int cthd_zone::read_user_set_psv_temp() {
 	std::ostringstream filename;
 	int temp = -1;
+
+	if (!is_valid_thermal_object_name(type_str))
+		return -1;
 
 	filename << TDRUNDIR << "/" << "thd_user_psv_temp." << type_str << "."
 			<< "conf";
@@ -259,6 +263,9 @@ int cthd_zone::update_max_temperature(int max_temp) {
 	std::ostringstream filename;
 	std::ostringstream temp_str;
 
+	if (!is_valid_thermal_object_name(type_str))
+		return THD_ERROR;
+
 	filename << TDRUNDIR << "/" << "thd_user_set_max." << type_str << "."
 			<< "conf";
 	std::ofstream fout(filename.str().c_str());
@@ -276,6 +283,9 @@ int cthd_zone::update_psv_temperature(int psv_temp) {
 
 	std::ostringstream filename;
 	std::ostringstream temp_str;
+
+	if (!is_valid_thermal_object_name(type_str))
+		return THD_ERROR;
 
 	filename << TDRUNDIR << "/" << "thd_user_psv_temp." << type_str << "."
 			<< "conf";

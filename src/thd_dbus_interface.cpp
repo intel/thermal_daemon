@@ -29,6 +29,7 @@
 #include "thd_sensor.h"
 #include "thd_zone.h"
 #include "thd_trip_point.h"
+#include "thd_util.h"
 
 #include <gio/gio.h>
 #include <glib.h>
@@ -232,6 +233,8 @@ gboolean thd_dbus_interface_reinit(PrefObject *obj, GError **error) {
 
 gboolean thd_dbus_interface_set_user_max_temperature(PrefObject *obj,
 		gchar *zone_name, unsigned int temperature, GError **error) {
+	if (!is_valid_thermal_object_name(zone_name))
+		return FALSE;
 
 	thd_log_debug("thd_dbus_interface_set_user_set_point %s:%d\n", zone_name,
 			temperature);
@@ -250,6 +253,8 @@ gboolean thd_dbus_interface_set_user_max_temperature(PrefObject *obj,
 
 gboolean thd_dbus_interface_set_user_passive_temperature(PrefObject *obj,
 		gchar *zone_name, unsigned int temperature, GError **error) {
+	if (!is_valid_thermal_object_name(zone_name))
+		return FALSE;
 
 	thd_log_debug("thd_dbus_interface_set_user_passive_temperature %s:%u\n",
 			zone_name, temperature);
@@ -288,6 +293,11 @@ gboolean thd_dbus_interface_add_virtual_sensor(PrefObject *obj, gchar *name,
 	int ret;
 
 	g_assert(obj != nullptr);
+	if (!is_valid_thermal_object_name(name))
+		return FALSE;
+	if (!is_valid_finite_value(slope, -1000.0, 1000.0)
+			|| !is_valid_finite_value(intercept, -1000.0, 1000.0))
+		return FALSE;
 
 	thd_log_debug("thd_dbus_interface_add_sensor %s:%s\n", (char*) name,
 			(char *) dep_sensor);
@@ -479,6 +489,8 @@ gboolean thd_dbus_interface_add_zone_passive(PrefObject *obj, gchar *zone_name,
 	int ret;
 
 	g_assert(obj != nullptr);
+	if (!is_valid_thermal_object_name(zone_name))
+		return FALSE;
 
 	thd_log_debug("thd_dbus_interface_add_zone_passive %s\n",
 			(char*) zone_name);
