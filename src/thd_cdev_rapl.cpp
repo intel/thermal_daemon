@@ -379,6 +379,8 @@ int cthd_sysfs_cdev_rapl::update() {
 	if (rapl_sysfs_valid())
 		return THD_ERROR;
 
+	register_for_restoration();
+
 	ppcc = read_ppcc_power_limits();
 
 	if (ppcc) {

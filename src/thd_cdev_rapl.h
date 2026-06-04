@@ -65,6 +65,7 @@ private:
 	int rapl_update_time_window(int time_window);
 	int rapl_update_pl2_time_window(int time_window);
 	int rapl_read_enable_status();
+	void register_for_restoration();
 
 public:
 	static constexpr int rapl_no_time_windows = 6;

@@ -64,6 +64,7 @@ thermald_SOURCES = \
 	src/thd_zone_generic.cpp \
 	src/thd_cdev_cpufreq.cpp \
 	src/thd_cdev_rapl.cpp \
+	src/thd_cdev_rapl_restore.cpp \
 	src/thd_cdev_intel_pstate_driver.cpp \
 	src/thd_rapl_power_meter.cpp \
 	src/thd_trt_art_reader.cpp \
