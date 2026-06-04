@@ -79,6 +79,7 @@ bool workaround_enabled = false;
 bool disable_active_power = false;
 bool ignore_critical = false;
 bool power_floor_enable = false;
+bool adaptive_perf_enable = false;
 
 // check cpuid
 static gboolean ignore_cpuid_check = false;
@@ -353,6 +354,7 @@ int main(int argc, char *argv[]) {
 	}
 
 	if (adaptive) {
+		adaptive_perf_enable = true;
 		ret = thd_engine_create_adaptive_engine((bool) ignore_cpuid_check, (bool) test_mode);
 		if (ret != THD_SUCCESS) {
 			thd_log_info("--adaptive option failed on this platform\n");

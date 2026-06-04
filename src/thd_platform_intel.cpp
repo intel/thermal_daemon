@@ -42,47 +42,48 @@
 typedef struct {
 	unsigned int family;
 	unsigned int model;
+    unsigned int adaptive_only;
 } supported_ids_t;
 
 static supported_ids_t intel_id_table[] = {
-    { 6, 0x2a }, // Sandybridge
-    { 6, 0x3a }, // IvyBridge
-    { 6, 0x3c }, // Haswell
-    { 6, 0x45 }, // Haswell ULT
-    { 6, 0x46 }, // Haswell ULT
-    { 6, 0x3d }, // Broadwell
-    { 6, 0x47 }, // Broadwell-GT3E
-    { 6, 0x37 }, // Valleyview BYT
-    { 6, 0x4c }, // Brasewell
-    { 6, 0x4e }, // skylake
-    { 6, 0x5e }, // skylake
-    { 6, 0x5c }, // Broxton
-    { 6, 0x7a }, // Gemini Lake
-    { 6, 0x8e }, // kabylake
-    { 6, 0x9e }, // kabylake
-    { 6, 0x66 }, // Cannonlake
-    { 6, 0x7e }, // Icelake
-    { 6, 0x8c }, // Tigerlake_L
-    { 6, 0x8d }, // Tigerlake
-    { 6, 0xa5 }, // Cometlake
-    { 6, 0xa6 }, // Cometlake_L
-    { 6, 0xa7 }, // Rocketlake
-    { 6, 0x9c }, // Jasper Lake
-    { 6, 0x97 }, // Alderlake
-    { 6, 0x9a }, // Alderlake
-    { 6, 0xb7 }, // Raptorlake
-    { 6, 0xba }, // Raptorlake
-    { 6, 0xbe }, // Alderlake N
-    { 6, 0xbf }, // Raptorlake S
-    { 6, 0xaa }, // Mateor Lake L
-    { 6, 0xbd }, // Lunar Lake M
-    { 6, 0xc6 }, // Arrow Lake
-    { 6, 0xc5 }, // Arrow Lake H
-    { 6, 0xb5 }, // Arrow Lake U
-    { 6, 0xcc }, // Panther Lake L
-    { 15, 0x01 }, // Nova Lake S
-    { 15, 0x03 }, // Nova Lake U/P/H/Hx
-    { 0, 0 } // Last Invalid entry
+    { 6, 0x2a, 0 }, // Sandybridge
+    { 6, 0x3a, 0 }, // IvyBridge
+    { 6, 0x3c, 0 }, // Haswell
+    { 6, 0x45, 0 }, // Haswell ULT
+    { 6, 0x46, 0 }, // Haswell ULT
+    { 6, 0x3d, 0 }, // Broadwell
+    { 6, 0x47, 0 }, // Broadwell-GT3E
+    { 6, 0x37, 0 }, // Valleyview BYT
+    { 6, 0x4c, 0 }, // Brasewell
+    { 6, 0x4e, 0 }, // skylake
+    { 6, 0x5e, 0 }, // skylake
+    { 6, 0x5c, 0 }, // Broxton
+    { 6, 0x7a, 0 }, // Gemini Lake
+    { 6, 0x8e, 0 }, // kabylake
+    { 6, 0x9e, 0 }, // kabylake
+    { 6, 0x66, 0 }, // Cannonlake
+    { 6, 0x7e, 0 }, // Icelake
+    { 6, 0x8c, 0 }, // Tigerlake_L
+    { 6, 0x8d, 0 }, // Tigerlake
+    { 6, 0xa5, 0 }, // Cometlake
+    { 6, 0xa6, 0 }, // Cometlake_L
+    { 6, 0xa7, 0 }, // Rocketlake
+    { 6, 0x9c, 0 }, // Jasper Lake
+    { 6, 0x97, 0 }, // Alderlake
+    { 6, 0x9a, 0 }, // Alderlake
+    { 6, 0xb7, 0 }, // Raptorlake
+    { 6, 0xba, 0 }, // Raptorlake
+    { 6, 0xbe, 0 }, // Alderlake N
+    { 6, 0xbf, 0 }, // Raptorlake S
+    { 6, 0xaa, 0 }, // Meteor Lake L
+    { 6, 0xbd, 1 }, // Lunar Lake M
+    { 6, 0xc6, 1 }, // Arrow Lake
+    { 6, 0xc5, 1 }, // Arrow Lake H
+    { 6, 0xb5, 1 }, // Arrow Lake U
+    { 6, 0xcc, 1 }, // Panther Lake L
+    { 15, 0x01, 1 }, // Nova Lake S
+    { 15, 0x03, 1 }, // Nova Lake U/P/H/Hx
+    { 0, 0, 0 } // Last Invalid entry
 };
 
 static constexpr const char *blocklist_paths[] {
@@ -144,6 +145,10 @@ int intel_platform::check_cpu_id(bool &proc_list_matched) {
         if (intel_id_table[i].family == family && intel_id_table[i].model == model) {
             proc_list_matched = true;
             valid = true;
+            if (intel_id_table[i].adaptive_only && !adaptive_perf_enable) {
+                proc_list_matched = false;
+                thd_log_warn("CPU %u:%u is supported only in adaptive performance mode. Please enable --adaptive to use this platform.\n", family, model);
+            }
             break;
         }
         i++;

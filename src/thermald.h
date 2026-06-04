@@ -118,5 +118,5 @@ extern bool workaround_enabled;
 extern bool disable_active_power;
 extern bool ignore_critical;
 extern bool power_floor_enable;
-
+extern bool adaptive_perf_enable;
 #endif
