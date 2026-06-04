@@ -201,45 +201,6 @@ void intel_platform::workaround_rapl_mmio_power(void) {
         }
     }
 
-#ifndef ANDROID
-#ifdef __x86_64__
-    int map_fd;
-    void *rapl_mem;
-    unsigned char *rapl_pkg_pwr_addr;
-    unsigned long long pkg_power_limit;
-
-    unsigned int ebx, ecx, edx;
-    unsigned int fms, family, model;
-
-    ecx = edx = 0;
-    __cpuid(1, fms, ebx, ecx, edx);
-    family = (fms >> 8) & 0xf;
-    model = (fms >> 4) & 0xf;
-    if (family == 6 || family == 0xf)
-        model += ((fms >> 16) & 0xf) << 4;
-
-    // Apply for KabyLake only
-    if (model != 0x8e && model != 0x9e)
-        return;
-
-    map_fd = open("/dev/mem", O_RDWR, 0);
-    if (map_fd < 0)
-        return;
-
-    rapl_mem = mmap(nullptr, 4096, PROT_READ | PROT_WRITE, MAP_SHARED, map_fd,
-            0xfed15000);
-    if (!rapl_mem || rapl_mem == MAP_FAILED) {
-        close(map_fd);
-        return;
-    }
-
-    rapl_pkg_pwr_addr = ((unsigned char *)rapl_mem + 0x9a0);
-    pkg_power_limit = *(unsigned long long *)rapl_pkg_pwr_addr;
-    *(unsigned long long *)rapl_pkg_pwr_addr = pkg_power_limit
-            & ~BIT_ULL(15);
-
-    munmap(rapl_mem, 4096);
-    close(map_fd);
-#endif // __x86_64__
-#endif // ANDROID
+    // Direct MMIO access via /dev/mem has been removed.
+    // The workaround now relies on the sysfs-based RAPL MMIO path above.
 }
