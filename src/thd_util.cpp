@@ -24,10 +24,14 @@
 
 #include "thd_util.h"
 #include "thermald.h"
+#include <cctype>
 #include <cmath>
 #include <cerrno>
 #include <cstdlib>
 #include <climits>
+#include <fcntl.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
 bool starts_with(const std::string& s, const char *prefix)
 {
@@ -147,4 +151,50 @@ int parse_double_value(const std::string &str, double *result, double min_val, d
 
 	*result = val;
 	return 0;
+}
+
+bool is_valid_thermal_object_name(const std::string &name) {
+	if (name.empty() || name.size() > 128)
+		return false;
+
+	if (name == "." || name == "..")
+		return false;
+
+	for (unsigned char ch : name) {
+		if (!std::isalnum(ch) && ch != '_' && ch != '-' && ch != '.')
+			return false;
+	}
+
+	return true;
+}
+
+bool is_valid_finite_value(double value, double min_val, double max_val) {
+	return std::isfinite(value) && value >= min_val && value <= max_val;
+}
+
+int open_validated_xml_file(const std::string &filename, bool require_root_owner) {
+	int fd = open(filename.c_str(), O_RDONLY | O_NOFOLLOW | O_CLOEXEC);
+	if (fd < 0)
+		return -1;
+
+	struct stat file_stat;
+	if (fstat(fd, &file_stat) == -1) {
+		close(fd);
+		return -1;
+	}
+
+	if (!S_ISREG(file_stat.st_mode)) {
+		close(fd);
+		errno = EPERM;
+		return -1;
+	}
+
+	if (require_root_owner
+			&& (file_stat.st_uid != 0 || (file_stat.st_mode & (S_IWGRP | S_IWOTH)))) {
+		close(fd);
+		errno = EPERM;
+		return -1;
+	}
+
+	return fd;
 }

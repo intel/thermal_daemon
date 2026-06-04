@@ -44,4 +44,9 @@ int parse_int_value(const std::string &str, int *result, int min_val, int max_va
 // Returns 0 on success, -1 on error
 int parse_double_value(const std::string &str, double *result, double min_val, double max_val);
 
+bool is_valid_thermal_object_name(const std::string &name);
+bool is_valid_finite_value(double value, double min_val, double max_val);
+
+int open_validated_xml_file(const std::string &filename, bool require_root_owner = true);
+
 #endif /* THD_UTIL_H_ */
