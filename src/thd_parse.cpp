@@ -36,6 +36,9 @@
 
 #define DEBUG_PARSER_PRINT(x,...)
 
+static constexpr int thd_xml_parse_options = XML_PARSE_NONET | XML_PARSE_NOERROR
+		| XML_PARSE_NOWARNING;
+
 void cthd_parse::string_trim(std::string &str) {
 	std::string chars = "\n \t\r";
 
@@ -123,7 +126,7 @@ int cthd_parse::parser_init(const std::string& config_file) {
 		}
 	}
 
-	int fd = open(xml_config_file, O_RDONLY | O_NOFOLLOW | O_CLOEXEC);
+	int fd = open_validated_xml_file(xml_config_file);
 	if (fd < 0) {
 		if (errno == ELOOP) {
 			thd_log_warn("Config file %s is a symlink\n", xml_config_file);
@@ -133,40 +136,20 @@ int cthd_parse::parser_init(const std::string& config_file) {
 		return THD_ERROR;
 	}
 
-	struct stat file_stat;
-	if (fstat(fd, &file_stat) == -1) {
-		thd_log_warn("Could not stat opened file %s: %s\n", xml_config_file, strerror(errno));
-		close(fd);
-		return THD_ERROR;
-	}
-
-	// Make sure file is owned by root and not writable by group/others
-	if (file_stat.st_uid != 0) {
-		thd_log_info("Config file %s is not owned by root\n", xml_config_file);
-		close(fd);
-		return THD_ERROR;
-	}
-
-	if (file_stat.st_mode & (S_IWGRP | S_IWOTH)) {
-		thd_log_info("File %s is group, other writable\n", xml_config_file);
-		close(fd);
-		return THD_ERROR;
-	}
-
-	// Verify it's a regular file (not device, FIFO, etc.)
-	if (!S_ISREG(file_stat.st_mode)) {
-		thd_log_warn("Config file %s is not a regular file\n", xml_config_file);
-		close(fd);
-		return THD_ERROR;
-	}
-
 	thd_log_msg("Using config file %s\n", xml_config_file);
 
 	// Read file using already-opened and validated file descriptor
-	doc = xmlReadFd(fd, xml_config_file, nullptr, 0);
+	doc = xmlReadFd(fd, xml_config_file, nullptr, thd_xml_parse_options);
 	close(fd);
 	if (doc == nullptr) {
 		thd_log_warn("error: could not parse file %s\n", xml_config_file);
+		return THD_ERROR;
+	}
+
+	if (doc->intSubset != nullptr || doc->extSubset != nullptr) {
+		thd_log_warn("Config file %s must not contain a DTD\n", xml_config_file);
+		xmlFreeDoc(doc);
+		doc = nullptr;
 		return THD_ERROR;
 	}
 	root_element = xmlDocGetRootElement(doc);

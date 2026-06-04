@@ -30,6 +30,9 @@
 #include <cerrno>
 #include <cstdlib>
 
+static constexpr int thd_xml_parse_options = XML_PARSE_NONET | XML_PARSE_NOERROR
+		| XML_PARSE_NOWARNING;
+
 char *cthd_features_parse::char_trim(char *str)
 {
 	int i;
@@ -54,47 +57,24 @@ cthd_features_parse::cthd_features_parse() :
 }
 
 int cthd_features_parse::parser_init() {
-	struct stat s;
-
-	struct stat file_stat;
-
-	if (stat(filename.c_str(), &file_stat) == -1) {
-		thd_log_info("Could not get file status for %s\n", filename.c_str());
-		return THD_ERROR;
-	}
-
-	// Make sure file is owned by root and not writable by group/others
-
-	if (file_stat.st_uid != 0) {
-		thd_log_info("Config file %s is not owned by root\n", filename.c_str());
-		return THD_ERROR;
-	}
-
-	if (file_stat.st_mode & (S_IWGRP | S_IWOTH)) {
-		thd_log_info("File %s is group, other writable\n", filename.c_str());
-		return THD_ERROR;
-	}
-
-	// Check if file is not a symbolic link
-
-	if (lstat(filename.c_str(), &file_stat) == -1) {
-		return THD_ERROR;
-	}
-
-	if (S_ISLNK(file_stat.st_mode)) {
-		thd_log_info("Config file %s is a symbolic link\n", filename.c_str());
-		return THD_ERROR;
-	}
-
 	// Init all features as supported
 	feature_list.assign(MAX_FEATURE, 1);
 
-	if (stat(filename.c_str(), &s))
+	int fd = open_validated_xml_file(filename);
+	if (fd < 0)
 		return THD_ERROR;
 
-	doc = xmlReadFile(filename.c_str(), nullptr, 0);
+	doc = xmlReadFd(fd, filename.c_str(), nullptr, thd_xml_parse_options);
+	close(fd);
 	if (doc == nullptr) {
 		thd_log_msg("error: could not parse file %s\n", filename.c_str());
+		return THD_ERROR;
+	}
+
+	if (doc->intSubset != nullptr || doc->extSubset != nullptr) {
+		thd_log_warn("Config file %s must not contain a DTD\n", filename.c_str());
+		xmlFreeDoc(doc);
+		doc = nullptr;
 		return THD_ERROR;
 	}
 

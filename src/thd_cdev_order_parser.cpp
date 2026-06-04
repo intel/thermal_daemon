@@ -26,6 +26,9 @@
 #include "thd_sys_fs.h"
 #include "thd_util.h"
 
+static constexpr int thd_xml_parse_options = XML_PARSE_NONET | XML_PARSE_NOERROR
+		| XML_PARSE_NOWARNING;
+
 cthd_cdev_order_parse::cthd_cdev_order_parse() :
 		doc(nullptr), root_element(nullptr) {
 	std::string name = TDCONFDIR;
@@ -38,9 +41,21 @@ int cthd_cdev_order_parse::parser_init() {
 	if (stat(filename.c_str(), &s))
 		return THD_ERROR;
 
-	doc = xmlReadFile(filename.c_str(), nullptr, 0);
+	int fd = open_validated_xml_file(filename);
+	if (fd < 0)
+		return THD_ERROR;
+
+	doc = xmlReadFd(fd, filename.c_str(), nullptr, thd_xml_parse_options);
+	close(fd);
 	if (doc == nullptr) {
 		thd_log_msg("error: could not parse file %s\n", filename.c_str());
+		return THD_ERROR;
+	}
+
+	if (doc->intSubset != nullptr || doc->extSubset != nullptr) {
+		thd_log_warn("Config file %s must not contain a DTD\n", filename.c_str());
+		xmlFreeDoc(doc);
+		doc = nullptr;
 		return THD_ERROR;
 	}
 	root_element = xmlDocGetRootElement(doc);
