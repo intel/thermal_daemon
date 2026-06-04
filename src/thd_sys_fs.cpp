@@ -30,6 +30,24 @@
 #include <limits.h>
 #include <vector>
 
+namespace {
+int open_validated_sysfs_write_fd(const std::string &path) {
+	char resolved_path[PATH_MAX];
+
+	if (realpath(path.c_str(), resolved_path) == nullptr)
+		return -errno;
+
+	if (!starts_with(resolved_path, "/sys/"))
+		return -EPERM;
+
+	int fd = ::open(resolved_path, O_WRONLY | O_NOFOLLOW);
+	if (fd < 0)
+		return -errno;
+
+	return fd;
+}
+}
+
 csys_fs::~csys_fs() {
 	for (auto &entry : fd_cache)
 		close(entry.second);
@@ -63,15 +81,15 @@ int csys_fs::check_non_symbolic_path(const std::string& path)
 
 int csys_fs::write(const std::string &path, const std::string &buf) {
 	std::string p = base_path + path;
-	int fd = ::open(p.c_str(), O_WRONLY | O_NOFOLLOW);
+	int fd = open_validated_sysfs_write_fd(p);
 	if (fd < 0) {
-		thd_log_info("sysfs write failed %s\n", p.c_str());
-		return -errno;
+		thd_log_info("sysfs write failed %s\n", path.c_str());
+		return fd;
 	}
 	int ret = ::write(fd, buf.c_str(), buf.size());
 	if (ret < 0) {
 		ret = -errno;
-		thd_log_info("sysfs write failed %s\n", p.c_str());
+		thd_log_info("sysfs write failed %s\n", path.c_str());
 	}
 	close(fd);
 
@@ -81,19 +99,19 @@ int csys_fs::write(const std::string &path, const std::string &buf) {
 int csys_fs::write(const std::string &path, unsigned int position, unsigned
 long long data) {
 	std::string p = base_path + path;
-	int fd = ::open(p.c_str(), O_WRONLY | O_NOFOLLOW);
+	int fd = open_validated_sysfs_write_fd(p);
 	if (fd < 0) {
-		thd_log_info("sysfs write failed %s\n", p.c_str());
-		return -errno;
+		thd_log_info("sysfs write failed %s\n", path.c_str());
+		return fd;
 	}
 	if (::lseek(fd, position, SEEK_CUR) == -1) {
-		thd_log_info("sysfs write failed %s\n", p.c_str());
+		thd_log_info("sysfs write failed %s\n", path.c_str());
 		close(fd);
 		return -errno;
 	}
 	int ret = ::write(fd, &data, sizeof(data));
 	if (ret < 0)
-		thd_log_info("sysfs write failed %s\n", p.c_str());
+		thd_log_info("sysfs write failed %s\n", path.c_str());
 	close(fd);
 
 	return ret;
