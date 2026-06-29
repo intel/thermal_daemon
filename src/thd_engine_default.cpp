@@ -35,6 +35,7 @@
 #include "thd_cdev_rapl.h"
 #include "thd_cdev_intel_pstate_driver.h"
 #include "thd_cdev_rapl_dram.h"
+#include "thd_cdev_spel.h"
 #include "thd_sensor_virtual.h"
 #include "thd_cdev_backlight.h"
 #include "thd_int3400.h"
@@ -778,6 +779,69 @@ int cthd_engine_default::read_cooling_devices() {
 	if (rapl_dram_dev->update() == THD_SUCCESS) {
 		cdevs.push_back(std::move(rapl_dram_dev));
 		++current_cdev_index;
+	}
+
+	// Add SPEL cooling devices for Qualcomm SOCs
+	// Check for SPEL sysfs nodes in powercap framework
+	// Create separate cooling devices for each constraint (PL0, PL1, PL2, PL3)
+	DIR *spel_dir;
+	struct dirent *spel_entry;
+	const std::string spel_base_path = "/sys/class/powercap/";
+
+	if ((spel_dir = opendir(spel_base_path.c_str())) != nullptr) {
+		while ((spel_entry = readdir(spel_dir)) != nullptr) {
+			if (strncmp(spel_entry->d_name, "qcom-spel:", 10) == 0) {
+				std::string spel_path = spel_base_path + spel_entry->d_name + "/";
+				// Check if this is a valid SPEL domain by looking for name file
+				csys_fs spel_sysfs(spel_path);
+				if (spel_sysfs.exists("name")) {
+					std::string domain_name;
+					if (spel_sysfs.read("name", domain_name) >= 0) {
+						// For each domain (soc/sys), scan for all available constraints
+						// Constraints are named pl1, pl2, pl3, pl4 and map to constraint_0-3
+						if (domain_name == "soc" || domain_name == "sys") {
+							// Scan for up to 4 constraints (constraint_0-3 = PL1-PL4)
+							for (int constraint_idx = 0; constraint_idx < 4; constraint_idx++) {
+								std::ostringstream constraint_file;
+								constraint_file << "constraint_" << constraint_idx << "_power_limit_uw";
+
+								if (spel_sysfs.exists(constraint_file.str())) {
+									// Read constraint name to verify it's a valid PL
+									std::ostringstream name_file;
+									name_file << "constraint_" << constraint_idx << "_name";
+									std::string constraint_name;
+									if (spel_sysfs.read(name_file.str(), constraint_name) < 0) {
+										continue;
+									}
+
+									// constraint_name should be "sys pl1", "sys pl2", etc.
+									// Extract the PL number (1-4)
+									int pl_num = constraint_idx + 1;  // constraint_0=PL1, constraint_1=PL2, etc.
+
+									// Create cooling device for this constraint
+									std::unique_ptr<cthd_sysfs_cdev_spel> spel_dev(
+										new cthd_sysfs_cdev_spel(current_cdev_index, 0,
+										                         domain_name, constraint_idx, spel_path));
+
+									// Set type name: spel_controller_soc_pl1, spel_controller_soc_pl2, etc.
+									std::ostringstream type_name;
+									type_name << "spel_controller_" << domain_name << "_pl" << pl_num;
+									spel_dev->set_cdev_type(type_name.str());
+
+									if (spel_dev->update() == THD_SUCCESS) {
+										thd_log_info("Added SPEL %s PL%d (constraint_%d) cooling device at %s\n",
+										            domain_name.c_str(), pl_num, constraint_idx, spel_path.c_str());
+										cdevs.push_back(std::move(spel_dev));
+										++current_cdev_index;
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		closedir(spel_dir);
 	}
 
 	cthd_cdev *cdev = search_cdev("LCD");

@@ -49,7 +49,9 @@ LOCAL_SRC_FILES := \
 		src/thd_platform_arm.cpp \
 		src/thd_util.cpp \
 		src/thd_cdev_rapl_restore.cpp \
-		src/thd_features_parse.cpp
+		src/thd_features_parse.cpp \
+		src/thd_cdev_spel.cpp \
+		src/thd_cdev_spel_restore.cpp
 
 LOCAL_C_INCLUDES += external/libxml2/include
 

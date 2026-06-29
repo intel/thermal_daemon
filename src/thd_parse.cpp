@@ -1255,7 +1255,8 @@ thermal_zone_t *cthd_parse::get_zone_dev_index(unsigned int zone_index) {
 }
 
 ppcc_t *cthd_parse::get_ppcc_param(const std::string& name) {
-	if (name != "TCPU.D0")
+	// Support both RAPL (TCPU.D0) and SPEL device names
+	if (name != "TCPU.D0" && name != "SPEL")
 		return nullptr;
 
 	if (matched_thermal_info_index >= 0 && thermal_info_list[matched_thermal_info_index].ppcc.valid)
