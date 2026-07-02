@@ -123,6 +123,14 @@ current virtual temperature.
          set of tags defined to define platform, sensors, zones, cooling
          devices and trip points. -->
     <ProductName>Example Product Name</ProductName>
+    <!-- SoCModel is optional. When present, thermald reads the board
+         model string from /sys/firmware/devicetree/base/model and
+         checks whether it starts with this value (prefix match).
+         This is intended for ARM/device-tree platforms such as
+         Qualcomm SoCs. Example: a SoCModel of
+         "Qualcomm Technologies, Inc. Glymur" will match a board
+         reporting "Qualcomm Technologies, Inc. Glymur CRD". -->
+    <SoCModel>Example SoC Model Prefix</SoCModel>
     <Preference>QUIET|PERFORMANCE</Preference>
     <!-- Quiet mode will only use passive cooling device. "PERFORMANCE"
          will only select active devices. -->

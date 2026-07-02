@@ -811,6 +811,10 @@ int cthd_parse::parse_new_platform_info(xmlNode * a_node, xmlDoc *doc,
 					"ProductSku")) {
 				info_ptr->product_sku.assign((const char*) tmp_value);
 				string_trim(info_ptr->product_sku);
+			} else if (!thd_strcasecmp_n((const char*) cur_node->name,
+					"SoCModel")) {
+				info_ptr->soc_model.assign((const char*) tmp_value);
+				string_trim(info_ptr->soc_model);
 			} else if (!thd_strcasecmp_n((const char*) cur_node->name, "Name")) {
 				info_ptr->name.assign((const char*) tmp_value);
 				string_trim(info_ptr->name);
@@ -991,6 +995,7 @@ void cthd_parse::dump_thermal_conf() {
 		thd_log_info("Product Name: %s\n", thermal_info_list[i].product_name.c_str());
 		thd_log_info("Product SKU: %s\n", thermal_info_list[i].product_sku.c_str());
 		thd_log_info("UUID: %s\n", thermal_info_list[i].uuid.c_str());
+		thd_log_info("SoC Model: %s\n", thermal_info_list[i].soc_model.c_str());
 		thd_log_info("type: %d\n", thermal_info_list[i].default_preference);
 		thd_log_info("Polling Interval: %d seconds\n", thermal_info_list[i].polling_interval);
 
@@ -1193,6 +1198,30 @@ bool cthd_parse::platform_matched() {
 			}
 		}
 	}
+
+	// Check SoC model via device tree (for ARM/Qualcomm platforms)
+	// /sys/firmware/devicetree/base/model contains the full board model string,
+	// e.g. "Qualcomm Technologies, Inc. Glymur CRD"
+	std::ifstream dt_model_file("/sys/firmware/devicetree/base/model");
+	if (dt_model_file.is_open() && getline(dt_model_file, line)) {
+		string_trim(line);
+		thd_log_debug("Device tree model: [%s]\n", line.c_str());
+		for (unsigned int i = 0; i < thermal_info_list.size(); ++i) {
+			if (!thermal_info_list[i].soc_model.size())
+				continue;
+			thd_log_debug("config SoCModel [%s] match with [%s]\n",
+					thermal_info_list[i].soc_model.c_str(), line.c_str());
+			// Prefix match: sysfs model string must start with the XML SoCModel value
+			if (line.compare(0, thermal_info_list[i].soc_model.size(),
+					thermal_info_list[i].soc_model) == 0) {
+				matched_thermal_info_index = i;
+				thd_log_info("SoC Model matched [%s]\n",
+						thermal_info_list[i].soc_model.c_str());
+				return true;
+			}
+		}
+	}
+
 	for (unsigned int i = 0; i < thermal_info_list.size(); ++i) {
 		if (!thermal_info_list[i].uuid.size())
 			continue;

@@ -6,6 +6,7 @@ use "man thermal-conf.xml" for details
 
 <!-- BEGIN -->
 <ThermalConfiguration>
+
 <Platform>
 	<Name>Generic X86 Laptop Device</Name>
 	<ProductName>EXAMPLE_SYSTEM</ProductName>
@@ -203,6 +204,40 @@ use "man thermal-conf.xml" for details
 		</CoolingDevice>
 	</CoolingDevices>
 </Platform>
+<!-- Thermal configuration example for Qualcomm platforms using SoCModel.
+     SoCModel is matched as a prefix against /sys/firmware/devicetree/base/model.
+     e.g. "Qualcomm Technologies, Inc. Glymur CRD" will match
+          SoCModel "Qualcomm Technologies, Inc. Glymur"
+-->
+<Platform>
+	<Name>Qualcomm Glymur CRD Platform</Name>
+	<SoCModel>Qualcomm Technologies, Inc. Glymur CRD</SoCModel>
+	<Preference>QUIET</Preference>
+	<ThermalSensors>
+		<ThermalSensor>
+			<Type>cpu-thermal</Type>
+			<AsyncCapable>1</AsyncCapable>
+		</ThermalSensor>
+	</ThermalSensors>
+	<ThermalZones>
+		<ThermalZone>
+			<Type>cpu-thermal</Type>
+			<TripPoints>
+				<TripPoint>
+					<SensorType>cpu-thermal</SensorType>
+					<Temperature>85000</Temperature>
+					<type>passive</type>
+					<ControlType>SEQUENTIAL</ControlType>
+					<CoolingDevice>
+						<index>1</index>
+						<type>cpufreq</type>
+						<influence>100</influence>
+						<SamplingPeriod>10</SamplingPeriod>
+					</CoolingDevice>
+				</TripPoint>
+			</TripPoints>
+		</ThermalZone>
+	</ThermalZones>
+</Platform>
 </ThermalConfiguration>
 <!-- END -->
-

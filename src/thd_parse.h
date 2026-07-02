@@ -160,6 +160,7 @@ typedef struct {
 	std::string uuid;
 	std::string product_name;
 	std::string product_sku;
+	std::string soc_model;
 	int default_preference;
 	int polling_interval;
 	ppcc_t ppcc;
