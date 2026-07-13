@@ -475,10 +475,44 @@ int cthd_cdev::thd_cdev_set_state(int set_point, int target_temp,
 		ret = THD_SUCCESS;
 
 	} else if (pid_param && pid_param->valid) {
-		// Handle PID param unique to a trip
 		pid.set_target_temp(target_temp);
-		ret = pid.pid_output(temperature, get_curr_state(true) - get_min_state());
-		ret += get_min_state();
+		bool inverted = (get_min_state() > get_max_state());
+
+		if (pid_param->mode == PID_INCREMENTAL) {
+			/*
+			 * Incremental PID: same formula as absolute (Kp*e + Ki*∫e + Kd*de/dt)
+			 * but anchored to curr_state instead of min_state.
+			 *
+			 * Active (state=1):
+			 *   new_state = curr_state - pid_output   (inverted range)
+			 *   new_state = curr_state + pid_output   (normal range)
+			 *   → power limit keeps decreasing each poll while temp > target
+			 *
+			 * Deactivating (state=0):
+			 *   Restore to min_state (no restriction) and reset PID.
+			 *   This avoids leaving the power limit partially reduced
+			 *   after the trip threshold is no longer exceeded.
+			 */
+			if (state == 0) {
+				ret = get_min_state();
+			} else {
+				ret = pid.pid_output(temperature, 0);
+				if (inverted)
+					ret = -ret;
+				ret += get_curr_state(true);
+			}
+		} else {
+			/* Absolute PID: output is the desired offset from min_state */
+			int initial_val = get_curr_state(true) - get_min_state();
+			if (inverted)
+				initial_val = -initial_val;
+			ret = pid.pid_output(temperature, initial_val);
+			if (inverted)
+				ret = -ret;
+			ret += get_min_state();
+		}
+
+		/* Clamp to valid state range (handles both normal and inverted) */
 		if (get_min_state() < get_max_state()) {
 			if (ret > get_max_state())
 				ret = get_max_state();
@@ -491,18 +525,41 @@ int cthd_cdev::thd_cdev_set_state(int set_point, int target_temp,
 				ret = get_min_state();
 		}
 		set_curr_state_raw(ret, state);
-		thd_log_info("Set pid : %d, %d, %d, %d, %d\n", set_point, temperature,
-				index, get_curr_state(), max_state);
+		thd_log_info("Set pid(%s%s): set_pt:%d temp:%d cdev:%d(%s) state:%d max:%d\n",
+				pid_param->mode == PID_INCREMENTAL ? "inc" : "abs",
+				inverted ? ",inv" : "",
+				set_point, temperature, index, type_str.c_str(),
+				get_curr_state(), max_state);
 		ret = THD_SUCCESS;
 
 		if (state == 0)
 			pid.reset();
 
 	} else if (pid_enable) {
-		// Handle PID param common to whole cooling device
+		/* Cdev-level PID (enabled via enable_pid() / XML <PidControl> in
+		 * <CoolingDevice> section).  Same Fix 1 + incremental logic as
+		 * the trip-level PID branch above. */
 		pid_ctrl.set_target_temp(target_temp);
-		ret = pid_ctrl.pid_output(temperature);
-		ret += get_min_state();
+		bool inverted = (get_min_state() > get_max_state());
+
+		if (pid_ctrl.get_pid_mode() == PID_INCREMENTAL) {
+			if (state == 0) {
+				ret = get_min_state();
+			} else {
+				ret = pid_ctrl.pid_output(temperature, 0);
+				if (inverted)
+					ret = -ret;
+				ret += get_curr_state(true);
+			}
+		} else {
+			int initial_val = get_curr_state(true) - get_min_state();
+			if (inverted)
+				initial_val = -initial_val;
+			ret = pid_ctrl.pid_output(temperature, initial_val);
+			if (inverted)
+				ret = -ret;
+			ret += get_min_state();
+		}
 
 		if (get_min_state() < get_max_state()) {
 			if (ret > get_max_state())
@@ -517,8 +574,11 @@ int cthd_cdev::thd_cdev_set_state(int set_point, int target_temp,
 		}
 
 		set_curr_state_raw(ret, state);
-		thd_log_info("Set : %d, %d, %d, %d, %d\n", set_point, temperature,
-				index, get_curr_state(), max_state);
+		thd_log_info("Set pid_cdev(%s%s): set_pt:%d temp:%d cdev:%d(%s) state:%d max:%d\n",
+				pid_ctrl.get_pid_mode() == PID_INCREMENTAL ? "inc" : "abs",
+				inverted ? ",inv" : "",
+				set_point, temperature, index, type_str.c_str(),
+				get_curr_state(), max_state);
 		ret = THD_SUCCESS;
 	} else {
 		if (state)

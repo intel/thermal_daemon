@@ -51,6 +51,7 @@ typedef struct {
 	double Kp;
 	double Ki;
 	double Kd;
+	pid_mode_t mode;   /* PID_ABSOLUTE (default) or PID_INCREMENTAL */
 } pid_control_t;
 
 typedef struct {

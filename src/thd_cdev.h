@@ -266,10 +266,16 @@ public:
 		pid_ctrl.kd = kd;
 		thd_log_info("set_pid_param %d [%g.%g,%g]\n", index, kp, ki, kd);
 	}
+	void set_pid_mode(pid_mode_t m) {
+		pid_ctrl.set_pid_mode(m);
+		thd_log_info("set_pid_mode %d [%s]\n", index,
+				m == PID_INCREMENTAL ? "incremental" : "absolute");
+	}
 	void enable_pid() {
 		thd_log_info("PID control enabled %d\n", index);
 		pid_enable = true;
 	}
+	bool is_pid_enabled() const { return pid_enable; }
 
 	void thd_cdev_set_write_prefix(std::string prefix) {
 		write_prefix = std::move(prefix);
