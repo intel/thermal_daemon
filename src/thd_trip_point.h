@@ -78,6 +78,7 @@ public:
 		pid_param.kp = 0;
 		pid_param.ki = 0;
 		pid_param.kd = 0;
+		pid_param.mode = PID_ABSOLUTE;
 		min_max_valid = 0;
 		min_state = 0;
 		max_state = 0;

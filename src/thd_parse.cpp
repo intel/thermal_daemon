@@ -246,6 +246,7 @@ int cthd_parse::parse_new_trip_cdev(xmlNode * a_node, xmlDoc *doc,
 					trip_cdev->pid_param.kp = pid_params.Kp;
 					trip_cdev->pid_param.ki = pid_params.Ki;
 					trip_cdev->pid_param.kd = pid_params.Kd;
+					trip_cdev->pid_param.mode = pid_params.mode;
 					trip_cdev->pid_param.valid = 1;
 				}
 				xmlFree(tmp_value);
@@ -309,6 +310,7 @@ int cthd_parse::parse_new_trip_point(xmlNode * a_node, xmlDoc *doc,
 				trip_cdev.pid_param.kp = 0.0;
 				trip_cdev.pid_param.ki = 0.0;
 				trip_cdev.pid_param.kd = 0.0;
+				trip_cdev.pid_param.mode = PID_ABSOLUTE;
 
 				parse_new_trip_cdev(cur_node->children, doc, &trip_cdev);
 				trip_pt->cdev_trips.push_back(trip_cdev);
@@ -380,6 +382,7 @@ int cthd_parse::parse_pid_values(xmlNode * a_node, xmlDoc *doc,
 	pid_ptr->Kp = 0.0005;
 	pid_ptr->Ki = 0.0001;
 	pid_ptr->Kd = 0.0001;
+	pid_ptr->mode = PID_ABSOLUTE;   /* default */
 
 	for (cur_node = a_node; cur_node; cur_node = cur_node->next) {
 		if (cur_node->type == XML_ELEMENT_NODE) {
@@ -389,22 +392,33 @@ int cthd_parse::parse_pid_values(xmlNode * a_node, xmlDoc *doc,
 			if (tmp_value) {
 				if (!thd_strcasecmp_n((const char*) cur_node->name, "Kp")) {
 					double val;
-
-					if (parse_double_value(tmp_value, &val, 0.0, 100.0) == THD_SUCCESS) {
+					/* Extended range: 0–1000 to support power-limit control
+					 * (temperature in millidegrees, power in microwatts). */
+					if (parse_double_value(tmp_value, &val, 0.0, 1000.0) == THD_SUCCESS) {
 						pid_ptr->Kp = val;
 					}
 				} else if (!thd_strcasecmp_n((const char*) cur_node->name, "Kd")) {
 					double val;
-
-					if (parse_double_value(tmp_value, &val, 0.0, 100.0) == THD_SUCCESS) {
+					if (parse_double_value(tmp_value, &val, 0.0, 1000.0) == THD_SUCCESS) {
 						pid_ptr->Kd = val;
 					}
 				} else if (!thd_strcasecmp_n((const char*) cur_node->name, "Ki")) {
 					double val;
-
-					if (parse_double_value(tmp_value, &val, 0.0, 100.0) == THD_SUCCESS) {
+					if (parse_double_value(tmp_value, &val, 0.0, 1000.0) == THD_SUCCESS) {
 						pid_ptr->Ki = val;
 					}
+				} else if (!thd_strcasecmp_n((const char*) cur_node->name,
+						"PidMode")) {
+					/*
+					 * <PidMode>absolute</PidMode>     — absolute PID (default)
+					 * <PidMode>incremental</PidMode>  — incremental PID
+					 */
+					char *mode_val = char_trim(tmp_value);
+					if (mode_val &&
+					    !thd_strcasecmp_n(mode_val, "incremental"))
+						pid_ptr->mode = PID_INCREMENTAL;
+					else
+						pid_ptr->mode = PID_ABSOLUTE;
 				}
 				xmlFree(tmp_value);
 			}

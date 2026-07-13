@@ -30,43 +30,65 @@ cthd_pid::cthd_pid() {
 	err_sum = 0.0;
 	last_err = 0.0;
 	target_temp = 0;
+	mode = PID_ABSOLUTE;
 }
 
 int cthd_pid::pid_output(unsigned int curr_temp, int initial_value) {
 	double output;
-	double d_err = 0;
-	int error = curr_temp - target_temp;
+	/* Use signed arithmetic to avoid unsigned wrap-around when
+	 * curr_temp < target_temp */
+	int error = (int)curr_temp - (int)target_temp;
 
 	time_t now;
 	time(&now);
-	if (last_time == 0) {
-		last_time = now;
 
-		/* Initialize integrative component (err_sum) so that current
-		 * output is the initial_value.
-		 * d_err must be assumed to be zero for this */
-		if (ki)
-			err_sum = (initial_value - kp * error) / ki;
-		else
+	if (last_time == 0) {
+		/* First call: initialise state. */
+		last_time = now;
+		last_err = error;
+
+		if (mode == PID_INCREMENTAL) {
+			/* No integral history yet — return Kp*e so the first
+			 * poll already applies a proportional correction. */
 			err_sum = 0;
+			output = kp * error;
+		} else {
+			/* Absolute mode: seed err_sum for bumpless start so the
+			 * first output equals initial_value. d_err assumed zero. */
+			err_sum = ki ? (initial_value - kp * error) / ki : 0;
+			output = kp * error + ki * err_sum;
+		}
+		thd_log_debug("pid first call mode:%s e:%d out:%d\n",
+				mode == PID_INCREMENTAL ? "inc" : "abs",
+				error, (int)output);
+		return (int)output;
 	}
+
 	time_t timeChange = (now - last_time);
 
-	thd_log_debug("pid_output error %d %g:%g\n", error, kp, kp * error);
-	err_sum += (error * timeChange);
-	if (timeChange)
-		d_err = (error - last_err) / timeChange;
-	else
-		d_err = 0.0;
+	/*
+	 * Both modes use the same PID formula:
+	 *   u = Kp*e + Ki*∫e*dt + Kd*de/dt
+	 *
+	 * The difference is in the caller (thd_cdev_set_state):
+	 *   Absolute:    new_state = min_state  ± u  (fixed steady-state)
+	 *   Incremental: new_state = curr_state ± u  (keeps reducing each poll)
+	 */
+	err_sum += (double)error * timeChange;
 
-	/*Compute PID Output*/
+	double d_err = timeChange ?
+			(double)(error - last_err) / timeChange : 0.0;
+
 	output = kp * error + ki * err_sum + kd * d_err;
-	thd_log_debug("pid %d:%d:%d:%d\n", (int) output, (int) (kp * error),
-			(int) (ki * err_sum), (int) (kd * d_err));
-	/*Remember some variables for next time*/
+
+	thd_log_debug("pid_%s e:%d kp:%g ki_sum:%g kd:%g out:%d\n",
+			mode == PID_INCREMENTAL ? "inc" : "abs",
+			error, kp * error, ki * err_sum, kd * d_err, (int)output);
+
 	last_err = error;
 	last_time = now;
-	thd_log_debug("pid_output %d:%d %g:%d\n", curr_temp, target_temp, output,
-			(int) output);
-	return (int) output;
+
+	thd_log_debug("pid_output curr:%u tgt:%u mode:%d out:%d\n",
+			curr_temp, target_temp, (int)mode, (int)output);
+	return (int)output;
 }
