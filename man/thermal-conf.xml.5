@@ -519,3 +519,73 @@ Example 7: Use RAPL power limits to control.
 </Platform>
 </ThermalConfiguration>
 .EE
+.PP
+.B Example 8:
+AMD Ryzen / k10temp configuration. On AMD platforms, the CPU temperature
+sensor (k10temp) is exposed via hwmon sysfs but does not have an
+associated thermal_zone in /sys/class/thermal. This means thermald
+cannot auto-discover it and the default CPU DTS monitoring will report
+"No coretemp sysfs found" and "No Zones present". A custom sensor must
+be defined with the hwmon path, and the CPU ID check must be bypassed
+using the \fB--ignore-cpuid-check\fP command line option.
+.PP
+To find the correct hwmon path, run:
+.RS 4
+.EX
+find /sys/class/hwmon/ -exec echo -n "{}: " \e; -exec cat {}/name \e;
+.EE
+.RE
+.PP
+Then identify the k10temp entry and its Tctl sensor. For example, if
+k10temp is hwmon2, the Tctl path is
+/sys/class/hwmon/hwmon2/temp1_input.
+.sp 1
+.EX
+<?xml version="1.0"?>
+<ThermalConfiguration>
+  <Platform>
+    <Name>AMD Ryzen (k10temp via hwmon)</Name>
+    <UUID>*</UUID>
+    <ProductName>*</ProductName>
+    <Preference>QUIET</Preference>
+    <ThermalSensors>
+      <ThermalSensor>
+        <!-- Define a custom sensor name and point it at the
+             k10temp hwmon path. The name must NOT match any
+             auto-discovered hwmon driver name (do not use
+             "k10temp" here); use a unique name instead. -->
+        <Type>amd_cpu_temp</Type>
+        <Path>/sys/class/hwmon/hwmon2/temp1_input</Path>
+        <AsyncCapable>0</AsyncCapable>
+      </ThermalSensor>
+    </ThermalSensors>
+    <ThermalZones>
+      <ThermalZone>
+        <Type>cpu</Type>
+        <TripPoints>
+          <TripPoint>
+            <SensorType>amd_cpu_temp</SensorType>
+            <Temperature>85000</Temperature>
+            <type>passive</type>
+            <CoolingDevice>
+              <type>cpufreq</type>
+              <influence>100</influence>
+              <SamplingPeriod>1</SamplingPeriod>
+            </CoolingDevice>
+          </TripPoint>
+          <TripPoint>
+            <SensorType>amd_cpu_temp</SensorType>
+            <Temperature>95000</Temperature>
+            <type>passive</type>
+            <CoolingDevice>
+              <type>cpufreq</type>
+              <influence>100</influence>
+              <SamplingPeriod>1</SamplingPeriod>
+            </CoolingDevice>
+          </TripPoint>
+        </TripPoints>
+      </ThermalZone>
+    </ThermalZones>
+  </Platform>
+</ThermalConfiguration>
+.EE
