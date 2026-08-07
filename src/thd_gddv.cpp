@@ -1738,7 +1738,7 @@ int cthd_gddv::evaluate_condition(struct condition& condition) {
 			return ret;
 
 		if (condition.time) {
-			thd_log_debug("time condition matched %ld \n", condition.state_entry_time);
+			thd_log_debug("time condition matched %jd \n", (intmax_t)condition.state_entry_time);
 			if (condition.state_entry_time == 0) {
 				condition.state_entry_time = time(nullptr);
 				return THD_ERROR;
