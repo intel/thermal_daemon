@@ -58,10 +58,14 @@ int cthd_pid::pid_output(unsigned int curr_temp, int initial_value) {
 			err_sum = ki ? (initial_value - kp * error) / ki : 0;
 			output = kp * error + ki * err_sum;
 		}
+		int out = (output > INT_MAX) ? INT_MAX :
+				(output < INT_MIN) ? INT_MIN :
+				(int)output;
+
 		thd_log_debug("pid first call mode:%s e:%d out:%d\n",
 				mode == PID_INCREMENTAL ? "inc" : "abs",
-				error, (int)output);
-		return (int)output;
+				error, out);
+		return out;
 	}
 
 	time_t timeChange = (now - last_time);
