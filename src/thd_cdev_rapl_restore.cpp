@@ -33,7 +33,7 @@ namespace {
 	struct rapl_restore_info {
 		std::string sysfs_path;
 		int constraint_index;
-		int power_limit;
+		unsigned long long power_limit;
 		int time_window;
 		int enable_status;
 	};
@@ -60,8 +60,8 @@ namespace {
 			std::ostringstream power_limit_path;
 			power_limit_path << "constraint_" << info.constraint_index << "_power_limit_uw";
 			if (sysfs.exists(power_limit_path.str())) {
-				sysfs.write(power_limit_path.str(), info.power_limit);
-				thd_log_info("  Restored PL1=%d uW for %s\n",
+				sysfs.write(power_limit_path.str(), std::to_string(info.power_limit));
+				thd_log_info("  Restored PL1=%llu uW for %s\n",
 					info.power_limit, info.sysfs_path.c_str());
 			}
 
@@ -106,10 +106,14 @@ void cthd_sysfs_cdev_rapl::register_for_restoration() {
 		}
 	}
 
-	const int power_limit = rapl_read_pl1();
+	std::ostringstream power_limit_path;
+	power_limit_path << "constraint_" << constraint_index << "_power_limit_uw";
+
+	unsigned long power_limit = 0;
+	const int read_power_ret = cdev_sysfs.read(power_limit_path.str(), &power_limit);
 	const int time_window = rapl_read_time_window();
 	const int enable_status = rapl_read_enable_status();
-	if (power_limit < 0 || time_window < 0 || enable_status < 0) {
+	if (read_power_ret <= 0 || time_window < 0 || enable_status < 0) {
 		thd_log_warn(
 			"Failed to read initial RAPL state for %s, skipping restoration registration\n",
 			sysfs_path.c_str());
@@ -125,6 +129,6 @@ void cthd_sysfs_cdev_rapl::register_for_restoration() {
 
 	restore_registry.push_back(info);
 
-	thd_log_info("Registered RAPL %s: PL1=%d uW, window=%d us, enable=%d\n",
+	thd_log_info("Registered RAPL %s: PL1=%llu uW, window=%d us, enable=%d\n",
 		sysfs_path.c_str(), info.power_limit, info.time_window, info.enable_status);
 }
