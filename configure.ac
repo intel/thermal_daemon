@@ -15,7 +15,18 @@ AC_CONFIG_HEADERS([config.h])
 AM_INIT_AUTOMAKE([1.11 foreign no-define subdir-objects])
 AM_MAINTAINER_MODE([enable])
 
+AC_ARG_ENABLE([doc],
+              [AS_HELP_STRING([--enable-doc],
+                              [Build documentation using gtk-doc (default: no)])],
+              [],
+              [enable_doc=no])
+
 GTK_DOC_CHECK([1.11],[--flavour no-tmpl])
+AS_IF([test "x$enable_doc" = "xyes" -a "x$have_gtk_doc" = "xno"],
+            [AC_MSG_ERROR([
+    You must have gtk-doc installed to build documentation.
+    Please install gtk-doc or configure with '--disable-doc'.])])
+AM_CONDITIONAL([ENABLE_DOC], [test "x$enable_doc" = "xyes"])
 
 AC_ARG_WITH(dbus-sys-dir, AS_HELP_STRING([--with-dbus-sys-dir=DIR], [where D-BUS system.d directory is]))
 if test -n "$with_dbus_sys_dir" ; then
@@ -48,6 +59,7 @@ echo "  systemdunitdir: $with_systemdsystemunitdir"
 echo "  tdbinary: $tdbinary"
 echo "  tdconfdir: $tdconfdir"
 echo "  tdrundir: $tdrundir"
+echo "  build-doc: $enable_doc"
 echo
 
 GETTEXT_PACKAGE=thermald

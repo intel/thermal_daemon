@@ -29,6 +29,8 @@ Install
 	yum install upower-devel
 	yum install libevdev-devel
 
+Note: gtk-doc is only required when building documentation with --enable-doc.
+
 Replace yum with dnf for later Fedora versions.
 
 2
@@ -70,6 +72,8 @@ Building on Ubuntu
 	sudo apt install libupower-glib-dev
 	sudo apt install libevdev-dev
 
+Note: gtk-doc-tools is only required when building documentation with --enable-doc.
+
 2
 Build
 
@@ -100,6 +104,8 @@ Install
 	zypper in gtk-doc
 	zypper in libupower-glib-devel
 	zypper in libevdev-devel
+
+gtk-doc is only required when building documentation with --enable-doc.
 
 For build, follow the same procedure as Fedora.
 
@@ -134,6 +140,9 @@ through a shared open_validated_xml_file() path.
 APCT/IDSP/data vault), max limits for zones/cooling devices/segments/conditions,
 fixed lock/unlock and stale mutex issues, guarded container operations, and
 improved exception safety (e.g., unique_ptr use for virtual sensor links).
+
+- Build system update: added an opt-in --enable-doc configure option so gtk-doc
+is only required when documentation generation is explicitly enabled.
 
 Release 2.5.11
 - Clang-tidy fixes
