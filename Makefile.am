@@ -17,7 +17,8 @@ AM_CXXFLAGS = \
 	-I src
 
 EXTRA_DIST=Makefile.glib \
-	thermald.pc.in
+	thermald.pc.in \
+	DEVELOPER.md
 
 # Programs to build
 sbin_PROGRAMS = thermald

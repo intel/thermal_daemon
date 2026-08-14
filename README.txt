@@ -2,6 +2,10 @@ Use man pages to check command line arguments in configuration:
 	man thermald
 	man thermal-conf.xml
 
+Developers and contributors: see DEVELOPER.md for an explanation of how
+thermald works internally (control loop, zones/trips/cooling devices, the
+--adaptive engine and DPTF table handling) and for debugging tips.
+
 Prerequisites:
 	Kernel
 		Prefers kernel with
