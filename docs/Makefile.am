@@ -48,6 +48,10 @@ MAINTAINERCLEANFILES =		\
 
 include $(top_srcdir)/gtk-doc.make
 
+if ENABLE_DOC
+all-local: all-gtk-doc
+endif
+
 EXTRA_DIST = thermal_daemon-docs.xml
 
 CLEANFILES +=				\

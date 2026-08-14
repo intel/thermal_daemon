@@ -1,6 +1,11 @@
 include $(GLIB_MAKEFILE)
 
-SUBDIRS = . docs data
+if ENABLE_DOC
+DOC_SUBDIR = docs
+endif
+
+SUBDIRS = . $(DOC_SUBDIR) data
+DIST_SUBDIRS = . docs data
 
 ACLOCAL_AMFLAGS =
 
