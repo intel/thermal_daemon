@@ -1358,8 +1358,8 @@ int cthd_gddv::verify_condition(const struct condition& condition) {
 
 	if (condition.condition >= Oem0 && condition.condition <= Oem5)
 		return 0;
-	if (condition.condition >= adaptive_condition(0x1000)
-			&& condition.condition < adaptive_condition(0x10000))
+	if (condition.condition >= adaptive_condition(OEM_CONDITION_BASE_ID)
+			&& condition.condition < adaptive_condition(SW_OEM_CONDITION_BASE_ID))
 		return 0;
 	if (condition.condition == Default)
 		return 0;
@@ -1382,6 +1382,26 @@ int cthd_gddv::verify_condition(const struct condition& condition) {
 		return 0;
 	if (condition.condition == OS_type)
 		return 0;
+
+	/*
+	 * Software-OEM conditions are set at runtime by OEM software through
+	 * the DPTF/ESIF interface, which has no equivalent on Linux, so they
+	 * can never be satisfied here. Don't fail verify_conditions() for
+	 * them: that would change engine startup behavior (unsupported
+	 * condition fallback). They are simply excluded from the ODVP
+	 * mapping, so evaluation fails quietly and the containing condition
+	 * set never matches - the same outcome as when they were misread as
+	 * ODVP variables, without the per-poll odvpN read errors.
+	 */
+	if (condition.condition >= adaptive_condition(SW_OEM_CONDITION_BASE_ID)
+			&& condition.condition < adaptive_condition(PARTICIPANT_CONDITION_BASE_ID)) {
+		thd_log_info(
+				"Software-OEM condition %" PRIu64
+				" (SwOem%" PRIu64 ") is set by OEM software via DPTF, not available on Linux; the condition set using it will never match\n",
+				condition.condition,
+				condition.condition - SW_OEM_CONDITION_BASE_ID);
+		return 0;
+	}
 
 	if ( condition.condition >=  ARRAY_SIZE(condition_names))
 		cond_name = "UNKNOWN";
@@ -1500,9 +1520,9 @@ int cthd_gddv::evaluate_oem_condition(const struct condition& condition) {
 
 	if (condition.condition >= Oem0 && condition.condition <= Oem5)
 		oem_condition = (int) condition.condition - Oem0;
-	else if (condition.condition >= (adaptive_condition) 0x1000
-			&& condition.condition < (adaptive_condition) 0x10000)
-		oem_condition = (int) condition.condition - 0x1000 + 6;
+	else if (condition.condition >= (adaptive_condition) OEM_CONDITION_BASE_ID
+			&& condition.condition < (adaptive_condition) SW_OEM_CONDITION_BASE_ID)
+		oem_condition = (int) condition.condition - OEM_CONDITION_BASE_ID + 6;
 
 	if (oem_condition != -1) {
 		std::string filename = "odvp" + std::to_string(oem_condition);
@@ -1673,8 +1693,8 @@ int cthd_gddv::evaluate_condition(struct condition& condition) {
 	}
 
 	if ((condition.condition >= Oem0 && condition.condition <= Oem5)
-			|| (condition.condition >= (adaptive_condition) 0x1000
-					&& condition.condition < (adaptive_condition) 0x10000))
+			|| (condition.condition >= (adaptive_condition) OEM_CONDITION_BASE_ID
+					&& condition.condition < (adaptive_condition) SW_OEM_CONDITION_BASE_ID))
 		ret = evaluate_oem_condition(condition);
 
 	if (condition.condition == Temperature

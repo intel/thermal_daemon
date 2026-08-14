@@ -23,7 +23,27 @@
  */
 
 #include "thermald.h"
+#include <cstdint>
 #include <time.h>
+
+/*
+ * PID controller mode:
+ *
+ *   PID_ABSOLUTE    - Output is the absolute desired state.
+ *                     u = Kp*e + Ki*∫e*dt + Kd*de/dt
+ *                     Caller: new_state = min_state ± u
+ *                     Finds a fixed steady-state proportional to the error.
+ *
+ *   PID_INCREMENTAL - Same formula as absolute, but output is applied as a
+ *                     delta to the current state instead of to min_state.
+ *                     Caller: new_state = curr_state ± u
+ *                     Power limit keeps decreasing each poll while
+ *                     temperature stays above the trip threshold.
+ */
+typedef enum : std::uint8_t {
+	PID_ABSOLUTE,
+	PID_INCREMENTAL
+} pid_mode_t;
 
 typedef struct
 {
@@ -31,6 +51,7 @@ typedef struct
 	double kp;
 	double ki;
 	double kd;
+	pid_mode_t mode;
 }pid_param_t;
 
 class cthd_pid {
@@ -39,10 +60,11 @@ private:
 	double err_sum, last_err;
 	time_t last_time;
 	unsigned int target_temp;
+	pid_mode_t mode;
 
 public:
-	cthd_pid();
 	double kp, ki, kd;
+	cthd_pid();
 	cthd_pid(const cthd_pid& x) = default;
 	
 	~cthd_pid() { }
@@ -55,11 +77,14 @@ public:
 		ki = _ki;
 		kd = _kd;
 	}
+	void set_pid_mode(pid_mode_t m) { mode = m; }
+	pid_mode_t get_pid_mode() const { return mode; }
+
 	int pid_output(unsigned int curr_temp, int initial_value = 0);
 	void set_target_temp(unsigned int temp) {
 		target_temp = temp;
 	}
 	void reset() {
 		err_sum = last_err = last_time = 0;
-	}	
+	}
 };

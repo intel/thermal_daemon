@@ -271,8 +271,19 @@ bool cthd_trip_point::thd_trip_point_check(int id, unsigned int read_temp,
 					cdev->get_cdev_type().c_str());
 			/*
 			 * When the cdev is already in max state, we skip this cdev.
+			 *
+			 * EXCEPTION: For PID control on an inverted-range device
+			 * (max_state < min_state, e.g. RAPL/SPEL power limits where
+			 * max_state = minimum power = most restrictive), we must keep
+			 * calling the PID even when at max_state.  The PID may compute
+			 * a less-restrictive output as temperature drops back toward the
+			 * trip threshold, allowing the power limit to be relaxed
+			 * proportionally rather than staying pinned at max_state until
+			 * the trip fully deactivates.
 			 */
-			if (cdev->in_max_state()) {
+			if (cdev->in_max_state() &&
+			    !((cdevs[i].pid_param.valid || cdev->is_pid_enabled()) &&
+			      cdev->get_max_state() < cdev->get_min_state())) {
 				thd_log_debug("Need to switch to next cdev target %d\n",
 						cdev->map_target_state(cdevs[i].target_state_valid,
 								cdevs[i].target_state));
@@ -350,12 +361,15 @@ void cthd_trip_point::thd_trip_point_add_cdev(cthd_cdev &cdev, int influence,
 		thd_cdev.max_state = max_state;
 	}
 	if (pid_param && pid_param->valid) {
-		thd_log_info("pid valid %f:%f:%f\n", pid_param->kp, pid_param->ki,
-				pid_param->kd);
+		thd_log_info("pid valid %f:%f:%f mode:%s\n", pid_param->kp,
+				pid_param->ki, pid_param->kd,
+				pid_param->mode == PID_INCREMENTAL ? "incremental" : "absolute");
 		memcpy(&thd_cdev.pid_param, pid_param, sizeof(pid_param_t));
 		thd_cdev.pid.set_pid_param(pid_param->kp, pid_param->ki, pid_param->kd);
+		thd_cdev.pid.set_pid_mode(pid_param->mode);
 	} else {
 		memset(&thd_cdev.pid_param, 0, sizeof(pid_param_t));
+		thd_cdev.pid_param.mode = PID_ABSOLUTE;
 	}
 	trip_cdev_add(thd_cdev);
 }

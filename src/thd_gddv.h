@@ -100,6 +100,21 @@ enum adaptive_condition : uint32_t { // NOLINT(performance-enum-size)
 	OS_type = 86
 };
 
+/*
+ * Adaptive condition ID ranges, matching Intel DPTF's ConditionType
+ * (OemConditionBaseId / SwOemConditionBaseId / ParticipantConditionBaseId).
+ *
+ * [OEM_CONDITION_BASE_ID, SW_OEM_CONDITION_BASE_ID)
+ *     OEM variables exported by the firmware as odvpN sysfs entries.
+ * [SW_OEM_CONDITION_BASE_ID, PARTICIPANT_CONDITION_BASE_ID)
+ *     Software-OEM conditions set at runtime by OEM software through the
+ *     DPTF/ESIF interface. These have no equivalent on Linux, so thermald
+ *     never matches them instead of misreading them as ODVP variables.
+ */
+#define OEM_CONDITION_BASE_ID		0x1000
+#define SW_OEM_CONDITION_BASE_ID	0x2000
+#define PARTICIPANT_CONDITION_BASE_ID	0x10000
+
 enum adaptive_comparison : uint8_t {
 	ADAPTIVE_EQUAL = 0x01, ADAPTIVE_LESSER_OR_EQUAL, ADAPTIVE_GREATER_OR_EQUAL, ADAPTIVE_NOT_EQUAL,
 };
