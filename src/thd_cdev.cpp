@@ -359,7 +359,7 @@ int cthd_cdev::thd_cdev_set_state(int set_point, int target_temp,
 
 		/* The below check to keep static analysis happy. There is no way
 		 * zone_trip_limits.size() == 0.
-		 * The above !found case ensures atleast size == 1
+		 * The above !found case ensures at least size == 1
 		 */
 		unsigned int zone_trips_size = zone_trip_limits.size();
 

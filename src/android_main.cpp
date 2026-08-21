@@ -40,7 +40,7 @@
 #  ifdef _POSIX_OPEN_MAX
 #   define   getdtablesize()	(_POSIX_OPEN_MAX)
 # endif
-// for AID_* constatns
+// for AID_* constants
 #include <cutils/android_filesystem_config.h>
 
 // getdtablesize() is removed from bionic/libc in LPDK*/
