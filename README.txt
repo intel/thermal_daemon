@@ -168,7 +168,7 @@ Release 2.5.8
 - Remove coverity errors to minimum
 - Add a script to plot temperature and trips from debug log
 - Deprecate modem/KBL-G support
-- Remove dbus-glib-devel as requirment
+- Remove dbus-glib-devel as requirement
 
 Release 2.5.7
 - Remove dependency on lzma libs
@@ -240,7 +240,7 @@ Release 2.4.1
 - Minor change for Dell XPS 13 with Tiger Lake.
 
 Release 2.4
-- Support for Rocket Lake and Commet Lake CPU model
+- Support for Rocket Lake and Comet Lake CPU model
 - Tiger Lake DPTF tables support
 - CPU stuck at low frequency on two models (issue 280)
 - Changes related to PID and exit codes
@@ -327,7 +327,7 @@ temperature is normal
 - Simplify RAPL cooling device
 
 Release 1.7.2
-- Workwround for platform with invalid thermal table
+- Workaround for platform with invalid thermal table
 - Error printing for RAPL constraint sysfs read on failure
 - thermal-conf.xml.auto  can be read from /etc/thermald, which allows user to modify
 generated thermal-conf.xml from /var/run/thermald and copy to /etc/thermald
@@ -487,7 +487,7 @@ on slope and angular increments to dynamically adjust set point
 
 
 Version 0.2
-- Define XML interface to set configuration data. Refer to thermal-conf.xml. This allows overriding buggy Bios thermal comfiguration and also allows extending the capability.
+- Define XML interface to set configuration data. Refer to thermal-conf.xml. This allows overriding buggy Bios thermal configuration and also allows extending the capability.
 - Use platform DMI UUID to index into configuration data. If there is no UUID match, falls back to thermal sysfs
 - Terminate interface
 - Takes over control from kernel thermal processing

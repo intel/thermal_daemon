@@ -46,7 +46,7 @@ cthd_zone_cpu::cthd_zone_cpu(int index, std::string path, int package_id) :
 				package_id), pkg_thres_th_zone(-1), pkg_temp_poll_enable(false) {
 
 	type_str = "cpu";
-	thd_log_debug("zone dts syfs: %s, package id %d\n", dts_sysfs.get_base_path().c_str(),
+	thd_log_debug("zone dts sysfs: %s, package id %d\n", dts_sysfs.get_base_path().c_str(),
 			package_id);
 }
 
