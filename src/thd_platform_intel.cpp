@@ -81,6 +81,7 @@ static supported_ids_t intel_id_table[] = {
     { 6, 0xc5, 1 }, // Arrow Lake H
     { 6, 0xb5, 1 }, // Arrow Lake U
     { 6, 0xcc, 1 }, // Panther Lake L
+    { 6, 0xd5, 1 }, // Wildcat Lake L
     { 15, 0x01, 1 }, // Nova Lake S
     { 15, 0x03, 1 }, // Nova Lake U/P/H/Hx
     { 0, 0, 0 } // Last Invalid entry
