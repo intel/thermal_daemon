@@ -169,10 +169,9 @@ bool check_thermald_running() {
 gboolean sig_int_handler(void) {
 	if (thd_engine)
 		thd_engine->thd_engine_terminate();
-	sleep(1);
 	if (g_main_loop)
 		g_main_loop_quit(g_main_loop);
-	thd_engine.reset();
+	thd_engine_destroy();
 	clean_up_lockfile();
 	exit(EXIT_SUCCESS);
 

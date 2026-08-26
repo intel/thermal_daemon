@@ -112,6 +112,7 @@ static int dummy_printf(const char *__restrict __format, ...) {
 class cthd_engine;
 class cthd_engine_therm_sysfs;
 extern std::unique_ptr<cthd_engine> thd_engine;
+void thd_engine_destroy();
 extern int thd_poll_interval;
 extern bool thd_ignore_default_control;
 extern bool workaround_enabled;

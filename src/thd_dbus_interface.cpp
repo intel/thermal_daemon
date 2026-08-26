@@ -206,25 +206,63 @@ gboolean thd_dbus_interface_terminate(PrefObject *obj, GError **error) {
 	return TRUE;
 }
 
+// Clears the reinit latch on every exit path, including an unwind
+struct reinit_guard {
+	bool &flag;
+	explicit reinit_guard(bool &f) : flag(f) {
+		flag = true;
+	}
+	~reinit_guard() {
+		flag = false;
+	}
+};
+
 gboolean thd_dbus_interface_reinit(PrefObject *obj, GError **error) {
+	static bool reinit_in_progress = false;
+
+	if (!thd_engine) {
+		g_set_error(error, G_DBUS_ERROR, G_DBUS_ERROR_FAILED,
+				"No thermal engine to reinitialize");
+		return FALSE;
+	}
+
+	/* Reinit destroys and rebuilds the whole engine. Re-entering it would
+	 * tear down an instance an outer call is still building, so refuse
+	 * overlapping requests rather than racing them.
+	 */
+	if (reinit_in_progress) {
+		g_set_error(error, G_DBUS_ERROR, G_DBUS_ERROR_LIMITS_EXCEEDED,
+				"Reinit is already in progress");
+		return FALSE;
+	}
+
 	bool exclusive_control = false;
 
 	if (thd_engine->get_control_mode() == EXCLUSIVE)
 		exclusive_control = true;
 
+	// Owns the storage that conf_file points at for the rest of this call
 	std::string config_file = thd_engine->get_config_file();
 	const char *conf_file = nullptr;
 	if (!config_file.empty())
 		conf_file = config_file.c_str();
 
+	reinit_guard guard(reinit_in_progress);
+
+	/* Stop the engine loop and wait for it to leave the object before
+	 * dropping it; thd_engine_destroy() abandons the instance rather than
+	 * freeing it if the loop could not be confirmed stopped.
+	 */
 	thd_engine->thd_engine_terminate();
-	sleep(1);
-	thd_engine.reset();
-	sleep(2);
+	thd_engine_destroy();
 
+	int ret = thd_engine_create_default_engine(true, exclusive_control,
+			conf_file);
 
-	if (thd_engine_create_default_engine(true, exclusive_control,
-			conf_file) != THD_SUCCESS) {
+	if (ret != THD_SUCCESS) {
+		thd_log_error("Reinit failed to re-create the thermal engine\n");
+		g_set_error(error, G_DBUS_ERROR, G_DBUS_ERROR_FAILED,
+				"Failed to re-create the thermal engine");
 		return FALSE;
 	}
 
@@ -1045,7 +1083,10 @@ thd_dbus_handle_method_call(GDBusConnection       *connection,
 	}
 
 	if (g_strcmp0(method_name, "Reinit") == 0) {
-		thd_dbus_interface_reinit(obj, &error);
+		if (!thd_dbus_interface_reinit(obj, &error)) {
+			return_dbus_error("Reinit");
+			return;
+		}
 
 		g_dbus_method_invocation_return_value(invocation,
 						      nullptr);

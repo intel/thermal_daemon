@@ -77,7 +77,9 @@ cthd_engine::cthd_engine(std::string _uuid) :
 				0), preference(0), status(true), thz_last_uevent_time(0), thz_last_temp_ind_time(
 				0), thz_last_update_event_time(0), terminate(false), has_invariant_tsc(0),
 				has_aperf(0), proc_list_matched(false), poll_interval_sec(0), poll_sensor_mask(0),
-				fast_poll_sensor_mask(0), saved_poll_interval(0), poll_fd_cnt(0), rt_kernel(false),
+				fast_poll_sensor_mask(0), saved_poll_interval(0),
+				thd_engine_thread_created(false), thd_engine_terminated(false),
+				thd_engine_thread_exited(false), poll_fd_cnt(0), rt_kernel(false),
 				parser_init_done(false) {
 	thd_engine = pthread_t();
 	thd_attr = pthread_attr_t();
@@ -173,6 +175,11 @@ void cthd_engine::thd_engine_thread() {
 		workarounds();
 	}
 	thd_log_debug("thd_engine_thread_end\n");
+
+	/* Last touch of this object: whoever asked us to terminate is allowed to
+	 * free it once this is published, so nothing below may use "this".
+	 */
+	thd_engine_thread_exited.store(true, std::memory_order_release);
 }
 
 bool cthd_engine::set_preference(const int pref) {
@@ -421,11 +428,20 @@ int cthd_engine::thd_engine_start() {
 	}
 	skip_kobj:
 #ifndef DISABLE_PTHREAD
-	// Create thread
+	// Create thread. It must be joinable: the loop dereferences "this" for
+	// its whole lifetime, so a caller that wants to drop the engine has to
+	// be able to wait for the loop to leave the object first.
 	pthread_attr_init(&thd_attr);
-	pthread_attr_setdetachstate(&thd_attr, PTHREAD_CREATE_DETACHED);
+	pthread_attr_setdetachstate(&thd_attr, PTHREAD_CREATE_JOINABLE);
+	thd_engine_thread_exited.store(false, std::memory_order_relaxed);
 	ret = pthread_create(&thd_engine, &thd_attr, cthd_engine_thread,
 			(void*) this);
+	pthread_attr_destroy(&thd_attr);
+	if (ret) {
+		thd_log_error("Failed to create engine thread: %s\n", strerror(ret));
+		return THD_FATAL_ERROR;
+	}
+	thd_engine_thread_created = true;
 #else
 	{
 		pid_t childpid;
@@ -513,10 +529,51 @@ void cthd_engine::process_pref_change() {
 	}
 }
 
+/*
+ * Wait for the engine loop to publish its exit, then reap it. Polling the flag
+ * rather than joining straight away keeps the wait bounded: a loop wedged in a
+ * sysfs access would otherwise block the caller - which is the D-Bus/signal
+ * handling main thread - for good.
+ *
+ * Returns false if the loop was still running when the timeout expired, in
+ * which case the thread is left unjoined and this object must not be freed.
+ */
+bool cthd_engine::wait_for_thread_exit(int timeout_msec) {
+	static constexpr int poll_step_msec = 20;
+	int waited_msec = 0;
+
+	while (!thd_engine_thread_exited.load(std::memory_order_acquire)) {
+		if (waited_msec >= timeout_msec) {
+			thd_log_warn("Engine thread still running after %d ms\n",
+					waited_msec);
+			return false;
+		}
+
+		struct timespec ts = { 0, poll_step_msec * 1000000L };
+		nanosleep(&ts, nullptr);
+		waited_msec += poll_step_msec;
+	}
+
+	pthread_join(thd_engine, nullptr);
+
+	return true;
+}
+
 void cthd_engine::thd_engine_terminate() {
-	send_message(TERMINATE, 0, nullptr);
-	sleep(1);
-	process_terminate();
+	if (thd_engine_thread_created) {
+		send_message(TERMINATE, 0, nullptr);
+		if (wait_for_thread_exit(terminate_timeout_msec))
+			thd_engine_thread_created = false;
+	}
+
+	/* Hand thermal control back to the kernel exactly once, even when the
+	 * loop had to be abandoned above, so the platform is not left running
+	 * under a policy that nothing is driving any more.
+	 */
+	if (!thd_engine_terminated) {
+		thd_engine_terminated = true;
+		process_terminate();
+	}
 }
 
 int cthd_engine::thd_engine_set_user_max_temp(const char *zone_type,

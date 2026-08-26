@@ -877,10 +877,33 @@ int cthd_engine_default::read_cooling_devices() {
 // Thermal engine
 std::unique_ptr<cthd_engine> thd_engine;
 
+/*
+ * Drop the current engine instance. The engine loop runs on its own thread and
+ * dereferences the instance for its whole lifetime, so freeing it while that
+ * thread is alive is a use-after-free. Callers are expected to have run
+ * thd_engine_terminate() first; if the loop still could not be confirmed
+ * stopped, deliberately abandon the instance instead of freeing it. Leaking a
+ * few KB beats letting a root daemon write through a dangling this pointer.
+ */
+void thd_engine_destroy() {
+	if (!thd_engine)
+		return;
+
+	if (thd_engine->thd_engine_thread_active()) {
+		thd_log_warn("Engine loop did not stop, abandoning engine instance\n");
+		// Dropping the pointer is the point here, see above
+		thd_engine.release(); // NOLINT(bugprone-unused-return-value)
+		return;
+	}
+
+	thd_engine.reset();
+}
+
 int thd_engine_create_default_engine(bool ignore_cpuid_check,
 		bool exclusive_control, const char *conf_file) {
 	int res;
 
+	thd_engine_destroy();
 	thd_engine.reset(new cthd_engine_default());
 	if (!thd_engine)
 		return THD_ERROR;

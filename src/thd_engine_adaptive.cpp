@@ -886,6 +886,7 @@ int cthd_engine_adaptive::thd_engine_start() {
 }
 
 int thd_engine_create_adaptive_engine(bool ignore_cpuid_check, bool test_mode) {
+	thd_engine_destroy();
 	thd_engine.reset(new cthd_engine_adaptive());
 
 	thd_engine->set_poll_interval(thd_poll_interval);

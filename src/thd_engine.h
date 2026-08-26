@@ -25,6 +25,7 @@
 #ifndef THD_ENGINE_H_
 #define THD_ENGINE_H_
 
+#include <atomic>
 #include <memory>
 #include <mutex>
 #include <pthread.h>
@@ -109,6 +110,12 @@ private:
 
 	pthread_t thd_engine;
 	pthread_attr_t thd_attr;
+	// Set once pthread_create() succeeded, cleared once the thread is joined
+	bool thd_engine_thread_created;
+	// Guards process_terminate() against running more than once
+	bool thd_engine_terminated;
+	// Published by the engine loop as its last action before returning
+	std::atomic<bool> thd_engine_thread_exited;
 
 	std::mutex thd_engine_mutex;
 
@@ -126,12 +133,15 @@ private:
 	void thermal_zone_change(message_capsul_t *msg);
 	void process_terminate();
 	void check_for_rt_kernel();
+	bool wait_for_thread_exit(int timeout_msec);
 
 public:
 	static constexpr int max_thermal_zones = 10;
 	static constexpr int max_cool_devs = 50;
 	static constexpr int def_poll_interval = 4000;
 	static constexpr int soft_cdev_start_index = 100;
+	// Upper bound on how long thd_engine_terminate() waits for the loop
+	static constexpr int terminate_timeout_msec = 3000;
 
 	cthd_parse parser;
 	cthd_features_parse features_parser;
@@ -156,6 +166,14 @@ public:
 
 	bool set_preference(const int pref);
 	void thd_engine_terminate();
+
+	// True while the engine loop may still be running, i.e. while this
+	// instance must not be freed. See thd_engine_destroy().
+	bool thd_engine_thread_active() {
+		return thd_engine_thread_created
+				&& !thd_engine_thread_exited.load(std::memory_order_acquire);
+	}
+
 	void thd_engine_calibrate();
 	int thd_engine_set_user_max_temp(const char *zone_type,
 			const char *user_set_point);
