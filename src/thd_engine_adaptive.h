@@ -58,6 +58,7 @@ protected:
 	void execute_target(struct adaptive_target &target);
 	void install_passive_default();
 	int set_int3400_base_path();
+	cthd_zone *search_proc_thermal_zone(std::string &name);
 
 public:
 	 static const int itmt_hyst = 2000;

@@ -49,6 +49,12 @@ protected:
 public:
 	static constexpr int power_clamp_reduction_percent = 5;
 	static constexpr int processor_thermal_min_passive = 90000;
+	/*
+	 * A zone with no usable sysfs trips gets a synthetic passive trip at
+	 * INT32_MAX, which can never fire. Reject such values so the zone is
+	 * not mistaken for one that can actually control the processor.
+	 */
+	static constexpr int processor_thermal_max_passive = 200000;
 
 	cthd_gddv gddv;
 

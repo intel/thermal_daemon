@@ -36,6 +36,38 @@
 #include "thd_sensor_rapl_power.h"
 #include "thd_zone_dynamic.h"
 
+/*
+ * The processor thermal device is exposed under several names depending on how
+ * it was enumerated: B0D4 or TCPU when described in ACPI, TCPU_PCI when the
+ * kernel enumerates it over PCI. GDDV tables only ever name the ACPI variants,
+ * so when the named zone is absent, resolve it to whichever alias does exist.
+ *
+ * On success "name" is updated to the alias found, because callers go on to
+ * look up the matching sensor by that name.
+ */
+cthd_zone *cthd_engine_adaptive::search_proc_thermal_zone(std::string &name) {
+	static const char *const aliases[] = { "B0D4", "TCPU", "TCPU_PCI" };
+
+	// Only these names are interchangeable, don't remap unrelated devices
+	if (name.compare(0, 4, "B0D4") && name.compare(0, 4, "TCPU"))
+		return nullptr;
+
+	for (const char *alias : aliases) {
+		if (name == alias)
+			continue;
+
+		cthd_zone *zone = search_zone(alias);
+		if (zone) {
+			thd_log_info("Using zone %s in place of %s\n", alias,
+					name.c_str());
+			name = alias;
+			return zone;
+		}
+	}
+
+	return nullptr;
+}
+
 int cthd_engine_adaptive::install_passive(struct psv *psv) {
 	std::string psv_zone;
 
@@ -50,23 +82,11 @@ int cthd_engine_adaptive::install_passive(struct psv *psv) {
 	}
 
 	cthd_zone *zone = search_zone(psv_zone);
+	if (!zone)
+		zone = search_proc_thermal_zone(psv_zone);
 	if (!zone) {
-		if (!psv_zone.compare(0, 4, "B0D4")) {
-			psv_zone = "TCPU";
-			zone = search_zone(psv_zone);
-		}
-
-		if (!zone) {
-			if (!psv_zone.compare(0, 4, "TCPU")) {
-				psv_zone = "B0D4";
-				zone = search_zone(psv_zone);
-			}
-			if (!zone) {
-				thd_log_warn("Unable to find a zone for %s\n",
-						psv_zone.c_str());
-				return THD_ERROR;
-			}
-		}
+		thd_log_warn("Unable to find a zone for %s\n", psv_zone.c_str());
+		return THD_ERROR;
 	}
 
 	std::string psv_cdev;
@@ -266,23 +286,11 @@ int cthd_engine_adaptive::install_itmt(struct itmt_entry *itmt_entry) {
 	}
 
 	cthd_zone *zone = search_zone(itmt_zone);
+	if (!zone)
+		zone = search_proc_thermal_zone(itmt_zone);
 	if (!zone) {
-		if (!itmt_zone.compare(0, 4, "B0D4")) {
-			itmt_zone = "TCPU";
-			zone = search_zone(itmt_zone);
-		}
-
-		if (!zone) {
-			if (!itmt_zone.compare(0, 4, "TCPU")) {
-				itmt_zone = "B0D4";
-				zone = search_zone(itmt_zone);
-			}
-			if (!zone) {
-				thd_log_warn("Unable to find a zone for %s\n",
-						itmt_zone.c_str());
-				return THD_ERROR;
-			}
-		}
+		thd_log_warn("Unable to find a zone for %s\n", itmt_zone.c_str());
+		return THD_ERROR;
 	}
 
 	cthd_cdev *cdev = search_cdev("rapl_controller_mmio");

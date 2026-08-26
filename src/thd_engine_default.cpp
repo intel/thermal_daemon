@@ -303,6 +303,13 @@ bool cthd_engine_default::add_int340x_processor_dev(void)
 		processor_thermal = search_zone("B0DB");
 	if (!processor_thermal)
 		processor_thermal = search_zone("TCPU");
+	/*
+	 * The processor thermal device may be enumerated over PCI rather than
+	 * described in ACPI. The kernel then names its zone TCPU_PCI and there
+	 * is no TCPU zone at all, so fall back to it.
+	 */
+	if (!processor_thermal)
+		processor_thermal = search_zone("TCPU_PCI");
 
 	if (processor_thermal) {
 		/* Check If there is a valid passive trip */
@@ -310,7 +317,8 @@ bool cthd_engine_default::add_int340x_processor_dev(void)
 			cthd_trip_point *trip = processor_thermal->get_trip_at_index(i);
 			if (trip && trip->get_trip_type() == PASSIVE
 					&& (passive = trip->get_trip_temp())
-					&& passive > processor_thermal_min_passive) {
+					&& passive > processor_thermal_min_passive
+					&& passive < processor_thermal_max_passive) {
 				/* Need to honor ACPI _CRT, otherwise the system could be shut down by Linux kernel */
 				acpi_thermal = search_zone("acpitz");
 				if (acpi_thermal) {
