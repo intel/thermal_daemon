@@ -796,7 +796,10 @@ int cthd_engine_default::read_cooling_devices() {
 		for (int i = 0; i < parser.cdev_count(); ++i) {
 			cooling_dev_t *cdev_config = parser.get_cool_dev_index(i);
 			if (cdev_config && !cdev_config->type_string.empty()) {
-				xml_defined_spel_cdevs.insert(cdev_config->type_string);
+				const std::string &type = cdev_config->type_string;
+				if (type.compare(0, sizeof("spel_controller_") - 1, "spel_controller_") == 0) {
+					xml_defined_spel_cdevs.insert(type);
+				}
 			}
 		}
 	}
