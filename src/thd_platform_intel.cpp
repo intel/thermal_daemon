@@ -155,7 +155,12 @@ int intel_platform::check_cpu_id(bool &proc_list_matched) {
         i++;
     }
     if (!valid) {
-        thd_log_msg(" Need Linux PowerCap sysfs\n");
+        csys_fs powercap_sysfs("/sys/class/powercap/intel-rapl/");
+
+        if (powercap_sysfs.exists())
+            thd_log_msg(" CPU model not in the supported list, using Linux PowerCap sysfs\n");
+        else
+            thd_log_msg(" Unsupported CPU model and no Linux PowerCap sysfs\n");
     }
 
     for (const char *path : blocklist_paths) {
