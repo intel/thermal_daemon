@@ -25,6 +25,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <errno.h>
+#include <sstream>
 #include <sys/reboot.h>
 #include "thd_trip_point.h"
 #include "thd_engine.h"
@@ -367,9 +368,20 @@ void cthd_trip_point::thd_trip_point_add_cdev(cthd_cdev &cdev, int influence,
 		memcpy(&thd_cdev.pid_param, pid_param, sizeof(pid_param_t));
 		thd_cdev.pid.set_pid_param(pid_param->kp, pid_param->ki, pid_param->kd);
 		thd_cdev.pid.set_pid_mode(pid_param->mode);
+		if (pid_param->adaptive) {
+			/*
+			 * Key the adapted coefficients on cdev type plus trip
+			 * temperature, so each (trip, cdev) pair keeps its own
+			 * trim across a daemon restart.
+			 */
+			std::ostringstream key;
+			key << cdev.get_cdev_type() << "." << temp;
+			thd_cdev.pid.set_pid_adaptive(true, key.str());
+		}
 	} else {
 		memset(&thd_cdev.pid_param, 0, sizeof(pid_param_t));
 		thd_cdev.pid_param.mode = PID_ABSOLUTE;
+		thd_cdev.pid_param.adaptive = false;
 	}
 	trip_cdev_add(thd_cdev);
 }

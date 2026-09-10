@@ -271,6 +271,13 @@ public:
 		thd_log_info("set_pid_mode %d [%s]\n", index,
 				m == PID_INCREMENTAL ? "incremental" : "absolute");
 	}
+	void set_pid_adaptive(bool enable) {
+		/* Keyed on the cdev type so the trim survives a daemon restart. */
+		pid_ctrl.set_pid_adaptive(enable, enable ? type_str : "");
+		if (enable)
+			thd_log_info("set_pid_adaptive %d [%s]\n", index,
+					type_str.c_str());
+	}
 	void enable_pid() {
 		thd_log_info("PID control enabled %d\n", index);
 		pid_enable = true;

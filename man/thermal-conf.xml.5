@@ -261,6 +261,16 @@ current virtual temperature.
           <kp>0.001</kp>
           <kd>0.0001</kd>
           <ki>0.0001</ki>
+          <!-- Optional, default absolute. "incremental" applies the PID
+               output as a delta to the current state instead of to
+               min_state. -->
+          <PidMode>absolute</PidMode>
+          <!-- Optional, default 0. When 1, thermald adjusts the three
+               constants above by up to a factor of 4 either way while it
+               runs, to reduce overshoot. Signs are never changed and the
+               first poll is unaffected, so behaviour with a freshly
+               started daemon is identical to the fixed-gain case. -->
+          <PidAdaptive>0</PidAdaptive>
         </PidControl>
         <!-- Write some prefix attached to state value, like below the
              prefix is "level ". It will preserve spaces as entered

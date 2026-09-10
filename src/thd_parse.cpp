@@ -247,6 +247,7 @@ int cthd_parse::parse_new_trip_cdev(xmlNode * a_node, xmlDoc *doc,
 					trip_cdev->pid_param.ki = pid_params.Ki;
 					trip_cdev->pid_param.kd = pid_params.Kd;
 					trip_cdev->pid_param.mode = pid_params.mode;
+					trip_cdev->pid_param.adaptive = pid_params.adaptive;
 					trip_cdev->pid_param.valid = 1;
 				}
 				xmlFree(tmp_value);
@@ -311,6 +312,7 @@ int cthd_parse::parse_new_trip_point(xmlNode * a_node, xmlDoc *doc,
 				trip_cdev.pid_param.ki = 0.0;
 				trip_cdev.pid_param.kd = 0.0;
 				trip_cdev.pid_param.mode = PID_ABSOLUTE;
+				trip_cdev.pid_param.adaptive = false;
 
 				parse_new_trip_cdev(cur_node->children, doc, &trip_cdev);
 				trip_pt->cdev_trips.push_back(trip_cdev);
@@ -383,6 +385,7 @@ int cthd_parse::parse_pid_values(xmlNode * a_node, xmlDoc *doc,
 	pid_ptr->Ki = 0.0001;
 	pid_ptr->Kd = 0.0001;
 	pid_ptr->mode = PID_ABSOLUTE;   /* default */
+	pid_ptr->adaptive = false;      /* default: fixed gains */
 
 	for (cur_node = a_node; cur_node; cur_node = cur_node->next) {
 		if (cur_node->type == XML_ELEMENT_NODE) {
@@ -419,6 +422,16 @@ int cthd_parse::parse_pid_values(xmlNode * a_node, xmlDoc *doc,
 						pid_ptr->mode = PID_INCREMENTAL;
 					else
 						pid_ptr->mode = PID_ABSOLUTE;
+				} else if (!thd_strcasecmp_n((const char*) cur_node->name,
+						"PidAdaptive")) {
+					/*
+					 * <PidAdaptive>1</PidAdaptive> lets the daemon trim
+					 * the Kp/Ki/Kd above by up to 4x either way while it
+					 * runs.  Signs and the initial output are unchanged.
+					 */
+					int val;
+					if (parse_int_value(tmp_value, &val, 0, 1) == THD_SUCCESS)
+						pid_ptr->adaptive = !!val;
 				}
 				xmlFree(tmp_value);
 			}
@@ -1095,10 +1108,13 @@ void cthd_parse::dump_thermal_conf() {
 								thermal_info_list[i].zones[j].trip_pts[k].cdev_trips[l].target_min_state,
 								thermal_info_list[i].zones[j].trip_pts[k].cdev_trips[l].target_max_state);
 					if (thermal_info_list[i].zones[j].trip_pts[k].cdev_trips[l].pid_param.valid)
-						thd_log_info("\t\t\t  PID values %f:%f:%f\n",
+						thd_log_info("\t\t\t  PID values %f:%f:%f mode:%s adaptive:%d\n",
 								thermal_info_list[i].zones[j].trip_pts[k].cdev_trips[l].pid_param.kp,
 								thermal_info_list[i].zones[j].trip_pts[k].cdev_trips[l].pid_param.ki,
-								thermal_info_list[i].zones[j].trip_pts[k].cdev_trips[l].pid_param.kd);
+								thermal_info_list[i].zones[j].trip_pts[k].cdev_trips[l].pid_param.kd,
+								thermal_info_list[i].zones[j].trip_pts[k].cdev_trips[l].pid_param.mode
+										== PID_INCREMENTAL ? "inc" : "abs",
+								thermal_info_list[i].zones[j].trip_pts[k].cdev_trips[l].pid_param.adaptive);
 				}
 			}
 		}

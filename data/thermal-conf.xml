@@ -200,6 +200,13 @@ use "man thermal-conf.xml" for details
 				<kp>0.001</kp>
 				<kd>0.0001</kd>
 				<ki>0.0001</ki>
+				<!-- Optional. Set to 1 to let thermald trim the three
+				     constants above by up to 4x either way while it runs,
+				     to reduce overshoot. Gain signs are never changed and
+				     the trim starts at 1.0, so a freshly started daemon
+				     behaves exactly as it does with this set to 0.
+				-->>
+				<PidAdaptive>0</PidAdaptive>
 			</PidControl>
 		</CoolingDevice>
 	</CoolingDevices>
