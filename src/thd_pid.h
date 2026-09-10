@@ -24,6 +24,7 @@
 
 #include "thermald.h"
 #include <cstdint>
+#include <string>
 #include <time.h>
 
 /*
@@ -52,7 +53,95 @@ typedef struct
 	double ki;
 	double kd;
 	pid_mode_t mode;
+	/*
+	 * When set, the configured Kp/Ki/Kd are trimmed at runtime by
+	 * cthd_pid_adaptive.  Opt-in via <PidAdaptive>1</PidAdaptive>.
+	 */
+	bool adaptive;
 }pid_param_t;
+
+/*
+ * Adaptive gain trimming.
+ *
+ * Rather than adapting Kp/Ki/Kd directly, this adapts a *multiplicative trim*
+ * on each of the three configured gains:
+ *
+ *   Kp_eff = kp * trim[0],  Ki_eff = ki * trim[1],  Kd_eff = kd * trim[2]
+ *
+ *   trim[i] = R ^ tanh(s[i]),  s[i] = sum_j coeff[i][j] * X[j]
+ *
+ * where X is the (normalised) error, error integral and error derivative, and
+ * coeff is adjusted by gradient descent on the tracking error each poll.
+ *
+ * Trimming rather than replacing is what makes this safe to run in a thermal
+ * daemon:
+ *
+ *   - trim[i] is bounded to [1/R, R], so an adapted gain can never be more
+ *     than R times off the value that was tuned by hand.
+ *   - trim[i] > 0 always, so adaptation can never flip the sign of a gain
+ *     and turn the loop into positive feedback.
+ *   - trim(s = 0) == 1 exactly, and coeff starts at zero.  A fresh controller
+ *     therefore reproduces the fixed-gain behaviour bit-for-bit on the first
+ *     poll, and only ever deviates from a known-good baseline.
+ *   - a slew limit caps how fast trim may move between polls.
+ *
+ * Inputs are normalised before use so that the step size does not depend on
+ * whether the error is expressed in millidegrees or the integral has been
+ * accumulating for an hour.
+ *
+ * The adaptation direction needs the sign of de/du, and that is taken from the
+ * configuration rather than measured: for a plant with dT/du = g, stability of
+ * u = kp*e + ... requires kp*g < 0, so sign(de/du) is -sign(kp).
+ *
+ * It is tempting to verify that at runtime by correlating our own output
+ * changes against the error changes that follow, but in closed loop that
+ * measurement is invalid: u is computed *from* e, so du and de are correlated
+ * through the controller (du/de = kp) and not through the plant.  Such an
+ * estimator converges to sign(kp), which is the wrong sign whenever kp > 0,
+ * and the resulting inverted gradient walks every gain to its bound.  A
+ * configured loop that had the sign wrong would already be diverging with
+ * fixed gains, so there is nothing here worth measuring.
+ */
+#define PID_ADAPT_DIM		3
+
+class cthd_pid_adaptive {
+
+private:
+	double coeff[PID_ADAPT_DIM][PID_ADAPT_DIM];
+	double prev_dcoeff[PID_ADAPT_DIM][PID_ADAPT_DIM];
+	/* Slew limited trim actually handed to the controller. */
+	double prev_trim[PID_ADAPT_DIM];
+	unsigned int updates_since_save;
+	std::string key;
+
+	bool store() const;
+
+public:
+	cthd_pid_adaptive() { reset(); }
+
+	void reset();
+
+	/* Persistence is keyed on a caller supplied, filename safe name. */
+	void set_key(const std::string &_key);
+	bool is_persistent() const { return !key.empty(); }
+
+	/*
+	 * trim[] is the multiplier for each gain; tanh_sum[] is the intermediate
+	 * tanh(s[i]), kept so adapt() need not recompute it.  Not const: the
+	 * returned trim is slew limited against the previous call, so calling
+	 * this advances state.
+	 */
+	void compute_trim(const double X[PID_ADAPT_DIM], double trim[PID_ADAPT_DIM],
+			double tanh_sum[PID_ADAPT_DIM]);
+
+	/*
+	 * gsign[] carries sign(kp), sign(ki), sign(kd); the plant sign is derived
+	 * from gsign[0], see the class comment.
+	 */
+	void adapt(const double X[PID_ADAPT_DIM], const double trim[PID_ADAPT_DIM],
+			const double tanh_sum[PID_ADAPT_DIM], const double gsign[PID_ADAPT_DIM],
+			double err_n);
+};
 
 class cthd_pid {
 
@@ -61,6 +150,11 @@ private:
 	time_t last_time;
 	unsigned int target_temp;
 	pid_mode_t mode;
+	bool adaptive;
+	cthd_pid_adaptive trim_ctrl;
+
+	/* Applies the current trim to kp/ki/kd, then advances the adaptation. */
+	double adaptive_output(double error, double _err_sum, double d_err);
 
 public:
 	double kp, ki, kd;
@@ -79,6 +173,14 @@ public:
 	}
 	void set_pid_mode(pid_mode_t m) { mode = m; }
 	pid_mode_t get_pid_mode() const { return mode; }
+
+	/*
+	 * Enable adaptive gain trimming.  "_key" names the file under TDRUNDIR
+	 * used to carry adapted coefficients across a daemon restart; pass an
+	 * empty string to keep them in memory only.
+	 */
+	void set_pid_adaptive(bool enable, const std::string &_key = "");
+	bool is_pid_adaptive() const { return adaptive; }
 
 	int pid_output(unsigned int curr_temp, int initial_value = 0);
 	void set_target_temp(unsigned int temp) {
