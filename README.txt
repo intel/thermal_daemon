@@ -113,6 +113,11 @@ For build, follow the same procedure as Fedora.
 
 Releases
 
+Release 2.5.13
+- Restricted Qualcomm SPEL PL initialization to XML-defined cooling devices only.
+- Fixed handling of large RAPL PL1 values during restore registration.
+- Re-added Wildcat Lake platform support.
+
 Release 2.5.12
 - Platform and feature expansion: added ARM backend support, Intel platform refactoring,
 new CPU IDs including NovaLake variants, generic_os/data-vault path enhancements,
