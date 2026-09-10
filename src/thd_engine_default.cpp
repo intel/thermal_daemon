@@ -26,6 +26,7 @@
 #include <dirent.h>
 #include <errno.h>
 #include <memory>
+#include <set>
 #include <sys/types.h>
 #include "thd_engine_default.h"
 #include "thd_zone_cpu.h"
@@ -785,6 +786,24 @@ int cthd_engine_default::read_cooling_devices() {
 	// Add SPEL cooling devices for Qualcomm SOCs
 	// Check for SPEL sysfs nodes in powercap framework
 	// Create separate cooling devices for each constraint (PL0, PL1, PL2, PL3)
+	//
+	// Build the set of SPEL cdev type names explicitly defined in the XML config.
+	// PL initialization (writing power limits to HW) must only happen for the
+	// specific SPEL cdev that the XML config targets; applying it to every
+	// discovered SPEL node would incorrectly program unrelated power domains.
+	std::set<std::string> xml_defined_spel_cdevs;
+	if (!parser_init() && parser.platform_matched()) {
+		for (int i = 0; i < parser.cdev_count(); ++i) {
+			cooling_dev_t *cdev_config = parser.get_cool_dev_index(i);
+			if (cdev_config && !cdev_config->type_string.empty()) {
+				const std::string &type = cdev_config->type_string;
+				if (type.compare(0, sizeof("spel_controller_") - 1, "spel_controller_") == 0) {
+					xml_defined_spel_cdevs.insert(type);
+				}
+			}
+		}
+	}
+
 	DIR *spel_dir;
 	struct dirent *spel_entry;
 	const std::string spel_base_path = "/sys/class/powercap/";
@@ -819,14 +838,27 @@ int cthd_engine_default::read_cooling_devices() {
 									// Extract the PL number (1-4)
 									int pl_num = constraint_idx + 1;  // constraint_0=PL1, constraint_1=PL2, etc.
 
+									// Set type name: spel_controller_soc_pl1, spel_controller_soc_pl2, etc.
+									std::ostringstream type_name;
+									type_name << "spel_controller_" << domain_name << "_pl" << pl_num;
+
+									// If the XML config explicitly lists SPEL cdevs, only initialise
+									// (and program HW power limits for) those that appear in the list.
+									// This prevents writing PPCC-derived PL values to every discovered
+									// SPEL domain/constraint, which would be incorrect for nodes that
+									// the XML config does not intend to manage.
+									if (!xml_defined_spel_cdevs.empty() &&
+									    xml_defined_spel_cdevs.find(type_name.str()) == xml_defined_spel_cdevs.end()) {
+										thd_log_info("Skipping SPEL %s PL%d: not defined in XML config\n",
+										             domain_name.c_str(), pl_num);
+										continue;
+									}
+
 									// Create cooling device for this constraint
 									std::unique_ptr<cthd_sysfs_cdev_spel> spel_dev(
 										new cthd_sysfs_cdev_spel(current_cdev_index, 0,
 										                         domain_name, constraint_idx, spel_path));
 
-									// Set type name: spel_controller_soc_pl1, spel_controller_soc_pl2, etc.
-									std::ostringstream type_name;
-									type_name << "spel_controller_" << domain_name << "_pl" << pl_num;
 									spel_dev->set_cdev_type(type_name.str());
 
 									if (spel_dev->update() == THD_SUCCESS) {
