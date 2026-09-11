@@ -47,6 +47,22 @@
 #define SENSOR_DEF_BIT_PATH		0x0001
 #define SENSOR_DEF_BIT_ASYNC_CAPABLE		0x0002
 
+/*
+ * Upper bound for PID gains supplied via XML.
+ *
+ * The gains convert a millidegree error into cooling device state units, and
+ * for a power limit device that unit is microwatts: Kp = 1000 means 1W per
+ * degree C.  A useful Kp for RAPL is therefore in the thousands, well past
+ * the 1000 that is plenty for a step indexed device such as cpufreq.
+ *
+ * 10^7 is one full sweep of a 1000W RAPL domain per 0.1C of error, i.e. past
+ * anything physically meaningful, while still rejecting a typo like 1e30.
+ * The bound is a sanity check, not the thing keeping the loop safe:
+ * pid_output() saturates to int range and thd_cdev_set_state() then clamps
+ * to the device's own min/max state.
+ */
+#define PID_GAIN_MAX		10000000.0
+
 typedef struct {
 	double Kp;
 	double Ki;

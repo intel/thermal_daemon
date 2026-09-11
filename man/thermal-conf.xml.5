@@ -258,12 +258,21 @@ current virtual temperature.
              step will use PID calculation using provided PID
              constants. -->
         <PidControl>
+          <!-- Each constant is a non negative number, at most 1e7. They
+               convert a millidegree error into this cooling device's own
+               state unit, so the useful magnitude depends on the device:
+               for a step indexed device such as cpufreq a fraction of 1
+               is normal, whereas a power limit device counts in
+               microwatts, where kp=1000 means 1W per degree C. -->
           <kp>0.001</kp>
           <kd>0.0001</kd>
           <ki>0.0001</ki>
           <!-- Optional, default absolute. "incremental" applies the PID
                output as a delta to the current state instead of to
-               min_state. -->
+               min_state. Absolute settles at one state per error value,
+               so with ki=0 it cannot travel further than kp times the
+               error; incremental keeps moving every poll while the trip
+               is active, so it can reach max_state from a small error. -->
           <PidMode>absolute</PidMode>
           <!-- Optional, default 0. When 1, thermald adjusts the three
                constants above by up to a factor of 4 either way while it

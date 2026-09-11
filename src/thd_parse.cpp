@@ -395,19 +395,20 @@ int cthd_parse::parse_pid_values(xmlNode * a_node, xmlDoc *doc,
 			if (tmp_value) {
 				if (!thd_strcasecmp_n((const char*) cur_node->name, "Kp")) {
 					double val;
-					/* Extended range: 0–1000 to support power-limit control
-					 * (temperature in millidegrees, power in microwatts). */
-					if (parse_double_value(tmp_value, &val, 0.0, 1000.0) == THD_SUCCESS) {
+					if (parse_double_value(tmp_value, &val, 0.0,
+							PID_GAIN_MAX) == THD_SUCCESS) {
 						pid_ptr->Kp = val;
 					}
 				} else if (!thd_strcasecmp_n((const char*) cur_node->name, "Kd")) {
 					double val;
-					if (parse_double_value(tmp_value, &val, 0.0, 1000.0) == THD_SUCCESS) {
+					if (parse_double_value(tmp_value, &val, 0.0,
+							PID_GAIN_MAX) == THD_SUCCESS) {
 						pid_ptr->Kd = val;
 					}
 				} else if (!thd_strcasecmp_n((const char*) cur_node->name, "Ki")) {
 					double val;
-					if (parse_double_value(tmp_value, &val, 0.0, 1000.0) == THD_SUCCESS) {
+					if (parse_double_value(tmp_value, &val, 0.0,
+							PID_GAIN_MAX) == THD_SUCCESS) {
 						pid_ptr->Ki = val;
 					}
 				} else if (!thd_strcasecmp_n((const char*) cur_node->name,
