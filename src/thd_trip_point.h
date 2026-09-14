@@ -191,6 +191,12 @@ public:
 		return cdevs.size();
 	}
 
+	/* Each trip level cdev entry carries its own PID and adaptation state. */
+	void pid_adaptive_flush() {
+		for (unsigned int i = 0; i < cdevs.size(); ++i)
+			cdevs[i].pid.pid_adaptive_flush();
+	}
+
 
 	int is_target_valid(int &target_state) {
 		target_state = 0;

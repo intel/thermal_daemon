@@ -278,6 +278,10 @@ public:
 			thd_log_info("set_pid_adaptive %d [%s]\n", index,
 					type_str.c_str());
 	}
+	/* Cdev level PID only; trip level ones live in trip_pt_cdev_t. */
+	void pid_adaptive_flush() {
+		pid_ctrl.pid_adaptive_flush();
+	}
 	void enable_pid() {
 		thd_log_info("PID control enabled %d\n", index);
 		pid_enable = true;

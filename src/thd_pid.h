@@ -141,6 +141,15 @@ public:
 	void adapt(const double X[PID_ADAPT_DIM], const double trim[PID_ADAPT_DIM],
 			const double tanh_sum[PID_ADAPT_DIM], const double gsign[PID_ADAPT_DIM],
 			double err_n);
+
+	/*
+	 * Write the coefficients out now instead of waiting for the next periodic
+	 * save.  adapt() only persists every PID_ADAPT_SAVE_INTERVAL updates, so
+	 * without this a run that ends before the interval elapses -- and every
+	 * run shorter than that, since the counter restarts at zero -- would
+	 * learn and then throw the result away.  No-op when not persistent.
+	 */
+	void flush();
 };
 
 class cthd_pid {
@@ -181,6 +190,12 @@ public:
 	 */
 	void set_pid_adaptive(bool enable, const std::string &_key = "");
 	bool is_pid_adaptive() const { return adaptive; }
+
+	/* Persist adapted coefficients now.  See cthd_pid_adaptive::flush(). */
+	void pid_adaptive_flush() {
+		if (adaptive)
+			trim_ctrl.flush();
+	}
 
 	int pid_output(unsigned int curr_temp, int initial_value = 0);
 	void set_target_temp(unsigned int temp) {

@@ -156,6 +156,7 @@ public:
 
 	bool set_preference(const int pref);
 	void thd_engine_terminate();
+	void pid_adaptive_flush();
 	void thd_engine_calibrate();
 	int thd_engine_set_user_max_temp(const char *zone_type,
 			const char *user_set_point);

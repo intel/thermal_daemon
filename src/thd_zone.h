@@ -167,6 +167,11 @@ public:
 		return trip_points.size();
 	}
 
+	void pid_adaptive_flush() {
+		for (unsigned int i = 0; i < trip_points.size(); ++i)
+			trip_points[i].pid_adaptive_flush();
+	}
+
 	int update_max_temperature(int max_temp);
 	int update_psv_temperature(int psv_temp);
 	int read_user_set_psv_temp();

@@ -194,6 +194,19 @@ void cthd_pid_adaptive::adapt(const double X[PID_ADAPT_DIM],
 	}
 }
 
+void cthd_pid_adaptive::flush() {
+	if (!is_persistent())
+		return;
+
+	updates_since_save = 0;
+
+	if (store())
+		thd_log_debug("pid_adapt: saved coefficients for %s\n", key.c_str());
+	else
+		thd_log_warn("pid_adapt: cannot save coefficients for %s\n",
+				key.c_str());
+}
+
 static std::string pid_adapt_file_name(const std::string &key) {
 	std::ostringstream filename;
 

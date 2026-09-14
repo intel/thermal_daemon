@@ -519,6 +519,24 @@ void cthd_engine::thd_engine_terminate() {
 	process_terminate();
 }
 
+/*
+ * Adapted PID coefficients are otherwise only written out every
+ * PID_ADAPT_SAVE_INTERVAL updates, so save them on the way out.
+ *
+ * Called from the TERMINATE message handler rather than from
+ * process_terminate(): the message is processed on the engine thread, which is
+ * the thread that owns the zones and cdevs and the only one that calls
+ * cthd_pid_adaptive::adapt(), so there is no race with the poll loop.
+ * process_terminate() runs from the signal handler on the main thread.
+ */
+void cthd_engine::pid_adaptive_flush() {
+	for (unsigned int i = 0; i < zones.size(); ++i)
+		zones[i]->pid_adaptive_flush();
+
+	for (unsigned int i = 0; i < cdevs.size(); ++i)
+		cdevs[i]->pid_adaptive_flush();
+}
+
 int cthd_engine::thd_engine_set_user_max_temp(const char *zone_type,
 		const char *user_set_point) {
 	std::string str(user_set_point);
@@ -620,6 +638,8 @@ int cthd_engine::proc_message(message_capsul_t *msg) {
 		break;
 	case TERMINATE:
 		thd_log_msg("Terminating ...\n");
+
+		pid_adaptive_flush();
 
 		ret = -1;
 		terminate = true;
