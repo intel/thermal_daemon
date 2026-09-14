@@ -347,6 +347,27 @@ double cthd_pid::adaptive_output(double error, double _err_sum, double d_err) {
 	return output;
 }
 
+/*
+ * Saturate to int before returning.  err_sum is unbounded -- it accumulates
+ * error * dt for as long as the trip stays active -- so ki * err_sum can
+ * exceed INT_MAX with entirely reasonable gains, and converting a double
+ * that large to int is undefined behaviour rather than a large int.
+ *
+ * Saturating is the right answer rather than an error: the caller clamps to
+ * the cooling device's own state range immediately afterwards, so INT_MAX
+ * simply means "as much cooling as this device can do".
+ */
+static inline int pid_clamp_to_int(double v) {
+	if (!std::isfinite(v))
+		return 0;
+	if (v > (double) INT_MAX)
+		return INT_MAX;
+	if (v < (double) INT_MIN)
+		return INT_MIN;
+
+	return (int) v;
+}
+
 int cthd_pid::pid_output(unsigned int curr_temp, int initial_value) {
 	double output;
 	/* Use signed arithmetic to avoid unsigned wrap-around when
@@ -378,9 +399,7 @@ int cthd_pid::pid_output(unsigned int curr_temp, int initial_value) {
 			err_sum = ki ? (initial_value - kp * error) / ki : 0;
 			output = kp * error + ki * err_sum;
 		}
-		int out = (output > INT_MAX) ? INT_MAX :
-				(output < INT_MIN) ? INT_MIN :
-				(int)output;
+		int out = pid_clamp_to_int(output);
 
 		thd_log_debug("pid first call mode:%s e:%d out:%d\n",
 				mode == PID_INCREMENTAL ? "inc" : "abs",
@@ -408,15 +427,17 @@ int cthd_pid::pid_output(unsigned int curr_temp, int initial_value) {
 	else
 		output = kp * error + ki * err_sum + kd * d_err;
 
+	int out = pid_clamp_to_int(output);
+
 	thd_log_debug("pid_%s%s e:%d kp:%g ki_sum:%g kd:%g out:%d\n",
 			mode == PID_INCREMENTAL ? "inc" : "abs",
 			adaptive ? ",adapt" : "",
-			error, kp * error, ki * err_sum, kd * d_err, (int)output);
+			error, kp * error, ki * err_sum, kd * d_err, out);
 
 	last_err = error;
 	last_time = now;
 
 	thd_log_debug("pid_output curr:%u tgt:%u mode:%d out:%d\n",
-			curr_temp, target_temp, (int)mode, (int)output);
-	return (int)output;
+			curr_temp, target_temp, (int)mode, out);
+	return out;
 }
