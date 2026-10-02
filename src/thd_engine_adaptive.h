@@ -57,6 +57,8 @@ protected:
 	void exec_fallback_target(int target);
 	void execute_target(struct adaptive_target &target);
 	void install_passive_default();
+	int install_virtual_sensor(const struct vsensor &vs,
+			const std::vector<struct vspt_entry> &vspts);
 	int set_int3400_base_path();
 
 public:
