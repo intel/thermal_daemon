@@ -212,6 +212,13 @@ struct vspt_entry {
 	int sample_period;
 };
 
+/* One virtual sensor participant (e.g. VR1.D0): its VSCT and VSPT tables */
+struct vsensor {
+	std::string name;
+	std::vector<struct vsct_entry> vscts;
+	std::vector<struct vspt_entry> vspts;
+};
+
 class cthd_gddv {
 private:
 	std::vector<ppcc_t> ppccs;
@@ -259,6 +266,7 @@ private:
 	int parse_itmt3(char *name, char *itmt, unsigned int len);
 	int parse_vsct(char *name, char *psvt, int len);
 	int parse_vspt(char *name, char *psvt, int len);
+	struct vsensor* get_vsensor(char *name);
 	int parse_trt(char *trt, int len);
 	void parse_idsp(char *name, char *idsp, int len);
 	void parse_trip_point(char *name, char *type, char *val, int len);
@@ -310,9 +318,7 @@ public:
 	std::vector<std::vector<struct condition>> conditions;
 	std::vector<struct adaptive_target> targets;
 
-	std::string vscts_name;
-	std::vector<struct vsct_entry> vscts;
-	std::vector<struct vspt_entry> vspts;
+	std::vector<struct vsensor> vsensors;
 
 	ppcc_t* get_ppcc_param(const std::string& name);
 	int gddv_init(std::string& base_path);
