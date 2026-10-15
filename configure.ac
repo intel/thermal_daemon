@@ -50,12 +50,18 @@ if test "x$with_systemdsystemunitdir" != xno; then
 fi
 AM_CONDITIONAL(HAVE_SYSTEMD, [test -n "$with_systemdsystemunitdir" -a "x$with_systemdsystemunitdir" != xno ])
 
+AC_ARG_WITH([udevrulesdir],
+        [AS_HELP_STRING([--with-udevrulesdir=DIR], [Directory for udev rules [default=PREFIX/lib/udev/rules.d]])],
+        [], [with_udevrulesdir='${prefix}/lib/udev/rules.d'])
+AC_SUBST([udevrulesdir], [$with_udevrulesdir])
+
 # print configuration
 echo
 echo "System paths:"
 echo "  prefix: $prefix"
 echo "  exec_prefix: $exec_prefix"
 echo "  systemdunitdir: $with_systemdsystemunitdir"
+echo "  udevrulesdir: $with_udevrulesdir"
 echo "  tdbinary: $tdbinary"
 echo "  tdconfdir: $tdconfdir"
 echo "  tdrundir: $tdrundir"
