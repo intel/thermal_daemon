@@ -1,6 +1,7 @@
 [Unit]
 Description=Thermal Daemon Service
 ConditionVirtualization=no
+After=sys-class-powercap.device
 
 [Service]
 Type=dbus
