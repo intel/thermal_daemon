@@ -78,21 +78,11 @@ void cthd_gddv::destroy_dynamic_sources() {
 	if (power_profiles_daemon)
 		g_clear_object(&power_profiles_daemon);
 
-	if (tablet_dev) {
-		close(libevdev_get_fd(tablet_dev));
-		libevdev_free(tablet_dev);
-
-		if (lid_dev == tablet_dev)
-			lid_dev = nullptr;
-		tablet_dev = nullptr;
+	for (auto &sw : input_switches) {
+		close(libevdev_get_fd(sw.dev));
+		libevdev_free(sw.dev);
 	}
-
-	if (lid_dev) {
-		close(libevdev_get_fd(lid_dev));
-		libevdev_free(lid_dev);
-
-		lid_dev = nullptr;
-	}
+	input_switches.clear();
 #endif
 
 }
@@ -1369,7 +1359,7 @@ int cthd_gddv::verify_condition(const struct condition& condition) {
 		return 0;
 	}
 #ifndef ANDROID
-	if (condition.condition == Lid_state && lid_dev != nullptr)
+	if (condition.condition == Lid_state && has_input_switch(SW_LID))
 		return 0;
 	if (condition.condition == Power_source && upower_client != nullptr)
 		return 0;
@@ -1575,17 +1565,12 @@ int cthd_gddv::evaluate_lid_condition(const struct condition& condition) {
 }
 #else
 int cthd_gddv::evaluate_lid_condition(const struct condition& condition) {
-	int value = 0;
+	int value = 1; /* open, if the lid switch went away */
+	int lid_closed;
 
-	if (lid_dev) {
-		struct input_event ev;
-
-		while (libevdev_has_event_pending(lid_dev))
-			libevdev_next_event(lid_dev, LIBEVDEV_READ_FLAG_NORMAL, &ev);
-
-		int lid_closed = libevdev_get_event_value(lid_dev, EV_SW, SW_LID);
+	if (get_input_switch(SW_LID, &lid_closed) == 0)
 		value = !lid_closed;
-	}
+
 	return compare_condition(condition, value);
 }
 #endif
@@ -1615,18 +1600,11 @@ int cthd_gddv::evaluate_platform_type_condition(
 int cthd_gddv::evaluate_platform_type_condition(
 		const struct condition& condition) {
 	int value = 1;
+	int tablet;
 
-	if (tablet_dev) {
-		struct input_event ev;
+	if (get_input_switch(SW_TABLET_MODE, &tablet) == 0 && tablet)
+		value = 2;
 
-		while (libevdev_has_event_pending(tablet_dev))
-			libevdev_next_event(tablet_dev, LIBEVDEV_READ_FLAG_NORMAL, &ev);
-
-		int tablet = libevdev_get_event_value(tablet_dev, EV_SW,
-				SW_TABLET_MODE);
-		if (tablet)
-			value = 2;
-	}
 	return compare_condition(condition, value);
 }
 #endif
@@ -1882,9 +1860,21 @@ static int is_event_device(const struct dirent *dir) {
 	return strncmp("event", dir->d_name, 5) == 0;
 }
 
-void cthd_gddv::setup_input_devices() {
+/* How often to look for switch devices that appeared after startup */
+#define INPUT_SWITCH_RESCAN_SEC	30
+
+/*
+ * Track every input device with a lid or tablet-mode switch. A laptop can
+ * have several tablet-mode switches, and some only appear on the first
+ * switch event (e.g. "Intel HID switches"), so this is called again
+ * periodically. The switch capabilities are read from sysfs, so other
+ * input devices such as touchscreens are not opened (and powered up).
+ */
+void cthd_gddv::scan_input_switches() {
 	struct dirent **namelist = nullptr;
-	int i, ndev, ret;
+	int i, ndev;
+
+	input_switches_scanned = time(nullptr);
 
 	ndev = scandir("/dev/input", &namelist, is_event_device, versionsort);
 	if (ndev == -1) {
@@ -1893,33 +1883,116 @@ void cthd_gddv::setup_input_devices() {
 	}
 
 	for (i = 0; i < ndev; i++) {
+		std::string name = namelist[i]->d_name;
+		std::string node = "/dev/input/" + name;
+		std::string caps_path = "/sys/class/input/" + name
+				+ "/device/capabilities/sw";
 		struct libevdev *dev = nullptr;
-		char fname[267];
-		int fd = -1;
+		unsigned long caps = 0;
+		bool known = false;
+		FILE *caps_file;
+		int fd;
 
-		snprintf(fname, sizeof(fname), "/dev/input/%s", namelist[i]->d_name);
 		free(namelist[i]);
-		fd = open(fname, O_RDONLY | O_NONBLOCK | O_CLOEXEC);
+
+		for (auto &sw : input_switches)
+			if (sw.node == node)
+				known = true;
+		if (known)
+			continue;
+
+		caps_file = fopen(caps_path.c_str(), "r");
+		if (!caps_file)
+			continue;
+		if (fscanf(caps_file, "%lx", &caps) != 1)
+			caps = 0;
+		fclose(caps_file);
+		if (!(caps & ((1UL << SW_LID) | (1UL << SW_TABLET_MODE))))
+			continue;
+
+		fd = open(node.c_str(), O_RDONLY | O_NONBLOCK | O_CLOEXEC);
 		if (fd < 0)
 			continue;
-		ret = libevdev_new_from_fd(fd, &dev);
-		if (ret) {
+		if (libevdev_new_from_fd(fd, &dev)) {
 			close(fd);
 			continue;
 		}
 
-		if (!tablet_dev && libevdev_has_event_code(dev, EV_SW, SW_TABLET_MODE))
-			tablet_dev = dev;
-		if (!lid_dev &&  libevdev_has_event_code(dev, EV_SW, SW_LID))
-			lid_dev = dev;
-
-		if (lid_dev != dev && tablet_dev != dev) {
-			libevdev_free(dev);
-			close(fd);
-		}
+		thd_log_info("Using switch input device \"%s\" (%s)\n",
+				libevdev_get_name(dev), node.c_str());
+		input_switches.push_back({ node, dev });
 	}
 
 	free(namelist);
+}
+
+/*
+ * Read all pending events so libevdev's state is current. Returns false if
+ * the device is gone: libevdev_has_event_pending() keeps reporting an event
+ * on a removed device (POLLHUP) while libevdev_next_event() fails with
+ * -ENODEV, so the caller must stop using the device.
+ */
+bool cthd_gddv::drain_input_events(struct libevdev *dev) {
+	struct input_event ev;
+	int rc;
+
+	while (libevdev_has_event_pending(dev) > 0) {
+		rc = libevdev_next_event(dev, LIBEVDEV_READ_FLAG_NORMAL, &ev);
+		if (rc == -EAGAIN)
+			break;
+		if (rc < 0)
+			return false;
+	}
+
+	return true;
+}
+
+void cthd_gddv::release_input_switch(size_t index) {
+	struct libevdev *dev = input_switches[index].dev;
+
+	thd_log_info("Input device \"%s\" is gone, no longer using it\n",
+			libevdev_get_name(dev));
+
+	close(libevdev_get_fd(dev));
+	libevdev_free(dev);
+	input_switches.erase(input_switches.begin() + index);
+}
+
+bool cthd_gddv::has_input_switch(unsigned int code) {
+	for (auto &sw : input_switches)
+		if (libevdev_has_event_code(sw.dev, EV_SW, code))
+			return true;
+
+	return false;
+}
+
+/*
+ * Get the state of switch @code: set if any device reports it set.
+ * Returns -ENODEV if no device has that switch.
+ */
+int cthd_gddv::get_input_switch(unsigned int code, int *value) {
+	bool found = false;
+
+	if (time(nullptr) - input_switches_scanned >= INPUT_SWITCH_RESCAN_SEC)
+		scan_input_switches();
+
+	*value = 0;
+	for (size_t i = input_switches.size(); i-- > 0;) {
+		struct libevdev *dev = input_switches[i].dev;
+
+		if (!libevdev_has_event_code(dev, EV_SW, code))
+			continue;
+		if (!drain_input_events(dev)) {
+			release_input_switch(i);
+			continue;
+		}
+
+		found = true;
+		if (libevdev_get_event_value(dev, EV_SW, code))
+			*value = 1;
+	}
+
+	return found ? 0 : -ENODEV;
 }
 #endif
 
@@ -2203,7 +2276,7 @@ skip_load:
 	}
 
 #ifndef ANDROID
-	setup_input_devices();
+	scan_input_switches();
 
 	upower_client = up_client_new();
 	if (!upower_client) {
