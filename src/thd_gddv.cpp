@@ -1575,14 +1575,12 @@ int cthd_gddv::evaluate_lid_condition(const struct condition& condition) {
 }
 #else
 int cthd_gddv::evaluate_lid_condition(const struct condition& condition) {
-	int value = 0;
+	int value = 1; /* open, if the lid switch went away */
+
+	if (lid_dev && !drain_input_events(lid_dev))
+		release_input_device(lid_dev);
 
 	if (lid_dev) {
-		struct input_event ev;
-
-		while (libevdev_has_event_pending(lid_dev))
-			libevdev_next_event(lid_dev, LIBEVDEV_READ_FLAG_NORMAL, &ev);
-
 		int lid_closed = libevdev_get_event_value(lid_dev, EV_SW, SW_LID);
 		value = !lid_closed;
 	}
@@ -1616,12 +1614,10 @@ int cthd_gddv::evaluate_platform_type_condition(
 		const struct condition& condition) {
 	int value = 1;
 
+	if (tablet_dev && !drain_input_events(tablet_dev))
+		release_input_device(tablet_dev);
+
 	if (tablet_dev) {
-		struct input_event ev;
-
-		while (libevdev_has_event_pending(tablet_dev))
-			libevdev_next_event(tablet_dev, LIBEVDEV_READ_FLAG_NORMAL, &ev);
-
 		int tablet = libevdev_get_event_value(tablet_dev, EV_SW,
 				SW_TABLET_MODE);
 		if (tablet)
@@ -1920,6 +1916,40 @@ void cthd_gddv::setup_input_devices() {
 	}
 
 	free(namelist);
+}
+
+/*
+ * Read all pending events so libevdev's state is current. Returns false if
+ * the device is gone: libevdev_has_event_pending() keeps reporting an event
+ * on a removed device (POLLHUP) while libevdev_next_event() fails with
+ * -ENODEV, so the caller must stop using the device.
+ */
+bool cthd_gddv::drain_input_events(struct libevdev *dev) {
+	struct input_event ev;
+	int rc;
+
+	while (libevdev_has_event_pending(dev) > 0) {
+		rc = libevdev_next_event(dev, LIBEVDEV_READ_FLAG_NORMAL, &ev);
+		if (rc == -EAGAIN)
+			break;
+		if (rc < 0)
+			return false;
+	}
+
+	return true;
+}
+
+void cthd_gddv::release_input_device(struct libevdev *dev) {
+	thd_log_info("Input device \"%s\" is gone, no longer using it\n",
+			libevdev_get_name(dev));
+
+	if (tablet_dev == dev)
+		tablet_dev = nullptr;
+	if (lid_dev == dev)
+		lid_dev = nullptr;
+
+	close(libevdev_get_fd(dev));
+	libevdev_free(dev);
 }
 #endif
 

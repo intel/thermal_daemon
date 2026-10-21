@@ -290,6 +290,8 @@ private:
 	void dump_vspt();
 #ifndef ANDROID
 	void setup_input_devices();
+	bool drain_input_events(struct libevdev *dev);
+	void release_input_device(struct libevdev *dev);
 #endif
 	int get_trip_temp(const std::string& name, trip_point_type_t type);
 
