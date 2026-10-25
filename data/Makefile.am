@@ -31,10 +31,19 @@ tdconfig_DATA = \
 	thermal-cpu-cdev-order.xml \
 	thermald-features.xml
 
+# thermal-conf.xml ships example/default platform policy rules (including
+# the Qualcomm Glymur block). Install it only if it doesn't already exist,
+# so make install never clobbers an admin's customized config.
+install-data-hook:
+	$(MKDIR_P) $(DESTDIR)$(tdconfigdir)
+	test -f $(DESTDIR)$(tdconfigdir)/thermal-conf.xml || \
+		$(INSTALL_DATA) $(srcdir)/thermal-conf.xml $(DESTDIR)$(tdconfigdir)/thermal-conf.xml
+
 EXTRA_DIST = \
 	thermald.service.in \
 	org.freedesktop.thermald.service.in \
 	$(dbusservice_DATA) \
-	$(tdconfig_DATA)
+	$(tdconfig_DATA) \
+	thermal-conf.xml
 
 CLEANFILES = thermald.service org.freedesktop.thermald.service
