@@ -29,7 +29,9 @@
 #include <inttypes.h>
 #include <linux/input.h>
 #include <unistd.h>
+#include <climits>
 #include <cstdlib>
+#include <stdexcept>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include "thd_engine_adaptive.h"
@@ -519,12 +521,53 @@ void cthd_engine_adaptive::install_passive_default() {
 	thd_log_info("\n\n ZONE DUMP END\n");
 }
 
+/*
+ * NotifyPlatform tells the firmware which adaptive target is active by
+ * evaluating IETM.IMOK, which the int3400 driver exposes as "imok". Some
+ * OEMs (e.g. HP) use it to switch the EC's own thermal mode.
+ */
+void cthd_engine_adaptive::set_notify_platform(struct adaptive_target &target) {
+	csys_fs sysfs("");
+	unsigned long value;
+	unsigned int argument;
+
+	try {
+		value = std::stoul(target.argument, nullptr);
+	} catch (const std::invalid_argument &) {
+		thd_log_warn("Invalid NotifyPlatform argument: %s\n",
+				target.argument.c_str());
+		return;
+	} catch (const std::out_of_range &) {
+		thd_log_warn("NotifyPlatform argument out of range: %s\n",
+				target.argument.c_str());
+		return;
+	}
+
+	/* The int3400 driver parses imok as an unsigned int */
+	if (value > UINT_MAX) {
+		thd_log_warn("NotifyPlatform argument out of range: %s\n",
+				target.argument.c_str());
+		return;
+	}
+	argument = value;
+
+	thd_log_info("NotifyPlatform %u\n", argument);
+	if (sysfs.write(int3400_base_path + "imok", argument) < 0)
+		thd_log_warn("Failed to write %u to %simok\n", argument,
+				int3400_base_path.c_str());
+}
+
 void cthd_engine_adaptive::execute_target(struct adaptive_target &target) {
 	cthd_cdev *cdev;
 	std::string name;
 	int argument;
 
 	thd_log_info("Target Name:%s\n", target.name.c_str());
+
+	if (target.code == "NotifyPlatform") {
+		set_notify_platform(target);
+		return;
+	}
 
 	size_t pos = target.participant.find_last_of('.');
 	if (pos == std::string::npos)
