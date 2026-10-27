@@ -12,6 +12,12 @@ servicedir = $(datadir)/dbus-1/system-services
 service_in_files = org.freedesktop.thermald.service.in
 service_DATA = $(service_in_files:.service.in=.service)
 
+udev_in_files = 99-thermald-powercap.rules.in
+udevrules_DATA = $(udev_in_files:.rules.in=.rules)
+
+%.rules: %.rules.in Makefile
+	@$(service_edit) $< >$@
+
 $(service_DATA): $(service_in_files) Makefile
 	@$(service_edit) $< >$@
 
@@ -34,7 +40,8 @@ tdconfig_DATA = \
 EXTRA_DIST = \
 	thermald.service.in \
 	org.freedesktop.thermald.service.in \
+	99-thermald-powercap.rules.in \
 	$(dbusservice_DATA) \
 	$(tdconfig_DATA)
 
-CLEANFILES = thermald.service org.freedesktop.thermald.service
+CLEANFILES = thermald.service org.freedesktop.thermald.service 99-thermald-powercap.rules
