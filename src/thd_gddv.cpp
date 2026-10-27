@@ -862,7 +862,12 @@ int cthd_gddv::parse_itmt(char *name, char *buf, int len) {
 		itmt_entry.trip_point = get_uint64(buf, &offset);
 		itmt_entry.pl1_min = get_string_obj(buf, &offset);
 		itmt_entry.pl1_max = get_string_obj(buf, &offset);
-		itmt_entry.unused = get_string_obj(buf, &offset);
+		/* Some vaults (e.g. ASUS Vivobook X1402ZA, DV "x1402_p28_0322")
+		 * end a version 1 entry right after pl1_max. Only consume the
+		 * trailing string when one is actually present. */
+		if (offset + (int) sizeof(uint32_t) <= len
+				&& *(uint32_t*) (buf + offset) == 8)
+			itmt_entry.unused = get_string_obj(buf, &offset);
 		if (version == 2) {
 			// Ref DPTF/Sources/Manager/DataManager.cpp DataManager::loadItmtTableObject()
 			std::string dummy_str;
