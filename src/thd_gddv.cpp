@@ -753,6 +753,28 @@ int cthd_gddv::parse_itmt3(char *name, char *buf, unsigned int len) {
 	return 0;
 }
 
+/*
+ * A platform can define several virtual sensors (e.g. VR1.D0 and VR2.D0),
+ * each with its own VSCT and VSPT. Keep them apart, keyed by participant
+ * name, so that each one becomes its own sensor and zone.
+ */
+struct vsensor* cthd_gddv::get_vsensor(char *name)
+{
+	std::string vs_name = name ? name : "vsct";
+
+	for (unsigned int i = 0; i < vsensors.size(); ++i) {
+		if (vsensors[i].name == vs_name)
+			return &vsensors[i];
+	}
+
+	struct vsensor vs;
+
+	vs.name = vs_name;
+	vsensors.push_back(std::move(vs));
+
+	return &vsensors.back();
+}
+
 int cthd_gddv::parse_vspt(char *name, char *buf, int len)
 {
 	int offset = 0;
@@ -764,13 +786,15 @@ int cthd_gddv::parse_vspt(char *name, char *buf, int len)
 		return THD_ERROR;
 	}
 
+	struct vsensor *vs = get_vsensor(name);
+
 	while (offset < len) {
 		struct vspt_entry vspt;
 
 		vspt.virtual_temp =	 get_uint64(buf, &offset);
 		vspt.virtual_temp = DECI_KELVIN_TO_CELSIUS(vspt.virtual_temp),
 		vspt.sample_period = get_uint64(buf, &offset) / 10;
-		vspts.push_back(vspt);
+		vs->vspts.push_back(vspt);
 	}
 
 	return THD_SUCCESS;
@@ -778,12 +802,7 @@ int cthd_gddv::parse_vspt(char *name, char *buf, int len)
 
 int cthd_gddv:: parse_vsct(char *name, char *buf, int len)
 {
-	if (name == nullptr)
-		vscts_name = "vsct";
-	else
-		vscts_name = name;
-
-	thd_log_debug(" vsct name %s\n", vscts_name.c_str());
+	thd_log_debug(" vsct name %s\n", name ? name : "vsct");
 	int offset = 0;
 	gddv_cur_buf_len = len;
 	int version = get_uint64(buf, &offset);
@@ -792,6 +811,8 @@ int cthd_gddv:: parse_vsct(char *name, char *buf, int len)
 		thd_log_warn("Found unsupported VSCT version %d\n", (int) version);
 		return THD_ERROR;
 	}
+
+	struct vsensor *vs = get_vsensor(name);
 
 	while (offset < len) {
 		struct vsct_entry vsct;
@@ -803,36 +824,40 @@ int cthd_gddv:: parse_vsct(char *name, char *buf, int len)
 		vsct.operation = get_uint64(buf, &offset);
 		vsct.alpha = get_uint64(buf, &offset);
 		vsct.trigger_point = get_uint64(buf, &offset);
-		vscts.push_back(std::move(vsct));
+		vs->vscts.push_back(std::move(vsct));
 	}
 
 	return THD_SUCCESS;
 }
 
 void cthd_gddv::dump_vsct() {
-	thd_log_info("..vsct dump begin [%s]\n", vscts_name.c_str());
+	for (unsigned int j = 0; j < vsensors.size(); ++j) {
+		thd_log_info("..vsct dump begin [%s]\n", vsensors[j].name.c_str());
 
-	for (unsigned int i = 0; i < vscts.size(); ++i) {
-		struct vsct_entry vsct = vscts[i];
-			thd_log_info(
-					"\t target:%s domain_type:%d coeff_type:%d coeff:%d operation:%d alpha:%d trigger_point:%d\n",
-					vsct.target.c_str(), vsct.domain_type,
-					vsct.coeff_type, vsct.coeff,
-					vsct.operation, vsct.alpha, vsct.trigger_point
-					);
+		for (unsigned int i = 0; i < vsensors[j].vscts.size(); ++i) {
+			struct vsct_entry vsct = vsensors[j].vscts[i];
+				thd_log_info(
+						"\t target:%s domain_type:%d coeff_type:%d coeff:%d operation:%d alpha:%d trigger_point:%d\n",
+						vsct.target.c_str(), vsct.domain_type,
+						vsct.coeff_type, vsct.coeff,
+						vsct.operation, vsct.alpha, vsct.trigger_point
+						);
+		}
+		thd_log_info("vsct dump end\n");
 	}
-	thd_log_info("vsct dump end\n");
 }
 
 void cthd_gddv::dump_vspt() {
-	thd_log_info("..vspt dump begin\n");
+	for (unsigned int j = 0; j < vsensors.size(); ++j) {
+		thd_log_info("..vspt dump begin [%s]\n", vsensors[j].name.c_str());
 
-	for (unsigned int i = 0; i < vspts.size(); ++i) {
-		struct vspt_entry vspt = vspts[i];
-			thd_log_info(
-					"\t sample_temp:%d polling period:%d\n", vspt.virtual_temp, vspt.sample_period);
+		for (unsigned int i = 0; i < vsensors[j].vspts.size(); ++i) {
+			struct vspt_entry vspt = vsensors[j].vspts[i];
+				thd_log_info(
+						"\t sample_temp:%d polling period:%d\n", vspt.virtual_temp, vspt.sample_period);
+		}
+		thd_log_info("vspt dump end\n");
 	}
-	thd_log_info("vspt dump end\n");
 }
 
 int cthd_gddv::parse_itmt(char *name, char *buf, int len) {
