@@ -351,9 +351,21 @@ void cthd_sysfs_cdev_rapl::set_adaptive_target(struct adaptive_target &target) {
 
 		if (curr_state > min_state)
 			set_curr_state(min_state, 1);
+
+		/* When this device is not throttling, PL1 belongs at the ceiling.
+		 * The current limit can be below it because update() wrote the
+		 * PPCC maximum (which may be far below the policy's PL1MAX), because
+		 * a lower target was active before, or because this is the PL1MAX
+		 * used to park the MSR interface in favour of MMIO. */
+		if (!constrained && pl1_rapl != min_state) {
+			thd_log_info("PL1MAX: raise PL1 to %d\n", min_state);
+			rapl_update_pl1(min_state);
+			curr_state = min_state;
+		}
 	} else if (target.code == "PL1MIN") {
 		max_state = pl0_min_pwr = argument * 1000;
-		if (curr_state < max_state)
+		/* curr_state 0 means "never set", not "below the floor" */
+		if (curr_state && curr_state < max_state)
 			set_curr_state(max_state, 1);
 	} else if (target.code == "PL1STEP") {
 		pl0_step_pwr = argument * 1000;
