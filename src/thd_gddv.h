@@ -31,6 +31,7 @@
 #include <upower.h>
 #endif
 
+#include <ctime>
 #include <memory>
 #include "thd_engine.h"
 #include "thd_trt_art_reader.h"
@@ -225,8 +226,13 @@ private:
 #ifndef ANDROID
 	UpClient *upower_client;
 	GDBusProxy *power_profiles_daemon;
-	struct libevdev *tablet_dev;
-	struct libevdev *lid_dev;
+	/* Input devices with a lid and/or tablet-mode switch */
+	struct input_switch {
+		std::string node;
+		struct libevdev *dev;
+	};
+	std::vector<struct input_switch> input_switches;
+	time_t input_switches_scanned;
 #endif
 	std::string int3400_base_path;
 	int power_slider;
@@ -289,7 +295,11 @@ private:
 	void dump_vsct();
 	void dump_vspt();
 #ifndef ANDROID
-	void setup_input_devices();
+	void scan_input_switches();
+	bool drain_input_events(struct libevdev *dev);
+	void release_input_switch(size_t index);
+	bool has_input_switch(unsigned int code);
+	int get_input_switch(unsigned int code, int *value);
 #endif
 	int get_trip_temp(const std::string& name, trip_point_type_t type);
 
@@ -297,7 +307,7 @@ public:
 #ifndef ANDROID
 	cthd_gddv() :
 			upower_client(
-			nullptr), power_profiles_daemon(nullptr), tablet_dev(nullptr), lid_dev(nullptr), int3400_base_path(""), power_slider(75), current_target_matched(-1), gddv_cur_buf_len(0) {
+			nullptr), power_profiles_daemon(nullptr), input_switches_scanned(0), int3400_base_path(""), power_slider(75), current_target_matched(-1), gddv_cur_buf_len(0) {
 	}
 #else
 	cthd_gddv() :
