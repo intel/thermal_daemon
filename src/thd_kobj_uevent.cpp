@@ -49,37 +49,42 @@ void cthd_kobj_uevent::kobj_uevent_close() {
 	close(fd);
 }
 
-bool cthd_kobj_uevent::check_for_event() {
-	ssize_t i = 0;
+cthd_kobj_uevent::event_type cthd_kobj_uevent::check_for_event() {
 	ssize_t len;
-	const char *dev_path = "DEVPATH=";
-	unsigned int dev_path_len = strlen(dev_path);
 	char buffer[max_buffer_size];
 
 	len = recv(fd, buffer, sizeof(buffer) - 1, MSG_DONTWAIT);
 	if (len <= 0)
-		return false;
+		return NO_EVENT;
 	buffer[len] = '\0';
 
-	while (i < len) {
-		// Use strnlen with len - i + 1 to include the appended '\0' at buffer[len]
-		// This ensures the last field is processed even if it reaches position len-1
-		size_t field_len = strnlen(buffer + i, (size_t)(len - i + 1));
-		if (i + field_len > (size_t)len) {
-			break;  // Malformed uevent data
-		}
+	return parse_event(buffer, len);
+}
 
+cthd_kobj_uevent::event_type cthd_kobj_uevent::parse_event(
+		const char *buffer, size_t len) const {
+	const char *dev_path = "DEVPATH=";
+	const size_t dev_path_len = strlen(dev_path);
+	const char *thinkpad_path = "/devices/platform/thinkpad_acpi";
+	size_t offset = 0;
+
+	while (offset < len) {
+		size_t field_len = strnlen(buffer + offset, len - offset);
 		if (field_len > dev_path_len
-				&& !strncmp(buffer + i, dev_path, dev_path_len)) {
-			if (!strncmp(buffer + i + dev_path_len, device_path,
-					strlen(device_path))) {
-				return true;
-			}
+				&& !strncmp(buffer + offset, dev_path, dev_path_len)) {
+			const char *path = buffer + offset + dev_path_len;
+			size_t path_len = field_len - dev_path_len;
+			if (path_len == strlen(thinkpad_path)
+					&& !memcmp(path, thinkpad_path, path_len))
+				return THINKPAD_ACPI_EVENT;
+			if (device_path[0] && path_len >= strlen(device_path)
+					&& !memcmp(path, device_path, strlen(device_path)))
+				return THERMAL_EVENT;
 		}
-		i += field_len + 1;
+		offset += field_len + 1;
 	}
 
-	return false;
+	return NO_EVENT;
 }
 
 void cthd_kobj_uevent::register_dev_path(char *path) {
