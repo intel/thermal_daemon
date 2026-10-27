@@ -74,6 +74,7 @@
 #include <gmodule.h>
 
 extern gboolean log_debug;
+void thd_request_shutdown();
 
 // Log macros
 #define thd_log_fatal		g_error		// Print error and terminate

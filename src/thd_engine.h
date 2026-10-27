@@ -120,12 +120,14 @@ private:
 	bool rt_kernel;
 	cthd_kobj_uevent kobj_uevent;
 	bool parser_init_done;
+	bool ignore_platform_check;
 
 	int proc_message(message_capsul_t *msg);
 	void process_pref_change();
 	void thermal_zone_change(message_capsul_t *msg);
 	void process_terminate();
 	void check_for_rt_kernel();
+	bool check_thinkpad_dytc();
 
 public:
 	static constexpr int max_thermal_zones = 10;
