@@ -210,34 +210,50 @@ use "man thermal-conf.xml" for details
           SoCModel "Qualcomm Technologies, Inc. Glymur"
 -->
 <Platform>
-	<Name>Qualcomm Glymur CRD Platform</Name>
+	<Name>Qualcomm Glymur Platform</Name>
 	<SoCModel>Qualcomm Technologies, Inc. Glymur CRD</SoCModel>
-	<Preference>QUIET</Preference>
+	<PollingInterval>5</PollingInterval>
+	<PPCC>
+		<PowerLimitMinimum>10000</PowerLimitMinimum> <!-- 10W minimum -->
+		<PowerLimitMaximum>38000</PowerLimitMaximum> <!-- 38W maximum -->
+		<TimeWindowMinimum>15000</TimeWindowMinimum> <!-- 15 second minimum -->
+		<TimeWindowMaximum>630000</TimeWindowMaximum> <!-- 630 second maximum -->
+	</PPCC>
 	<ThermalSensors>
 		<ThermalSensor>
-			<Type>cpu-thermal</Type>
-			<AsyncCapable>1</AsyncCapable>
+			<Type>qcom_ec_therm_2</Type>
+			<AsyncCapable>0</AsyncCapable>
 		</ThermalSensor>
 	</ThermalSensors>
 	<ThermalZones>
 		<ThermalZone>
-			<Type>cpu-thermal</Type>
+			<Type>qcom_ec_therm_2</Type>
 			<TripPoints>
 				<TripPoint>
-					<SensorType>cpu-thermal</SensorType>
-					<Temperature>85000</Temperature>
+					<SensorType>qcom_ec_therm_2</SensorType>
+					<Temperature>48000</Temperature> <!-- 48C -->
+					<Hyst>2000</Hyst>
 					<type>passive</type>
-					<ControlType>SEQUENTIAL</ControlType>
 					<CoolingDevice>
-						<index>1</index>
-						<type>cpufreq</type>
-						<influence>100</influence>
-						<SamplingPeriod>10</SamplingPeriod>
+						<Type>spel_controller_soc_pl1</Type>
+						<SamplingPeriod>1</SamplingPeriod>
+						<PidControl>
+							<Kp>100</Kp> <!-- Moderate response -->
+							<Ki>0</Ki> <!-- No integral action -->
+							<Kd>280</Kd> <!-- Light damping -->
+							<PidMode>incremental</PidMode>
+						</PidControl>
 					</CoolingDevice>
 				</TripPoint>
 			</TripPoints>
 		</ThermalZone>
 	</ThermalZones>
+	<CoolingDevices>
+		<CoolingDevice>
+			<Type>spel_controller_soc_pl1</Type>
+			<DebouncePeriod>0</DebouncePeriod>
+		</CoolingDevice>
+	</CoolingDevices>
 </Platform>
 </ThermalConfiguration>
 <!-- END -->
