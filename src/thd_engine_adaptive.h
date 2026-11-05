@@ -31,6 +31,8 @@
 #include <upower.h>
 #endif
 
+#include <set>
+
 #include "thd_engine_default.h"
 #include "thd_cpu_default_binding.h"
 #include "thd_adaptive_types.h"
@@ -59,6 +61,7 @@ protected:
 	void install_passive_default();
 	int install_virtual_sensor(const struct vsensor &vs,
 			const std::vector<struct vspt_entry> &vspts);
+	std::set<std::string> virt_sensor_names;
 	int set_int3400_base_path();
 
 public:
