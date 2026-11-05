@@ -758,7 +758,7 @@ int cthd_gddv::parse_itmt3(char *name, char *buf, unsigned int len) {
  * each with its own VSCT and VSPT. Keep them apart, keyed by participant
  * name, so that each one becomes its own sensor and zone.
  */
-struct vsensor* cthd_gddv::get_vsensor(char *name)
+struct vsensor* cthd_gddv::get_vsensor(const char *name)
 {
 	std::string vs_name = name ? name : "vsct";
 
@@ -831,30 +831,27 @@ int cthd_gddv:: parse_vsct(char *name, char *buf, int len)
 }
 
 void cthd_gddv::dump_vsct() {
-	for (unsigned int j = 0; j < vsensors.size(); ++j) {
-		thd_log_info("..vsct dump begin [%s]\n", vsensors[j].name.c_str());
+	for (const auto &vs : vsensors) {
+		thd_log_info("..vsct dump begin [%s]\n", vs.name.c_str());
 
-		for (unsigned int i = 0; i < vsensors[j].vscts.size(); ++i) {
-			struct vsct_entry vsct = vsensors[j].vscts[i];
-				thd_log_info(
-						"\t target:%s domain_type:%d coeff_type:%d coeff:%d operation:%d alpha:%d trigger_point:%d\n",
-						vsct.target.c_str(), vsct.domain_type,
-						vsct.coeff_type, vsct.coeff,
-						vsct.operation, vsct.alpha, vsct.trigger_point
-						);
+		for (const auto &vsct : vs.vscts) {
+			thd_log_info(
+				"\t target:%s domain_type:%d coeff_type:%d coeff:%d operation:%d alpha:%d trigger_point:%d\n",
+				vsct.target.c_str(), vsct.domain_type,
+				vsct.coeff_type, vsct.coeff,
+				vsct.operation, vsct.alpha, vsct.trigger_point);
 		}
 		thd_log_info("vsct dump end\n");
 	}
 }
 
 void cthd_gddv::dump_vspt() {
-	for (unsigned int j = 0; j < vsensors.size(); ++j) {
-		thd_log_info("..vspt dump begin [%s]\n", vsensors[j].name.c_str());
+	for (const auto &vs : vsensors) {
+		thd_log_info("..vspt dump begin [%s]\n", vs.name.c_str());
 
-		for (unsigned int i = 0; i < vsensors[j].vspts.size(); ++i) {
-			struct vspt_entry vspt = vsensors[j].vspts[i];
-				thd_log_info(
-						"\t sample_temp:%d polling period:%d\n", vspt.virtual_temp, vspt.sample_period);
+		for (const auto &vspt : vs.vspts) {
+			thd_log_info("\t sample_temp:%d polling period:%d\n",
+					vspt.virtual_temp, vspt.sample_period);
 		}
 		thd_log_info("vspt dump end\n");
 	}

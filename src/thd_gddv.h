@@ -266,7 +266,7 @@ private:
 	int parse_itmt3(char *name, char *itmt, unsigned int len);
 	int parse_vsct(char *name, char *psvt, int len);
 	int parse_vspt(char *name, char *psvt, int len);
-	struct vsensor* get_vsensor(char *name);
+	struct vsensor* get_vsensor(const char *name);
 	int parse_trt(char *trt, int len);
 	void parse_idsp(char *name, char *idsp, int len);
 	void parse_trip_point(char *name, char *type, char *val, int len);

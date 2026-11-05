@@ -735,26 +735,54 @@ int cthd_engine_adaptive::thd_engine_init(bool ignore_cpuid_check,
 		return res;
 
 	/*
-	 * A VSPT without a participant name (stored as "vsct") applies to
-	 * any virtual sensor that has no polling table of its own.
+	 * Pick a polling table for virtual sensors that have no VSPT of their
+	 * own. A VSPT without a participant name (stored as "vsct") is the
+	 * shared table. Even when the unnamed participant also has its own
+	 * VSCT, its VSPT is still shared with the other sensors, as the old
+	 * single-sensor code did. Otherwise, if exactly one VSPT has no
+	 * matching VSCT, use that one, so that a table filed under a different
+	 * name is not dropped.
 	 */
 	const std::vector<struct vspt_entry> *shared_vspts = nullptr;
-
-	for (unsigned int i = 0; i < gddv.vsensors.size(); ++i) {
-		if (gddv.vsensors[i].name == "vsct" && gddv.vsensors[i].vspts.size())
-			shared_vspts = &gddv.vsensors[i].vspts;
-	}
+	const std::vector<struct vspt_entry> *orphan_vspts = nullptr;
+	int orphans = 0;
 
 	for (unsigned int i = 0; i < gddv.vsensors.size(); ++i) {
 		const struct vsensor &vs = gddv.vsensors[i];
+
+		if (!vs.vspts.size())
+			continue;
+
+		if (vs.name == "vsct") {
+			shared_vspts = &vs.vspts;
+		} else if (!vs.vscts.size()) {
+			thd_log_info("VSPT [%s] has no matching VSCT\n",
+					vs.name.c_str());
+			orphan_vspts = &vs.vspts;
+			++orphans;
+		}
+	}
+
+	if (!shared_vspts && orphans == 1)
+		shared_vspts = orphan_vspts;
+
+	virt_sensor_names.clear();
+
+	for (unsigned int i = 0; i < gddv.vsensors.size(); ++i) {
+		const struct vsensor &vs = gddv.vsensors[i];
+		int ret;
 
 		if (!vs.vscts.size())
 			continue;
 
 		if (!vs.vspts.size() && shared_vspts)
-			install_virtual_sensor(vs, *shared_vspts);
+			ret = install_virtual_sensor(vs, *shared_vspts);
 		else
-			install_virtual_sensor(vs, vs.vspts);
+			ret = install_virtual_sensor(vs, vs.vspts);
+
+		if (ret != THD_SUCCESS)
+			thd_log_info("Virtual sensor [%s] not installed\n",
+					vs.name.c_str());
 	}
 
 	return THD_SUCCESS;
@@ -764,19 +792,20 @@ int cthd_engine_adaptive::install_virtual_sensor(const struct vsensor &vs,
 		const std::vector<struct vspt_entry> &vspts) {
 	thd_log_info("Found virtual sensor [%s]\n", vs.name.c_str());
 
-	std::string dev_name;
-	size_t pos = vs.name.find_last_of('.');
-	if (pos == std::string::npos) {
-		dev_name = vs.name;
-	} else {
-		dev_name = vs.name;
-		dev_name.resize(pos);
-	}
+	std::string dev_name = vs.name.substr(0, vs.name.find_last_of('.'));
 
 	if (dev_name.empty()) {
 		thd_log_info("Can't parse virtual sensor name\n");
 		return THD_ERROR;
 	}
+
+	/* e.g. VR1.D0 and VR1.D1 would both map to VR1 */
+	if (virt_sensor_names.count(dev_name)) {
+		thd_log_warn("Virtual sensor [%s]: %s already installed, skipping\n",
+				vs.name.c_str(), dev_name.c_str());
+		return THD_ERROR;
+	}
+	virt_sensor_names.insert(dev_name);
 
 	std::string dummy = "";
 
