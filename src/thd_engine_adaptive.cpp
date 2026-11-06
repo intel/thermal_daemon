@@ -570,7 +570,21 @@ void cthd_engine_adaptive::set_notify_platform(struct adaptive_target &target) {
 	}
 	argument = value;
 
-	thd_log_info("NotifyPlatform %u\n", argument);
+	/*
+	 * The int3400 driver only creates imok if the firmware has an IMOK
+	 * method. Say so once instead of failing on every target switch.
+	 */
+	if (!sysfs.exists(int3400_base_path + "imok")) {
+		if (!imok_missing_logged) {
+			thd_log_info("No %simok, ignoring NotifyPlatform targets\n",
+					int3400_base_path.c_str());
+			imok_missing_logged = true;
+		}
+		return;
+	}
+
+	thd_log_info("NotifyPlatform %u (target %s)\n", argument,
+			target.name.c_str());
 	if (sysfs.write(int3400_base_path + "imok", argument) < 0)
 		thd_log_warn("Failed to write %u to %simok\n", argument,
 				int3400_base_path.c_str());
@@ -584,7 +598,12 @@ void cthd_engine_adaptive::execute_target(struct adaptive_target &target) {
 	thd_log_info("Target Name:%s\n", target.name.c_str());
 
 	if (target.code == "NotifyPlatform") {
-		set_notify_platform(target);
+		/* NotifyPlatform is an IETM control, evaluated via IETM.IMOK */
+		if (target.participant == int3400_path)
+			set_notify_platform(target);
+		else
+			thd_log_info("Ignoring NotifyPlatform for %s, not IETM\n",
+					target.participant.c_str());
 		return;
 	}
 
