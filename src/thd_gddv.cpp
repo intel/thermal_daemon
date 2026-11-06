@@ -1895,6 +1895,19 @@ static int is_event_device(const struct dirent *dir) {
 #define INPUT_SWITCH_RESCAN_SEC	30
 
 /*
+ * Seconds from a monotonic clock, so a wall-clock step (e.g. NTP fixing a
+ * wrong RTC at boot) can't stall or hurry the rescan.
+ */
+static time_t input_switch_now() {
+	struct timespec ts;
+
+	if (clock_gettime(CLOCK_MONOTONIC, &ts))
+		return 0;
+
+	return ts.tv_sec;
+}
+
+/*
  * Track every input device with a lid or tablet-mode switch. A laptop can
  * have several tablet-mode switches, and some only appear on the first
  * switch event (e.g. "Intel HID switches"), so this is called again
@@ -1905,7 +1918,7 @@ void cthd_gddv::scan_input_switches() {
 	struct dirent **namelist = nullptr;
 	int i, ndev;
 
-	input_switches_scanned = time(nullptr);
+	input_switches_scanned = input_switch_now();
 
 	ndev = scandir("/dev/input", &namelist, is_event_device, versionsort);
 	if (ndev == -1) {
@@ -1935,6 +1948,7 @@ void cthd_gddv::scan_input_switches() {
 		caps_file = fopen(caps_path.c_str(), "r");
 		if (!caps_file)
 			continue;
+		/* The EV_SW bitmap fits in one word (SW_MAX is 0x10) */
 		if (fscanf(caps_file, "%lx", &caps) != 1)
 			caps = 0;
 		fclose(caps_file);
@@ -1989,7 +2003,7 @@ void cthd_gddv::release_input_switch(size_t index) {
 	input_switches.erase(input_switches.begin() + index);
 }
 
-bool cthd_gddv::has_input_switch(unsigned int code) {
+bool cthd_gddv::has_input_switch(unsigned int code) const {
 	for (auto &sw : input_switches)
 		if (libevdev_has_event_code(sw.dev, EV_SW, code))
 			return true;
@@ -2000,11 +2014,16 @@ bool cthd_gddv::has_input_switch(unsigned int code) {
 /*
  * Get the state of switch @code: set if any device reports it set.
  * Returns -ENODEV if no device has that switch.
+ *
+ * Some drivers report SW_TABLET_MODE set on laptops that can't fold, so
+ * one such device forces tablet mode. Log when devices disagree, once
+ * per change, to make that visible.
  */
 int cthd_gddv::get_input_switch(unsigned int code, int *value) {
-	bool found = false;
+	int found = 0, set = 0;
+	unsigned long bit = 1UL << code;
 
-	if (time(nullptr) - input_switches_scanned >= INPUT_SWITCH_RESCAN_SEC)
+	if (input_switch_now() - input_switches_scanned >= INPUT_SWITCH_RESCAN_SEC)
 		scan_input_switches();
 
 	*value = 0;
@@ -2018,9 +2037,26 @@ int cthd_gddv::get_input_switch(unsigned int code, int *value) {
 			continue;
 		}
 
-		found = true;
+		++found;
 		if (libevdev_get_event_value(dev, EV_SW, code))
-			*value = 1;
+			++set;
+	}
+
+	*value = set ? 1 : 0;
+
+	if (set && set != found) {
+		if (!(input_switch_mismatch & bit)) {
+			thd_log_info("Switch %s: %d of %d input devices report it set, using set\n",
+					libevdev_event_code_get_name(EV_SW, code), set, found);
+			for (auto &sw : input_switches)
+				if (libevdev_has_event_code(sw.dev, EV_SW, code))
+					thd_log_info("  \"%s\" (%s): %d\n", libevdev_get_name(sw.dev),
+							sw.node.c_str(),
+							libevdev_get_event_value(sw.dev, EV_SW, code));
+			input_switch_mismatch |= bit;
+		}
+	} else {
+		input_switch_mismatch &= ~bit;
 	}
 
 	return found ? 0 : -ENODEV;

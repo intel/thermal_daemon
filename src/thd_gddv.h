@@ -240,6 +240,7 @@ private:
 	};
 	std::vector<struct input_switch> input_switches;
 	time_t input_switches_scanned;
+	unsigned long input_switch_mismatch;	/* EV_SW codes devices disagree on */
 #endif
 	std::string int3400_base_path;
 	int power_slider;
@@ -306,7 +307,7 @@ private:
 	void scan_input_switches();
 	bool drain_input_events(struct libevdev *dev);
 	void release_input_switch(size_t index);
-	bool has_input_switch(unsigned int code);
+	bool has_input_switch(unsigned int code) const;
 	int get_input_switch(unsigned int code, int *value);
 #endif
 	int get_trip_temp(const std::string& name, trip_point_type_t type);
@@ -315,7 +316,7 @@ public:
 #ifndef ANDROID
 	cthd_gddv() :
 			upower_client(
-			nullptr), power_profiles_daemon(nullptr), input_switches_scanned(0), int3400_base_path(""), power_slider(75), current_target_matched(-1), gddv_cur_buf_len(0) {
+			nullptr), power_profiles_daemon(nullptr), input_switches_scanned(0), input_switch_mismatch(0), int3400_base_path(""), power_slider(75), current_target_matched(-1), gddv_cur_buf_len(0) {
 	}
 #else
 	cthd_gddv() :
