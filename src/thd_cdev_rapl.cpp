@@ -357,10 +357,21 @@ void cthd_sysfs_cdev_rapl::set_adaptive_target(struct adaptive_target &target) {
 		 * PPCC maximum (which may be far below the policy's PL1MAX), because
 		 * a lower target was active before, or because this is the PL1MAX
 		 * used to park the MSR interface in favour of MMIO. */
-		if (!constrained && pl1_rapl != min_state) {
-			thd_log_info("PL1MAX: raise PL1 to %d\n", min_state);
-			rapl_update_pl1(min_state);
-			curr_state = min_state;
+		if (!constrained && !bios_locked) {
+			int pl1 = rapl_read_pl1();
+
+			if (pl1 != THD_ERROR && pl1 != min_state) {
+				int ret;
+
+				thd_log_info("PL1MAX: set PL1 %d -> %d\n", pl1, min_state);
+				ret = rapl_update_pl1(min_state);
+				if (ret == THD_SUCCESS) {
+					curr_state = min_state;
+				} else if (ret == -ENODATA) {
+					thd_log_info("powercap RAPL is BIOS locked, cannot update\n");
+					bios_locked = true;
+				}
+			}
 		}
 	} else if (target.code == "PL1MIN") {
 		max_state = pl0_min_pwr = argument * 1000;
