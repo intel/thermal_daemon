@@ -2193,7 +2193,7 @@ int cthd_gddv::gddv_init(std::string& base_path) {
 skip_load:
 	try {
 		if (parse_gddv(buf.get(), size, nullptr, 0)) {
-			thd_log_debug("Unable to parse GDDV");
+			thd_log_debug("Unable to parse GDDV\n");
 			return THD_FATAL_ERROR;
 		}
 
