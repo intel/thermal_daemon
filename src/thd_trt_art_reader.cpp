@@ -417,8 +417,8 @@ int cthd_acpi_rel::read_trt() {
 
 #define ACPI_TYPE_STRING                0x02
 #define DECI_KELVIN_TO_CELSIUS(t)       ({                      \
-        int _t = (t);                                          \
-        ((_t-2732 >= 0) ? (_t-2732+5)/10 : (_t-2732-5)/10);     \
+        long long _t = (t);    /* no int overflow near INT_MIN */ \
+        (int) ((_t-2732 >= 0) ? (_t-2732+5)/10 : (_t-2732-5)/10); \
 })
 
 void cthd_acpi_rel::add_psvt_trip_point(rel_object_t &rel_obj) {

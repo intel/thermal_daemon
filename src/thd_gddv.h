@@ -36,8 +36,8 @@
 #include "thd_trt_art_reader.h"
 
 #define DECI_KELVIN_TO_CELSIUS(t)       ({                      \
-        int _t = (t);                                          \
-        ((_t-2732 >= 0) ? (_t-2732+5)/10 : (_t-2732-5)/10);     \
+        long long _t = (t);    /* no int overflow near INT_MIN */ \
+        (int) ((_t-2732 >= 0) ? (_t-2732+5)/10 : (_t-2732-5)/10); \
 })
 
 enum adaptive_condition : uint32_t { // NOLINT(performance-enum-size)
