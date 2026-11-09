@@ -1066,8 +1066,11 @@ int cthd_gddv::parse_trt(char *buf, int len)
 #define ESIFDV_ITEM_KEYS_REV0_SIGNATURE	0xA0D8
 #define MAX_DATA_VAULT_SIZE	(512 * 1024)
 #define	MAX_GDDV_SEGMENTS	30
+/* Total (nested and compressed) segments in one vault; real vaults
+ * have a handful. Bounds the work for a malformed vault. */
+#define	MAX_GDDV_TOTAL_SEGMENTS	256
 
-int cthd_gddv::handle_compressed_gddv(char *buf, int size) {
+int cthd_gddv::handle_compressed_gddv(char *buf, int size, int depth) {
 
 	if (!buf || !size || size <= (int)sizeof(struct header))
 		return THD_ERROR;
@@ -1115,7 +1118,8 @@ int cthd_gddv::handle_compressed_gddv(char *buf, int size) {
 	header->v2.flags &= ~ESIF_SERVICE_CONFIG_COMPRESSED;
 	header->v2.payload_size = destlen;
 
-	res = parse_gddv((char*)decompressed.get(), output_size, nullptr, 0);
+	/* Nested: keep counting depth and segments across decompression */
+	res = parse_gddv((char*)decompressed.get(), output_size, nullptr, depth + 1);
 
 	return res;
 }
@@ -1284,6 +1288,14 @@ int cthd_gddv::parse_gddv(char *buf, int size, int *end_offset, int depth) {
 		return THD_ERROR;
 	}
 
+	if (depth == 0)
+		gddv_segments = 0;
+	if (++gddv_segments > MAX_GDDV_TOTAL_SEGMENTS) {
+		thd_log_warn("GDDV has more than %d segments, rejected\n",
+				MAX_GDDV_TOTAL_SEGMENTS);
+		return THD_ERROR;
+	}
+
 	if (size < (int) sizeof(struct header))
 		return THD_ERROR;
 
@@ -1308,7 +1320,7 @@ int cthd_gddv::parse_gddv(char *buf, int size, int *end_offset, int depth) {
 
 		if (header->v2.flags & ESIF_SERVICE_CONFIG_COMPRESSED) {
 			thd_log_debug("Uncompress GDDV payload\n");
-			return handle_compressed_gddv(buf, size);
+			return handle_compressed_gddv(buf, size, depth);
 		}
 
 		strncpy(name, header->v2.segmentid, sizeof(name) - 1);

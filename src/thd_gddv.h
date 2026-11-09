@@ -238,6 +238,7 @@ private:
 	 * cannot walk off the end of attacker-controlled buffers.
 	 */
 	int gddv_cur_buf_len;
+	int gddv_segments = 0;	/* segments parsed in the current vault */
 	void destroy_dynamic_sources();
 	int get_type(char *object, int *offset);
 	uint64_t get_uint64(char *object, int *offset);
@@ -262,7 +263,7 @@ private:
 	int parse_trt(char *trt, int len);
 	void parse_idsp(char *name, char *idsp, int len);
 	void parse_trip_point(char *name, char *type, char *val, int len);
-	int handle_compressed_gddv(char *buf, int size);
+	int handle_compressed_gddv(char *buf, int size, int depth);
 	int parse_gddv_key(char *buf, int size, int *end_offset);
 	int parse_gddv(char *buf, int size, int *end_offset, int depth = 0);
 	int verify_condition(const struct condition& condition);
