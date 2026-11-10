@@ -54,6 +54,7 @@ protected:
 	void psvt_consolidate();
 	void set_trip(const std::string& device, const std::string& argument);
 	void set_int3400_target(struct adaptive_target &target);
+	void set_notify_platform(struct adaptive_target &target);
 	void exec_fallback_target(int target);
 	void execute_target(struct adaptive_target &target);
 	void install_passive_default();
