@@ -579,8 +579,15 @@ int cthd_gddv::parse_ppcc(char *name, char *buf, int len) {
 	ppcc.step_size = *(uint64_t*) (buf + 76);
 	ppcc.valid = 1;
 
-	if (len < 156)
+	/* PL1 only: keep it, without a second (PL2) limit */
+	if (len < 156) {
+		ppcc.limit_1_valid = 0;
+		ppcc.power_limit_1_min = ppcc.power_limit_1_max = 0;
+		ppcc.time_wind_1_min = ppcc.time_wind_1_max = 0;
+		ppcc.step_1_size = 0;
+		ppccs.push_back(std::move(ppcc));
 		return 0;
+	}
 
 	thd_log_info("Processing ppcc limit 2, length %d\n", len);
 	int start = 76 + 12;
