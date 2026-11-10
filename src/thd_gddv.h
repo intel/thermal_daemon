@@ -221,6 +221,9 @@ struct vsensor {
 };
 
 class cthd_gddv {
+	/* test/unit/gddv_dump.cpp: parse a vault file and dump the tables */
+	friend class cthd_gddv_test;
+
 private:
 	std::vector<ppcc_t> ppccs;
 	std::vector<struct custom_condition> custom_conditions;
