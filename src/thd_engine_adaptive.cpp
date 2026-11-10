@@ -586,8 +586,19 @@ void cthd_engine_adaptive::update_engine_state() {
 	if (passive_def_only)
 		return;
 
-	if (fallback_id < 0)
-		target = gddv.evaluate_conditions();
+	// A fallback target was chosen at start because no condition set
+	// can match: conditions are not evaluated any more, so apply it
+	// once here. This must come before the "No change in target"
+	// check, as target and current_matched_target are both -1 then.
+	if (fallback_id >= 0) {
+		if (!policy_active) {
+			exec_fallback_target(gddv.targets[fallback_id].target_id);
+			policy_active = 1;
+		}
+		return;
+	}
+
+	target = gddv.evaluate_conditions();
 
 	if (current_matched_target == target) {
 		thd_log_debug("No change in target\n");
@@ -600,15 +611,6 @@ void cthd_engine_adaptive::update_engine_state() {
 	// It is possible that the target which matched last time didn't match
 	// because of conditions have changed.
 	// So in that case we have to install the default target.
-	// Return only when there is a fallback ID was identified during
-	// start after installing that target
-	if (target == -1) {
-		if (fallback_id >= 0 && !policy_active) {
-			exec_fallback_target(gddv.targets[fallback_id].target_id);
-			policy_active = 1;
-			return;
-		}
-	}
 
 	int3400_installed = 0;
 
