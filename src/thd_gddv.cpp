@@ -169,9 +169,10 @@ char* cthd_gddv::get_string(char *object, int *offset) {
 	*offset += 8;
 
 	/* Reject lengths that would overflow the int offset arithmetic
-	 * or read past the buffer. */
+	 * or read past the buffer. Compare with the bytes left:
+	 * *offset + length can overflow int. */
 	if (length > (uint64_t) INT_MAX ||
-			*offset + (int) length > gddv_cur_buf_len) {
+			length > (uint64_t) (gddv_cur_buf_len - *offset)) {
 		thd_log_warn("GDDV: get_string value out of bounds (off=%d len=%d need=%llu)\n",
 				*offset, gddv_cur_buf_len,
 				(unsigned long long) length);
@@ -1065,7 +1066,9 @@ int cthd_gddv::handle_compressed_gddv(char *buf, int size) {
 		return THD_ERROR;
 
 	struct header *header = (struct header*) buf;
-	if (header->headersize > size)
+	/* The header is copied into the decompressed buffer and its v2
+	 * fields updated there, so it must hold a whole v2 header */
+	if (header->headersize < sizeof(struct header) || header->headersize > size)
 		return THD_ERROR;
 
 	uint64_t output_size;
@@ -1132,11 +1135,12 @@ int cthd_gddv::parse_gddv_key(char *buf, int size, int *end_offset) {
 	memcpy(&keylength, buf + offset, sizeof(keylength));
 	offset += sizeof(keylength);
 
-	/* Validate keylength against remaining buffer; reserve one byte for
-	 * a NUL terminator so subsequent strtok() cannot walk off the end
-	 * if the on-disk key is not NUL-terminated. */
+	/* Validate keylength against remaining buffer (offset + keylength
+	 * can overflow int); the key copy below gets its own NUL so that
+	 * strtok() cannot walk off the end if the on-disk key is not
+	 * NUL-terminated. */
 	if (keylength == 0 || keylength >= (uint32_t) INT_MAX ||
-		offset + (int) keylength > size) {
+			keylength > (uint32_t) (size - offset)) {
 		thd_log_warn("GDDV keylength %u rejected (offset=%d size=%d)\n",
 				keylength, offset, size);
 		throw gddv_exception;
@@ -1161,7 +1165,7 @@ int cthd_gddv::parse_gddv_key(char *buf, int size, int *end_offset) {
 	offset += sizeof(vallength);
 
 	if (vallength >= (uint32_t) INT_MAX ||
-			offset + (int) vallength > size) {
+			vallength > (uint32_t) (size - offset)) {
 		thd_log_warn("GDDV vallength %u rejected (offset=%d size=%d)\n",
 				vallength, offset, size);
 		throw gddv_exception;
