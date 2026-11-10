@@ -101,7 +101,14 @@ int cthd_engine_adaptive::install_passive(struct psv *psv) {
 		return THD_ERROR;
 	}
 
-	int temp = DECI_KELVIN_TO_CELSIUS(psv->temp) * 1000;
+	/* millicelsius: an absurd PSVT temperature would overflow int */
+	long long temp_mc = (long long) DECI_KELVIN_TO_CELSIUS(psv->temp) * 1000;
+	if (temp_mc < INT_MIN || temp_mc > INT_MAX) {
+		thd_log_warn("PSVT %s -> %s: temperature %d dK out of range, ignored\n",
+				psv->source.c_str(), psv->target.c_str(), psv->temp);
+		return THD_ERROR;
+	}
+	int temp = (int) temp_mc;
 	int target_state = 0;
 
 	if (psv->limit.length()) {

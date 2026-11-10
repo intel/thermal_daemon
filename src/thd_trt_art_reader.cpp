@@ -445,18 +445,18 @@ void cthd_acpi_rel::add_psvt_trip_point(rel_object_t &rel_obj) {
 		if (object->acpi_psvt_entry.control_knob_type == ACPI_TYPE_STRING) {
 			if (!strncasecmp (object->acpi_psvt_entry.limit.string, "MAX", 3))
 				conf_file << prefix << "\t" << "<Temperature>"
-						<< (DECI_KELVIN_TO_CELSIUS(object->acpi_psvt_entry.passive_temp) + 1) * 1000
+						<< (DECI_KELVIN_TO_CELSIUS(object->acpi_psvt_entry.passive_temp) + 1) * 1000LL
 						<< "</Temperature>\n";
 
 			if (!strncasecmp (object->acpi_psvt_entry.limit.string, "MIN", 3))
 				conf_file << prefix << "\t" << "<Temperature>"
-						<< (DECI_KELVIN_TO_CELSIUS(object->acpi_psvt_entry.passive_temp) * 1000)
+						<< (DECI_KELVIN_TO_CELSIUS(object->acpi_psvt_entry.passive_temp) * 1000LL)
 						<< "</Temperature>\n";
 		}
 		else {
 			limit_value = object->acpi_psvt_entry.limit.integer;
 			conf_file << prefix << "\t" << "<Temperature>"
-					<< (DECI_KELVIN_TO_CELSIUS(object->acpi_psvt_entry.passive_temp) * 1000)
+					<< (DECI_KELVIN_TO_CELSIUS(object->acpi_psvt_entry.passive_temp) * 1000LL)
 					<< "</Temperature>\n";
 		}
 
