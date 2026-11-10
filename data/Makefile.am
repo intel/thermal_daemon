@@ -34,6 +34,7 @@ dbusservice_DATA = org.freedesktop.thermald.conf
 
 tdconfigdir = $(tdconfdir)
 tdconfig_DATA = \
+	thermal-conf.xml \
 	thermal-cpu-cdev-order.xml \
 	thermald-features.xml
 
