@@ -1399,6 +1399,9 @@ int cthd_gddv::verify_condition(const struct condition& condition) {
 #endif
 	if (condition.condition == Workload)
 		return 0;
+	/* Evaluated as stationary, see evaluate_condition() */
+	if (condition.condition == Motion)
+		return 0;
 	if (condition.condition == Platform_type)
 		return 0;
 	if (condition.condition == Power_slider)
