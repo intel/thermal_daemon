@@ -26,6 +26,7 @@
 #include "thd_preference.h"
 #include "thd_engine.h"
 #include "thd_engine_default.h"
+#include "thd_engine_adaptive.h"
 #include "thd_sensor.h"
 #include "thd_zone.h"
 #include "thd_trip_point.h"
@@ -222,6 +223,18 @@ gboolean thd_dbus_interface_reinit(PrefObject *obj, GError **error) {
 	thd_engine.reset();
 	sleep(2);
 
+	/*
+	 * Recreate the kind of engine that was running, as at start: with
+	 * --adaptive try the adaptive engine first, and use the default
+	 * engine only if that fails.
+	 */
+	if (adaptive_perf_enable) {
+		if (thd_engine_create_adaptive_engine(true, false) == THD_SUCCESS)
+			return TRUE;
+
+		adaptive_perf_enable = false;
+		thd_log_info("Reinit: adaptive engine failed, using the default engine\n");
+	}
 
 	if (thd_engine_create_default_engine(true, exclusive_control,
 			conf_file) != THD_SUCCESS) {

@@ -417,8 +417,8 @@ int cthd_acpi_rel::read_trt() {
 
 #define ACPI_TYPE_STRING                0x02
 #define DECI_KELVIN_TO_CELSIUS(t)       ({                      \
-        int _t = (t);                                          \
-        ((_t-2732 >= 0) ? (_t-2732+5)/10 : (_t-2732-5)/10);     \
+        long long _t = (t);    /* no int overflow near INT_MIN */ \
+        (int) ((_t-2732 >= 0) ? (_t-2732+5)/10 : (_t-2732-5)/10); \
 })
 
 void cthd_acpi_rel::add_psvt_trip_point(rel_object_t &rel_obj) {
@@ -445,18 +445,18 @@ void cthd_acpi_rel::add_psvt_trip_point(rel_object_t &rel_obj) {
 		if (object->acpi_psvt_entry.control_knob_type == ACPI_TYPE_STRING) {
 			if (!strncasecmp (object->acpi_psvt_entry.limit.string, "MAX", 3))
 				conf_file << prefix << "\t" << "<Temperature>"
-						<< (DECI_KELVIN_TO_CELSIUS(object->acpi_psvt_entry.passive_temp) + 1) * 1000
+						<< (DECI_KELVIN_TO_CELSIUS(object->acpi_psvt_entry.passive_temp) + 1) * 1000LL
 						<< "</Temperature>\n";
 
 			if (!strncasecmp (object->acpi_psvt_entry.limit.string, "MIN", 3))
 				conf_file << prefix << "\t" << "<Temperature>"
-						<< (DECI_KELVIN_TO_CELSIUS(object->acpi_psvt_entry.passive_temp) * 1000)
+						<< (DECI_KELVIN_TO_CELSIUS(object->acpi_psvt_entry.passive_temp) * 1000LL)
 						<< "</Temperature>\n";
 		}
 		else {
 			limit_value = object->acpi_psvt_entry.limit.integer;
 			conf_file << prefix << "\t" << "<Temperature>"
-					<< (DECI_KELVIN_TO_CELSIUS(object->acpi_psvt_entry.passive_temp) * 1000)
+					<< (DECI_KELVIN_TO_CELSIUS(object->acpi_psvt_entry.passive_temp) * 1000LL)
 					<< "</Temperature>\n";
 		}
 

@@ -169,9 +169,10 @@ char* cthd_gddv::get_string(char *object, int *offset) {
 	*offset += 8;
 
 	/* Reject lengths that would overflow the int offset arithmetic
-	 * or read past the buffer. */
+	 * or read past the buffer. Compare with the bytes left:
+	 * *offset + length can overflow int. */
 	if (length > (uint64_t) INT_MAX ||
-			*offset + (int) length > gddv_cur_buf_len) {
+			length > (uint64_t) (gddv_cur_buf_len - *offset)) {
 		thd_log_warn("GDDV: get_string value out of bounds (off=%d len=%d need=%llu)\n",
 				*offset, gddv_cur_buf_len,
 				(unsigned long long) length);
@@ -578,8 +579,15 @@ int cthd_gddv::parse_ppcc(char *name, char *buf, int len) {
 	ppcc.step_size = *(uint64_t*) (buf + 76);
 	ppcc.valid = 1;
 
-	if (len < 156)
+	/* PL1 only: keep it, without a second (PL2) limit */
+	if (len < 156) {
+		ppcc.limit_1_valid = 0;
+		ppcc.power_limit_1_min = ppcc.power_limit_1_max = 0;
+		ppcc.time_wind_1_min = ppcc.time_wind_1_max = 0;
+		ppcc.step_1_size = 0;
+		ppccs.push_back(std::move(ppcc));
 		return 0;
+	}
 
 	thd_log_info("Processing ppcc limit 2, length %d\n", len);
 	int start = 76 + 12;
@@ -1058,14 +1066,19 @@ int cthd_gddv::parse_trt(char *buf, int len)
 #define ESIFDV_ITEM_KEYS_REV0_SIGNATURE	0xA0D8
 #define MAX_DATA_VAULT_SIZE	(512 * 1024)
 #define	MAX_GDDV_SEGMENTS	30
+/* Total (nested and compressed) segments in one vault; real vaults
+ * have a handful. Bounds the work for a malformed vault. */
+#define	MAX_GDDV_TOTAL_SEGMENTS	256
 
-int cthd_gddv::handle_compressed_gddv(char *buf, int size) {
+int cthd_gddv::handle_compressed_gddv(char *buf, int size, int depth) {
 
 	if (!buf || !size || size <= (int)sizeof(struct header))
 		return THD_ERROR;
 
 	struct header *header = (struct header*) buf;
-	if (header->headersize > size)
+	/* The header is copied into the decompressed buffer and its v2
+	 * fields updated there, so it must hold a whole v2 header */
+	if (header->headersize < sizeof(struct header) || header->headersize > size)
 		return THD_ERROR;
 
 	uint64_t output_size;
@@ -1105,7 +1118,8 @@ int cthd_gddv::handle_compressed_gddv(char *buf, int size) {
 	header->v2.flags &= ~ESIF_SERVICE_CONFIG_COMPRESSED;
 	header->v2.payload_size = destlen;
 
-	res = parse_gddv((char*)decompressed.get(), output_size, nullptr, 0);
+	/* Nested: keep counting depth and segments across decompression */
+	res = parse_gddv((char*)decompressed.get(), output_size, nullptr, depth + 1);
 
 	return res;
 }
@@ -1132,11 +1146,12 @@ int cthd_gddv::parse_gddv_key(char *buf, int size, int *end_offset) {
 	memcpy(&keylength, buf + offset, sizeof(keylength));
 	offset += sizeof(keylength);
 
-	/* Validate keylength against remaining buffer; reserve one byte for
-	 * a NUL terminator so subsequent strtok() cannot walk off the end
-	 * if the on-disk key is not NUL-terminated. */
+	/* Validate keylength against remaining buffer (offset + keylength
+	 * can overflow int); the key copy below gets its own NUL so that
+	 * strtok() cannot walk off the end if the on-disk key is not
+	 * NUL-terminated. */
 	if (keylength == 0 || keylength >= (uint32_t) INT_MAX ||
-		offset + (int) keylength > size) {
+			keylength > (uint32_t) (size - offset)) {
 		thd_log_warn("GDDV keylength %u rejected (offset=%d size=%d)\n",
 				keylength, offset, size);
 		throw gddv_exception;
@@ -1161,7 +1176,7 @@ int cthd_gddv::parse_gddv_key(char *buf, int size, int *end_offset) {
 	offset += sizeof(vallength);
 
 	if (vallength >= (uint32_t) INT_MAX ||
-			offset + (int) vallength > size) {
+			vallength > (uint32_t) (size - offset)) {
 		thd_log_warn("GDDV vallength %u rejected (offset=%d size=%d)\n",
 				vallength, offset, size);
 		throw gddv_exception;
@@ -1273,6 +1288,14 @@ int cthd_gddv::parse_gddv(char *buf, int size, int *end_offset, int depth) {
 		return THD_ERROR;
 	}
 
+	if (depth == 0)
+		gddv_segments = 0;
+	if (++gddv_segments > MAX_GDDV_TOTAL_SEGMENTS) {
+		thd_log_warn("GDDV has more than %d segments, rejected\n",
+				MAX_GDDV_TOTAL_SEGMENTS);
+		return THD_ERROR;
+	}
+
 	if (size < (int) sizeof(struct header))
 		return THD_ERROR;
 
@@ -1297,7 +1320,7 @@ int cthd_gddv::parse_gddv(char *buf, int size, int *end_offset, int depth) {
 
 		if (header->v2.flags & ESIF_SERVICE_CONFIG_COMPRESSED) {
 			thd_log_debug("Uncompress GDDV payload\n");
-			return handle_compressed_gddv(buf, size);
+			return handle_compressed_gddv(buf, size, depth);
 		}
 
 		strncpy(name, header->v2.segmentid, sizeof(name) - 1);
@@ -1375,6 +1398,9 @@ int cthd_gddv::verify_condition(const struct condition& condition) {
 		return 0;
 #endif
 	if (condition.condition == Workload)
+		return 0;
+	/* Evaluated as stationary, see evaluate_condition() */
+	if (condition.condition == Motion)
 		return 0;
 	if (condition.condition == Platform_type)
 		return 0;
@@ -2182,7 +2208,7 @@ int cthd_gddv::gddv_init(std::string& base_path) {
 skip_load:
 	try {
 		if (parse_gddv(buf.get(), size, nullptr, 0)) {
-			thd_log_debug("Unable to parse GDDV");
+			thd_log_debug("Unable to parse GDDV\n");
 			return THD_FATAL_ERROR;
 		}
 
