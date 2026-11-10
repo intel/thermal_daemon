@@ -1817,6 +1817,34 @@ struct psvt* cthd_gddv::find_psvt(const std::string& name) {
 	return nullptr;
 }
 
+// Return the PSVT with the highest passive temperature, ignoring
+// temperatures that install_passive() would reject.
+struct psvt* cthd_gddv::find_max_perf_psvt() {
+	struct psvt *best = nullptr;
+	int best_temp = INT_MIN;
+
+	for (unsigned int i = 0; i < psvts.size(); ++i) {
+		for (unsigned int j = 0; j < psvts[i].psvs.size(); ++j) {
+			int temp = DECI_KELVIN_TO_CELSIUS(psvts[i].psvs[j].temp);
+			long long temp_mc = (long long) temp * 1000;
+
+			if (temp_mc < INT_MIN || temp_mc > INT_MAX)
+				continue;
+
+			if (!best || temp > best_temp) {
+				best_temp = temp;
+				best = &psvts[i];
+			}
+		}
+	}
+
+	if (best)
+		thd_log_info("Max performance PSVT %s, passive temp %d C\n",
+				best->name.c_str(), best_temp);
+
+	return best;
+}
+
 struct itmt* cthd_gddv::find_itmt(const std::string& name) {
 	for (int i = 0; i < (int) itmts.size(); i++) {
 		int matched;

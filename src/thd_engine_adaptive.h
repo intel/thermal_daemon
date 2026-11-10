@@ -50,6 +50,7 @@ protected:
 
 	int set_itmt_target(struct adaptive_target &target);
 	int install_passive(struct psv *psv);
+	int install_psvt(struct psvt *psvt);
 	int install_itmt(struct itmt_entry *itmt_entry);
 	void psvt_consolidate();
 	void set_trip(const std::string& device, const std::string& argument);

@@ -324,6 +324,7 @@ public:
 	void update_power_slider();
 	int find_agressive_target();
 	struct psvt* find_psvt(const std::string& name);
+	struct psvt* find_max_perf_psvt();
 	struct itmt* find_itmt(const std::string& name);
 	struct psvt* find_def_psvt();
 	int search_idsp(const std::string& name);
