@@ -27,6 +27,8 @@
 
 #include "thd_sensor.h"
 #include <atomic>
+#include <condition_variable>
+#include <mutex>
 #include <vector>
 #include <memory>
 
@@ -56,6 +58,8 @@ private:
 	bool poll_thread_started;
 public:
 	std::atomic<bool> stop_polling;
+	std::mutex polling_wait_mutex;
+	std::condition_variable polling_wakeup;
 	std::atomic<int> last_temp;
 
 	static const int def_polling_period = 5; //seconds
