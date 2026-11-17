@@ -1010,6 +1010,23 @@ cthd_sensor* cthd_engine::search_sensor(const std::string& name) {
 	return nullptr;
 }
 
+// DTT names the CPU TCPU or B0D4; without PPCC only the PCI driver's TCPU_PCI exists
+std::string cthd_engine::cpu_participant_name(const std::string& name, bool sensor) {
+	bool b0d4 = !name.compare(0, 4, "B0D4");
+
+	if (!b0d4 && name.compare(0, 4, "TCPU"))
+		return name;
+
+	const std::string names[] = { name, b0d4 ? "TCPU" : "B0D4", "TCPU_PCI" };
+
+	for (const auto &n : names) {
+		if (sensor ? search_sensor(n) != nullptr : search_zone(n) != nullptr)
+			return n;
+	}
+
+	return name;
+}
+
 cthd_sensor* cthd_engine::get_sensor(int index) {
 	if (index >= 0 && index < (int) sensors.size())
 		return sensors[index].get();
