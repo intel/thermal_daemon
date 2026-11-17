@@ -449,7 +449,14 @@ void cthd_engine_adaptive::set_int3400_target(struct adaptive_target &target) {
 	}
 	thd_log_info("\n\n ZONE DUMP END\n");
 
-	if (!new_zone_count) {
+	/*
+	 * Only PSVT and ITMT targets create zones. Other INT3400 targets
+	 * (for example EPOT) can precede them in a condition set, so at
+	 * startup there may be no active zone yet when they are processed.
+	 */
+	if (!new_zone_count
+			&& (target.code == "PSVT" || target.code == "ITMT"
+					|| target.code == "ITMT3")) {
 		thd_log_warn("Adaptive policy couldn't create any zones\n");
 		thd_log_warn("Possibly some sensors in the PSVT are missing\n");
 		thd_log_warn("Restart in non adaptive mode via systemd\n");
