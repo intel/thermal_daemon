@@ -24,6 +24,7 @@
 #include "thd_sensor_virtual.h"
 #include "thd_engine.h"
 #include <chrono>
+#include <climits>
 #include <cmath>
 #include <memory>
 
@@ -150,11 +151,17 @@ unsigned int cthd_sensor_virtual::_read_temperature() {
 
 	thd_log_debug("virt temp:%g\n", virt_temp);
 
-	temp = static_cast<int>(std::round(virt_temp));
-
-	int temp_mc = temp * 1000;
-	if (temp_mc < 0)
-		temp_mc = 0;
+	/*
+	 * Convert to millicelsius before rounding: rounding to whole units
+	 * first loses up to 0.5 of them, e.g. 2.6 W from a power based
+	 * virtual sensor became 3 W.
+	 */
+	double virt_mc = std::round(virt_temp * 1000);
+	if (virt_mc < 0)
+		virt_mc = 0;
+	if (virt_mc > INT_MAX)
+		virt_mc = INT_MAX;
+	int temp_mc = static_cast<int>(virt_mc);
 
 	// Keep cache and return value in the same unit (mC).
 	last_temp.store(temp_mc);
