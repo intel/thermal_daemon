@@ -51,24 +51,11 @@ int cthd_engine_adaptive::install_passive(struct psv *psv) {
 		psv_zone.pop_back();
 	}
 
+	psv_zone = cpu_participant_name(psv_zone, false);
 	cthd_zone *zone = search_zone(psv_zone);
 	if (!zone) {
-		if (!psv_zone.compare(0, 4, "B0D4")) {
-			psv_zone = "TCPU";
-			zone = search_zone(psv_zone);
-		}
-
-		if (!zone) {
-			if (!psv_zone.compare(0, 4, "TCPU")) {
-				psv_zone = "B0D4";
-				zone = search_zone(psv_zone);
-			}
-			if (!zone) {
-				thd_log_warn("Unable to find a zone for %s\n",
-						psv_zone.c_str());
-				return THD_ERROR;
-			}
-		}
+		thd_log_warn("Unable to find a zone for %s\n", psv_zone.c_str());
+		return THD_ERROR;
 	}
 
 	std::string psv_cdev;
@@ -153,6 +140,7 @@ void cthd_engine_adaptive::set_trip(const std::string& target, const std::string
 		psv_zone.pop_back();
 	}
 
+	psv_zone = cpu_participant_name(psv_zone, false);
 	cthd_zone *zone = search_zone(psv_zone);
 	if (!zone) {
 		thd_log_warn("Unable to find a zone for %s\n", psv_zone.c_str());
@@ -274,24 +262,11 @@ int cthd_engine_adaptive::install_itmt(struct itmt_entry *itmt_entry) {
 		itmt_zone.pop_back();
 	}
 
+	itmt_zone = cpu_participant_name(itmt_zone, false);
 	cthd_zone *zone = search_zone(itmt_zone);
 	if (!zone) {
-		if (!itmt_zone.compare(0, 4, "B0D4")) {
-			itmt_zone = "TCPU";
-			zone = search_zone(itmt_zone);
-		}
-
-		if (!zone) {
-			if (!itmt_zone.compare(0, 4, "TCPU")) {
-				itmt_zone = "B0D4";
-				zone = search_zone(itmt_zone);
-			}
-			if (!zone) {
-				thd_log_warn("Unable to find a zone for %s\n",
-						itmt_zone.c_str());
-				return THD_ERROR;
-			}
-		}
+		thd_log_warn("Unable to find a zone for %s\n", itmt_zone.c_str());
+		return THD_ERROR;
 	}
 
 	cthd_cdev *cdev = search_cdev("rapl_controller_mmio");
@@ -961,6 +936,8 @@ int cthd_engine_adaptive::install_virtual_sensor(const struct vsensor &vs,
 				target_name = vs.vscts[i].target;
 			else
 				target_name = vs.vscts[i].target.substr(pos + 1);
+
+			target_name = cpu_participant_name(target_name, true);
 		}
 
 		double operation;

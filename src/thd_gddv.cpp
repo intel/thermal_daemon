@@ -1610,6 +1610,7 @@ int cthd_gddv::evaluate_temperature_condition(
 	else
 		sensor_name = condition.device.substr(pos + 1);
 
+	sensor_name = thd_engine->cpu_participant_name(sensor_name, true);
 	cthd_sensor *sensor = thd_engine->search_sensor(sensor_name);
 	if (!sensor) {
 		thd_log_info("Unable to find a sensor for %s\n",
