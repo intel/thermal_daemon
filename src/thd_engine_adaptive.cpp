@@ -401,6 +401,18 @@ int cthd_engine_adaptive::set_itmt_target(struct adaptive_target &target) {
 
 void cthd_engine_adaptive::set_int3400_target(struct adaptive_target &target) {
 
+	/*
+	 * Only these IETM target codes are handled. Ignore any other (e.g.
+	 * EPOT): running the PSVT consolidation, zone dump and zone checks
+	 * below again for them changed the trips installed for this target.
+	 */
+	if (target.code != "ITMT" && target.code != "ITMT3" &&
+			target.code != "PSVT" && target.code != "PSV") {
+		thd_log_info("Unsupported IETM target code %s (target %s), ignored\n",
+				target.code.c_str(), target.name.c_str());
+		return;
+	}
+
 	if (target.code == "ITMT" || target.code == "ITMT3") {
 		if (set_itmt_target(target) == THD_SUCCESS) {
 			int3400_installed = 1;
