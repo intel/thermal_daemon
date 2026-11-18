@@ -158,7 +158,14 @@ void cthd_engine::thd_engine_thread() {
 				poll_fds[wakeup_fd].revents = 0;
 				continue;
 			}
-			if (proc_message(&msg) < 0) {
+			/*
+			 * Messages walk and change the zone list; D-Bus calls
+			 * add and delete zones under the same lock.
+			 */
+			thd_engine_lock();
+			int ret = proc_message(&msg);
+			thd_engine_unlock();
+			if (ret < 0) {
 				thd_log_debug("Terminating thread..\n");
 			}
 		}
