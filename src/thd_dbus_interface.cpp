@@ -1236,6 +1236,8 @@ thd_dbus_on_bus_acquired(GDBusConnection *connection,
 							    user_data,
 							    nullptr,
 							    &error);
+	/* The registration holds its own reference to the interface info */
+	g_dbus_node_info_unref(introspection_data);
 
 	proxy_id = g_dbus_proxy_new_sync(connection,
 					 G_DBUS_PROXY_FLAGS_DO_NOT_LOAD_PROPERTIES,
