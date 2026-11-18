@@ -76,8 +76,8 @@ cthd_engine::cthd_engine(std::string _uuid) :
 				-1), uevent_fd(-1), control_mode(COMPLEMENTRY), write_pipe_fd(
 				0), preference(0), status(true), thz_last_uevent_time(0), thz_last_temp_ind_time(
 				0), thz_last_update_event_time(0), terminate(false), has_invariant_tsc(0),
-				has_aperf(0), proc_list_matched(false), poll_interval_sec(0), poll_sensor_mask(0),
-				fast_poll_sensor_mask(0), saved_poll_interval(0), poll_fd_cnt(0), rt_kernel(false),
+				has_aperf(0), proc_list_matched(false), poll_interval_sec(0),
+				saved_poll_interval(0), poll_fd_cnt(0), rt_kernel(false),
 				parser_init_done(false) {
 	thd_engine = pthread_t();
 	thd_attr = pthread_attr_t();
@@ -578,12 +578,12 @@ void cthd_engine::poll_enable_disable(bool status, message_capsul_t *msg) {
 	unsigned int *sensor_id = (unsigned int*) msg->msg;
 
 	if (status) {
-		poll_sensor_mask |= (1 << (*sensor_id));
+		poll_sensors.insert(*sensor_id);
 		poll_timeout_msec = def_poll_interval;
 		thd_log_debug("thd_engine polling enabled via %u\n", *sensor_id);
 	} else {
-		poll_sensor_mask &= ~(1 << (*sensor_id));
-		if (!poll_sensor_mask) {
+		poll_sensors.erase(*sensor_id);
+		if (poll_sensors.empty()) {
 			poll_timeout_msec = -1;
 			thd_log_debug("thd_engine polling last disabled via %u\n",
 					*sensor_id);
@@ -595,14 +595,14 @@ void cthd_engine::fast_poll_enable_disable(bool status, message_capsul_t *msg) {
 	unsigned int *sensor_id = (unsigned int*) msg->msg;
 
 	if (status) {
-		fast_poll_sensor_mask |= (1 << (*sensor_id));
+		fast_poll_sensors.insert(*sensor_id);
 		if (!saved_poll_interval)
 			saved_poll_interval = poll_timeout_msec;
 		poll_timeout_msec = 1000;
 		thd_log_debug("thd_engine fast polling enabled via %u\n", *sensor_id);
 	} else {
-		fast_poll_sensor_mask &= ~(1 << (*sensor_id));
-		if (!fast_poll_sensor_mask) {
+		fast_poll_sensors.erase(*sensor_id);
+		if (fast_poll_sensors.empty()) {
 			if (saved_poll_interval)
 				poll_timeout_msec = saved_poll_interval;
 			thd_log_debug("thd_engine polling last disabled via %u\n",
