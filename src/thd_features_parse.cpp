@@ -41,9 +41,10 @@ char *cthd_features_parse::char_trim(char *str)
 		return nullptr;
 	if (str[0] == '\0')
 		return str;
-	while (isspace(*str))
+	while (isspace((unsigned char) *str))
 		str++;
-	for (i = strlen(str) - 1; (isspace(str[i])); i--)
+	/* i >= 0: the value may be only white space */
+	for (i = strlen(str) - 1; i >= 0 && isspace((unsigned char) str[i]); i--)
 		;
 	str[i + 1] = '\0';
 
