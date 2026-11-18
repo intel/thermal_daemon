@@ -56,7 +56,7 @@ add appropriate prefix.
 	sudo systemctl enable thermald.service
 
 4. Terminate using DBUS I/F
-	sudo test/test_pref.sh
+	sudo tools/thermald_set_pref.sh
 		and select "TERMINATE" choice.
 
 
