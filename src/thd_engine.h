@@ -27,6 +27,7 @@
 
 #include <memory>
 #include <mutex>
+#include <set>
 #include <pthread.h>
 #include <poll.h>
 #include <time.h>
@@ -102,8 +103,6 @@ private:
 	bool proc_list_matched;
 	int poll_interval_sec;
 	cthd_preference thd_pref;
-	unsigned int poll_sensor_mask;
-	unsigned int fast_poll_sensor_mask;
 	int saved_poll_interval;
 	std::string config_file;
 
@@ -113,6 +112,9 @@ private:
 	std::mutex thd_engine_mutex;
 
 	std::vector<std::string> zone_preferences;
+	// Sensors that asked for polling: indexes can be 32 or more
+	std::set<unsigned int> poll_sensors;
+	std::set<unsigned int> fast_poll_sensors;
 	static constexpr int thz_notify_debounce_interval = 3;
 
 	struct pollfd poll_fds[THD_NUM_OF_POLL_FDS];
