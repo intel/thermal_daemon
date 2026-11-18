@@ -9,7 +9,7 @@ Setup
 File Name: thermal_conf.xml.1
 
 thermald command line
-$ sudo ./thermald --no-daemon --loglevel=info --ignore-default-control --config-file test/thermal_conf.xml.1 
+$ sudo ./thermald --no-daemon --loglevel=info --ignore-default-control --config-file test/manual/configs/thermal_conf.xml.1 
 
 <?xml version="1.0"?>
  <!-- BEGIN -->
@@ -304,7 +304,7 @@ The trip recovers before.
 
 2. Single target state for max
 
-command line: $ sudo ./thermald --no-daemon --loglevel=info --ignore-default-control --config-file test/thermal_conf.xml.2 
+command line: $ sudo ./thermald --no-daemon --loglevel=info --ignore-default-control --config-file test/manual/configs/thermal_conf.xml.2 
 
 <?xml version="1.0"?>
  <!-- BEGIN -->
@@ -392,7 +392,7 @@ there is nothing in the queue.
 
 3. Multi step control
 
-command line: $ sudo ./thermald --no-daemon --loglevel=info --ignore-default-control --config-file test/thermal_conf.xml.3
+command line: $ sudo ./thermald --no-daemon --loglevel=info --ignore-default-control --config-file test/manual/configs/thermal_conf.xml.3
 
 - Run some busy workload to reach TDP
 
