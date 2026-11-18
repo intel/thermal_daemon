@@ -1,0 +1,135 @@
+<?xml version="1.0"?>
+<!--
+  Example thermal-conf.xml for issue #616 (Surface Book 3 15", no DTT
+  tables, thermald run without adaptive mode). Run thermald with the
+  ignore-default-control option, so that only this file controls the
+  limits, and with config-file pointing to this file.
+
+  - Several passive trips in ONE zone. The zone type ("cpu_and_skin")
+    must not be an existing thermal zone type (e.g. x86_pkg_temp):
+    trips for an existing zone replace each other per trip type, trips
+    of a new zone are all kept.
+  - Each trip sets PL1 to a fixed value (TargetState, in uW). thermald
+    keeps the most restrictive active trip; when it turns off, the next
+    active trip's value is applied, so PL1 steps back up a level at a
+    time instead of jumping to the 30 W maximum.
+  - A separate high trip lowers PL2 through a generic sysfs cooling
+    device, with a large hysteresis so that it doesn't chatter.
+
+  Adjust ProductName (cat /sys/class/dmi/id/product_name), the I_VTS1
+  path and the temperatures/limits for your device.
+-->
+<ThermalConfiguration>
+<Platform>
+	<Name>Surface Book 3 15 (PL1 staircase, CPU and skin)</Name>
+	<ProductName>Surface Book 3</ProductName>
+	<Preference>QUIET</Preference>
+
+	<ThermalSensors>
+		<!-- Skin sensor from the Surface EC (surface_temp hwmon) -->
+		<ThermalSensor>
+			<Type>I_VTS1</Type>
+			<Path>/sys/class/hwmon/hwmonN/temp1_input</Path>
+			<AsyncCapable>0</AsyncCapable>
+		</ThermalSensor>
+	</ThermalSensors>
+
+	<ThermalZones>
+		<ThermalZone>
+			<Type>cpu_and_skin</Type>
+			<TripPoints>
+				<!-- CPU package: 85 / 92 / 97 C -> 24 / 18 / 12 W.
+				     Each releases Hyst below its temperature. -->
+				<TripPoint>
+					<SensorType>x86_pkg_temp</SensorType>
+					<Temperature>85000</Temperature>
+					<Hyst>3000</Hyst>
+					<type>passive</type>
+					<CoolingDevice>
+						<type>rapl_controller</type>
+						<TargetState>24000000</TargetState>
+						<SamplingPeriod>2</SamplingPeriod>
+					</CoolingDevice>
+				</TripPoint>
+				<TripPoint>
+					<SensorType>x86_pkg_temp</SensorType>
+					<Temperature>92000</Temperature>
+					<Hyst>3000</Hyst>
+					<type>passive</type>
+					<CoolingDevice>
+						<type>rapl_controller</type>
+						<TargetState>18000000</TargetState>
+						<SamplingPeriod>2</SamplingPeriod>
+					</CoolingDevice>
+				</TripPoint>
+				<TripPoint>
+					<SensorType>x86_pkg_temp</SensorType>
+					<Temperature>97000</Temperature>
+					<Hyst>3000</Hyst>
+					<type>passive</type>
+					<CoolingDevice>
+						<type>rapl_controller</type>
+						<TargetState>12000000</TargetState>
+						<SamplingPeriod>2</SamplingPeriod>
+					</CoolingDevice>
+				</TripPoint>
+
+				<!-- Skin: 43 / 45 C -> 20 / 14 W -->
+				<TripPoint>
+					<SensorType>I_VTS1</SensorType>
+					<Temperature>43000</Temperature>
+					<Hyst>1000</Hyst>
+					<type>passive</type>
+					<CoolingDevice>
+						<type>rapl_controller</type>
+						<TargetState>20000000</TargetState>
+						<SamplingPeriod>5</SamplingPeriod>
+					</CoolingDevice>
+				</TripPoint>
+				<TripPoint>
+					<SensorType>I_VTS1</SensorType>
+					<Temperature>45000</Temperature>
+					<Hyst>1000</Hyst>
+					<type>passive</type>
+					<CoolingDevice>
+						<type>rapl_controller</type>
+						<TargetState>14000000</TargetState>
+						<SamplingPeriod>5</SamplingPeriod>
+					</CoolingDevice>
+				</TripPoint>
+
+				<!-- Near TjMax: PL2 61 -> 21 W until the CPU is below
+				     74 C, so the boost budget doesn't come straight back -->
+				<TripPoint>
+					<SensorType>x86_pkg_temp</SensorType>
+					<Temperature>99000</Temperature>
+					<Hyst>25000</Hyst>
+					<type>passive</type>
+					<CoolingDevice>
+						<type>rapl_pl2</type>
+						<TargetState>21000000</TargetState>
+					</CoolingDevice>
+				</TripPoint>
+			</TripPoints>
+		</ThermalZone>
+	</ThermalZones>
+
+	<CoolingDevices>
+		<!-- PL1 range: 30 W (no limit) to 8 W -->
+		<CoolingDevice>
+			<Type>rapl_controller</Type>
+			<MinState>30000000</MinState>
+			<MaxState>8000000</MaxState>
+			<IncDecStep>500000</IncDecStep>
+		</CoolingDevice>
+		<!-- PL2 (constraint_1, short_term) -->
+		<CoolingDevice>
+			<Type>rapl_pl2</Type>
+			<Path>/sys/class/powercap/intel-rapl:0/constraint_1_power_limit_uw</Path>
+			<MinState>61000000</MinState>
+			<MaxState>21000000</MaxState>
+			<IncDecStep>40000000</IncDecStep>
+		</CoolingDevice>
+	</CoolingDevices>
+</Platform>
+</ThermalConfiguration>
