@@ -1100,6 +1100,8 @@ thd_dbus_handle_method_call(GDBusConnection       *connection,
 			return_dbus_error("SetUserMaxTemperature");
 			return;
 		}
+
+		g_dbus_method_invocation_return_value(invocation, nullptr);
 		return;
 	}
 
