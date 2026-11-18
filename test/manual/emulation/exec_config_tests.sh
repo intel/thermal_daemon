@@ -2,9 +2,9 @@
 
 echo "Make sure that intel_pstate is not started with --adaptive option"
 
-make
+make -C ../../module
 
-insmod thermald_test_kern_module.ko
+insmod ../../module/thermald_test_kern_module.ko
 
 CONF_FILE="/etc/thermald/thermal-conf.xml.auto"
 
