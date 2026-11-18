@@ -401,6 +401,36 @@ int cthd_engine_adaptive::set_itmt_target(struct adaptive_target &target) {
 
 }
 
+// Install the passive trips of a PSVT. Unless another PSVT or ITMT is
+// already installed, first clear the trips of the other zones. Return
+// the number of trips installed.
+int cthd_engine_adaptive::install_psvt(struct psvt *psvt) {
+	int installed = 0;
+
+	if (!int3400_installed) {
+		for (unsigned int i = 0; i < zones.size(); ++i) {
+			cthd_zone *_zone = zones[i].get();
+
+			// This is only for debug to plot power, so keep
+			if (_zone->get_zone_type() == "rapl_pkg_power" || _zone->get_zone_type() == "power_floor")
+				continue;
+
+			_zone->zone_reset(1);
+			_zone->trip_delete_all();
+
+			if (_zone->zone_active_status())
+				_zone->set_zone_inactive();
+		}
+	}
+
+	for (unsigned int i = 0; i < psvt->psvs.size(); ++i) {
+		if (install_passive(&psvt->psvs[i]) == THD_SUCCESS)
+			++installed;
+	}
+
+	return installed;
+}
+
 void cthd_engine_adaptive::set_int3400_target(struct adaptive_target &target) {
 
 	/*
@@ -423,32 +453,33 @@ void cthd_engine_adaptive::set_int3400_target(struct adaptive_target &target) {
 
 	if (target.code == "PSVT") {
 		struct psvt *psvt;
+		int installed = 0;
 
 		thd_log_info("set_int3400 target %s\n", target.argument.c_str());
 
 		psvt = gddv.find_psvt(target.argument);
 		if (psvt) {
-			if (!int3400_installed) {
-				for (unsigned int i = 0; i < zones.size(); ++i) {
-					cthd_zone *_zone = zones[i].get();
-
-					// This is only for debug to plot power, so keep
-					if (_zone->get_zone_type() == "rapl_pkg_power" || _zone->get_zone_type() == "power_floor")
-						continue;
-
-					_zone->zone_reset(1);
-					_zone->trip_delete_all();
-
-					if (_zone->zone_active_status())
-						_zone->set_zone_inactive();
-				}
+			installed = install_psvt(psvt);
+		} else {
+			/*
+			 * Some firmware references PSVT names that are not in the
+			 * GDDV. Installing nothing makes adaptive mode exit for lack
+			 * of zones. Use the default PSVT, the platform's baseline
+			 * policy, instead.
+			 */
+			psvt = gddv.find_def_psvt();
+			if (psvt) {
+				thd_log_warn("PSVT %s not found in GDDV, using default PSVT %s\n",
+						target.argument.c_str(), psvt->name.c_str());
+				installed = install_psvt(psvt);
+			} else {
+				thd_log_warn("PSVT %s not found in GDDV, and no default PSVT\n",
+						target.argument.c_str());
 			}
-
-			for (int i = 0; i < (int) psvt->psvs.size(); i++) {
-				install_passive(&psvt->psvs[i]);
-			}
-			int3400_installed = 1;
 		}
+
+		if (installed)
+			int3400_installed = 1;
 	}
 
 	if (int3400_installed)
