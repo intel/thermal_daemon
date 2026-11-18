@@ -576,6 +576,18 @@ gboolean thd_dbus_interface_add_cooling_device(PrefObject *obj,
 			strlen("/etc")))
 			return FALSE;
 
+	// The cooling device adds and subtracts the step from its states
+	if (min_state < -cthd_cdev::max_state_step
+			|| min_state > cthd_cdev::max_state_step
+			|| max_state < -cthd_cdev::max_state_step
+			|| max_state > cthd_cdev::max_state_step
+			|| step < -cthd_cdev::max_state_step
+			|| step > cthd_cdev::max_state_step) {
+		thd_log_warn("Cooling device %s: state or step out of range\n",
+				(char *) cdev_name);
+		return FALSE;
+	}
+
 	ret = thd_engine->user_add_cdev(cdev_name, path, min_state, max_state,
 			step);
 	if (ret == THD_SUCCESS)

@@ -490,14 +490,16 @@ int cthd_parse::parse_new_cooling_dev(xmlNode * a_node, xmlDoc *doc,
 				} else if (!thd_strcasecmp_n((const char *) cur_node->name, "MinState")) {
 					int val;
 
-					if (parse_int_value(tmp_value, &val, 0, INT_MAX) == THD_SUCCESS) {
+					if (parse_int_value(tmp_value, &val, 0,
+							cthd_cdev::max_state_step) == THD_SUCCESS) {
 						cdev->min_state = val;
 						cdev->mask |= CDEV_DEF_BIT_MIN_STATE;
 					}
 				} else if (!thd_strcasecmp_n((const char *) cur_node->name, "MaxState")) {
 					int val;
 
-					if (parse_int_value(tmp_value, &val, 0, INT_MAX) == THD_SUCCESS) {
+					if (parse_int_value(tmp_value, &val, 0,
+							cthd_cdev::max_state_step) == THD_SUCCESS) {
 						cdev->max_state = val;
 						cdev->mask |= CDEV_DEF_BIT_MAX_STATE;
 					}
@@ -505,7 +507,8 @@ int cthd_parse::parse_new_cooling_dev(xmlNode * a_node, xmlDoc *doc,
 						"IncDecStep")) {
 					int val;
 
-					if (parse_int_value(tmp_value, &val, 0, INT_MAX) == THD_SUCCESS) {
+					if (parse_int_value(tmp_value, &val, 0,
+							cthd_cdev::max_state_step) == THD_SUCCESS) {
 						cdev->inc_dec_step = val;
 						cdev->mask |= CDEV_DEF_BIT_STEP;
 					}
