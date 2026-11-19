@@ -732,6 +732,7 @@ int cthd_engine_adaptive::thd_engine_init(bool ignore_cpuid_check,
 	filename << TDRUNDIR << "/" << "ignore_adaptive";
 	csys_fs _sysfs(filename.str().c_str());
 	if (_sysfs.exists()) {
+		thd_log_info(TDRUNDIR "/ignore_adaptive exists, disabling adaptive\n");
 		return THD_ERROR;
 	}
 
