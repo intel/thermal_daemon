@@ -242,6 +242,7 @@ public:
 	cthd_cdev *search_cdev(const std::string& name);
 	cthd_cdev *match_cdev(const std::string& name);
 	cthd_sensor *search_sensor(const std::string& name);
+	std::string cpu_participant_name(const std::string& name, bool sensor);
 	cthd_sensor *get_sensor(int index);
 	cthd_zone *get_zone(int index);
 	cthd_zone *get_zone(const std::string& type);
