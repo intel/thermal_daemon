@@ -69,7 +69,8 @@ int cthd_zone_generic::read_trip_points() {
 						trip_pt_config.cdev_trips[j].influence,
 						trip_pt_config.cdev_trips[j].sampling_period,
 						trip_pt_config.cdev_trips[j].target_state_valid,
-						trip_pt_config.cdev_trips[j].target_state, nullptr,
+						trip_pt_config.cdev_trips[j].target_state,
+						&trip_pt_config.cdev_trips[j].pid_param,
 						trip_pt_config.cdev_trips[j].min_max_valid,
 						trip_pt_config.cdev_trips[j].target_min_state,
 						trip_pt_config.cdev_trips[j].target_max_state);
