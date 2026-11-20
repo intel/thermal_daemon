@@ -190,6 +190,15 @@ int main(int argc, char *argv[]) {
 	gboolean test_mode = FALSE;
 	gboolean adaptive = FALSE;
 	gboolean ignore_default_control = FALSE;
+	/*
+	 * GOption writes a gboolean (int) for G_OPTION_ARG_NONE: parse into
+	 * gboolean, not into the bool globals, which a 4 byte write would
+	 * overrun into the next ones.
+	 */
+	gboolean workaround = FALSE;
+	gboolean no_active_power = FALSE;
+	gboolean no_critical = FALSE;
+	gboolean power_floor = FALSE;
 	gchar *conf_file = nullptr;
 	gint poll_interval = -1;
 	gboolean success;
@@ -229,16 +238,16 @@ int main(int argc, char *argv[]) {
 							"Ignore default CPU temperature control. "
 							"Strictly follow thermal-conf.xml"), nullptr },
 			{ "workaround-enabled", 0, 0, G_OPTION_ARG_NONE,
-						&workaround_enabled, N_(
+						&workaround, N_(
 						"Enable workarounds for power"), nullptr },
 			{ "disable-active-power", 0, 0, G_OPTION_ARG_NONE,
-						&disable_active_power, N_(
+						&no_active_power, N_(
 						"Disable active power settings to reduce thermal impact"), nullptr },
 			{ "ignore-critical-trip", 0, 0, G_OPTION_ARG_NONE,
-						&ignore_critical, N_(
+						&no_critical, N_(
 						"Ignore critical trips for reboot"), nullptr },
 			{ "power-floor-enable", 0, 0, G_OPTION_ARG_NONE,
-						&power_floor_enable, N_(
+						&power_floor, N_(
 						"Handle power floor event"), nullptr },
 			{ nullptr, 0, 0,
 					G_OPTION_ARG_NONE, nullptr, nullptr, nullptr } };
@@ -310,6 +319,10 @@ int main(int argc, char *argv[]) {
 	}
 
 	thd_ignore_default_control = ignore_default_control;
+	workaround_enabled = workaround;
+	disable_active_power = no_active_power;
+	ignore_critical = no_critical;
+	power_floor_enable = power_floor;
 
 	openlog("thermald", LOG_PID, LOG_USER | LOG_DAEMON | LOG_SYSLOG);
 	// Don't care return val
