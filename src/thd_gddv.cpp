@@ -326,6 +326,7 @@ int cthd_gddv::parse_apct(char *apct, int len) {
 				condition.target = 0;
 				condition.state = 0;
 				condition.state_entry_time = 0;
+				condition.temp_matched = 0;
 				condition.target = target;
 				condition.ignore_condition = 0;
 
@@ -386,6 +387,7 @@ int cthd_gddv::parse_apct(char *apct, int len) {
 				condition.target = 0;
 				condition.state = 0;
 				condition.state_entry_time = 0;
+				condition.temp_matched = 0;
 				condition.target = target;
 				condition.ignore_condition = 0;
 
@@ -1564,8 +1566,18 @@ int cthd_gddv::evaluate_oem_condition(const struct condition& condition) {
 	return THD_ERROR;
 }
 
+/*
+ * Hysteresis of a Temperature condition (Temperature_without_hysteresis has
+ * none), millicelsius: once matched, a "greater or equal" condition stays
+ * matched until the temperature is this much below its argument, a "lesser
+ * or equal" one until it is this much above. Without it a temperature at
+ * the argument switches the adaptive target, and with it the tables, on
+ * every small change. 2 C, the hysteresis the platform sensors report.
+ */
+#define TEMPERATURE_CONDITION_HYST	2000
+
 int cthd_gddv::evaluate_temperature_condition(
-		struct condition condition) {
+		struct condition &condition) {
 	std::string sensor_name;
 
 	if (condition.ignore_condition)
@@ -1587,10 +1599,21 @@ int cthd_gddv::evaluate_temperature_condition(
 
 	int value = sensor->read_temperature();
 
+	if (condition.condition == Temperature && condition.temp_matched) {
+		if (condition.comparison == ADAPTIVE_GREATER_OR_EQUAL)
+			value += TEMPERATURE_CONDITION_HYST;
+		else if (condition.comparison == ADAPTIVE_LESSER_OR_EQUAL)
+			value -= TEMPERATURE_CONDITION_HYST;
+	}
+
 	// Conditions are specified in decikelvin, temperatures are in
 	// millicelsius.
 	value = value / 100 + 2732;
-	return compare_condition(condition, value);
+	int ret = compare_condition(condition, value);
+
+	condition.temp_matched = (ret == THD_SUCCESS);
+
+	return ret;
 }
 
 #ifdef ANDROID
