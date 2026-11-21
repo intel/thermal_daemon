@@ -576,6 +576,18 @@ gboolean thd_dbus_interface_add_cooling_device(PrefObject *obj,
 			strlen("/etc")))
 			return FALSE;
 
+	// The cooling device adds and subtracts the step from its states
+	if (min_state < -cthd_cdev::max_state_step
+			|| min_state > cthd_cdev::max_state_step
+			|| max_state < -cthd_cdev::max_state_step
+			|| max_state > cthd_cdev::max_state_step
+			|| step < -cthd_cdev::max_state_step
+			|| step > cthd_cdev::max_state_step) {
+		thd_log_warn("Cooling device %s: state or step out of range\n",
+				(char *) cdev_name);
+		return FALSE;
+	}
+
 	ret = thd_engine->user_add_cdev(cdev_name, path, min_state, max_state,
 			step);
 	if (ret == THD_SUCCESS)
@@ -1100,6 +1112,8 @@ thd_dbus_handle_method_call(GDBusConnection       *connection,
 			return_dbus_error("SetUserMaxTemperature");
 			return;
 		}
+
+		g_dbus_method_invocation_return_value(invocation, nullptr);
 		return;
 	}
 
@@ -1234,6 +1248,8 @@ thd_dbus_on_bus_acquired(GDBusConnection *connection,
 							    user_data,
 							    nullptr,
 							    &error);
+	/* The registration holds its own reference to the interface info */
+	g_dbus_node_info_unref(introspection_data);
 
 	proxy_id = g_dbus_proxy_new_sync(connection,
 					 G_DBUS_PROXY_FLAGS_DO_NOT_LOAD_PROPERTIES,

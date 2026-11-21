@@ -23,6 +23,8 @@
  */
 #include "thd_sensor_virtual.h"
 #include "thd_engine.h"
+#include <chrono>
+#include <climits>
 #include <cmath>
 #include <memory>
 
@@ -149,11 +151,17 @@ unsigned int cthd_sensor_virtual::_read_temperature() {
 
 	thd_log_debug("virt temp:%g\n", virt_temp);
 
-	temp = static_cast<int>(std::round(virt_temp));
-
-	int temp_mc = temp * 1000;
-	if (temp_mc < 0)
-		temp_mc = 0;
+	/*
+	 * Convert to millicelsius before rounding: rounding to whole units
+	 * first loses up to 0.5 of them, e.g. 2.6 W from a power based
+	 * virtual sensor became 3 W.
+	 */
+	double virt_mc = std::round(virt_temp * 1000);
+	if (virt_mc < 0)
+		virt_mc = 0;
+	if (virt_mc > INT_MAX)
+		virt_mc = INT_MAX;
+	int temp_mc = static_cast<int>(virt_mc);
 
 	// Keep cache and return value in the same unit (mC).
 	last_temp.store(temp_mc);
@@ -219,7 +227,9 @@ static void *periodic_callback(void *data) {
 		if (sleep_period <= 0)
 			sleep_period = cthd_sensor_virtual::def_polling_period;
 
-		sleep(sleep_period);
+		std::unique_lock<std::mutex> lock(sensor->polling_wait_mutex);
+		sensor->polling_wakeup.wait_for(lock, std::chrono::seconds(sleep_period),
+				[sensor] { return sensor->stop_polling.load(); });
 	}
 
 	return nullptr;
@@ -265,7 +275,12 @@ void cthd_sensor_virtual::disable_periodic_timer()
 		return;
 
 	thd_log_info("Virtual sensor periodic timer disabled\n");
-	stop_polling.store(true);
+	{
+		std::lock_guard<std::mutex> lock(polling_wait_mutex);
+		// Serialize the predicate update with entering the wait.
+		stop_polling.store(true);
+	}
+	polling_wakeup.notify_all();
 
 	if (poll_thread_started) {
 		pthread_join(poll_thread, nullptr);

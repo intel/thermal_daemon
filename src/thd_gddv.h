@@ -150,6 +150,8 @@ struct condition {
 	int state;
 	time_t state_entry_time;
 	int ignore_condition;
+	/* Temperature condition: last result, for its hysteresis */
+	int temp_matched;
 };
 
 struct custom_condition {
@@ -270,7 +272,7 @@ private:
 	int compare_condition(const struct condition& condition, int value);
 	int compare_time(const struct condition& condition);
 	int evaluate_oem_condition(const struct condition& condition);
-	int evaluate_temperature_condition(struct condition condition);
+	int evaluate_temperature_condition(struct condition &condition);
 	int evaluate_ac_condition(const struct condition& condition);
 	int evaluate_lid_condition(const struct condition& condition);
 	int evaluate_workload_condition(const struct condition& condition);
