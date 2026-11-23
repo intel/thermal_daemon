@@ -570,6 +570,10 @@ void cthd_trip_point::step_control(trip_pt_cdev_t &c, unsigned int read_temp) {
 
 	long long request = c.step_active ? c.step_request : no_limit;
 	bool reached = (band > c.step_band);
+
+	/* Not less limited than the device allows (its range may have changed) */
+	if ((request - no_limit) * dir < 0)
+		request = no_limit;
 	bool reached_power = false;
 
 	c.step_band = band;
@@ -639,4 +643,22 @@ void cthd_trip_point::step_control(trip_pt_cdev_t &c, unsigned int read_temp) {
 	c.step_request = (int) request;
 	c.step_active = active;
 	cdev->thd_cdev_set_step_request(zone_id, index, c.step_request, active);
+}
+
+void cthd_trip_point::carry_init(cthd_cdev &cdev, int hold_temp, int request,
+		int step, int unlimit_coeff, int sampling_period) {
+	step_point_t point;
+
+	point.temp = hold_temp;
+	point.limit = request;
+	point.step = step;
+	point.limit_coeff = 0;
+	point.unlimit_coeff = unlimit_coeff;
+	point.max_entry = 0;
+	thd_trip_point_add_step_point(cdev, point, sampling_period);
+
+	temporary = true;
+	cdevs[0].step_request = request;
+	cdevs[0].step_active = true;
+	cdevs[0].step_band = 0;
 }

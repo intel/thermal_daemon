@@ -149,6 +149,7 @@ private:
 	int sensor_id;
 	bool trip_on;
 	bool poll_on;
+	bool temporary = false;
 
 	cthd_cdev *depend_cdev;
 	int depend_cdev_state;
@@ -186,8 +187,25 @@ public:
 	/* sampling_period in 0.1 s */
 	void thd_trip_point_add_step_point(cthd_cdev &cdev,
 			const step_point_t &point, int sampling_period);
-	bool is_step_control() {
+	bool is_step_control() const {
 		return cdevs.size() == 1 && cdevs[0].step_points.size();
+	}
+	const trip_pt_cdev_t *step_cdev() const {
+		return is_step_control() ? &cdevs[0] : nullptr;
+	}
+	int get_trip_index() const {
+		return index;
+	}
+	/*
+	 * A temporary trip holding a power limit over a change of the adaptive
+	 * target: request held while the sensor is at or above hold_temp, below
+	 * it released by step * unlimit_coeff per sampling period (0.1 s); the
+	 * trip is done once released.
+	 */
+	void carry_init(cthd_cdev &cdev, int hold_temp, int request, int step,
+			int unlimit_coeff, int sampling_period);
+	bool carry_finished() const {
+		return temporary && cdevs.size() && !cdevs[0].step_active;
 	}
 	/* Close a curve ending with no limit (MAX): full limit 1 C above it */
 	void step_points_finalize();

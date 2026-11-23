@@ -421,6 +421,101 @@ int cthd_engine_adaptive::install_itmt(struct itmt_entry *itmt_entry) {
 	return 0;
 }
 
+/*
+ * A change of the adaptive target installs the new target's tables: the
+ * zones are reset first, which restores the power limit, also while it is
+ * being limited. Keep a power limit that is in force over the change instead:
+ * a temporary trip holds it as long as the sensor of the trip that limited
+ * it stays at or above that trip (an ITMT trip: minus its hysteresis), then
+ * releases it at that trip's rate (a PSVT entry: step size * unlimit
+ * coefficient per its sampling period; ITMT: the device's release step per
+ * second). The new target's trips apply as usual; the most restrictive
+ * request wins.
+ */
+void cthd_engine_adaptive::carry_capture() {
+	carries.clear();
+
+	for (unsigned int i = 0; i < cdevs.size(); ++i) {
+		cthd_cdev *cdev = cdevs[i].get();
+		int zone_id, trip_id;
+
+		/* Power limits (inverted range) that are limited now */
+		if (cdev->get_min_state() <= cdev->get_max_state() || cdev->in_min_state())
+			continue;
+		if (!cdev->active_limit_source(&zone_id, &trip_id))
+			continue;
+
+		cthd_zone *zone = nullptr;
+		for (unsigned int j = 0; j < zones.size(); ++j) {
+			if (zones[j]->get_zone_index() == zone_id)
+				zone = zones[j].get();
+		}
+		if (!zone)
+			continue;
+
+		cthd_trip_point *trip = nullptr;
+		for (unsigned int j = 0; j < zone->get_trip_count(); ++j) {
+			cthd_trip_point *t = zone->get_trip_at_index(j);
+			if (t && t->get_trip_index() == trip_id)
+				trip = t;
+		}
+		if (!trip)
+			continue;
+
+		power_limit_carry_t c;
+		c.cdev = cdev;
+		c.zone_index = zone_id;
+		c.sensor_id = trip->get_sensor_id();
+		c.request = cdev->get_curr_state();
+
+		const trip_pt_cdev_t *sc = trip->step_cdev();
+		if (sc) {
+			const step_point_t &p = sc->step_points[sc->step_band > 0 ? sc->step_band : 0];
+			c.hold_temp = sc->step_points[0].temp;
+			c.step = p.step;
+			c.unlimit_coeff = p.unlimit_coeff;
+			c.sampling_period = sc->step_period_ms / 100;
+		} else {
+			c.hold_temp = (int) trip->get_trip_temp() - (int) trip->get_trip_hyst();
+			c.step = cdev->get_release_step();
+			if (c.step <= 0)
+				c.step = 500000;
+			c.unlimit_coeff = 1;
+			c.sampling_period = 10;
+		}
+
+		thd_log_info("target change: keep %s at %d while zone %d sensor %d >= %d\n",
+				cdev->get_cdev_type().c_str(), c.request, zone_id, c.sensor_id,
+				c.hold_temp);
+		carries.push_back(c);
+	}
+}
+
+void cthd_engine_adaptive::carry_apply() {
+	for (const power_limit_carry_t &c : carries) {
+		cthd_zone *zone = nullptr;
+
+		for (unsigned int j = 0; j < zones.size(); ++j) {
+			if (zones[j]->get_zone_index() == c.zone_index)
+				zone = zones[j].get();
+		}
+		if (!zone)
+			continue;
+
+		int index = carry_trip_index++;
+		cthd_trip_point trip(index, PASSIVE, c.hold_temp, 0, c.zone_index,
+				c.sensor_id, SEQUENTIAL);
+
+		trip.carry_init(*c.cdev, c.hold_temp, c.request, c.step, c.unlimit_coeff,
+				c.sampling_period);
+		zone->add_trip(trip, 1);
+		zone->zone_cdev_set_binded();
+		zone->set_zone_active();
+		c.cdev->thd_cdev_set_step_request(c.zone_index, index, c.request, true);
+	}
+	carries.clear();
+}
+
 int cthd_engine_adaptive::set_itmt_target(struct adaptive_target &target) {
 	struct itmt *itmt;
 
@@ -432,6 +527,7 @@ int cthd_engine_adaptive::set_itmt_target(struct adaptive_target &target) {
 	}
 
 	if (!int3400_installed) {
+		carry_capture();
 		for (unsigned int i = 0; i < zones.size(); ++i) {
 			cthd_zone *_zone = zones[i].get();
 
@@ -464,6 +560,7 @@ int cthd_engine_adaptive::install_psvt(struct psvt *psvt) {
 	int installed = 0;
 
 	if (!int3400_installed) {
+		carry_capture();
 		for (unsigned int i = 0; i < zones.size(); ++i) {
 			cthd_zone *_zone = zones[i].get();
 
@@ -560,6 +657,7 @@ void cthd_engine_adaptive::set_int3400_target(struct adaptive_target &target) {
 
 	if (int3400_installed)
 		psvt_consolidate();
+	carry_apply();
 
 	thd_log_info("\n\n ZONE DUMP BEGIN\n");
 	int new_zone_count = 0;
@@ -630,6 +728,7 @@ void cthd_engine_adaptive::set_int3400_target(struct adaptive_target &target) {
 void cthd_engine_adaptive::install_passive_default() {
 	thd_log_info("IETM_D0 processed\n");
 
+	carry_capture();
 	for (unsigned int i = 0; i < zones.size(); ++i) {
 		cthd_zone *_zone = zones[i].get();
 		_zone->zone_reset(1);
@@ -651,6 +750,7 @@ void cthd_engine_adaptive::install_passive_default() {
 	}
 
 	psvt_consolidate();
+	carry_apply();
 	thd_log_info("\n\n ZONE DUMP BEGIN\n");
 	for (unsigned int i = 0; i < zones.size(); ++i) {
 		zones[i]->zone_dump();

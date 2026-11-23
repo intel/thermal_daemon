@@ -68,6 +68,7 @@ protected:
 
 private:
 	void sort_and_update_poll_trip();
+	void remove_finished_carry_trips();
 public:
 	static constexpr unsigned int def_async_trip_offset = 5000;
 	static constexpr unsigned int def_async_trip_offset_pct = 10;
