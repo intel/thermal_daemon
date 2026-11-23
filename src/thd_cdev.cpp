@@ -151,6 +151,7 @@ int cthd_cdev::thd_cdev_exponential_controller(int set_point, int target_temp,
 
 		trend_increase = true;
 		thd_log_debug("op->device:%s %d\n", type_str.c_str(), _state);
+		_state = step_bound(_state);
 		set_curr_state(_state, control);
 	} else {
 		// Get the latest state, which is not the latest from the hardware but last set state to the device
@@ -184,6 +185,7 @@ int cthd_cdev::thd_cdev_exponential_controller(int set_point, int target_temp,
 			_state = thd_clamp_state_max(_state, temp_min_state, temp_max_state);
 
 			thd_log_info("op->device:%s %d\n", type_str.c_str(), _state);
+			_state = step_bound(_state);
 			set_curr_state(_state, control);
 		} else {
 			// Force to effective min, then ensure full range clamp.
@@ -192,6 +194,7 @@ int cthd_cdev::thd_cdev_exponential_controller(int set_point, int target_temp,
 			_state = thd_clamp_state_max(_state, temp_min_state, temp_max_state);
 
 			thd_log_debug("op->device: force min %s %d\n", type_str.c_str(), _state);
+			_state = step_bound(_state);
 			set_curr_state(_state, control);
 		}
 	}
@@ -476,6 +479,7 @@ int cthd_cdev::thd_cdev_set_state(int set_point, int target_temp,
 	}
 
 	if (target_state_valid) {
+		target_value = step_bound(target_value);
 		set_curr_state_raw(target_value, state);
 		curr_state = target_value;
 		ret = THD_SUCCESS;
@@ -587,6 +591,7 @@ int cthd_cdev::thd_cdev_set_state(int set_point, int target_temp,
 		bool releasing = (state == 0 && pid_param->gradual_release
 				&& ret != get_min_state());
 
+		ret = step_bound(ret);
 		set_curr_state_raw(ret, releasing ? 1 : state);
 		thd_log_info("Set pid(%s%s): set_pt:%d temp:%d cdev:%d(%s) state:%d max:%d\n",
 				pid_param->mode == PID_INCREMENTAL ? "inc" : "abs",
@@ -636,6 +641,7 @@ int cthd_cdev::thd_cdev_set_state(int set_point, int target_temp,
 				ret = get_min_state();
 		}
 
+		ret = step_bound(ret);
 		set_curr_state_raw(ret, state);
 		thd_log_info("Set pid_cdev(%s%s): set_pt:%d temp:%d cdev:%d(%s) state:%d max:%d\n",
 				pid_ctrl.get_pid_mode() == PID_INCREMENTAL ? "inc" : "abs",
@@ -752,6 +758,51 @@ int cthd_cdev::thd_cdev_set_step_request(int zone_id, int trip_id,
 		control_end();
 
 	return THD_SUCCESS;
+}
+
+/*
+ * Not less limited than the most restrictive step request: other control
+ * (the default controller, a PID, target states) can only limit further
+ * while a step trip, e.g. a power limit carried over a target change,
+ * holds the device.
+ */
+int cthd_cdev::step_bound(int state) {
+	if (step_requests.empty())
+		return state;
+
+	bool inverted = (get_min_state() > get_max_state());
+	int most = get_min_state();
+
+	for (const step_request_t &r : step_requests) {
+		if ((inverted && r.request < most) || (!inverted && r.request > most))
+			most = r.request;
+	}
+	if ((inverted && state > most) || (!inverted && state < most))
+		state = most;
+
+	return state;
+}
+
+bool cthd_cdev::active_limit_source(int *zone_id, int *trip_id) {
+	bool inverted = (get_min_state() > get_max_state());
+	int best = get_min_state();
+	bool found = false;
+
+	for (const step_request_t &r : step_requests) {
+		if ((inverted && r.request < best) || (!inverted && r.request > best)) {
+			best = r.request;
+			*zone_id = r.zone;
+			*trip_id = r.trip;
+			found = true;
+		}
+	}
+	if (!found && zone_trip_limits.size()) {
+		*zone_id = zone_trip_limits.back().zone;
+		*trip_id = zone_trip_limits.back().trip;
+		found = true;
+	}
+
+	return found;
 }
 
 int cthd_cdev::thd_cdev_set_min_state(int zone_id, int trip_id) {

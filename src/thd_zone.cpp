@@ -64,6 +64,20 @@ void cthd_zone::thermal_zone_temp_change(int id, unsigned int temp, int pref) {
 			break;
 		}
 	}
+	remove_finished_carry_trips();
+}
+
+void cthd_zone::remove_finished_carry_trips() {
+	auto it = std::remove_if(trip_points.begin(), trip_points.end(),
+			[](const cthd_trip_point &trip) { return trip.carry_finished(); });
+
+	if (it == trip_points.end())
+		return;
+
+	trip_points.erase(it, trip_points.end());
+	thd_log_info("zone %s: power limit carried over the target change released\n",
+			type_str.c_str());
+	sort_and_update_poll_trip();
 }
 
 void cthd_zone::update_zone_preference() {

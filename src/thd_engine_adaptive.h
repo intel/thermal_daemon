@@ -40,8 +40,25 @@
 
 #include "thd_itmt_pid_config.h"
 
+/* A power limit held over a change of the adaptive target */
+typedef struct {
+	cthd_cdev *cdev;
+	int zone_index;
+	int sensor_id;
+	int hold_temp;		/* millicelsius: held at or above */
+	int request;		/* device state */
+	int step;		/* release per sampling period: step * unlimit_coeff */
+	int unlimit_coeff;
+	int sampling_period;	/* 0.1 s */
+} power_limit_carry_t;
+
 class cthd_engine_adaptive: public cthd_engine_default {
 	cthd_itmt_pid_config itmt_pid_config;
+	std::vector<power_limit_carry_t> carries;
+	int carry_trip_index = 1000;
+
+	void carry_capture();
+	void carry_apply();
 
 protected:
 	int policy_active;

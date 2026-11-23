@@ -136,6 +136,14 @@ public:
 
 	int thd_cdev_set_step_request(int zone_id, int trip_id, int request,
 			bool active);
+	int step_bound(int state);
+	/* Zone and trip of the most restrictive active limit, false if none */
+	bool active_limit_source(int *zone_id, int *trip_id);
+	int get_release_step() {
+		if (dec_val)
+			return dec_val < 0 ? -dec_val : dec_val;
+		return inc_dec_val < 0 ? -inc_dec_val : inc_dec_val;
+	}
 	int pid_gradual_bound(int delta, bool inverted, int trip_temp,
 			int set_point, int temperature, cthd_pid &pid);
 	virtual int thd_cdev_set_min_state(int zone_id, int trip_id);
