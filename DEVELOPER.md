@@ -496,6 +496,10 @@ Several distinct paths, worth knowing because they look different in the log:
   bails immediately, so the restarted daemon runs the default engine. If a user
   reports "thermald restarted once at boot and now behaves differently", this is
   why. Removing the file re-enables adaptive mode on the next start.
+  Exception: if thermal zones, cooling devices or powercap zones appeared
+  since the engine read them (at boot, drivers can probe after thermald
+  starts), thermald creates `adaptive_retried` instead, so the restart tries
+  adaptive mode once more. This happens once per boot.
 
 ### 7.7 Re-evaluation
 

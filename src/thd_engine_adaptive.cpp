@@ -406,6 +406,26 @@ int cthd_engine_adaptive::install_psvt(struct psvt *psvt) {
 	return installed;
 }
 
+// Number of thermal zones, cooling devices and powercap zones
+static int thermal_device_count() {
+	int count = 0;
+
+	for (const char *path : { "/sys/class/thermal", "/sys/class/powercap" }) {
+		DIR *dir = opendir(path);
+		if (!dir)
+			continue;
+
+		struct dirent *entry;
+		while ((entry = readdir(dir)) != nullptr) {
+			if (entry->d_name[0] != '.')
+				count++;
+		}
+		closedir(dir);
+	}
+
+	return count;
+}
+
 void cthd_engine_adaptive::set_int3400_target(struct adaptive_target &target) {
 
 	/*
@@ -472,7 +492,18 @@ void cthd_engine_adaptive::set_int3400_target(struct adaptive_target &target) {
 	if (!new_zone_count) {
 		thd_log_warn("Adaptive policy couldn't create any zones\n");
 		thd_log_warn("Possibly some sensors in the PSVT are missing\n");
-		thd_log_warn("Restart in non adaptive mode via systemd\n");
+
+		// At boot, drivers can probe after thermald started. If thermal
+		// devices appeared since, try adaptive mode once more.
+		const char *flag = "ignore_adaptive";
+		csys_fs retried(TDRUNDIR "/adaptive_retried");
+		if (thermal_device_count() > thermal_devices_at_init
+				&& !retried.exists()) {
+			thd_log_warn("Thermal devices appeared since startup, retry adaptive mode via systemd\n");
+			flag = "adaptive_retried";
+		} else {
+			thd_log_warn("Restart in non adaptive mode via systemd\n");
+		}
 
 		char *resolved_rundir = realpath(TDRUNDIR, nullptr);
 		if (!resolved_rundir) {
@@ -494,11 +525,11 @@ void cthd_engine_adaptive::set_int3400_target(struct adaptive_target &target) {
 					thd_log_warn("Insecure runtime dir permissions on %s (uid=%u mode=%o)\n",
 							resolved_rundir, st.st_uid, st.st_mode & 0777);
 				} else {
-					int fd = openat(dir_fd, "ignore_adaptive",
+					int fd = openat(dir_fd, flag,
 							O_CREAT | O_WRONLY | O_TRUNC | O_CLOEXEC | O_NOFOLLOW, 0600);
 					if (fd < 0) {
-						thd_log_warn("Failed to create %s/ignore_adaptive securely: %s\n",
-								resolved_rundir, strerror(errno));
+						thd_log_warn("Failed to create %s/%s securely: %s\n",
+								resolved_rundir, flag, strerror(errno));
 					} else {
 						close(fd);
 					}
@@ -820,6 +851,7 @@ int cthd_engine_adaptive::thd_engine_init(bool ignore_cpuid_check,
 	thd_ignore_default_control = 1;
 
 	/* Read the sensors/zones */
+	thermal_devices_at_init = thermal_device_count();
 	res = cthd_engine::thd_engine_init(ignore_cpuid_check, adaptive);
 	if (res != THD_SUCCESS)
 		return res;
