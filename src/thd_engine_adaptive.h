@@ -46,6 +46,7 @@ protected:
 	int passive_def_processed;
 	int power_slider;
 	int int3400_installed;
+	int thermal_devices_at_init = 0;
 	int current_matched_target;
 
 	int set_itmt_target(struct adaptive_target &target);
