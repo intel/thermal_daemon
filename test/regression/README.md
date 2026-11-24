@@ -87,7 +87,8 @@ default 0xaa Meteor Lake L) or `cpu` (raw `qemu -cpu`), `idsp`,
 
 - inputs: `set_temp`, `set_demand`, `set_rapl_locked`, `set_lid_closed`,
   `set_tablet_mode`, `add_switch`, `remove_switch`, `set_on_battery`,
-  `set_power_profile`, `reinit`
+  `set_power_profile`, `reinit`, `unload_module`, `load_module` (the test
+  module's zones, cooling devices and RAPL, e.g. to probe late)
 - observations: `pl1`, `pl2`, `rapl_enabled`, `rapl_writes`, `temp`,
   `log`, `imok_values` (IETM.IMOK calls), `cpu_seconds`
 - control: `wait_ready`, `wait_until`, `wait_log`, `hold`, `check`,
@@ -120,4 +121,4 @@ it passes, so the marker is removed together with the fix.
 | Condition tables | `conditions_power_lid_tablet`, `conditions_oem_slider_temp`, `conditions_unsupported_fallback` |
 | Temperature limits, restore | `psvt_throttle_restore`, `reinit_while_throttled` |
 | Several zones, one cooling device | `multizone_shared_cdev` |
-| Fixes | `virtual_sensors_two_participants` (6656673), `input_switch_removed` (PR #611), `notify_platform_imok` (PR #613), `ignore_adaptive_flow` |
+| Fixes | `virtual_sensors_two_participants` (6656673), `input_switch_removed` (PR #611), `notify_platform_imok` (PR #613), `ignore_adaptive_flow`, `late_devices_retry` |
