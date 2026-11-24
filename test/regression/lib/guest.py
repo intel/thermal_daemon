@@ -102,20 +102,7 @@ class Guest:
         shutil.rmtree(RUN_DIR, ignore_errors=True)
         os.makedirs(RUN_DIR)
 
-        args = []
-        if p.get("zones"):
-            args.append("zone_names=" + ",".join(p["zones"]))
-        if p.get("cdevs"):
-            args.append("cdev_names=" + ",".join(p["cdevs"]))
-        rapl = p.get("rapl")
-        if rapl is not None:
-            args.append("rapl=1")
-            for k in ("max_uw", "pl1_uw", "pl2_uw", "demand_uw",
-                      "locked", "lock_errno"):
-                if k in rapl:
-                    args.append("rapl_%s=%s" % (k, int(rapl[k])))
-        sh("insmod", os.path.join(self.repo, "test", "module",
-                                  "thermald_test_kern_module.ko"), *args)
+        self._insmod()
         if p.get("gddv") is not None:
             # Print AML Debug object writes (the SSDT's IMOK logs its
             # argument) to dmesg
@@ -211,6 +198,16 @@ class Guest:
     def remove_switch(self, kind):
         dev, _ = self.switches.pop(kind)
         dev.close()
+
+    def unload_module(self):
+        """Remove the test module's zones, cooling devices and RAPL."""
+        sh("rmmod", "thermald_test_kern_module")
+
+    def load_module(self):
+        """Load the test module again, like a driver that probes late."""
+        self._insmod()
+        for zone, celsius in self.platform.get("initial_temps", {}).items():
+            self.set_temp(zone, celsius)
 
     def _set_switch(self, kind, value):
         from evdev import ecodes
@@ -339,6 +336,23 @@ class Guest:
             raise ScenarioFailed(message)
 
     # Internals
+
+    def _insmod(self):
+        p = self.platform
+        args = []
+        if p.get("zones"):
+            args.append("zone_names=" + ",".join(p["zones"]))
+        if p.get("cdevs"):
+            args.append("cdev_names=" + ",".join(p["cdevs"]))
+        rapl = p.get("rapl")
+        if rapl is not None:
+            args.append("rapl=1")
+            for k in ("max_uw", "pl1_uw", "pl2_uw", "demand_uw",
+                      "locked", "lock_errno"):
+                if k in rapl:
+                    args.append("rapl_%s=%s" % (k, int(rapl[k])))
+        sh("insmod", os.path.join(self.repo, "test", "module",
+                                  "thermald_test_kern_module.ko"), *args)
 
     def _start_dbus(self):
         conf = os.path.join(self.outdir, "dbus.conf")

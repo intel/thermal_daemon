@@ -374,6 +374,7 @@ thermald binary from this tree.
 | | `input_switch_removed` | removing the lid switch device doesn't make thermald spin, the lid then counts as open (PR #611) |
 | | `notify_platform_imok` | NotifyPlatform targets call IETM.IMOK with their argument, only for IETM (PR #613) |
 | | `ignore_adaptive_flow` | when no adaptive zone can be created thermald writes ignore_adaptive and exits; the next start runs non-adaptive |
+| | `late_devices_retry` | the zone and RAPL appear only after thermald started, as when drivers probe late at boot: thermald exits without writing ignore_adaptive and the next start runs adaptive, once per boot |
 | D-Bus | `dbus_fuzz_adaptive`, `dbus_fuzz_default` | 3000 random calls (fixed seed) to every D-Bus method except Terminate, with the method list and argument types read from `src/thd_dbus_interface.xml`: names of real and missing zones, sensors and cooling devices, path traversal, printf conversions, long and non-ASCII strings, 0, -1, INT_MIN/INT_MAX, UINT32_MAX, NaN, infinity. thermald (the ASan + UBSan build) must answer every call, keep running, report no sanitizer error or leak and exit cleanly. In the adaptive engine and in the default engine with an XML config. Calls in `dbus_calls.log` |
 | Real vaults | `test_real_vault` (`real/real_vault.py`) | each private vault: stays adaptive, every PSVT target has a zone, PL1 within the PPCC range, power-on PL1 restored on exit, plus the `"vm"` expectations in its `.json` |
 
