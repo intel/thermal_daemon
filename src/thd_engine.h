@@ -84,6 +84,13 @@ protected:
 	std::string uuid;
 	bool parser_disabled;
 	bool adaptive_mode;
+	std::string int3400_base_path;
+	bool imok_missing_logged;
+
+	int write_int3400_imok(unsigned int value, const char *caller);
+	virtual unsigned int get_keep_alive_imok_arg() {
+		return 1U;
+	}
 
 private:
 
@@ -130,6 +137,7 @@ private:
 	void process_terminate();
 	void check_for_rt_kernel();
 	bool check_thinkpad_dytc();
+	void handle_keep_alive_event();
 
 public:
 	static constexpr int max_thermal_zones = 10;
