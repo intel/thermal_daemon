@@ -72,8 +72,8 @@ static bool canonicalize_sysfs_path(const std::string &path,
 cthd_engine::cthd_engine(std::string _uuid) :
 		current_cdev_index(0), current_zone_index(0), current_sensor_index(0), parse_thermal_zone_success(
 				false), parse_thermal_cdev_success(false), uuid(std::move(_uuid)), parser_disabled(
-				false), adaptive_mode(false), poll_timeout_msec(-1), wakeup_fd(
-				-1), uevent_fd(-1), control_mode(COMPLEMENTRY), write_pipe_fd(
+				false), adaptive_mode(false), imok_missing_logged(false), poll_timeout_msec(
+				-1), wakeup_fd(-1), uevent_fd(-1), control_mode(COMPLEMENTRY), write_pipe_fd(
 				0), preference(0), status(true), thz_last_uevent_time(0), thz_last_temp_ind_time(
 				0), thz_last_update_event_time(0), terminate(false), has_invariant_tsc(0),
 				has_aperf(0), proc_list_matched(false), poll_interval_sec(0),
@@ -108,6 +108,53 @@ bool cthd_engine::check_thinkpad_dytc() {
 	return true;
 }
 
+int cthd_engine::write_int3400_imok(unsigned int value, const char *caller) {
+	csys_fs sysfs("");
+
+	if (int3400_base_path.empty()) {
+		cthd_INT3400 int3400(uuid);
+		int3400_base_path = int3400.get_base_path();
+		if (int3400_base_path.empty())
+			return THD_ERROR;
+	}
+
+	/*
+	 * The int3400 driver only creates imok if the firmware has an IMOK
+	 * method. Log once instead of failing on every target switch or event.
+	 */
+	std::string imok_path = int3400_base_path + "imok";
+	if (!sysfs.exists(imok_path)) {
+		if (!imok_missing_logged) {
+			thd_log_info("No %s, ignoring %s\n", imok_path.c_str(), caller);
+			imok_missing_logged = true;
+		}
+		return THD_ERROR;
+	}
+
+	if (sysfs.write(imok_path, value) < 0) {
+		thd_log_warn("Failed to write %u to %s\n", value, imok_path.c_str());
+		return THD_ERROR;
+	}
+
+	return THD_SUCCESS;
+}
+
+void cthd_engine::handle_keep_alive_event() {
+	if (!status || terminate)
+		return;
+
+	/*
+	 * Per Documentation/driver-api/thermal/intel_dptf.rst, respond to
+	 * THERMAL_EVENT_KEEP_ALIVE by writing 1 to the INT3400 imok attribute.
+	 * When an adaptive NotifyPlatform target is active, re-send its value
+	 * so the keep-alive reply does not overwrite the platform state.
+	 */
+	unsigned int arg = get_keep_alive_imok_arg();
+	if (write_int3400_imok(arg, "INT3400 keep-alive") == THD_SUCCESS)
+		thd_log_debug("Responded to INT3400 keep-alive (%u) via %simok\n",
+				arg, int3400_base_path.c_str());
+}
+
 void cthd_engine::thd_engine_thread() {
 	unsigned int i;
 	int n;
@@ -131,13 +178,16 @@ void cthd_engine::thd_engine_thread() {
 		}
 		time(&tm);
 		rapl_power_meter.rapl_measure_power();
+		bool keep_alive_pending = false;
 
 		if (uevent_fd >= 0 && (poll_fds[uevent_fd].revents & POLLIN)) {
 			cthd_kobj_uevent::event_type event = kobj_uevent.check_for_event();
 			if (event == cthd_kobj_uevent::THINKPAD_ACPI_EVENT
 					&& check_thinkpad_dytc())
 				break;
-			if (event == cthd_kobj_uevent::THERMAL_EVENT) {
+			if (event == cthd_kobj_uevent::KEEP_ALIVE_EVENT) {
+				keep_alive_pending = true;
+			} else if (event == cthd_kobj_uevent::THERMAL_EVENT) {
 				time_t tm;
 
 				time(&tm);
@@ -199,6 +249,9 @@ void cthd_engine::thd_engine_thread() {
 			thd_engine_unlock();
 			thz_last_update_event_time = tm;
 		}
+
+		if (keep_alive_pending)
+			handle_keep_alive_event();
 
 		workarounds();
 	}

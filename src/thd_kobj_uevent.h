@@ -49,6 +49,7 @@ public:
 		NO_EVENT,
 		THERMAL_EVENT,
 		THINKPAD_ACPI_EVENT,
+		KEEP_ALIVE_EVENT,
 	};
 
 	cthd_kobj_uevent() {

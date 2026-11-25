@@ -583,7 +583,6 @@ void cthd_engine_adaptive::install_passive_default() {
  * OEMs (e.g. HP) use it to switch the EC's own thermal mode.
  */
 void cthd_engine_adaptive::set_notify_platform(struct adaptive_target &target) {
-	csys_fs sysfs("");
 	unsigned long value;
 	unsigned int argument;
 
@@ -607,24 +606,12 @@ void cthd_engine_adaptive::set_notify_platform(struct adaptive_target &target) {
 	}
 	argument = value;
 
-	/*
-	 * The int3400 driver only creates imok if the firmware has an IMOK
-	 * method. Say so once instead of failing on every target switch.
-	 */
-	if (!sysfs.exists(int3400_base_path + "imok")) {
-		if (!imok_missing_logged) {
-			thd_log_info("No %simok, ignoring NotifyPlatform targets\n",
-					int3400_base_path.c_str());
-			imok_missing_logged = true;
-		}
-		return;
+	if (write_int3400_imok(argument, "NotifyPlatform") == THD_SUCCESS) {
+		notify_platform_active = true;
+		notify_platform_arg = argument;
+		thd_log_info("NotifyPlatform %u (target %s)\n", argument,
+				target.name.c_str());
 	}
-
-	thd_log_info("NotifyPlatform %u (target %s)\n", argument,
-			target.name.c_str());
-	if (sysfs.write(int3400_base_path + "imok", argument) < 0)
-		thd_log_warn("Failed to write %u to %simok\n", argument,
-				int3400_base_path.c_str());
 }
 
 void cthd_engine_adaptive::execute_target(struct adaptive_target &target) {
@@ -687,6 +674,7 @@ void cthd_engine_adaptive::execute_target(struct adaptive_target &target) {
 void cthd_engine_adaptive::exec_fallback_target(int target) {
 	thd_log_debug("exec_fallback_target %d\n", target);
 	int3400_installed = 0;
+	notify_platform_active = false;
 	for (int i = 0; i < (int) gddv.targets.size(); i++) {
 		if (gddv.targets[i].target_id != (uint64_t) target)
 			continue;
@@ -731,6 +719,7 @@ void cthd_engine_adaptive::update_engine_state() {
 	// So in that case we have to install the default target.
 
 	int3400_installed = 0;
+	notify_platform_active = false;
 
 	if (target > 0) {
 		for (int i = 0; i < (int) gddv.targets.size(); i++) {
