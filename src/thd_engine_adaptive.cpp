@@ -306,6 +306,7 @@ void cthd_engine_adaptive::psvt_consolidate() {
 
 #define DEFAULT_SAMPLE_TIME_SEC		5
 
+
 int cthd_engine_adaptive::install_itmt(struct itmt_entry *itmt_entry) {
 	std::string itmt_zone;
 
@@ -386,9 +387,32 @@ int cthd_engine_adaptive::install_itmt(struct itmt_entry *itmt_entry) {
 	 * Which is opposite of the argument order in the
 	 * thd_trip_point_add_cdev()
 	 */
+	pid_param_t pid_param;
+
+	if (itmt_pid_config.enable) {
+		/* PL1 range of the entry: MAX/MIN resolved to the device range */
+		long long top = (_max_state && _max_state != TRIP_PT_INVALID_TARGET_STATE) ?
+				_max_state : cdev->get_min_state();
+		long long bottom = (_min_state && _min_state != TRIP_PT_INVALID_TARGET_STATE) ?
+				_min_state : cdev->get_max_state();
+		long long range = top > bottom ? top - bottom : bottom - top;
+		double scale = itmt_pid_config.scale(range);
+
+		pid_param.valid = 1;
+		pid_param.kp = itmt_pid_config.kp * scale;
+		pid_param.ki = 0;
+		pid_param.kd = itmt_pid_config.kd * scale;
+		pid_param.mode = PID_INCREMENTAL;
+		pid_param.gradual_release = 1;
+		pid_param.set_point_offset = itmt_pid_config.set_point_offset;
+		pid_param.time_scaled = 1;
+		thd_log_info("ITMT PID %s: PL1 range %lld mW, gain scale %.2f\n",
+				itmt_zone.c_str(), range / 1000, scale);
+	}
+
 	trip_pt.thd_trip_point_add_cdev(*cdev, cthd_trip_point::default_influence,
 	DEFAULT_SAMPLE_TIME_SEC, 0, 0,
-	nullptr, 1, _max_state, _min_state);
+	itmt_pid_config.enable ? &pid_param : nullptr, 1, _max_state, _min_state);
 
 	zone->add_trip(trip_pt, 1);
 	zone->zone_cdev_set_binded();
@@ -840,6 +864,8 @@ int cthd_engine_adaptive::thd_engine_init(bool ignore_cpuid_check,
 	check_acpi_platform_profile();
 
 	thd_parse_features();
+
+	itmt_pid_config.load();
 
 	parser_disabled = true;
 	force_mmio_rapl = true;
