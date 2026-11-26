@@ -59,6 +59,12 @@ typedef struct _zone_trip_limits{
 
 #define ZONE_TRIP_LIMIT_COUNT	12
 
+typedef struct {
+	int zone;
+	int trip;
+	int request;
+} step_request_t;
+
 class cthd_cdev {
 
 protected:
@@ -83,6 +89,7 @@ protected:
 	cthd_pid pid_ctrl;
 	int last_state;
 	std::vector<zone_trip_limits_t> zone_trip_limits;
+	std::vector<step_request_t> step_requests;
 	std::string write_prefix;
 	int inc_val;
 	int dec_val;
@@ -125,6 +132,8 @@ public:
 			pid_param_t *pid_param, cthd_pid &pid, bool force,
 			int min_max_valid, int _min_state, int _max_state);
 
+	int thd_cdev_set_step_request(int zone_id, int trip_id, int request,
+			bool active);
 	virtual int thd_cdev_set_min_state(int zone_id, int trip_id);
 
 	virtual void thd_cdev_set_min_state_param(int arg) {

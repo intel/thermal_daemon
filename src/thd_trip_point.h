@@ -53,6 +53,26 @@ typedef enum : uint8_t {
 	EQUAL, GREATER, LESSER, LESSER_OR_EQUAL, GREATER_OR_EQUAL
 } trip_point_cdev_depend_rel_t;
 
+/* Step control limits resolved from the cooling device range when applied */
+#define STEP_LIMIT_NONE		(INT32_MAX - 1)	/* no limit: min_state */
+#define STEP_LIMIT_FULL		(INT32_MAX - 2)	/* full limit: max_state */
+
+/*
+ * One point of a step control curve (a PSVT entry): at and above temp the
+ * device is limited towards limit, interpolated with the next point. The
+ * request moves by step * limit_coeff per sampling period towards a more
+ * restrictive limit, by step * unlimit_coeff towards a less restrictive one.
+ */
+typedef struct {
+	int temp;		/* millicelsius */
+	int limit;		/* device state, or STEP_LIMIT_NONE/FULL */
+	int step;		/* device state units */
+	int limit_coeff;
+	int unlimit_coeff;
+	/* The full limit point after a last MAX entry: reached as PL1 max (no jump) */
+	int max_entry;
+} step_point_t;
+
 class trip_pt_cdev_t{
 public:
 	cthd_cdev *cdev;
@@ -66,6 +86,12 @@ public:
 	int min_max_valid;
 	int min_state;
 	int max_state;
+	std::vector<step_point_t> step_points;	/* sorted by temp */
+	int step_request;
+	bool step_active;
+	int step_band;		/* curve point at or below the last temperature */
+	int step_period_ms;
+	long long step_last_ms;
 
 	trip_pt_cdev_t() {
 		cdev = nullptr;
@@ -82,6 +108,11 @@ public:
 		min_max_valid = 0;
 		min_state = 0;
 		max_state = 0;
+		step_request = 0;
+		step_active = false;
+		step_band = -1;
+		step_period_ms = 0;
+		step_last_ms = 0;
 	}
 
 	trip_pt_cdev_t(const trip_pt_cdev_t& x) = default;
@@ -124,6 +155,8 @@ private:
 	trip_point_cdev_depend_rel_t depend_cdev_state_rel;
 	int crit_trip_count;
 
+	void step_control(trip_pt_cdev_t &cdev, unsigned int read_temp);
+
 	bool check_duplicate(cthd_cdev *cdev, int *index) {
 		for (unsigned int i = 0; i < cdevs.size(); ++i) {
 			if (cdevs[i].cdev->get_cdev_type() == cdev->get_cdev_type()) {
@@ -149,6 +182,15 @@ public:
 			int target_state =
 			TRIP_PT_INVALID_TARGET_STATE, pid_param_t *pid_param = nullptr,
 			int min_max_valid = 0, int min_state = 0, int max_state = 0);
+
+	/* sampling_period in 0.1 s */
+	void thd_trip_point_add_step_point(cthd_cdev &cdev,
+			const step_point_t &point, int sampling_period);
+	bool is_step_control() {
+		return cdevs.size() == 1 && cdevs[0].step_points.size();
+	}
+	/* Close a curve ending with no limit (MAX): full limit 1 C above it */
+	void step_points_finalize();
 
 	void delete_cdevs() {
 		cdevs.clear();
@@ -296,6 +338,12 @@ public:
 				thd_log_info("\t pid: kp=%g ki=%g kd=%g\n",
 						cdevs[i].pid_param.kp, cdevs[i].pid_param.ki,
 						cdevs[i].pid_param.kd);
+			for (const step_point_t &p : cdevs[i].step_points)
+				thd_log_info("\t step: temp:%d limit:%s%d step:%d coeff:%d/%d\n",
+						p.temp, p.limit == STEP_LIMIT_NONE ? "none " :
+						p.limit == STEP_LIMIT_FULL ? "full " : "",
+						(p.limit == STEP_LIMIT_NONE || p.limit == STEP_LIMIT_FULL) ?
+						0 : p.limit, p.step, p.limit_coeff, p.unlimit_coeff);
 			if (cdevs[i].min_max_valid) {
 				thd_log_info("\t min_state:%d\n", cdevs[i].min_state);
 				thd_log_info("\t max_state:%d\n", cdevs[i].max_state);

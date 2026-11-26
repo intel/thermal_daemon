@@ -112,6 +112,53 @@ int cthd_engine_adaptive::install_passive(struct psv *psv) {
 		}
 	}
 
+	/*
+	 * CPU power limit entries with a step size and coefficients: step
+	 * control along the curve of all such entries of this sensor, see
+	 * cthd_trip_point::step_control(). The sampling period is in 0.1 s.
+	 */
+	if (psv->step_size > 0 && psv->limit_coeff > 0 && psv->unlimit_coeff > 0
+			&& psv->step_size <= INT_MAX / 1000
+			&& (!psv_cdev.compare(0, 4, "TCPU")
+					|| !psv_cdev.compare(0, 4, "B0D4"))) {
+		step_point_t point;
+
+		point.temp = temp;
+		if (target_state == TRIP_PT_INVALID_TARGET_STATE)
+			point.limit = STEP_LIMIT_NONE;
+		else if (!target_state)
+			point.limit = STEP_LIMIT_FULL;
+		else
+			point.limit = target_state;
+		point.step = psv->step_size * 1000;
+		point.limit_coeff = psv->limit_coeff;
+		point.unlimit_coeff = psv->unlimit_coeff;
+		point.max_entry = 0;
+
+		for (unsigned int i = 0; i < zone->get_trip_count(); ++i) {
+			cthd_trip_point *trip = zone->get_trip_at_index(i);
+
+			if (trip && trip->is_step_control()
+					&& trip->get_sensor_id() == sensor->get_index()
+					&& trip->get_first_cdev() == cdev) {
+				trip->thd_trip_point_add_step_point(*cdev, point,
+						psv->sample_period);
+				zone->zone_cdev_set_binded();
+				zone->set_zone_active();
+				return 0;
+			}
+		}
+
+		cthd_trip_point trip_pt(zone->get_trip_count(), PASSIVE, temp, 0,
+				zone->get_zone_index(), sensor->get_index(), SEQUENTIAL);
+		trip_pt.thd_trip_point_add_step_point(*cdev, point,
+				psv->sample_period);
+		zone->add_trip(trip_pt, 1);
+		zone->zone_cdev_set_binded();
+		zone->set_zone_active();
+		return 0;
+	}
+
 	cthd_trip_point trip_pt(zone->get_trip_count(), PASSIVE, temp, 0,
 			zone->get_zone_index(), sensor->get_index(), SEQUENTIAL);
 	trip_pt.thd_trip_point_add_cdev(*cdev, cthd_trip_point::default_influence,
@@ -170,11 +217,19 @@ void cthd_engine_adaptive::psvt_consolidate() {
 		cthd_zone *zone = zones[i].get();
 		unsigned int count = zone->get_trip_count();
 
+		// Step control trips carry their own curve
+		for (unsigned int j = 0; j < count; ++j) {
+			cthd_trip_point *trip = zone->get_trip_at_index(j);
+
+			if (trip && trip->is_step_control())
+				trip->step_points_finalize();
+		}
+
 		// Special case for handling a single trip which has a defined
 		// target state. Add another trip + 1C so that control is applied
 		// till max state
 		// Count is 2, because there is a default poll trip
-		if (count == 2) {
+		if (count == 2 && !zone->get_trip_at_index(0)->is_step_control()) {
 			cthd_trip_point *trip = zone->get_trip_at_index(0);
 			int target_state;
 
@@ -196,6 +251,8 @@ void cthd_engine_adaptive::psvt_consolidate() {
 			cthd_trip_point *trip = zone->get_trip_at_index(j);
 			int target_state;
 			thd_log_debug("check trip zone:%d:%d\n", i, j);
+			if (trip->is_step_control())
+				continue;
 			if (trip->is_target_valid(target_state) == THD_SUCCESS) {
 
 				if (target_state == TRIP_PT_INVALID_TARGET_STATE) {

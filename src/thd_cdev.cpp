@@ -596,6 +596,57 @@ int cthd_cdev::thd_cdev_set_state(int set_point, int target_temp,
 	return ret;
 }
 
+/*
+ * Step control (see cthd_trip_point::step_control): each step trip keeps
+ * its own request, the most restrictive one is applied. While another trip
+ * controls this device through thd_cdev_set_state(), only limit further.
+ */
+int cthd_cdev::thd_cdev_set_step_request(int zone_id, int trip_id,
+		int request, bool active) {
+	bool found = false;
+
+	for (auto it = step_requests.begin(); it != step_requests.end(); ++it) {
+		if (it->zone == zone_id && it->trip == trip_id) {
+			if (active)
+				it->request = request;
+			else
+				step_requests.erase(it);
+			found = true;
+			break;
+		}
+	}
+	if (!found && active)
+		step_requests.push_back({zone_id, trip_id, request});
+
+	bool inverted = (get_min_state() > get_max_state());
+	int state = get_min_state();
+
+	for (const step_request_t &r : step_requests) {
+		if ((inverted && r.request < state) || (!inverted && r.request > state))
+			state = r.request;
+	}
+
+	if (zone_trip_limits.size() && cmp_current_state(state) <= 0)
+		return THD_SUCCESS;
+
+	if (state == get_curr_state())
+		return THD_SUCCESS;
+
+	if (in_min_state())
+		control_begin();
+
+	set_curr_state_raw(state, state != get_min_state());
+	curr_state = state;
+	thd_log_info("Set step: zone:%d trip:%d request:%d cdev:%d(%s) state:%d\n",
+			zone_id, trip_id, request, index, type_str.c_str(),
+			get_curr_state());
+
+	if (curr_state == get_max_state())
+		control_end();
+
+	return THD_SUCCESS;
+}
+
 int cthd_cdev::thd_cdev_set_min_state(int zone_id, int trip_id) {
 	trend_increase = false;
 	cthd_pid unused;
