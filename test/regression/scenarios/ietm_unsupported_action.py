@@ -18,7 +18,9 @@ PLATFORM = {
     "rapl": rapl(),
     "gddv": {
         "ppcc": {"TCPU.D0": ppcc()},
-        "psvt": {"t0": [gddv.psv(gddv.TCPU, "\\_SB_.SEN2", 39, limit="MAX")]},
+        # No step size: the trips of the PSVT consolidation, not step control
+        "psvt": {"t0": [gddv.psv(gddv.TCPU, "\\_SB_.SEN2", 39, limit="MAX",
+                                 step_size=0)]},
         "apct": [(1, [gddv.cond(gddv.DEFAULT)])],
         "apat": [
             gddv.action(1, "T0", gddv.TCPU, "PL1MAX", 30000),

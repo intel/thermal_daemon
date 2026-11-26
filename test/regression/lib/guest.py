@@ -18,6 +18,8 @@ import time
 import traceback
 
 TEST_SYSFS = "/sys/kernel/thermald_test"
+PSTATE = "/sys/devices/system/cpu/intel_pstate"
+CPUFREQ = "/sys/devices/system/cpu/cpu%d/cpufreq"
 POWERCAP = "/sys/devices/virtual/powercap"
 DOMAINS = {
     "msr": POWERCAP + "/intel-rapl/intel-rapl:0",
@@ -83,6 +85,9 @@ class Guest:
         self._log_cursor = 0
         self._rapl_log = []
         self._rapl_log_lock = threading.Lock()
+        self._cdev_log = []
+        self._cdev_log_cursor = 0
+        self._cdev_log_lock = threading.Lock()
         self.switches = {}
         self.helpers = []
         self.bus_address = None
@@ -262,6 +267,39 @@ class Guest:
                 if (domain is None or w["domain"] == domain)
                 and (attr is None or w["attr"] == attr)]
 
+    def cdev_writes(self, device=None, attr=None):
+        """Cooling device changes so far (the test module's cdev_log): list
+        of dicts (ms, device, attr, value). device: a test cooling device
+        type, "intel_pstate" or "cpufreq<cpu>"."""
+        self._drain_cdev_log()
+        return [w for w in self._cdev_log
+                if (device is None or w["device"] == device)
+                and (attr is None or w["attr"] == attr)]
+
+    def cdev_state(self, cdev_type):
+        """cur_state of the thermal cooling device of this type."""
+        for d in sorted(os.listdir("/sys/class/thermal")):
+            path = os.path.join("/sys/class/thermal", d)
+            if d.startswith("cooling_device") and \
+                    read(path + "/type") == cdev_type:
+                return int(read(path + "/cur_state"))
+        raise KeyError(cdev_type)
+
+    def pstate(self, attr="max_perf_pct"):
+        """A value of the fake intel_pstate sysfs."""
+        return int(read(PSTATE + "/" + attr))
+
+    def brightness(self):
+        """brightness of the fake intel_backlight."""
+        return int(read("/sys/class/backlight/intel_backlight/brightness"))
+
+    def gen_cdev(self):
+        """The test module's gen_cdev value."""
+        return int(read(TEST_SYSFS + "/gen_cdev"))
+
+    def cpufreq_max_khz(self, cpu=0):
+        return int(read(CPUFREQ % cpu + "/scaling_max_freq"))
+
     def cpu_seconds(self):
         """CPU time thermald has used so far (user + system)."""
         with open("/proc/%d/stat" % self.proc.pid) as f:
@@ -344,6 +382,24 @@ class Guest:
             args.append("zone_names=" + ",".join(p["zones"]))
         if p.get("cdevs"):
             args.append("cdev_names=" + ",".join(p["cdevs"]))
+        coretemp = p.get("coretemp")
+        if coretemp is not None:
+            # {"max_c": 80, "crit_c": 100}, or {} for the defaults
+            args.append("coretemp=1")
+            for k in ("max", "crit"):
+                if k + "_c" in coretemp:
+                    args.append("coretemp_%s_mc=%d"
+                                % (k, coretemp[k + "_c"] * 1000))
+        if p.get("intel_pstate"):
+            args.append("intel_pstate=1")
+        if p.get("backlight"):
+            args.append("backlight=1")
+        cpufreq = p.get("cpufreq")
+        if cpufreq:
+            # True, or the frequency table in kHz
+            args.append("cpufreq=1")
+            if cpufreq is not True:
+                args.append("cpufreq_khz=" + ",".join(str(f) for f in cpufreq))
         rapl = p.get("rapl")
         if rapl is not None:
             args.append("rapl=1")
@@ -413,6 +469,20 @@ class Guest:
                     attr=attr, value=int(value), ret=int(ret)))
                 self._log_cursor = int(seq) + 1
 
+    def _drain_cdev_log(self):
+        with self._cdev_log_lock:
+            while True:
+                write(TEST_SYSFS + "/cdev_log", self._cdev_log_cursor)
+                lines = read(TEST_SYSFS + "/cdev_log").splitlines()
+                if not lines:
+                    return
+                for line in lines:
+                    seq, ms, device, attr, value = line.split()
+                    self._cdev_log.append(dict(seq=int(seq), ms=int(ms),
+                                               device=device, attr=attr,
+                                               value=int(value)))
+                    self._cdev_log_cursor = int(seq) + 1
+
     def _sample(self):
         sample = {"t": round(self.now(), 2)}
         for zone in self.platform.get("zones", []):
@@ -433,6 +503,7 @@ class Guest:
                     self.trace.append(self._sample())
                     if self.platform.get("rapl") is not None:
                         self._drain_rapl_log()
+                    self._drain_cdev_log()
                 except OSError:
                     pass
                 time.sleep(0.5)
@@ -447,6 +518,10 @@ class Guest:
                 self._drain_rapl_log()
             except OSError:
                 pass
+        try:
+            self._drain_cdev_log()
+        except OSError:
+            pass
         if self.thermald_running():
             try:
                 self.stop_thermald()
@@ -495,6 +570,7 @@ def main():
         result["duration_s"] = round(time.monotonic() - start, 1)
         result["trace"] = g.trace
         result["rapl_writes"] = g._rapl_log
+        result["cdev_writes"] = g._cdev_log
         with open(os.path.join(outdir, "dmesg.log"), "w") as f:
             f.write(sh("dmesg", check=False).stdout)
         with open(os.path.join(outdir, "result.json"), "w") as f:

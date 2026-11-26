@@ -5,6 +5,14 @@ import gddv
 POWER_ON_PL1_W = 15
 
 
+# itmt-pid.xml enabling the ITMT PID with the default gains
+ITMT_PID_ON = """<?xml version="1.0"?>
+<ItmtPid>
+	<Enable>1</Enable>
+</ItmtPid>
+"""
+
+
 def ppcc(min_w=10, max_w=35, step_w=1):
     """PL1 min_w..max_w W, PL2 35-64 W."""
     return gddv.ppcc(pl1_min_mw=min_w * 1000, pl1_max_mw=max_w * 1000,

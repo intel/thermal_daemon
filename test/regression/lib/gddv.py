@@ -42,8 +42,8 @@ def celsius_to_dk(celsius):
 
 
 def psv(source, target, temperature_c, limit="MIN", priority=10,
-        sample_period=10, domain=9, control_knob=65536, step_size=1,
-        limit_coeff=1, unlimit_coeff=1, temperature_dk=None):
+        sample_period=10, domain=9, control_knob=65536, step_size=250,
+        limit_coeff=10, unlimit_coeff=10, temperature_dk=None):
     """One PSVT entry. limit is "MIN", "MAX" or a power in mW.
     temperature_dk sets the raw deci-Kelvin value instead."""
     return dict(source=source, target=target, temperature_c=temperature_c,

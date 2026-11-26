@@ -17,3 +17,6 @@ gboolean exclusive_control = FALSE;
 /* Set THD_TEST_DEBUG=1 for thermald's debug messages */
 gboolean log_debug = FALSE;
 gint own_id = 0;
+
+/* main.cpp schedules the daemon's shutdown; nothing to stop here */
+void thd_request_shutdown() {}

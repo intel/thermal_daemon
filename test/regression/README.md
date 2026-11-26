@@ -10,6 +10,16 @@ platform in it and runs the thermald binary from this tree against it:
   the same module (`rapl=1`). Package power is the lower of the demand and
   the enabled PL1s and drives `energy_uj`. Every write is logged. Power
   limit writes can be made to fail like a BIOS-locked part.
+- **CPU cooling devices** for the default engine, from the same module:
+  a `coretemp` hwmon device (`coretemp=1`, the trips of thermald's CPU
+  zone), an `intel_pstate` sysfs directory (`intel_pstate=1`) and a
+  cpufreq driver with a frequency table (`cpufreq=1`), and for
+  `thermal-conf.xml` trips a backlight device (`backlight=1`, thermald's
+  `LCD`) and a plain sysfs value for a generic cooling device
+  (`/sys/kernel/thermald_test/gen_cdev`). The VM's own ACPI `Processor`
+  cooling devices are used as they are. Changes to the test cooling
+  devices, `intel_pstate`, the cpufreq limits, the brightness and
+  `gen_cdev` are logged.
 - **IETM**: an ACPI SSDT, loaded with `qemu -acpitable`, with an `INTC10D4`
   device whose `GDDV` returns the scenario's data vault. The real
   `int3400_thermal` driver binds to it and exposes `data_vault`, `imok`
@@ -74,7 +84,9 @@ def run(g):
 ```
 
 Other `PLATFORM` keys: `cdevs` (extra cooling devices, e.g.
-`intel_powerclamp`), `odvp` (OEM variables for Oem0-5 conditions),
+`intel_powerclamp`), `coretemp` (`{"max_c": 80, "crit_c": 100}`, or `{}`),
+`intel_pstate` (`True`), `cpufreq` (`True`, or the frequency table in
+kHz), `backlight` (`True`), `odvp` (OEM variables for Oem0-5 conditions),
 `power_profile` (dbusmock power-profiles-daemon), `dbus` (private bus
 for thermald itself), `thermald_args` (default `["--adaptive"]`),
 `conf_files` (files for `/etc/thermald`), `cpu_model` (family 6 model,
@@ -89,7 +101,9 @@ default 0xaa Meteor Lake L) or `cpu` (raw `qemu -cpu`), `idsp`,
   `set_tablet_mode`, `add_switch`, `remove_switch`, `set_on_battery`,
   `set_power_profile`, `reinit`, `unload_module`, `load_module` (the test
   module's zones, cooling devices and RAPL, e.g. to probe late)
-- observations: `pl1`, `pl2`, `rapl_enabled`, `rapl_writes`, `temp`,
+- observations: `pl1`, `pl2`, `rapl_enabled`, `rapl_writes`,
+  `cdev_writes`, `cdev_state`, `pstate`, `cpufreq_max_khz`,
+  `brightness`, `gen_cdev`, `temp`,
   `log`, `imok_values` (IETM.IMOK calls), `cpu_seconds`
 - control: `wait_ready`, `wait_until`, `wait_log`, `hold`, `check`,
   `start_thermald`, `stop_thermald`
@@ -121,4 +135,6 @@ it passes, so the marker is removed together with the fix.
 | Condition tables | `conditions_power_lid_tablet`, `conditions_oem_slider_temp`, `conditions_unsupported_fallback` |
 | Temperature limits, restore | `psvt_throttle_restore`, `reinit_while_throttled` |
 | Several zones, one cooling device | `multizone_shared_cdev` |
+| Default engine, no data vault or XML | `default_engine_cpu_zone`, `default_engine_some_cdevs`, `default_engine_cdev_order` |
+| Cooling devices from thermal-conf.xml | `xml_cooling_devices` (intel_pstate, cpufreq, powerclamp, LCD, generic sysfs), `xml_pl1_staircase` (RAPL) |
 | Fixes | `virtual_sensors_two_participants` (6656673), `input_switch_removed` (PR #611), `notify_platform_imok` (PR #613), `ignore_adaptive_flow`, `late_devices_retry` |
