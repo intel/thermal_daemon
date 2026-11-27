@@ -20,6 +20,9 @@ CONFIG = """<?xml version="1.0"?>
 	<Kd>fast</Kd>
 	<ReferenceRange>5000</ReferenceRange>
 	<ScaleMax>1.5</ScaleMax>
+	<BackstopOffset>5001</BackstopOffset>
+	<AllowRaiseAboveSetPoint>2</AllowRaiseAboveSetPoint>
+	<CutFromLastLimit>2</CutFromLastLimit>
 	<Gain>2</Gain>
 </ItmtPid>
 """
@@ -45,6 +48,11 @@ def run(g):
     g.wait_log("set_int3400 ITMT target IETM.D0")
     log = g.log()
     g.check("invalid Kd \"fast\"" in log, "invalid Kd not reported")
+    for name, value in [("BackstopOffset", 5001), ("AllowRaiseAboveSetPoint", 2),
+                        ("CutFromLastLimit", 2)]:
+        g.check('invalid %s "%d"' % (name, value) in log, "accepted invalid " + name)
+    g.check("backstop offset 1000 allow raise 0 cut from last limit 0" in log,
+            "invalid settings changed defaults")
     g.check("unknown element Gain" in log, "unknown element not reported")
     g.check("gain scale 1.50" in log, "gain scale not clamped to 1.5")
     g.check("pid valid 90.000000:0.000000:1500.000000" in log,

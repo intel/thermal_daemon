@@ -66,6 +66,9 @@
  *		<Kp>30</Kp>
  *		<Kd>1000</Kd>
  *		<SetPointOffset>500</SetPointOffset>	millicelsius
+ *		<BackstopOffset>1000</BackstopOffset>	millicelsius, 0: off
+ *		<AllowRaiseAboveSetPoint>0</AllowRaiseAboveSetPoint>
+ *		<CutFromLastLimit>0</CutFromLastLimit>
  *		<ScaleWithRange>1</ScaleWithRange>	0: Kp and Kd as given
  *		<ReferenceRange>17000</ReferenceRange>	mW
  *		<ScaleMin>0.5</ScaleMin>
@@ -85,6 +88,9 @@ public:
 	double kp = ITMT_PID_KP;
 	double kd = ITMT_PID_KD;
 	int set_point_offset = ITMT_PID_SET_POINT_OFFSET;
+	int backstop_offset = 1000;
+	bool allow_raise_above_set_point = false;
+	bool cut_from_last_limit = false;
 	bool scale_with_range = true;
 	int reference_range_mw = ITMT_PID_REFERENCE_RANGE_MW;
 	double scale_min = ITMT_PID_SCALE_MIN;

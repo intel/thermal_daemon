@@ -144,8 +144,8 @@ public:
 			return dec_val < 0 ? -dec_val : dec_val;
 		return inc_dec_val < 0 ? -inc_dec_val : inc_dec_val;
 	}
-	int pid_gradual_bound(int delta, bool inverted, int trip_temp,
-			int set_point, int temperature, cthd_pid &pid);
+	long long pid_gradual_bound(long long delta, bool inverted, int trip_temp,
+			int set_point, int temperature, cthd_pid &pid, const pid_param_t &param);
 	virtual int thd_cdev_set_min_state(int zone_id, int trip_id);
 
 	virtual void thd_cdev_set_min_state_param(int arg) {

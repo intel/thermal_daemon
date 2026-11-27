@@ -108,6 +108,18 @@ void cthd_itmt_pid_config::load(const std::string &filename) {
 			ret = parse_int_value(str, &i, 0, 5000);
 			if (ret == THD_SUCCESS)
 				set_point_offset = i;
+		} else if (!thd_strcasecmp_n(name, "BackstopOffset")) {
+			ret = parse_int_value(str, &i, 0, 5000);
+			if (ret == THD_SUCCESS)
+				backstop_offset = i;
+		} else if (!thd_strcasecmp_n(name, "AllowRaiseAboveSetPoint")) {
+			ret = parse_int_value(str, &i, 0, 1);
+			if (ret == THD_SUCCESS)
+				allow_raise_above_set_point = i;
+		} else if (!thd_strcasecmp_n(name, "CutFromLastLimit")) {
+			ret = parse_int_value(str, &i, 0, 1);
+			if (ret == THD_SUCCESS)
+				cut_from_last_limit = i;
 		} else if (!thd_strcasecmp_n(name, "ScaleWithRange")) {
 			ret = parse_int_value(str, &i, 0, 1);
 			if (ret == THD_SUCCESS)
@@ -144,10 +156,12 @@ void cthd_itmt_pid_config::load(const std::string &filename) {
 	}
 
 	thd_log_info("%s: ITMT PID %s, Kp %g Kd %g set point offset %d scale %s"
-			" (reference %d mW, %g-%g)\n", filename.c_str(),
+			" (reference %d mW, %g-%g) backstop offset %d allow raise %d"
+			" cut from last limit %d\n", filename.c_str(),
 			enable ? "enabled" : "disabled", kp, kd,
 			set_point_offset, scale_with_range ? "with range" : "off",
-			reference_range_mw, scale_min, scale_max);
+			reference_range_mw, scale_min, scale_max, backstop_offset,
+			allow_raise_above_set_point, cut_from_last_limit);
 }
 
 double cthd_itmt_pid_config::scale(long long range_uw) const {

@@ -42,14 +42,13 @@ static void *rapl_periodic_callback(void *data) {
 
 cthd_rapl_power_meter::cthd_rapl_power_meter(unsigned int mask) :
 		rapl_present(true), rapl_sysfs("/sys/class/powercap/intel-rapl/"), domain_list(
-				0), last_time(0), poll_thread(0), measure_mask(mask), enable_measurement(
+				0), last_sample_ms(0), poll_thread(0), measure_mask(mask), enable_measurement(
 				false) {
 	thd_attr = pthread_attr_t();
 
 	if (rapl_sysfs.exists()) {
 		thd_log_debug("RAPL sysfs present\n");
 		rapl_present = true;
-		last_time = time(nullptr);
 		rapl_read_domains(rapl_sysfs.get_base_path().c_str());
 	} else {
 		thd_log_warn("NO RAPL sysfs present\n");
@@ -137,13 +136,18 @@ bool cthd_rapl_power_meter::rapl_energy_loop() {
 	int status;
 	unsigned long long counter;
 	unsigned long long diff;
-	time_t curr_time;
+	struct timespec now;
 
 	if (!enable_measurement)
 		return false;
 
-	curr_time = time(nullptr);
-	if ((curr_time - last_time) <= 0)
+	// Include suspend time when averaging the energy between reads.
+	if (clock_gettime(CLOCK_BOOTTIME, &now))
+		return true;
+	int64_t sample_ms = now.tv_sec * 1000LL + now.tv_nsec / 1000000;
+	int64_t elapsed_ms = sample_ms - last_sample_ms;
+	// Nearby reads can see the same rounded energy counter.
+	if (elapsed_ms < 500)
 		return true;
 	for (unsigned int i = 0; i < domain_list.size(); ++i) {
 		unsigned long energy_uj;
@@ -183,7 +187,7 @@ bool cthd_rapl_power_meter::rapl_energy_loop() {
 
 			if (counter)
 				domain_list[i].power = (domain_list[i].energy_counter - counter
-						+ diff) / (curr_time - last_time);
+						+ diff) * 1000 / elapsed_ms;
 			if (domain_list[i].power > domain_list[i].max_power)
 				domain_list[i].max_power = domain_list[i].power;
 
@@ -201,7 +205,7 @@ bool cthd_rapl_power_meter::rapl_energy_loop() {
 
 		}
 	}
-	last_time = curr_time;
+	last_sample_ms = sample_ms;
 
 	return true;
 }

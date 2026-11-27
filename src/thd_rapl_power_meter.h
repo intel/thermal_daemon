@@ -54,7 +54,7 @@ private:
 	bool rapl_present;
 	csys_fs rapl_sysfs;
 	std::vector<rapl_domain_t> domain_list;
-	time_t last_time;
+	int64_t last_sample_ms;
 	pthread_t poll_thread;
 	pthread_attr_t thd_attr;
 	unsigned int measure_mask;

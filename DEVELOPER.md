@@ -339,8 +339,27 @@ difference is what the output is applied to:
   down every poll while the temperature stays above target, and on deactivation
   restores `min_state` and resets the PID.
 
+The PID measures the sample interval in monotonic seconds.
 The `±` is the inverted-range handling again. Configure via `<PidControl>` in
 `thermal-conf.xml`, either per trip-cdev binding or per cooling device.
+
+For gradual ITMT trips, `BackstopOffset` sets the distance above the trip
+where the minimum cut starts doubling on successive samples (0..5000
+millicelsius, default 1000). Zero disables it. With the backstop off and
+two sensors sharing PL1, a cooling sensor can raise PL1 while the other
+is above its trip. In one measurement PL1 rose from 27.3 to 35 W while
+the other sensor was 3.5 C over its trip and took about a minute to
+return to 30.4 W. `AllowRaiseAboveSetPoint` (0 or 1, default 0) lets a
+falling temperature raise PL1 while the trip is active and the
+temperature is above the set point.
+
+`CutFromLastLimit` (0 or 1, default 0) selects the base for a cut.
+Zero uses the state the cooling device reports, which for RAPL can be
+the measured package power. One uses the last requested limit. It is
+not read back, so a limit changed by firmware or
+another program is not seen. A load that draws much less than the limit
+is not limited until the limit has come down to it; with the backstop
+off that can take minutes.
 
 ---
 

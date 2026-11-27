@@ -266,7 +266,7 @@ int cthd_cdev::thd_cdev_set_state(int set_point, int target_temp,
 		int _max_state) {
 
 	time_t tm;
-	int ret;
+	long long ret;
 
 	if (!state && in_min_state() && zone_trip_limits.size() == 0) {
 		// This means that the there is no device in activated state
@@ -532,14 +532,16 @@ int cthd_cdev::thd_cdev_set_state(int set_point, int target_temp,
 				/*
 				 * With gradual release, release from the current limit:
 				 * stepping from the measured power (e.g. near idle)
-				 * would limit further while asked to release.
+				 * would limit further while asked to release. With
+				 * cut_from_last_limit, cut from the current limit too.
 				 */
 				if (pid_param->gradual_release)
 					ret = pid_gradual_bound(ret, inverted, set_point,
 							target_temp - pid_param->set_point_offset,
-							temperature, pid);
+							temperature, pid, *pid_param);
 				if (pid_param->gradual_release
-						&& ((inverted && ret >= 0) || (!inverted && ret <= 0)))
+						&& (pid_param->cut_from_last_limit
+						    || (inverted ? ret >= 0 : ret <= 0)))
 					ret += get_curr_state();
 				else
 					ret += get_curr_state(true);
@@ -671,21 +673,23 @@ int cthd_cdev::thd_cdev_set_state(int set_point, int target_temp,
  *
  * - Guard: while the temperature is above the set point, never release.
  *   The derivative term reacts to a falling temperature, which must not
- *   raise the limit while still too hot.
- * - Backstop: at or above the trip temperature + 1 C, cool at least as hard
+ *   raise the limit while still too hot. Off with
+ *   allow_raise_above_set_point.
+ * - Backstop: at or above the trip temperature + backstop_offset (1 C by
+ *   default), cool at least as hard
  *   as the default controller: the step doubled on each consecutive call.
  *   The PID's integral part is slow, this bounds the overshoot after a fast
- *   rise.
+ *   rise. Off with a backstop_offset of 0.
  */
-int cthd_cdev::pid_gradual_bound(int delta, bool inverted, int trip_temp,
-		int set_point, int temperature, cthd_pid &pid) {
+long long cthd_cdev::pid_gradual_bound(long long delta, bool inverted, int trip_temp,
+		int set_point, int temperature, cthd_pid &pid, const pid_param_t &param) {
 	/* > 0: more cooling */
-	long long cool = inverted ? -(long long) delta : delta;
+	long long cool = inverted ? -delta : delta;
 
-	if (temperature > set_point && cool < 0)
+	if (!param.allow_raise_above_set_point && temperature > set_point && cool < 0)
 		cool = 0;
 
-	if (temperature >= trip_temp + 1000) {
+	if (param.backstop_offset && temperature >= (long long) trip_temp + param.backstop_offset) {
 		/* The default controller's step: inc_val if set, else inc_dec_val */
 		long long step = inc_val ? llabs(inc_val) : llabs(inc_dec_val);
 
@@ -706,7 +710,7 @@ int cthd_cdev::pid_gradual_bound(int delta, bool inverted, int trip_temp,
 	if (cool > INT_MAX / 2)
 		cool = INT_MAX / 2;
 
-	return (int) (inverted ? -cool : cool);
+	return inverted ? -cool : cool;
 }
 
 /*
