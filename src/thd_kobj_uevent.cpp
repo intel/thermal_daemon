@@ -79,12 +79,6 @@ cthd_kobj_uevent::event_type cthd_kobj_uevent::parse_event(
 	bool matched_registered_dev = false;
 	bool is_int3400 = false;
 	bool is_keep_alive = false;
-	/*
-	 * kobj_uevent_open() subscribes to all netlink groups (nl_groups = -1),
-	 * so udevd re-broadcasts each kernel event with a "libudev\0" header.
-	 * Ignore the udev duplicate for keep-alive to avoid writing imok twice.
-	 */
-	bool is_udev = (len >= 8 && !memcmp(buffer, "libudev", 8));
 	size_t offset = 0;
 
 	while (offset < len) {
@@ -115,7 +109,7 @@ cthd_kobj_uevent::event_type cthd_kobj_uevent::parse_event(
 		offset += field_len + 1;
 	}
 
-	if (!is_udev && is_thermal_zone_dev && is_int3400 && is_keep_alive)
+	if (is_thermal_zone_dev && is_int3400 && is_keep_alive)
 		return KEEP_ALIVE_EVENT;
 	if (matched_registered_dev)
 		return THERMAL_EVENT;

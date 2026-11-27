@@ -82,9 +82,9 @@ protected:
 	bool parse_thermal_zone_success;
 	bool parse_thermal_cdev_success;
 	std::string uuid;
+	std::string int3400_base_path;
 	bool parser_disabled;
 	bool adaptive_mode;
-	std::string int3400_base_path;
 	bool imok_missing_logged;
 
 	int write_int3400_imok(unsigned int value, const char *caller);

@@ -24,6 +24,7 @@
 #ifndef THD_KOBJ_UEVENT_H_
 #define THD_KOBJ_UEVENT_H_
 
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -45,7 +46,7 @@ private:
 	char device_path[max_buffer_size];
 
 public:
-	enum event_type {
+	enum event_type : uint8_t {
 		NO_EVENT,
 		THERMAL_EVENT,
 		THINKPAD_ACPI_EVENT,
