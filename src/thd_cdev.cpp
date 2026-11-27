@@ -266,7 +266,7 @@ int cthd_cdev::thd_cdev_set_state(int set_point, int target_temp,
 		int _max_state) {
 
 	time_t tm;
-	int ret;
+	long long ret;
 
 	if (!state && in_min_state() && zone_trip_limits.size() == 0) {
 		// This means that the there is no device in activated state
@@ -677,10 +677,10 @@ int cthd_cdev::thd_cdev_set_state(int set_point, int target_temp,
  *   The PID's integral part is slow, this bounds the overshoot after a fast
  *   rise.
  */
-int cthd_cdev::pid_gradual_bound(int delta, bool inverted, int trip_temp,
+long long cthd_cdev::pid_gradual_bound(long long delta, bool inverted, int trip_temp,
 		int set_point, int temperature, cthd_pid &pid) {
 	/* > 0: more cooling */
-	long long cool = inverted ? -(long long) delta : delta;
+	long long cool = inverted ? -delta : delta;
 
 	if (temperature > set_point && cool < 0)
 		cool = 0;
@@ -706,7 +706,7 @@ int cthd_cdev::pid_gradual_bound(int delta, bool inverted, int trip_temp,
 	if (cool > INT_MAX / 2)
 		cool = INT_MAX / 2;
 
-	return (int) (inverted ? -cool : cool);
+	return inverted ? -cool : cool;
 }
 
 /*

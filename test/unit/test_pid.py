@@ -12,3 +12,7 @@ def test_pid_zone_reset():
 
 def test_pid_band_release():
     subprocess.run([Path(__file__).parent / "build" / "pid_device", "band-release"], check=True)
+
+
+def test_large_pid_delta():
+    subprocess.run([Path(__file__).parent / "build" / "pid_device", "large-delta"], check=True)

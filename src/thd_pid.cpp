@@ -103,6 +103,7 @@ int cthd_pid::pid_output(unsigned int curr_temp, int initial_value) {
 		output = kp * error + ki * err_sum + kd * d_err;
 	}
 
+	output = std::max((double) INT_MIN, std::min((double) INT_MAX, output));
 	thd_log_debug("pid_%s e:%d kp:%g ki_sum:%g kd:%g out:%d\n",
 			mode == PID_INCREMENTAL ? "inc" : "abs",
 			error, kp * error, ki * err_sum, kd * d_err, (int)output);

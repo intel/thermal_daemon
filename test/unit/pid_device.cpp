@@ -70,6 +70,38 @@ extern "C" int __wrap_clock_gettime(clockid_t clock, struct timespec *ts) {
 	return 0;
 }
 
+static void check_large_delta(double kd) {
+	power_limit pl1;
+	pl1.set_min_state(41000000);
+	pl1.set_max_state(32000000);
+	pl1.set_curr_state(41000000, 0);
+	pl1.set_debounce_interval(-1);
+	pid_param_t param = {};
+	param.valid = param.gradual_release = 1;
+	param.mode = PID_INCREMENTAL;
+	cthd_pid pid;
+	pid.set_pid_mode(param.mode);
+	pid.set_pid_param(0, 0, kd);
+	pid.set_time_scaled(true);
+	auto poll = [&](int temp, int active) {
+		++elapsed;
+		pl1.thd_cdev_set_state(52000, 52000, temp, 0, active, 0, 0,
+				0, 0, &param, pid, false, 0, 0, 0);
+		return pl1.get_curr_state();
+	};
+
+	poll(52000, 1);
+	assert(poll(53024, 1) == 32000000);
+	assert(poll(52000, 1) == 41000000);
+	assert(poll(53024, 1) == 32000000);
+	assert(poll(52000, 0) == 41000000);
+}
+
 int main(int argc, char **argv) {
+	if (argc > 1 && std::string(argv[1]) == "large-delta") {
+		check_large_delta(2097152);
+		check_large_delta(3000000);
+		return 0;
+	}
 	check_pid_restart(argc > 1 && std::string(argv[1]) == "band-release");
 }
