@@ -442,7 +442,8 @@ int cthd_parse::parse_new_zone(xmlNode * a_node, xmlDoc *doc,
 			if (!thd_strcasecmp_n((const char*) cur_node->name, "TripPoints")) {
 				parse_trip_points(cur_node->children, doc, info_ptr);
 
-			} else if (!thd_strcasecmp_n((const char*) cur_node->name, "Type")) {
+			} else if (tmp_value
+					&& !thd_strcasecmp_n((const char*) cur_node->name, "Type")) {
 				info_ptr->type.assign((const char*) tmp_value);
 				string_trim(info_ptr->type);
 			}

@@ -75,6 +75,9 @@ seeds() {
 		# Values that are only white space
 		printf '<?xml version="1.0"?>\n<ThermaldFeatures><DbusControl> \t </DbusControl></ThermaldFeatures>\n' \
 			> "$dir/blank_value.xml"
+		# A value that is empty: libxml2 returns no string for it
+		printf '<?xml version="1.0"?>\n<ThermalConfiguration>\n<Platform>\n<ThermalZones>\n<ThermalZone>\n<Type></Type>\n</ThermalZone>\n</ThermalZones>\n</Platform>\n</ThermalConfiguration>\n' \
+			> "$dir/empty_value.xml"
 		# Matches any machine, so the getters run on the parsed data
 		sed -e 's|<ProductName>[^<]*</ProductName>|<ProductName>*</ProductName>|' \
 			"$TOP"/test/regression/configs/pl1_staircase.xml > "$dir/any_platform.xml"
