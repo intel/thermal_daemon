@@ -17,7 +17,7 @@ public:
 
 static time_t elapsed = 100;
 
-static void check_zone_reset() {
+static void check_pid_restart(bool in_band) {
 	power_limit pl1;
 	pl1.set_min_state(41000000);
 	pl1.set_max_state(32000000);
@@ -42,6 +42,18 @@ static void check_zone_reset() {
 
 	int first = poll(52050);
 	assert(first == 41000000 - 16 * 550);
+	if (in_band) {
+		assert(poll(51050) == 41000000);
+		assert(poll(49050) == 41000000);
+		cthd_trip_point peer(0, PASSIVE, 52000, 2000, 1, 1);
+		peer.thd_trip_point_add_cdev(pl1, 0, 0, 0, 0, &param, 1, 41000000, 35000000);
+		bool reset;
+		peer.thd_trip_point_check(1, 52050, PREF_ENERGY_CONSERVE, &reset);
+		assert(pl1.get_curr_state() == first);
+		peer.thd_trip_point_check(1, 48050, PREF_ENERGY_CONSERVE, &reset);
+		assert(poll(52050) == first);
+		return;
+	}
 	poll(55050);
 	poll(55050);
 	assert(poll(55050) == 32000000);
@@ -58,6 +70,6 @@ extern "C" int __wrap_clock_gettime(clockid_t clock, struct timespec *ts) {
 	return 0;
 }
 
-int main() {
-	check_zone_reset();
+int main(int argc, char **argv) {
+	check_pid_restart(argc > 1 && std::string(argv[1]) == "band-release");
 }

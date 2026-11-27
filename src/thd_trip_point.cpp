@@ -335,7 +335,7 @@ bool cthd_trip_point::thd_trip_point_check(int id, unsigned int read_temp,
 					cdev->get_cdev_type().c_str());
 
 
-			if (cdev->in_min_state()) {
+			if (cdev->in_min_state() && !cdevs[i].pid_param.gradual_release) {
 				thd_log_debug("Need to switch to next cdev\n");
 				// No scope of control with this cdev
 				continue;

@@ -8,3 +8,7 @@ def test_pid_elapsed_time():
 
 def test_pid_zone_reset():
     subprocess.run([Path(__file__).parent / "build" / "pid_device"], check=True)
+
+
+def test_pid_band_release():
+    subprocess.run([Path(__file__).parent / "build" / "pid_device", "band-release"], check=True)
