@@ -1,6 +1,6 @@
 # Unit test and fuzzing helpers built from thermald's own sources.
 #
-#   make -C test/unit          gddv_dump and pid_clock (ASan + UBSan)
+#   make -C test/unit          gddv_dump, pid_clock and pid_device (ASan + UBSan)
 #   test/fuzz/run.sh           libFuzzer targets, built with clang
 #
 # The default target also builds rapl_meter.
@@ -34,7 +34,7 @@ LDLIBS := $(shell pkg-config --libs $(PKGS)) -lm -ldl
 
 OBJS := $(patsubst %,$(BUILD)/%.o,$(SRCS))
 
-all: $(BUILD)/gddv_dump $(BUILD)/pid_clock $(BUILD)/rapl_meter
+all: $(BUILD)/gddv_dump $(BUILD)/pid_clock $(BUILD)/pid_device $(BUILD)/rapl_meter
 
 $(BUILD)/rapl_meter: $(BUILD)/rapl_meter.o $(BUILD)/main_stubs.o $(OBJS)
 	$(CXX) $(SANITIZE) $^ $(LDLIBS) -Wl,--wrap=time,--wrap=clock_gettime \
@@ -43,10 +43,13 @@ $(BUILD)/rapl_meter: $(BUILD)/rapl_meter.o $(BUILD)/main_stubs.o $(OBJS)
 $(BUILD)/rapl_meter.o: rapl_meter.cpp $(BUILD)/.flags
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(SANITIZE) -c $< -o $@
 
+$(BUILD)/pid_device: $(BUILD)/pid_device.cpp.o $(BUILD)/main_stubs.o $(OBJS)
+	$(CXX) $(SANITIZE) $^ $(LDLIBS) -Wl,--wrap=clock_gettime -o $@
+
 $(BUILD)/pid_clock: $(BUILD)/pid_clock.cpp.o $(BUILD)/src/thd_pid.cpp.o $(BUILD)/main_stubs.o
 	$(CXX) $(SANITIZE) $^ $(LDLIBS) -Wl,--wrap=time,--wrap=clock_gettime -o $@
 
-$(BUILD)/pid_clock.cpp.o: pid_clock.cpp $(BUILD)/.flags
+$(BUILD)/pid_%.cpp.o: pid_%.cpp $(BUILD)/.flags
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(SANITIZE) -c $< -o $@
 
 # Rebuild everything when the flags change (CONFDIR, SANITIZE, ...)

@@ -62,3 +62,21 @@ def check_rejected_cleanly(g, seconds=10):
         g.check(bad not in g.log(), "thermald log contains %r" % bad)
     status = g.stop_thermald()
     g.check(status == 0, "thermald exit status %s" % status)
+
+
+def itmt_pid_platform(settings):
+    return {
+        "zones": ["SEN2"],
+        "initial_temps": {"SEN2": 45},
+        "rapl": rapl(),
+        "thermald_args": ["--adaptive"],
+        "conf_files": {"itmt-pid.xml": "<ItmtPid><Enable>1</Enable>"
+                       + settings + "</ItmtPid>"},
+        "gddv": {
+            "ppcc": {"TCPU.D0": ppcc(10, 41, 2)},
+            "apct": [(1, [gddv.cond(gddv.DEFAULT)])],
+            "apat": [gddv.action(1, "Itmt", gddv.IETM, "ITMT", "IETM.D0")],
+            "itmt": {"IETM.D0": [("\\_SB_.SEN2", 52, 32000, "MAX")]},
+            "idsp": [gddv.ITMT_UUID],
+        },
+    }
