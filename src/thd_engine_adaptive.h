@@ -38,7 +38,11 @@
 #include "thd_adaptive_types.h"
 
 
+#include "thd_itmt_pid_config.h"
+
 class cthd_engine_adaptive: public cthd_engine_default {
+	cthd_itmt_pid_config itmt_pid_config;
+
 protected:
 	int policy_active;
 	int fallback_id;

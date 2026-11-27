@@ -41,6 +41,7 @@ typedef struct _zone_trip_limits{
 	int _min_state;
 	int _max_state;
 	int _min_max_valid;
+	int pid;
 
 	_zone_trip_limits() {
 		zone = 0;
@@ -48,6 +49,7 @@ typedef struct _zone_trip_limits{
 		target_state_valid = 0;
 		target_value = 0;
 		_min_state = _max_state = _min_max_valid = 0;
+		pid = 0;
 	}
 
 	_zone_trip_limits(const _zone_trip_limits& x) = default;
@@ -134,6 +136,8 @@ public:
 
 	int thd_cdev_set_step_request(int zone_id, int trip_id, int request,
 			bool active);
+	int pid_gradual_bound(int delta, bool inverted, int trip_temp,
+			int set_point, int temperature, cthd_pid &pid);
 	virtual int thd_cdev_set_min_state(int zone_id, int trip_id);
 
 	virtual void thd_cdev_set_min_state_param(int arg) {

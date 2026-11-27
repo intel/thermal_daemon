@@ -38,12 +38,15 @@ tdconfig_DATA = \
 	thermald-features.xml
 
 # thermal-conf.xml ships example/default platform policy rules (including
-# the Qualcomm Glymur block). Install it only if it doesn't already exist,
-# so make install never clobbers an admin's customized config.
+# the Qualcomm Glymur block), itmt-pid.xml the documented default ITMT PID
+# gains. Install them only if they don't already exist, so make install
+# never clobbers an admin's customized config.
 install-data-hook:
 	$(MKDIR_P) $(DESTDIR)$(tdconfigdir)
 	test -f $(DESTDIR)$(tdconfigdir)/thermal-conf.xml || \
 		$(INSTALL_DATA) $(srcdir)/thermal-conf.xml $(DESTDIR)$(tdconfigdir)/thermal-conf.xml
+	test -f $(DESTDIR)$(tdconfigdir)/itmt-pid.xml || \
+		$(INSTALL_DATA) $(srcdir)/itmt-pid.xml $(DESTDIR)$(tdconfigdir)/itmt-pid.xml
 
 EXTRA_DIST = \
 	thermald.service.in \
@@ -51,6 +54,7 @@ EXTRA_DIST = \
 	99-thermald-powercap.rules.in \
 	$(dbusservice_DATA) \
 	$(tdconfig_DATA) \
-	thermal-conf.xml
+	thermal-conf.xml \
+	itmt-pid.xml
 
 CLEANFILES = thermald.service org.freedesktop.thermald.service 99-thermald-powercap.rules

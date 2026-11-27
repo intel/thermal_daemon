@@ -251,8 +251,23 @@ bool cthd_trip_point::thd_trip_point_check(int id, unsigned int read_temp,
 		return true;
 	}
 
-	if (on != 1 && off != 1)
-		return true;
+	if (on != 1 && off != 1) {
+		bool pid_release = false;
+
+		for (unsigned int j = 0; j < cdevs.size(); ++j) {
+			if (cdevs[j].pid_param.valid && cdevs[j].pid_param.gradual_release)
+				pid_release = true;
+		}
+
+		/*
+		 * Within the hysteresis below an active trip: a PID with gradual
+		 * release keeps controlling, otherwise its first call after
+		 * leaving the band would act on the whole time spent in it.
+		 */
+		if (!trip_on || !pid_release)
+			return true;
+		on = 1;
+	}
 
 	int i, ret;
 	thd_log_debug("cdev size for this trippoint %lu\n",
@@ -369,11 +384,13 @@ void cthd_trip_point::thd_trip_point_add_cdev(cthd_cdev &cdev, int influence,
 		thd_log_info("pid valid %f:%f:%f mode:%s\n", pid_param->kp,
 				pid_param->ki, pid_param->kd,
 				pid_param->mode == PID_INCREMENTAL ? "incremental" : "absolute");
-		memcpy(&thd_cdev.pid_param, pid_param, sizeof(pid_param_t));
+		thd_cdev.pid_param = *pid_param;
 		thd_cdev.pid.set_pid_param(pid_param->kp, pid_param->ki, pid_param->kd);
 		thd_cdev.pid.set_pid_mode(pid_param->mode);
+		thd_cdev.pid.set_time_scaled(pid_param->time_scaled);
 	} else {
-		memset(&thd_cdev.pid_param, 0, sizeof(pid_param_t));
+		thd_cdev.pid_param = pid_param_t();
+		thd_cdev.pid_param.valid = 0;
 		thd_cdev.pid_param.mode = PID_ABSOLUTE;
 	}
 	trip_cdev_add(thd_cdev);

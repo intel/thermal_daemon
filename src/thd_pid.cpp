@@ -31,6 +31,8 @@ cthd_pid::cthd_pid() {
 	last_err = 0.0;
 	target_temp = 0;
 	mode = PID_ABSOLUTE;
+	time_scaled = false;
+	boost_pow = 0;
 }
 
 int cthd_pid::pid_output(unsigned int curr_temp, int initial_value) {
@@ -83,7 +85,19 @@ int cthd_pid::pid_output(unsigned int curr_temp, int initial_value) {
 	double d_err = timeChange ?
 			(double)(error - last_err) / timeChange : 0.0;
 
-	output = kp * error + ki * err_sum + kd * d_err;
+	if (time_scaled && mode == PID_INCREMENTAL) {
+		/*
+		 * Velocity form: Kp acts per second, Kd on each change. A long
+		 * gap since the last call must not make one large step.
+		 */
+		double dt = timeChange > PID_TIME_SCALED_MAX_DT ?
+				PID_TIME_SCALED_MAX_DT : (double) timeChange;
+
+		output = kp * error * dt + ki * err_sum * dt
+				+ kd * (error - last_err);
+	} else {
+		output = kp * error + ki * err_sum + kd * d_err;
+	}
 
 	thd_log_debug("pid_%s e:%d kp:%g ki_sum:%g kd:%g out:%d\n",
 			mode == PID_INCREMENTAL ? "inc" : "abs",
