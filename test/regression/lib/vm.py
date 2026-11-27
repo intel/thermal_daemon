@@ -43,6 +43,12 @@ DefinitionBlock ("", "SSDT", 2, "THDTST", "IETM", 0x1)
                 Debug = Concatenate ("THDTST IMOK ", ToDecimalString (Arg0))
                 Return (Arg0)
             }
+            // Keep-alive request to the thermal daemon, evaluated by the
+            // test module (acpi_eval); int3400_thermal sends EVENT=8
+            Method (KALV, 0, NotSerialized)
+            {
+                Notify (\\_SB.IETM, 0xA0)
+            }
 %(odvp)s        }
     }
 }

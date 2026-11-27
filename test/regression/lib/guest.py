@@ -312,6 +312,10 @@ class Guest:
                                      "/org/freedesktop/thermald")
         obj.Reinit(dbus_interface="org.freedesktop.thermald")
 
+    def acpi_eval(self, method):
+        """Evaluate an ACPI method of the test SSDT, e.g. "\\_SB.IETM.KALV"."""
+        write(TEST_SYSFS + "/acpi_eval", method)
+
     def imok_values(self):
         """Arguments of every IETM.IMOK call so far (from dmesg)."""
         import re

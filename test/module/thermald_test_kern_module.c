@@ -46,6 +46,9 @@
  *   zone_temp       write "<zone type> <millicelsius>", read: all zones
  *   rapl_demand_uw  package power the simulated workload asks for
  *   rapl_locked     1: power limit writes fail with -rapl_lock_errno
+ *   acpi_eval       write an ACPI method path (e.g. \\_SB.IETM.KALV) to
+ *                   evaluate it without arguments, e.g. to make the test
+ *                   SSDT send a notification
  *   gen_cdev        a plain integer, for a generic sysfs cooling device
  *                   from thermal-conf.xml (writes are logged)
  *   cdev_log        as rapl_log, for cooling device changes:
@@ -83,6 +86,7 @@
 #include <linux/cpu.h>
 #include <linux/cpufreq.h>
 #include <linux/backlight.h>
+#include <linux/acpi.h>
 
 static char *zone_name = "none";
 module_param(zone_name, charp, 0644);
@@ -1174,6 +1178,29 @@ static ssize_t gen_cdev_store(struct kobject *kobj, struct kobj_attribute *attr,
 	return count;
 }
 
+static ssize_t acpi_eval_store(struct kobject *kobj, struct kobj_attribute *attr,
+			       const char *buf, size_t count)
+{
+#ifdef CONFIG_ACPI
+	char path[128];
+	acpi_status status;
+
+	if (strscpy(path, buf, sizeof(path)) < 0)
+		return -EINVAL;
+	strim(path);
+	status = acpi_evaluate_object(NULL, path, NULL, NULL);
+	if (ACPI_FAILURE(status)) {
+		pr_err("thermald_test: evaluating %s failed: %s\n", path,
+		       acpi_format_exception(status));
+		return -EIO;
+	}
+
+	return count;
+#else
+	return -ENODEV;
+#endif
+}
+
 static struct kobj_attribute sensor_attribute =
 		__ATTR(sensor_temp, 0644, sensor_show, sensor_store);
 static struct kobj_attribute control_attribute =
@@ -1188,6 +1215,8 @@ static struct kobj_attribute rapl_log_attribute =
 		__ATTR(rapl_log, 0644, rapl_log_show, rapl_log_store);
 static struct kobj_attribute cdev_log_attribute =
 		__ATTR(cdev_log, 0644, cdev_log_show, cdev_log_store);
+static struct kobj_attribute acpi_eval_attribute =
+		__ATTR(acpi_eval, 0200, NULL, acpi_eval_store);
 static struct kobj_attribute gen_cdev_attribute =
 		__ATTR(gen_cdev, 0644, gen_cdev_show, gen_cdev_store);
 
@@ -1200,6 +1229,7 @@ static struct attribute *thermald_attrs[] = {
 	&rapl_log_attribute.attr,
 	&cdev_log_attribute.attr,
 	&gen_cdev_attribute.attr,
+	&acpi_eval_attribute.attr,
 	NULL,
 };
 

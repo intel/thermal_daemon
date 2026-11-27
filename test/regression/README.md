@@ -137,4 +137,4 @@ it passes, so the marker is removed together with the fix.
 | Several zones, one cooling device | `multizone_shared_cdev` |
 | Default engine, no data vault or XML | `default_engine_cpu_zone`, `default_engine_some_cdevs`, `default_engine_cdev_order` |
 | Cooling devices from thermal-conf.xml | `xml_cooling_devices` (intel_pstate, cpufreq, powerclamp, LCD, generic sysfs), `xml_pl1_staircase` (RAPL) |
-| Fixes | `virtual_sensors_two_participants` (6656673), `input_switch_removed` (PR #611), `notify_platform_imok` (PR #613), `ignore_adaptive_flow`, `late_devices_retry` |
+| Fixes | `virtual_sensors_two_participants` (6656673), `input_switch_removed` (PR #611), `notify_platform_imok` (PR #613), `ignore_adaptive_flow`, `late_devices_retry`, `keepalive_imok`, `keepalive_notify_platform` (PR #627) |
