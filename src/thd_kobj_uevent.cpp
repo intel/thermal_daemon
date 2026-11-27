@@ -30,7 +30,12 @@ int cthd_kobj_uevent::kobj_uevent_open() {
 
 	nls.nl_family = AF_NETLINK;
 	nls.nl_pid = getpid();
-	nls.nl_groups = -1;
+	/*
+	 * Kernel uevents only: with all groups, the copies systemd-udevd
+	 * broadcasts after processing an event arrive too, so each event was
+	 * handled twice.
+	 */
+	nls.nl_groups = 1;
 
 	fd = socket(PF_NETLINK, SOCK_DGRAM, NETLINK_KOBJECT_UEVENT);
 	if (fd < 0)
