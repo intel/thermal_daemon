@@ -20,8 +20,9 @@
       PL1 change (uW) = Kp * e * seconds since the last change
                         + Kd * (change of e since then)
 
-  Above the set point PL1 is never raised, and 1 C or more above the trip
-  PL1 is cut at least as fast as the default controller would.
+  By default, above the set point PL1 is never raised, and 1 C or more above
+  the trip PL1 is cut at least as fast as the default controller would.
+  AllowRaiseAboveSetPoint and BackstopOffset change these bounds.
 -->
 <ItmtPid>
 	<!--
@@ -52,6 +53,30 @@
 	  degrees are about as often above the set point as below it.
 	-->
 	<SetPointOffset>500</SetPointOffset>
+
+	<!--
+	  BackstopOffset: this far above the trip, in millicelsius, the PID
+	  requests a cut of at least one step of the default controller. The
+	  step doubles, up to a limit, on each consecutive sample still that
+	  far above the trip. 0 to 5000; 0 turns this off.
+	-->
+	<BackstopOffset>1000</BackstopOffset>
+
+	<!--
+	  AllowRaiseAboveSetPoint: while the trip is active and the temperature
+	  is above the set point, 1 lets a falling temperature raise PL1 and 0
+	  does not.
+	-->
+	<AllowRaiseAboveSetPoint>0</AllowRaiseAboveSetPoint>
+
+	<!--
+	  CutFromLastLimit: 0 to start each cut from the state the cooling
+	  device reports, which for RAPL can be the measured package power.
+	  1 to start each cut from the PL1 thermald requested last. A load far
+	  below PL1 is then not limited until PL1 has come down to it, which is
+	  slow with BackstopOffset 0.
+	-->
+	<CutFromLastLimit>0</CutFromLastLimit>
 
 	<!--
 	  ScaleWithRange: 1 to scale Kp and Kd with the PL1 range of the ITMT

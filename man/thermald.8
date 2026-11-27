@@ -126,6 +126,14 @@ which settles the power limit near the trip temperature, when
 /etc/thermald/itmt-pid.xml is present (it is installed by default). The file
 holds the PID gains and explains each setting; with Enable set to 0 there,
 or without the file, the default controller is used.
+BackstopOffset (0 to 5000 millicelsius, default 1000) sets how far above
+the trip the doubling cuts start. Zero disables them. AllowRaiseAboveSetPoint
+(0 or 1, default 0) lets a falling temperature raise PL1 while the trip is
+active and the temperature is above the set point. CutFromLastLimit (0 or 1,
+default 0) starts cuts from the last requested limit when enabled; a load far
+below the limit is then not limited until the limit has come down to it. The
+default starts from the state the cooling device reports, which for RAPL can
+be the measured package power.
 .TP
 .B \-\-test-mode
 Force use adaptive mode and exit if not supported, instead of restarting in

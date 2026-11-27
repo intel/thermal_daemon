@@ -63,6 +63,11 @@ typedef struct pid_param
 	int gradual_release = 0;
 	/* Control towards trip temperature - set_point_offset (millicelsius) */
 	int set_point_offset = 0;
+	/* Gradual release only, see cthd_cdev::pid_gradual_bound() (millicelsius) */
+	int backstop_offset = 1000;
+	bool allow_raise_above_set_point = false;
+	/* Gradual release only: cut from the last state set, not the measured one */
+	bool cut_from_last_limit = false;
 	/*
 	 * Incremental mode only: output Kp*e*dt + Kd*(e - last e), so the
 	 * gains are per second and don't depend on how often it is called.

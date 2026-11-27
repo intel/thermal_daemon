@@ -38,6 +38,8 @@ def run(g):
     g.check("itmt-pid.xml: ITMT PID enabled, Kp 30 Kd 1000 set point offset 500 scale with "
             "range (reference 17000 mW, 0.5-1.5)" in log,
             "the shipped itmt-pid.xml doesn't give the built-in defaults, enabled")
+    g.check("backstop offset 1000 allow raise 0 cut from last limit 0" in log,
+            "shipped settings changed")
     warnings = [l for l in log.splitlines() if "itmt-pid.xml" in l and "[WARN]" in l]
     g.check(not warnings, "warnings for the shipped itmt-pid.xml: %s" % warnings)
     g.check("pid valid 17.647059:0.000000:588.235294" in log,

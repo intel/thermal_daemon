@@ -113,6 +113,10 @@ For build, follow the same procedure as Fedora.
 
 Releases
 
+Unreleased
+- The ITMT PID supports BackstopOffset, AllowRaiseAboveSetPoint and
+  CutFromLastLimit in itmt-pid.xml.
+
 Release 2.5.14-rc1
 This is a test release, for testing across a wide variety of platforms.
 

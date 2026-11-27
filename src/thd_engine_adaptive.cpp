@@ -405,6 +405,9 @@ int cthd_engine_adaptive::install_itmt(struct itmt_entry *itmt_entry) {
 		pid_param.mode = PID_INCREMENTAL;
 		pid_param.gradual_release = 1;
 		pid_param.set_point_offset = itmt_pid_config.set_point_offset;
+		pid_param.backstop_offset = itmt_pid_config.backstop_offset;
+		pid_param.allow_raise_above_set_point = itmt_pid_config.allow_raise_above_set_point;
+		pid_param.cut_from_last_limit = itmt_pid_config.cut_from_last_limit;
 		pid_param.time_scaled = 1;
 		thd_log_info("ITMT PID %s: PL1 range %lld mW, gain scale %.2f\n",
 				itmt_zone.c_str(), range / 1000, scale);
