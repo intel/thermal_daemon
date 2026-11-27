@@ -3,6 +3,8 @@
 #   make -C test/unit          gddv_dump and pid_clock (ASan + UBSan)
 #   test/fuzz/run.sh           libFuzzer targets, built with clang
 #
+# The default target also builds rapl_meter.
+#
 # The source list is read from the top-level Makefile.am, so it follows
 # the real build. The tree must be configured (config.h and the
 # generated thermald-resource.c come from ./configure and make).
@@ -32,7 +34,14 @@ LDLIBS := $(shell pkg-config --libs $(PKGS)) -lm -ldl
 
 OBJS := $(patsubst %,$(BUILD)/%.o,$(SRCS))
 
-all: $(BUILD)/gddv_dump $(BUILD)/pid_clock
+all: $(BUILD)/gddv_dump $(BUILD)/pid_clock $(BUILD)/rapl_meter
+
+$(BUILD)/rapl_meter: $(BUILD)/rapl_meter.o $(BUILD)/main_stubs.o $(OBJS)
+	$(CXX) $(SANITIZE) $^ $(LDLIBS) -Wl,--wrap=time,--wrap=clock_gettime \
+		-Wl,--wrap=_ZN7csys_fs6existsEv -o $@
+
+$(BUILD)/rapl_meter.o: rapl_meter.cpp $(BUILD)/.flags
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(SANITIZE) -c $< -o $@
 
 $(BUILD)/pid_clock: $(BUILD)/pid_clock.cpp.o $(BUILD)/src/thd_pid.cpp.o $(BUILD)/main_stubs.o
 	$(CXX) $(SANITIZE) $^ $(LDLIBS) -Wl,--wrap=time,--wrap=clock_gettime -o $@
