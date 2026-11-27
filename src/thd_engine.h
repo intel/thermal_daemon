@@ -82,8 +82,15 @@ protected:
 	bool parse_thermal_zone_success;
 	bool parse_thermal_cdev_success;
 	std::string uuid;
+	std::string int3400_base_path;
 	bool parser_disabled;
 	bool adaptive_mode;
+	bool imok_missing_logged;
+
+	int write_int3400_imok(unsigned int value, const char *caller);
+	virtual unsigned int get_keep_alive_imok_arg() {
+		return 1U;
+	}
 
 private:
 
@@ -122,12 +129,15 @@ private:
 	bool rt_kernel;
 	cthd_kobj_uevent kobj_uevent;
 	bool parser_init_done;
+	bool ignore_platform_check;
 
 	int proc_message(message_capsul_t *msg);
 	void process_pref_change();
 	void thermal_zone_change(message_capsul_t *msg);
 	void process_terminate();
 	void check_for_rt_kernel();
+	bool check_thinkpad_dytc();
+	void handle_keep_alive_event();
 
 public:
 	static constexpr int max_thermal_zones = 10;
@@ -244,6 +254,7 @@ public:
 	cthd_cdev *search_cdev(const std::string& name);
 	cthd_cdev *match_cdev(const std::string& name);
 	cthd_sensor *search_sensor(const std::string& name);
+	std::string cpu_participant_name(const std::string& name, bool sensor);
 	cthd_sensor *get_sensor(int index);
 	cthd_zone *get_zone(int index);
 	cthd_zone *get_zone(const std::string& type);

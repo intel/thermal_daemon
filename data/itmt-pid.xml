@@ -1,0 +1,79 @@
+<?xml version="1.0"?>
+<!--
+  PID control of ITMT trips, used when thermald runs in adaptive mode and
+  this file is present, unless Enable below is 0.
+
+  An ITMT table entry gives a trip temperature for a sensor (usually a skin
+  sensor) and a PL1 range. Once the sensor reaches the trip, a PID moves the
+  PL1 power limit within that range so that the sensor settles near the
+  trip, instead of cutting PL1 in steps and restoring it (a sawtooth). Below
+  the trip, minus a 2 C hysteresis, PL1 is released back gradually.
+
+  Each element is optional; a missing or invalid one keeps the default shown
+  here. These are the built-in defaults, tuned for a common 25 W client
+  system. Without this file, or if it can't be parsed, the PID is not used.
+  thermald reads this file at start. Restart thermald after a change.
+
+  How the PID acts, every 5 s while the trip is active (e: sensor
+  temperature minus the set point, in millicelsius):
+
+      PL1 change (uW) = Kp * e * seconds since the last change
+                        + Kd * (change of e since then)
+
+  Above the set point PL1 is never raised, and 1 C or more above the trip
+  PL1 is cut at least as fast as the default controller would.
+-->
+<ItmtPid>
+	<!--
+	  Enable: 1 to control ITMT trips with the PID described here. 0: the
+	  default controller, which cuts PL1 in steps while the sensor is above
+	  the trip and releases it again once the sensor is 2 C below the trip.
+	-->
+	<Enable>1</Enable>
+
+	<!--
+	  Kp: how fast PL1 keeps changing while the temperature stays away from
+	  the set point, in uW per millicelsius per second. 30: 30 mW per second
+	  for each degree of error. Larger: reaches the limit sooner, but with
+	  slow skin sensors it overshoots and oscillates more.
+	-->
+	<Kp>30</Kp>
+
+	<!--
+	  Kd: how much PL1 changes at once when the temperature changes, in uW
+	  per millicelsius. 1000: 1 W for each degree the sensor rises or falls.
+	  Larger: reacts more strongly to each change of the sensor reading.
+	-->
+	<Kd>1000</Kd>
+
+	<!--
+	  SetPointOffset: the PID aims this far below the ITMT trip temperature,
+	  in millicelsius. 500: half a degree, so that sensors that report whole
+	  degrees are about as often above the set point as below it.
+	-->
+	<SetPointOffset>500</SetPointOffset>
+
+	<!--
+	  ScaleWithRange: 1 to scale Kp and Kd with the PL1 range of the ITMT
+	  entry (PL1 maximum minus PL1 minimum), so that a system with a larger
+	  range moves through it about as fast as the reference system. 0 to use
+	  Kp and Kd exactly as given.
+	-->
+	<ScaleWithRange>1</ScaleWithRange>
+
+	<!--
+	  ReferenceRange: the PL1 range, in mW, for which Kp and Kd are given.
+	  17000: a 25 W client system limited down to 8 W. An entry with a 34 W
+	  range gets twice the gains (before ScaleMax applies).
+	-->
+	<ReferenceRange>17000</ReferenceRange>
+
+	<!--
+	  ScaleMin, ScaleMax: limits for that scale factor. With a skin sensor
+	  that responds slowly (30 s or more), gains above about 1.5 times make
+	  the control oscillate, so keep ScaleMax at 1.5 unless the sensor is
+	  known to respond faster.
+	-->
+	<ScaleMin>0.5</ScaleMin>
+	<ScaleMax>1.5</ScaleMax>
+</ItmtPid>

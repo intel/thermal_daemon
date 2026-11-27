@@ -179,6 +179,12 @@ gboolean sig_int_handler(void) {
 	return FALSE;
 }
 
+void thd_request_shutdown() {
+	g_idle_add([](gpointer) -> gboolean {
+		return sig_int_handler();
+	}, nullptr);
+}
+
 gboolean log_debug = FALSE;
 
 // main function

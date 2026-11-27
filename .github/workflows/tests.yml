@@ -1,0 +1,101 @@
+name: thermald tests
+
+# Parser unit tests, a short fuzz run and the VM regression suite.
+# Real data vaults are never used here: they may hold OEM data and are
+# only tested locally (test/run_all.sh --vault-dir).
+
+on:
+  push:
+  pull_request:
+
+permissions: read-all
+
+env:
+  BUILD_DEPS: >-
+    autoconf autoconf-archive automake g++ gtk-doc-tools libevdev-dev
+    libglib2.0-dev libupower-glib-dev libxml2-dev
+
+jobs:
+  unit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y $BUILD_DEPS python3-pytest
+      - name: Build
+        run: ./autogen.sh prefix=/ && make -j$(nproc)
+      - name: Parser unit tests (ASan, UBSan)
+        run: make -C test/unit -j$(nproc) && python3 -m pytest -v test/unit
+
+  fuzz:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y $BUILD_DEPS clang
+      - name: Build
+        run: ./autogen.sh prefix=/ && make -j$(nproc)
+      - name: Allow user namespaces (the XML fuzzer runs in one)
+        run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0 || true
+      - name: Fuzz the GDDV, XML and helper parsers, 1 minute each
+        run: FUZZ_SECONDS=60 THD_FUZZ_OUT=$RUNNER_TEMP/fuzz test/fuzz/run.sh
+      - name: Keep crash inputs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fuzz-crashes
+          path: ${{ runner.temp }}/fuzz/*/crashes/
+
+  vm-regression:
+    runs-on: ubuntu-latest
+    # Not validated on GitHub runners yet (needs KVM, the runner kernel's
+    # headers and modules, and a readable vmlinuz): don't block on it
+    # until it has run green once.
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' \
+            | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          # Not every runner kernel has a linux-modules-extra package
+          extra=linux-modules-extra-$(uname -r)
+          apt-cache show $extra > /dev/null 2>&1 || extra=
+          sudo apt-get install -y $BUILD_DEPS qemu-system-x86 acpica-tools \
+            python3-pytest python3-dbusmock python3-evdev python3-dbus dbus \
+            linux-headers-$(uname -r) $extra
+          sudo pip3 install --break-system-packages virtme-ng
+          sudo chmod 0644 /boot/vmlinuz-$(uname -r)
+      - name: Check the runner kernel
+        id: kernel
+        run: |
+          # The scenarios run the runner's kernel in the VM and need its
+          # int3400_thermal module (the IETM device) and powercap
+          if modinfo int3400_thermal > /dev/null 2>&1 \
+              && [ -d /sys/class/powercap ]; then
+            echo "ok=1" >> "$GITHUB_OUTPUT"
+          else
+            echo "::notice::kernel $(uname -r) has no int3400_thermal or powercap: VM scenarios skipped"
+            echo "ok=0" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Build
+        if: steps.kernel.outputs.ok == '1'
+        run: ./autogen.sh prefix=/ && make -j$(nproc)
+      - name: VM regression scenarios
+        if: steps.kernel.outputs.ok == '1'
+        run: THD_REG_OUT=$RUNNER_TEMP/regression test/regression/run.sh
+      - name: Keep results
+        if: always() && steps.kernel.outputs.ok == '1'
+        uses: actions/upload-artifact@v4
+        with:
+          name: regression-results
+          path: ${{ runner.temp }}/regression/

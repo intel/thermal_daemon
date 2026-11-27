@@ -496,6 +496,10 @@ Several distinct paths, worth knowing because they look different in the log:
   bails immediately, so the restarted daemon runs the default engine. If a user
   reports "thermald restarted once at boot and now behaves differently", this is
   why. Removing the file re-enables adaptive mode on the next start.
+  Exception: if thermal zones, cooling devices or powercap zones appeared
+  since the engine read them (at boot, drivers can probe after thermald
+  starts), thermald creates `adaptive_retried` instead, so the restart tries
+  adaptive mode once more. This happens once per boot.
 
 ### 7.7 Re-evaluation
 
@@ -552,9 +556,9 @@ sudo thermald --no-daemon --loglevel=debug --adaptive        # or without --adap
 
 `--no-daemon` sends output to stdout; otherwise it goes to syslog/journal. There
 are ready-made collection scripts:
-[test/thermal-debug-dump-fedora.sh](test/thermal-debug-dump-fedora.sh),
-[test/thermal-debug-dump-ubuntu.sh](test/thermal-debug-dump-ubuntu.sh),
-[test/thermal-dptf-tables-test-fedora.sh](test/thermal-dptf-tables-test-fedora.sh).
+[tools/thermal-debug-dump-fedora.sh](tools/thermal-debug-dump-fedora.sh),
+[tools/thermal-debug-dump-ubuntu.sh](tools/thermal-debug-dump-ubuntu.sh),
+[tools/thermal-dptf-tables-test-fedora.sh](tools/thermal-dptf-tables-test-fedora.sh).
 
 ### Log lines to look for first
 
@@ -582,23 +586,23 @@ adaptive mode tears everything down.
 
 ### Plotting
 
-[test/thermald_debug_output_graph.py](test/thermald_debug_output_graph.py) plots
+[tools/thermald_debug_output_graph.py](tools/thermald_debug_output_graph.py) plots
 temperatures and trips from a debug log;
-[test/thermal_temp_dump.py](test/thermal_temp_dump.py) and
-[test/thermal_config_dump.py](test/thermal_config_dump.py) are also useful.
+[tools/thermal_temp_dump.py](tools/thermal_temp_dump.py) and
+[tools/thermal_config_dump.py](tools/thermal_config_dump.py) are also useful.
 `ThermalMonitor` (a separate GUI, referenced from the man page) talks over D-Bus.
 
-### Testing without the hardware
+### Testing
 
-[test/readme_test.txt](test/readme_test.txt): build
-[test/thermald_test_kern_module.c](test/thermald_test_kern_module.c) against your
-kernel with `CONFIG_THERMAL_EMULATION=y`, load it, then run
-[test/exec_config_tests.sh](test/exec_config_tests.sh) — you get a loopback
-thermal zone whose temperature you can drive via `emul_temp`.
-[test/using_test_data_vault.txt](test/using_test_data_vault.txt) explains how to
-feed a canned data vault into adaptive mode from
-`/lib/firmware/intel/dtt/`, which is how you reproduce another machine's DPTF
-tables locally. Sample data vaults are in [test/gddv_tests/](test/gddv_tests/).
+[test/README.md](test/README.md) is the guide to testing thermald: setup,
+what to run for a change, what each test checks, and how to add tests.
+In short, `test/run_all.sh` runs the parser unit tests, a short fuzz run
+and a VM regression suite that drives the real thermald binary on a fake
+platform (test kernel module, fake RAPL, ACPI data vault), with no root
+or special hardware. `sudo test/hw/hw_smoke.py` checks a real machine.
+To reproduce another machine's DPTF tables locally, see
+[test/manual/data_vault/README.txt](test/manual/data_vault/README.txt),
+or run its data vault in the VM suite (`test/run_all.sh --vault-dir`).
 
 ---
 
@@ -657,7 +661,7 @@ handlers validate names with `is_valid_thermal_object_name()`, resolve paths
 with `realpath()` and require a `/sys/` prefix
 (`canonicalize_sysfs_path()`), and bound numeric ranges. Match that standard in
 new methods. [tools/thermald_set_pref.sh](tools/thermald_set_pref.sh) and
-[test/default.sh](test/default.sh) are handy manual clients.
+[test/manual/emulation/default.sh](test/manual/emulation/default.sh) are handy manual clients.
 
 ---
 
@@ -710,10 +714,12 @@ Before sending a pull request:
   and has had real bounds bugs; validate lengths, bound loops, prefer
   `std::unique_ptr` over raw `new`/`delete`, and open files with `O_NOFOLLOW`
   where a symlink would be a problem.
-* **Add a test** where the loopback module makes it possible: an XML config plus
-  a script under [test/](test/), wired into
-  [test/exec_config_tests.sh](test/exec_config_tests.sh); or a data vault under
-  [test/gddv_tests/](test/gddv_tests/) for parser changes.
+* **Add a test** with the change: a VM scenario in
+  [test/regression/scenarios/](test/regression/scenarios/) for engine,
+  adaptive or configuration behaviour, or a case in
+  [test/unit/test_gddv_parser.py](test/unit/test_gddv_parser.py) for the
+  data vault parser. Check that it fails without the fix; see
+  [test/README.md](test/README.md).
 * **Update the man pages** ([man/thermald.8](man/thermald.8),
   [man/thermal-conf.xml.5](man/thermal-conf.xml.5)) when you add an option or a
   config element, and add a release note to [README.txt](README.txt).

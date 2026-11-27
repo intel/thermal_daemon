@@ -121,7 +121,11 @@ up with lower power limits.
 .TP
 .B \-\-adaptive
 Use DPTF adaptive tables when present. This will ignore thermald config via
-xml files.
+xml files. The trips of an ITMT table are controlled by a PID controller,
+which settles the power limit near the trip temperature, when
+/etc/thermald/itmt-pid.xml is present (it is installed by default). The file
+holds the PID gains and explains each setting; with Enable set to 0 there,
+or without the file, the default controller is used.
 .TP
 .B \-\-test-mode
 Force use adaptive mode and exit if not supported, instead of restarting in

@@ -41,6 +41,7 @@ typedef struct _zone_trip_limits{
 	int _min_state;
 	int _max_state;
 	int _min_max_valid;
+	int pid;
 
 	_zone_trip_limits() {
 		zone = 0;
@@ -48,6 +49,7 @@ typedef struct _zone_trip_limits{
 		target_state_valid = 0;
 		target_value = 0;
 		_min_state = _max_state = _min_max_valid = 0;
+		pid = 0;
 	}
 
 	_zone_trip_limits(const _zone_trip_limits& x) = default;
@@ -58,6 +60,12 @@ typedef struct _zone_trip_limits{
 } zone_trip_limits_t;
 
 #define ZONE_TRIP_LIMIT_COUNT	12
+
+typedef struct {
+	int zone;
+	int trip;
+	int request;
+} step_request_t;
 
 class cthd_cdev {
 
@@ -83,6 +91,7 @@ protected:
 	cthd_pid pid_ctrl;
 	int last_state;
 	std::vector<zone_trip_limits_t> zone_trip_limits;
+	std::vector<step_request_t> step_requests;
 	std::string write_prefix;
 	int inc_val;
 	int dec_val;
@@ -125,6 +134,18 @@ public:
 			pid_param_t *pid_param, cthd_pid &pid, bool force,
 			int min_max_valid, int _min_state, int _max_state);
 
+	int thd_cdev_set_step_request(int zone_id, int trip_id, int request,
+			bool active);
+	int step_bound(int state);
+	/* Zone and trip of the most restrictive active limit, false if none */
+	bool active_limit_source(int *zone_id, int *trip_id);
+	int get_release_step() {
+		if (dec_val)
+			return dec_val < 0 ? -dec_val : dec_val;
+		return inc_dec_val < 0 ? -inc_dec_val : inc_dec_val;
+	}
+	int pid_gradual_bound(int delta, bool inverted, int trip_temp,
+			int set_point, int temperature, cthd_pid &pid);
 	virtual int thd_cdev_set_min_state(int zone_id, int trip_id);
 
 	virtual void thd_cdev_set_min_state_param(int arg) {

@@ -151,6 +151,7 @@ int cthd_cdev::thd_cdev_exponential_controller(int set_point, int target_temp,
 
 		trend_increase = true;
 		thd_log_debug("op->device:%s %d\n", type_str.c_str(), _state);
+		_state = step_bound(_state);
 		set_curr_state(_state, control);
 	} else {
 		// Get the latest state, which is not the latest from the hardware but last set state to the device
@@ -184,6 +185,7 @@ int cthd_cdev::thd_cdev_exponential_controller(int set_point, int target_temp,
 			_state = thd_clamp_state_max(_state, temp_min_state, temp_max_state);
 
 			thd_log_info("op->device:%s %d\n", type_str.c_str(), _state);
+			_state = step_bound(_state);
 			set_curr_state(_state, control);
 		} else {
 			// Force to effective min, then ensure full range clamp.
@@ -192,6 +194,7 @@ int cthd_cdev::thd_cdev_exponential_controller(int set_point, int target_temp,
 			_state = thd_clamp_state_max(_state, temp_min_state, temp_max_state);
 
 			thd_log_debug("op->device: force min %s %d\n", type_str.c_str(), _state);
+			_state = step_bound(_state);
 			set_curr_state(_state, control);
 		}
 	}
@@ -304,6 +307,9 @@ int cthd_cdev::thd_cdev_set_state(int set_point, int target_temp,
 			limit.trip = trip_id;
 			limit.target_state_valid = target_state_valid;
 			limit.target_value = target_value;
+			/* Only for the opt-in PID behaviour (ITMT), see below */
+			limit.pid = pid_param && pid_param->valid
+					&& pid_param->gradual_release;
 
 			// Cap the trip min max limits to actual cooling device trips
 			// Here min_state and max_state are for cooling device and
@@ -372,6 +378,17 @@ int cthd_cdev::thd_cdev_set_state(int set_point, int target_temp,
 		target_value = limit.target_value;
 		_max_state = limit._max_state;
 		_min_state = limit._min_state;
+
+		/*
+		 * A gradual release PID limit owned by another trip: that trip's
+		 * PID drives the state. Otherwise this trip would run its own
+		 * control towards its own set point on the same device.
+		 */
+		if (limit.pid && (limit.zone != zone_id || limit.trip != trip_id)) {
+			thd_log_debug("PID limit owned by [%d: %d]: ignore\n",
+					limit.zone, limit.trip);
+			return THD_SUCCESS;
+		}
 
 		if (!first_entry && target_state_valid
 				&& cmp_current_state(
@@ -462,6 +479,7 @@ int cthd_cdev::thd_cdev_set_state(int set_point, int target_temp,
 	}
 
 	if (target_state_valid) {
+		target_value = step_bound(target_value);
 		set_curr_state_raw(target_value, state);
 		curr_state = target_value;
 		ret = THD_SUCCESS;
@@ -475,7 +493,7 @@ int cthd_cdev::thd_cdev_set_state(int set_point, int target_temp,
 		ret = THD_SUCCESS;
 
 	} else if (pid_param && pid_param->valid) {
-		pid.set_target_temp(target_temp);
+		pid.set_target_temp(target_temp - pid_param->set_point_offset);
 		bool inverted = (get_min_state() > get_max_state());
 
 		if (pid_param->mode == PID_INCREMENTAL) {
@@ -492,14 +510,39 @@ int cthd_cdev::thd_cdev_set_state(int set_point, int target_temp,
 			 *   Restore to min_state (no restriction) and reset PID.
 			 *   This avoids leaving the power limit partially reduced
 			 *   after the trip threshold is no longer exceeded.
+			 *
+			 *   With gradual_release, keep running the PID instead, so
+			 *   the limit is released in proportion to the (negative)
+			 *   error, never made more restrictive. Called each poll
+			 *   below the trip until the device is back at min_state.
 			 */
-			if (state == 0) {
+			if (state == 0 && pid_param->gradual_release) {
+				ret = pid.pid_output(temperature, 0);
+				if (inverted)
+					ret = -ret;
+				if ((inverted && ret < 0) || (!inverted && ret > 0))
+					ret = 0;
+				ret += get_curr_state();
+			} else if (state == 0) {
 				ret = get_min_state();
 			} else {
 				ret = pid.pid_output(temperature, 0);
 				if (inverted)
 					ret = -ret;
-				ret += get_curr_state(true);
+				/*
+				 * With gradual release, release from the current limit:
+				 * stepping from the measured power (e.g. near idle)
+				 * would limit further while asked to release.
+				 */
+				if (pid_param->gradual_release)
+					ret = pid_gradual_bound(ret, inverted, set_point,
+							target_temp - pid_param->set_point_offset,
+							temperature, pid);
+				if (pid_param->gradual_release
+						&& ((inverted && ret >= 0) || (!inverted && ret <= 0)))
+					ret += get_curr_state();
+				else
+					ret += get_curr_state(true);
 			}
 		} else {
 			/* Absolute PID: output is the desired offset from min_state */
@@ -510,6 +553,27 @@ int cthd_cdev::thd_cdev_set_state(int set_point, int target_temp,
 			if (inverted)
 				ret = -ret;
 			ret += get_min_state();
+		}
+
+		/*
+		 * Clamp to the trip's own range (ITMT PL1 min/max): never less
+		 * limited than _min_state, never more limited than _max_state.
+		 * The latter is applied last, as the default controller does, so
+		 * an entry whose PL1 minimum is above the device range (e.g. 28 W
+		 * with PL1 at most 20 W) doesn't limit at all.
+		 */
+		if (state && pid_param->gradual_release && _min_state && _max_state) {
+			if (inverted) {
+				if (ret > _min_state)
+					ret = _min_state;
+				if (ret < _max_state)
+					ret = _max_state;
+			} else {
+				if (ret < _min_state)
+					ret = _min_state;
+				if (ret > _max_state)
+					ret = _max_state;
+			}
 		}
 
 		/* Clamp to valid state range (handles both normal and inverted) */
@@ -524,7 +588,11 @@ int cthd_cdev::thd_cdev_set_state(int set_point, int target_temp,
 			if (ret > get_min_state())
 				ret = get_min_state();
 		}
-		set_curr_state_raw(ret, state);
+		bool releasing = (state == 0 && pid_param->gradual_release
+				&& ret != get_min_state());
+
+		ret = step_bound(ret);
+		set_curr_state_raw(ret, releasing ? 1 : state);
 		thd_log_info("Set pid(%s%s): set_pt:%d temp:%d cdev:%d(%s) state:%d max:%d\n",
 				pid_param->mode == PID_INCREMENTAL ? "inc" : "abs",
 				inverted ? ",inv" : "",
@@ -532,7 +600,7 @@ int cthd_cdev::thd_cdev_set_state(int set_point, int target_temp,
 				get_curr_state(), max_state);
 		ret = THD_SUCCESS;
 
-		if (state == 0)
+		if (state == 0 && !releasing)
 			pid.reset();
 
 	} else if (pid_enable) {
@@ -573,6 +641,7 @@ int cthd_cdev::thd_cdev_set_state(int set_point, int target_temp,
 				ret = get_min_state();
 		}
 
+		ret = step_bound(ret);
 		set_curr_state_raw(ret, state);
 		thd_log_info("Set pid_cdev(%s%s): set_pt:%d temp:%d cdev:%d(%s) state:%d max:%d\n",
 				pid_ctrl.get_pid_mode() == PID_INCREMENTAL ? "inc" : "abs",
@@ -594,6 +663,146 @@ int cthd_cdev::thd_cdev_set_state(int set_point, int target_temp,
 	}
 
 	return ret;
+}
+
+/*
+ * Bounds for a gradual release PID's change of state "delta" (already in
+ * state direction, + = more cooling unless "inverted"):
+ *
+ * - Guard: while the temperature is above the set point, never release.
+ *   The derivative term reacts to a falling temperature, which must not
+ *   raise the limit while still too hot.
+ * - Backstop: at or above the trip temperature + 1 C, cool at least as hard
+ *   as the default controller: the step doubled on each consecutive call.
+ *   The PID's integral part is slow, this bounds the overshoot after a fast
+ *   rise.
+ */
+int cthd_cdev::pid_gradual_bound(int delta, bool inverted, int trip_temp,
+		int set_point, int temperature, cthd_pid &pid) {
+	/* > 0: more cooling */
+	long long cool = inverted ? -(long long) delta : delta;
+
+	if (temperature > set_point && cool < 0)
+		cool = 0;
+
+	if (temperature >= trip_temp + 1000) {
+		/* The default controller's step: inc_val if set, else inc_dec_val */
+		long long step = inc_val ? llabs(inc_val) : llabs(inc_dec_val);
+
+		if (!step)
+			step = 1;
+		long long boost = step << pid.boost_pow;
+
+		if (pid.boost_pow < 20)
+			++pid.boost_pow;
+		if (boost > INT_MAX / 2)
+			boost = INT_MAX / 2;
+		if (cool < boost)
+			cool = boost;
+	} else {
+		pid.boost_pow = 0;
+	}
+
+	if (cool > INT_MAX / 2)
+		cool = INT_MAX / 2;
+
+	return (int) (inverted ? -cool : cool);
+}
+
+/*
+ * Step control (see cthd_trip_point::step_control): each step trip keeps
+ * its own request, the most restrictive one is applied. While another trip
+ * controls this device through thd_cdev_set_state(), only limit further.
+ */
+int cthd_cdev::thd_cdev_set_step_request(int zone_id, int trip_id,
+		int request, bool active) {
+	bool found = false;
+
+	for (auto it = step_requests.begin(); it != step_requests.end(); ++it) {
+		if (it->zone == zone_id && it->trip == trip_id) {
+			if (active)
+				it->request = request;
+			else
+				step_requests.erase(it);
+			found = true;
+			break;
+		}
+	}
+	if (!found && active)
+		step_requests.push_back({zone_id, trip_id, request});
+
+	bool inverted = (get_min_state() > get_max_state());
+	int state = get_min_state();
+
+	for (const step_request_t &r : step_requests) {
+		if ((inverted && r.request < state) || (!inverted && r.request > state))
+			state = r.request;
+	}
+
+	if (zone_trip_limits.size() && cmp_current_state(state) <= 0)
+		return THD_SUCCESS;
+
+	if (state == get_curr_state())
+		return THD_SUCCESS;
+
+	if (in_min_state())
+		control_begin();
+
+	set_curr_state_raw(state, state != get_min_state());
+	curr_state = state;
+	thd_log_info("Set step: zone:%d trip:%d request:%d cdev:%d(%s) state:%d\n",
+			zone_id, trip_id, request, index, type_str.c_str(),
+			get_curr_state());
+
+	if (curr_state == get_max_state())
+		control_end();
+
+	return THD_SUCCESS;
+}
+
+/*
+ * Not less limited than the most restrictive step request: other control
+ * (the default controller, a PID, target states) can only limit further
+ * while a step trip, e.g. a power limit carried over a target change,
+ * holds the device.
+ */
+int cthd_cdev::step_bound(int state) {
+	if (step_requests.empty())
+		return state;
+
+	bool inverted = (get_min_state() > get_max_state());
+	int most = get_min_state();
+
+	for (const step_request_t &r : step_requests) {
+		if ((inverted && r.request < most) || (!inverted && r.request > most))
+			most = r.request;
+	}
+	if ((inverted && state > most) || (!inverted && state < most))
+		state = most;
+
+	return state;
+}
+
+bool cthd_cdev::active_limit_source(int *zone_id, int *trip_id) {
+	bool inverted = (get_min_state() > get_max_state());
+	int best = get_min_state();
+	bool found = false;
+
+	for (const step_request_t &r : step_requests) {
+		if ((inverted && r.request < best) || (!inverted && r.request > best)) {
+			best = r.request;
+			*zone_id = r.zone;
+			*trip_id = r.trip;
+			found = true;
+		}
+	}
+	if (!found && zone_trip_limits.size()) {
+		*zone_id = zone_trip_limits.back().zone;
+		*trip_id = zone_trip_limits.back().trip;
+		found = true;
+	}
+
+	return found;
 }
 
 int cthd_cdev::thd_cdev_set_min_state(int zone_id, int trip_id) {

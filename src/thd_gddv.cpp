@@ -78,21 +78,11 @@ void cthd_gddv::destroy_dynamic_sources() {
 	if (power_profiles_daemon)
 		g_clear_object(&power_profiles_daemon);
 
-	if (tablet_dev) {
-		close(libevdev_get_fd(tablet_dev));
-		libevdev_free(tablet_dev);
-
-		if (lid_dev == tablet_dev)
-			lid_dev = nullptr;
-		tablet_dev = nullptr;
+	for (auto &sw : input_switches) {
+		close(libevdev_get_fd(sw.dev));
+		libevdev_free(sw.dev);
 	}
-
-	if (lid_dev) {
-		close(libevdev_get_fd(lid_dev));
-		libevdev_free(lid_dev);
-
-		lid_dev = nullptr;
-	}
+	input_switches.clear();
 #endif
 
 }
@@ -763,6 +753,28 @@ int cthd_gddv::parse_itmt3(char *name, char *buf, unsigned int len) {
 	return 0;
 }
 
+/*
+ * A platform can define several virtual sensors (e.g. VR1.D0 and VR2.D0),
+ * each with its own VSCT and VSPT. Keep them apart, keyed by participant
+ * name, so that each one becomes its own sensor and zone.
+ */
+struct vsensor* cthd_gddv::get_vsensor(const char *name)
+{
+	std::string vs_name = name ? name : "vsct";
+
+	for (unsigned int i = 0; i < vsensors.size(); ++i) {
+		if (vsensors[i].name == vs_name)
+			return &vsensors[i];
+	}
+
+	struct vsensor vs;
+
+	vs.name = vs_name;
+	vsensors.push_back(std::move(vs));
+
+	return &vsensors.back();
+}
+
 int cthd_gddv::parse_vspt(char *name, char *buf, int len)
 {
 	int offset = 0;
@@ -774,13 +786,15 @@ int cthd_gddv::parse_vspt(char *name, char *buf, int len)
 		return THD_ERROR;
 	}
 
+	struct vsensor *vs = get_vsensor(name);
+
 	while (offset < len) {
 		struct vspt_entry vspt;
 
 		vspt.virtual_temp =	 get_uint64(buf, &offset);
 		vspt.virtual_temp = DECI_KELVIN_TO_CELSIUS(vspt.virtual_temp),
 		vspt.sample_period = get_uint64(buf, &offset) / 10;
-		vspts.push_back(vspt);
+		vs->vspts.push_back(vspt);
 	}
 
 	return THD_SUCCESS;
@@ -788,12 +802,7 @@ int cthd_gddv::parse_vspt(char *name, char *buf, int len)
 
 int cthd_gddv:: parse_vsct(char *name, char *buf, int len)
 {
-	if (name == nullptr)
-		vscts_name = "vsct";
-	else
-		vscts_name = name;
-
-	thd_log_debug(" vsct name %s\n", vscts_name.c_str());
+	thd_log_debug(" vsct name %s\n", name ? name : "vsct");
 	int offset = 0;
 	gddv_cur_buf_len = len;
 	int version = get_uint64(buf, &offset);
@@ -802,6 +811,8 @@ int cthd_gddv:: parse_vsct(char *name, char *buf, int len)
 		thd_log_warn("Found unsupported VSCT version %d\n", (int) version);
 		return THD_ERROR;
 	}
+
+	struct vsensor *vs = get_vsensor(name);
 
 	while (offset < len) {
 		struct vsct_entry vsct;
@@ -813,36 +824,37 @@ int cthd_gddv:: parse_vsct(char *name, char *buf, int len)
 		vsct.operation = get_uint64(buf, &offset);
 		vsct.alpha = get_uint64(buf, &offset);
 		vsct.trigger_point = get_uint64(buf, &offset);
-		vscts.push_back(std::move(vsct));
+		vs->vscts.push_back(std::move(vsct));
 	}
 
 	return THD_SUCCESS;
 }
 
 void cthd_gddv::dump_vsct() {
-	thd_log_info("..vsct dump begin [%s]\n", vscts_name.c_str());
+	for (const auto &vs : vsensors) {
+		thd_log_info("..vsct dump begin [%s]\n", vs.name.c_str());
 
-	for (unsigned int i = 0; i < vscts.size(); ++i) {
-		struct vsct_entry vsct = vscts[i];
+		for (const auto &vsct : vs.vscts) {
 			thd_log_info(
-					"\t target:%s domain_type:%d coeff_type:%d coeff:%d operation:%d alpha:%d trigger_point:%d\n",
-					vsct.target.c_str(), vsct.domain_type,
-					vsct.coeff_type, vsct.coeff,
-					vsct.operation, vsct.alpha, vsct.trigger_point
-					);
+				"\t target:%s domain_type:%d coeff_type:%d coeff:%d operation:%d alpha:%d trigger_point:%d\n",
+				vsct.target.c_str(), vsct.domain_type,
+				vsct.coeff_type, vsct.coeff,
+				vsct.operation, vsct.alpha, vsct.trigger_point);
+		}
+		thd_log_info("vsct dump end\n");
 	}
-	thd_log_info("vsct dump end\n");
 }
 
 void cthd_gddv::dump_vspt() {
-	thd_log_info("..vspt dump begin\n");
+	for (const auto &vs : vsensors) {
+		thd_log_info("..vspt dump begin [%s]\n", vs.name.c_str());
 
-	for (unsigned int i = 0; i < vspts.size(); ++i) {
-		struct vspt_entry vspt = vspts[i];
-			thd_log_info(
-					"\t sample_temp:%d polling period:%d\n", vspt.virtual_temp, vspt.sample_period);
+		for (const auto &vspt : vs.vspts) {
+			thd_log_info("\t sample_temp:%d polling period:%d\n",
+					vspt.virtual_temp, vspt.sample_period);
+		}
+		thd_log_info("vspt dump end\n");
 	}
-	thd_log_info("vspt dump end\n");
 }
 
 int cthd_gddv::parse_itmt(char *name, char *buf, int len) {
@@ -872,6 +884,15 @@ int cthd_gddv::parse_itmt(char *name, char *buf, int len) {
 		itmt_entry.trip_point = get_uint64(buf, &offset);
 		itmt_entry.pl1_min = get_string_obj(buf, &offset);
 		itmt_entry.pl1_max = get_string_obj(buf, &offset);
+		/* Some vaults (e.g. ASUS Vivobook X1402ZA, DV "x1402_p28_0322")
+		 * end the last entry right after pl1_max. Peeking at the next
+		 * object type can't tell the trailing string from the next
+		 * entry's target (both are strings), so only accept a short
+		 * entry at the very end of the table. */
+		if (offset == len) {
+			itmt.itmt_entries.push_back(std::move(itmt_entry));
+			break;
+		}
 		itmt_entry.unused = get_string_obj(buf, &offset);
 		if (version == 2) {
 			// Ref DPTF/Sources/Manager/DataManager.cpp DataManager::loadItmtTableObject()
@@ -1394,7 +1415,7 @@ int cthd_gddv::verify_condition(const struct condition& condition) {
 		return 0;
 	}
 #ifndef ANDROID
-	if (condition.condition == Lid_state && lid_dev != nullptr)
+	if (condition.condition == Lid_state && has_input_switch(SW_LID))
 		return 0;
 	if (condition.condition == Power_source && upower_client != nullptr)
 		return 0;
@@ -1589,6 +1610,7 @@ int cthd_gddv::evaluate_temperature_condition(
 	else
 		sensor_name = condition.device.substr(pos + 1);
 
+	sensor_name = thd_engine->cpu_participant_name(sensor_name, true);
 	cthd_sensor *sensor = thd_engine->search_sensor(sensor_name);
 	if (!sensor) {
 		thd_log_info("Unable to find a sensor for %s\n",
@@ -1624,17 +1646,12 @@ int cthd_gddv::evaluate_lid_condition(const struct condition& condition) {
 }
 #else
 int cthd_gddv::evaluate_lid_condition(const struct condition& condition) {
-	int value = 0;
+	int value = 1; /* open, if the lid switch went away */
+	int lid_closed;
 
-	if (lid_dev) {
-		struct input_event ev;
-
-		while (libevdev_has_event_pending(lid_dev))
-			libevdev_next_event(lid_dev, LIBEVDEV_READ_FLAG_NORMAL, &ev);
-
-		int lid_closed = libevdev_get_event_value(lid_dev, EV_SW, SW_LID);
+	if (get_input_switch(SW_LID, &lid_closed) == 0)
 		value = !lid_closed;
-	}
+
 	return compare_condition(condition, value);
 }
 #endif
@@ -1664,18 +1681,11 @@ int cthd_gddv::evaluate_platform_type_condition(
 int cthd_gddv::evaluate_platform_type_condition(
 		const struct condition& condition) {
 	int value = 1;
+	int tablet;
 
-	if (tablet_dev) {
-		struct input_event ev;
+	if (get_input_switch(SW_TABLET_MODE, &tablet) == 0 && tablet)
+		value = 2;
 
-		while (libevdev_has_event_pending(tablet_dev))
-			libevdev_next_event(tablet_dev, LIBEVDEV_READ_FLAG_NORMAL, &ev);
-
-		int tablet = libevdev_get_event_value(tablet_dev, EV_SW,
-				SW_TABLET_MODE);
-		if (tablet)
-			value = 2;
-	}
 	return compare_condition(condition, value);
 }
 #endif
@@ -1931,9 +1941,34 @@ static int is_event_device(const struct dirent *dir) {
 	return strncmp("event", dir->d_name, 5) == 0;
 }
 
-void cthd_gddv::setup_input_devices() {
+/* How often to look for switch devices that appeared after startup */
+#define INPUT_SWITCH_RESCAN_SEC	30
+
+/*
+ * Seconds from a monotonic clock, so a wall-clock step (e.g. NTP fixing a
+ * wrong RTC at boot) can't stall or hurry the rescan.
+ */
+static time_t input_switch_now() {
+	struct timespec ts;
+
+	if (clock_gettime(CLOCK_MONOTONIC, &ts))
+		return 0;
+
+	return ts.tv_sec;
+}
+
+/*
+ * Track every input device with a lid or tablet-mode switch. A laptop can
+ * have several tablet-mode switches, and some only appear on the first
+ * switch event (e.g. "Intel HID switches"), so this is called again
+ * periodically. The switch capabilities are read from sysfs, so other
+ * input devices such as touchscreens are not opened (and powered up).
+ */
+void cthd_gddv::scan_input_switches() {
 	struct dirent **namelist = nullptr;
-	int i, ndev, ret;
+	int i, ndev;
+
+	input_switches_scanned = input_switch_now();
 
 	ndev = scandir("/dev/input", &namelist, is_event_device, versionsort);
 	if (ndev == -1) {
@@ -1942,33 +1977,139 @@ void cthd_gddv::setup_input_devices() {
 	}
 
 	for (i = 0; i < ndev; i++) {
+		std::string name = namelist[i]->d_name;
+		std::string node = "/dev/input/" + name;
+		std::string caps_path = "/sys/class/input/" + name
+				+ "/device/capabilities/sw";
 		struct libevdev *dev = nullptr;
-		char fname[267];
-		int fd = -1;
+		unsigned long caps = 0;
+		bool known = false;
+		FILE *caps_file;
+		int fd;
 
-		snprintf(fname, sizeof(fname), "/dev/input/%s", namelist[i]->d_name);
 		free(namelist[i]);
-		fd = open(fname, O_RDONLY | O_NONBLOCK | O_CLOEXEC);
+
+		for (auto &sw : input_switches)
+			if (sw.node == node)
+				known = true;
+		if (known)
+			continue;
+
+		caps_file = fopen(caps_path.c_str(), "r");
+		if (!caps_file)
+			continue;
+		/* The EV_SW bitmap fits in one word (SW_MAX is 0x10) */
+		if (fscanf(caps_file, "%lx", &caps) != 1)
+			caps = 0;
+		fclose(caps_file);
+		if (!(caps & ((1UL << SW_LID) | (1UL << SW_TABLET_MODE))))
+			continue;
+
+		fd = open(node.c_str(), O_RDONLY | O_NONBLOCK | O_CLOEXEC);
 		if (fd < 0)
 			continue;
-		ret = libevdev_new_from_fd(fd, &dev);
-		if (ret) {
+		if (libevdev_new_from_fd(fd, &dev)) {
 			close(fd);
 			continue;
 		}
 
-		if (!tablet_dev && libevdev_has_event_code(dev, EV_SW, SW_TABLET_MODE))
-			tablet_dev = dev;
-		if (!lid_dev &&  libevdev_has_event_code(dev, EV_SW, SW_LID))
-			lid_dev = dev;
-
-		if (lid_dev != dev && tablet_dev != dev) {
-			libevdev_free(dev);
-			close(fd);
-		}
+		thd_log_info("Using switch input device \"%s\" (%s)\n",
+				libevdev_get_name(dev), node.c_str());
+		input_switches.push_back({ node, dev });
 	}
 
 	free(namelist);
+}
+
+/*
+ * Read all pending events so libevdev's state is current. Returns false if
+ * the device is gone: libevdev_has_event_pending() keeps reporting an event
+ * on a removed device (POLLHUP) while libevdev_next_event() fails with
+ * -ENODEV, so the caller must stop using the device.
+ */
+bool cthd_gddv::drain_input_events(struct libevdev *dev) {
+	struct input_event ev;
+	int rc;
+
+	while (libevdev_has_event_pending(dev) > 0) {
+		rc = libevdev_next_event(dev, LIBEVDEV_READ_FLAG_NORMAL, &ev);
+		if (rc == -EAGAIN)
+			break;
+		if (rc < 0)
+			return false;
+	}
+
+	return true;
+}
+
+void cthd_gddv::release_input_switch(size_t index) {
+	struct libevdev *dev = input_switches[index].dev;
+
+	thd_log_info("Input device \"%s\" is gone, no longer using it\n",
+			libevdev_get_name(dev));
+
+	close(libevdev_get_fd(dev));
+	libevdev_free(dev);
+	input_switches.erase(input_switches.begin() + index);
+}
+
+bool cthd_gddv::has_input_switch(unsigned int code) const {
+	for (auto &sw : input_switches)
+		if (libevdev_has_event_code(sw.dev, EV_SW, code))
+			return true;
+
+	return false;
+}
+
+/*
+ * Get the state of switch @code: set if any device reports it set.
+ * Returns -ENODEV if no device has that switch.
+ *
+ * Some drivers report SW_TABLET_MODE set on laptops that can't fold, so
+ * one such device forces tablet mode. Log when devices disagree, once
+ * per change, to make that visible.
+ */
+int cthd_gddv::get_input_switch(unsigned int code, int *value) {
+	int found = 0, set = 0;
+	unsigned long bit = 1UL << code;
+
+	if (input_switch_now() - input_switches_scanned >= INPUT_SWITCH_RESCAN_SEC)
+		scan_input_switches();
+
+	*value = 0;
+	for (size_t i = input_switches.size(); i-- > 0;) {
+		struct libevdev *dev = input_switches[i].dev;
+
+		if (!libevdev_has_event_code(dev, EV_SW, code))
+			continue;
+		if (!drain_input_events(dev)) {
+			release_input_switch(i);
+			continue;
+		}
+
+		++found;
+		if (libevdev_get_event_value(dev, EV_SW, code))
+			++set;
+	}
+
+	*value = set ? 1 : 0;
+
+	if (set && set != found) {
+		if (!(input_switch_mismatch & bit)) {
+			thd_log_info("Switch %s: %d of %d input devices report it set, using set\n",
+					libevdev_event_code_get_name(EV_SW, code), set, found);
+			for (auto &sw : input_switches)
+				if (libevdev_has_event_code(sw.dev, EV_SW, code))
+					thd_log_info("  \"%s\" (%s): %d\n", libevdev_get_name(sw.dev),
+							sw.node.c_str(),
+							libevdev_get_event_value(sw.dev, EV_SW, code));
+			input_switch_mismatch |= bit;
+		}
+	} else {
+		input_switch_mismatch &= ~bit;
+	}
+
+	return found ? 0 : -ENODEV;
 }
 #endif
 
@@ -2252,7 +2393,7 @@ skip_load:
 	}
 
 #ifndef ANDROID
-	setup_input_devices();
+	scan_input_switches();
 
 	upower_client = up_client_new();
 	if (!upower_client) {

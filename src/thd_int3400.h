@@ -38,6 +38,9 @@ public:
 	cthd_INT3400(std::string _uuid);
 	int match_supported_uuid(void);
 	void set_default_uuid(void);
+	const std::string& get_base_path() const {
+		return base_path;
+	}
 };
 
 #endif /* SRC_THD_INT3400_UUID_H_ */

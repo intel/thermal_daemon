@@ -40,18 +40,34 @@
  *                     Power limit keeps decreasing each poll while
  *                     temperature stays above the trip threshold.
  */
+/* Longest time step (seconds) one call of a time scaled PID acts on */
+#define PID_TIME_SCALED_MAX_DT	10
+
 typedef enum : std::uint8_t {
 	PID_ABSOLUTE,
 	PID_INCREMENTAL
 } pid_mode_t;
 
-typedef struct
+typedef struct pid_param
 {
 	int valid;
 	double kp;
 	double ki;
 	double kd;
 	pid_mode_t mode;
+	/*
+	 * Incremental mode only: below the trip keep running the PID, so the
+	 * limit is released in proportion to the (negative) error instead of
+	 * being restored at once.
+	 */
+	int gradual_release = 0;
+	/* Control towards trip temperature - set_point_offset (millicelsius) */
+	int set_point_offset = 0;
+	/*
+	 * Incremental mode only: output Kp*e*dt + Kd*(e - last e), so the
+	 * gains are per second and don't depend on how often it is called.
+	 */
+	int time_scaled = 0;
 }pid_param_t;
 
 class cthd_pid {
@@ -61,9 +77,12 @@ private:
 	time_t last_time;
 	unsigned int target_temp;
 	pid_mode_t mode;
+	bool time_scaled;
 
 public:
 	double kp, ki, kd;
+	/* Consecutive backstop calls, see cthd_cdev::pid_gradual_bound() */
+	int boost_pow;
 	cthd_pid();
 	cthd_pid(const cthd_pid& x) = default;
 	
@@ -78,6 +97,7 @@ public:
 		kd = _kd;
 	}
 	void set_pid_mode(pid_mode_t m) { mode = m; }
+	void set_time_scaled(bool t) { time_scaled = t; }
 	pid_mode_t get_pid_mode() const { return mode; }
 
 	int pid_output(unsigned int curr_temp, int initial_value = 0);
@@ -86,5 +106,6 @@ public:
 	}
 	void reset() {
 		err_sum = last_err = last_time = 0;
+		boost_pow = 0;
 	}
 };

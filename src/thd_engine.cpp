@@ -72,13 +72,13 @@ static bool canonicalize_sysfs_path(const std::string &path,
 cthd_engine::cthd_engine(std::string _uuid) :
 		current_cdev_index(0), current_zone_index(0), current_sensor_index(0), parse_thermal_zone_success(
 				false), parse_thermal_cdev_success(false), uuid(std::move(_uuid)), parser_disabled(
-				false), adaptive_mode(false), poll_timeout_msec(-1), wakeup_fd(
-				-1), uevent_fd(-1), control_mode(COMPLEMENTRY), write_pipe_fd(
+				false), adaptive_mode(false), imok_missing_logged(false), poll_timeout_msec(
+				-1), wakeup_fd(-1), uevent_fd(-1), control_mode(COMPLEMENTRY), write_pipe_fd(
 				0), preference(0), status(true), thz_last_uevent_time(0), thz_last_temp_ind_time(
 				0), thz_last_update_event_time(0), terminate(false), has_invariant_tsc(0),
 				has_aperf(0), proc_list_matched(false), poll_interval_sec(0),
 				saved_poll_interval(0), poll_fd_cnt(0), rt_kernel(false),
-				parser_init_done(false) {
+				parser_init_done(false), ignore_platform_check(false) {
 	thd_engine = pthread_t();
 	thd_attr = pthread_attr_t();
 
@@ -91,6 +91,70 @@ cthd_engine::~cthd_engine() {
 		parser.parser_deinit();
 }
 
+bool cthd_engine::check_thinkpad_dytc() {
+	struct stat info;
+	const char *path = "/sys/devices/platform/thinkpad_acpi/dytc_lapmode";
+
+	if (ignore_platform_check || stat(path, &info))
+		return false;
+
+	thd_log_warn("[%s] present: Thermald can't run on this platform; stopping\n",
+			path);
+#ifdef GLIB_SUPPORT
+	thd_request_shutdown();
+#else
+	kill(getpid(), SIGTERM);
+#endif
+	return true;
+}
+
+int cthd_engine::write_int3400_imok(unsigned int value, const char *caller) {
+	csys_fs sysfs("");
+
+	if (int3400_base_path.empty()) {
+		cthd_INT3400 int3400(uuid);
+		int3400_base_path = int3400.get_base_path();
+		if (int3400_base_path.empty())
+			return THD_ERROR;
+	}
+
+	/*
+	 * The int3400 driver only creates imok if the firmware has an IMOK
+	 * method. Log once instead of failing on every target switch or event.
+	 */
+	std::string imok_path = int3400_base_path + "imok";
+	if (!sysfs.exists(imok_path)) {
+		if (!imok_missing_logged) {
+			thd_log_info("No %s, ignoring %s\n", imok_path.c_str(), caller);
+			imok_missing_logged = true;
+		}
+		return THD_ERROR;
+	}
+
+	if (sysfs.write(imok_path, value) < 0) {
+		thd_log_warn("Failed to write %u to %s\n", value, imok_path.c_str());
+		return THD_ERROR;
+	}
+
+	return THD_SUCCESS;
+}
+
+void cthd_engine::handle_keep_alive_event() {
+	if (!status || terminate)
+		return;
+
+	/*
+	 * Per Documentation/driver-api/thermal/intel_dptf.rst, respond to
+	 * THERMAL_EVENT_KEEP_ALIVE by writing 1 to the INT3400 imok attribute.
+	 * When an adaptive NotifyPlatform target is active, re-send its value
+	 * so the keep-alive reply does not overwrite the platform state.
+	 */
+	unsigned int arg = get_keep_alive_imok_arg();
+	if (write_int3400_imok(arg, "INT3400 keep-alive") == THD_SUCCESS)
+		thd_log_debug("Responded to INT3400 keep-alive (%u) via %simok\n",
+				arg, int3400_base_path.c_str());
+}
+
 void cthd_engine::thd_engine_thread() {
 	unsigned int i;
 	int n;
@@ -98,6 +162,9 @@ void cthd_engine::thd_engine_thread() {
 	int poll_timeout_sec = poll_timeout_msec / 1000;
 
 	thd_log_info("thd_engine_thread begin\n");
+	if (check_thinkpad_dytc())
+		return;
+
 	for (;;) {
 		if (terminate)
 			break;
@@ -111,24 +178,16 @@ void cthd_engine::thd_engine_thread() {
 		}
 		time(&tm);
 		rapl_power_meter.rapl_measure_power();
+		bool keep_alive_pending = false;
 
-		if (n == 0 || (tm - thz_last_temp_ind_time) >= poll_timeout_sec) {
-			if (!status) {
-				thd_log_msg("Thermal Daemon is disabled\n");
-				continue;
-			}
-			thd_engine_lock();
-			// Polling mode enabled. Trigger a temp change message
-			for (i = 0; i < zones.size(); ++i) {
-				cthd_zone *zone = zones[i].get();
-				zone->zone_temperature_notification(0, 0);
-			}
-			thd_engine_unlock();
-			thz_last_temp_ind_time = tm;
-		}
 		if (uevent_fd >= 0 && (poll_fds[uevent_fd].revents & POLLIN)) {
-			// Kobj uevent
-			if (kobj_uevent.check_for_event()) {
+			cthd_kobj_uevent::event_type event = kobj_uevent.check_for_event();
+			if (event == cthd_kobj_uevent::THINKPAD_ACPI_EVENT
+					&& check_thinkpad_dytc())
+				break;
+			if (event == cthd_kobj_uevent::KEEP_ALIVE_EVENT) {
+				keep_alive_pending = true;
+			} else if (event == cthd_kobj_uevent::THERMAL_EVENT) {
 				time_t tm;
 
 				time(&tm);
@@ -146,6 +205,20 @@ void cthd_engine::thd_engine_thread() {
 				}
 				thz_last_uevent_time = tm;
 			}
+		}
+		if (n == 0 || (tm - thz_last_temp_ind_time) >= poll_timeout_sec) {
+			if (!status) {
+				thd_log_msg("Thermal Daemon is disabled\n");
+				continue;
+			}
+			thd_engine_lock();
+			// Polling mode enabled. Trigger a temp change message
+			for (i = 0; i < zones.size(); ++i) {
+				cthd_zone *zone = zones[i].get();
+				zone->zone_temperature_notification(0, 0);
+			}
+			thd_engine_unlock();
+			thz_last_temp_ind_time = tm;
 		}
 		if (wakeup_fd >= 0 && (poll_fds[wakeup_fd].revents & POLLIN)) {
 			message_capsul_t msg;
@@ -176,6 +249,9 @@ void cthd_engine::thd_engine_thread() {
 			thd_engine_unlock();
 			thz_last_update_event_time = tm;
 		}
+
+		if (keep_alive_pending)
+			handle_keep_alive_event();
 
 		workarounds();
 	}
@@ -293,6 +369,7 @@ void cthd_engine::thd_parse_features()
 }
 
 int cthd_engine::thd_engine_init(bool ignore_cpuid_check, bool adaptive) {
+	ignore_platform_check = ignore_cpuid_check;
 	int ret;
 
 	adaptive_mode = adaptive;
@@ -406,27 +483,22 @@ int cthd_engine::thd_engine_start() {
 		if (i == zones.size()) {
 			thd_log_info("Proceed without polling mode!\n");
 		}
+	}
 
-		if (check_feature(KOBJECT_UEVENT_SUPPORT) == 0) {
-			thd_log_info("Kobject uevent support is disabled by config file\n");
-			goto skip_kobj;
-		}
-
-		uevent_fd = poll_fd_cnt;
-		poll_fds[uevent_fd].fd = kobj_uevent.kobj_uevent_open();
-		if (poll_fds[uevent_fd].fd < 0) {
-			thd_log_warn("Invalid kobj_uevent handle\n");
-			uevent_fd = -1;
-			goto skip_kobj;
-		}
+	uevent_fd = poll_fd_cnt;
+	poll_fds[uevent_fd].fd = kobj_uevent.kobj_uevent_open();
+	if (poll_fds[uevent_fd].fd < 0) {
+		thd_log_warn("Invalid kobj_uevent handle; late ThinkPad DYTC detection unavailable\n");
+		uevent_fd = -1;
+	} else {
 		thd_log_info("FD = %d\n", poll_fds[uevent_fd].fd);
-		kobj_uevent.register_dev_path(
-				(char *) "/devices/virtual/thermal/thermal_zone");
+		if (!poll_interval_sec && check_feature(KOBJECT_UEVENT_SUPPORT) != 0)
+			kobj_uevent.register_dev_path(
+					(char *) "/devices/virtual/thermal/thermal_zone");
 		poll_fds[uevent_fd].events = POLLIN;
 		poll_fds[uevent_fd].revents = 0;
 		poll_fd_cnt++;
 	}
-	skip_kobj:
 #ifndef DISABLE_PTHREAD
 	// Create thread
 	pthread_attr_init(&thd_attr);
@@ -1015,6 +1087,23 @@ cthd_sensor* cthd_engine::search_sensor(const std::string& name) {
 	}
 
 	return nullptr;
+}
+
+// DTT names the CPU TCPU or B0D4; without PPCC only the PCI driver's TCPU_PCI exists
+std::string cthd_engine::cpu_participant_name(const std::string& name, bool sensor) {
+	bool b0d4 = !name.compare(0, 4, "B0D4");
+
+	if (!b0d4 && name.compare(0, 4, "TCPU"))
+		return name;
+
+	const std::string names[] = { name, b0d4 ? "TCPU" : "B0D4", "TCPU_PCI" };
+
+	for (const auto &n : names) {
+		if (sensor ? search_sensor(n) != nullptr : search_zone(n) != nullptr)
+			return n;
+	}
+
+	return name;
 }
 
 cthd_sensor* cthd_engine::get_sensor(int index) {

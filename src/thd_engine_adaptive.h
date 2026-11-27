@@ -31,32 +31,66 @@
 #include <upower.h>
 #endif
 
+#include <set>
+
 #include "thd_engine_default.h"
 #include "thd_cpu_default_binding.h"
 #include "thd_adaptive_types.h"
 
 
+#include "thd_itmt_pid_config.h"
+
+/* A power limit held over a change of the adaptive target */
+typedef struct {
+	cthd_cdev *cdev;
+	int zone_index;
+	int sensor_id;
+	int hold_temp;		/* millicelsius: held at or above */
+	int request;		/* device state */
+	int step;		/* release per sampling period: step * unlimit_coeff */
+	int unlimit_coeff;
+	int sampling_period;	/* 0.1 s */
+} power_limit_carry_t;
+
 class cthd_engine_adaptive: public cthd_engine_default {
+	cthd_itmt_pid_config itmt_pid_config;
+	std::vector<power_limit_carry_t> carries;
+	int carry_trip_index = 1000;
+
+	void carry_capture();
+	void carry_apply();
+
 protected:
 	int policy_active;
 	int fallback_id;
 	std::string int3400_path;
-	std::string int3400_base_path;
 	int passive_def_only;
 	int passive_def_processed;
 	int power_slider;
 	int int3400_installed;
+	bool notify_platform_active = false;
+	unsigned int notify_platform_arg = 0;
+	int thermal_devices_at_init = 0;
 	int current_matched_target;
+
+	unsigned int get_keep_alive_imok_arg() override {
+		return notify_platform_active ? notify_platform_arg : 1U;
+	}
 
 	int set_itmt_target(struct adaptive_target &target);
 	int install_passive(struct psv *psv);
+	int install_psvt(struct psvt *psvt);
 	int install_itmt(struct itmt_entry *itmt_entry);
 	void psvt_consolidate();
 	void set_trip(const std::string& device, const std::string& argument);
 	void set_int3400_target(struct adaptive_target &target);
+	void set_notify_platform(struct adaptive_target &target);
 	void exec_fallback_target(int target);
 	void execute_target(struct adaptive_target &target);
 	void install_passive_default();
+	int install_virtual_sensor(const struct vsensor &vs,
+			const std::vector<struct vspt_entry> &vspts);
+	std::set<std::string> virt_sensor_names;
 	int set_int3400_base_path();
 
 public:
@@ -64,14 +98,14 @@ public:
 #ifndef ANDROID
 	cthd_engine_adaptive() :
 			cthd_engine_default("63BE270F-1C11-48FD-A6F7-3AF253FF3E2D"), policy_active(
-					0), fallback_id(-1), int3400_path(""), int3400_base_path(
-					""), passive_def_only(0), passive_def_processed(0),
-					power_slider(75), int3400_installed(0), current_matched_target(-1) {
+					0), fallback_id(-1), int3400_path(""), passive_def_only(
+					0), passive_def_processed(0), power_slider(75),
+					int3400_installed(0), current_matched_target(-1) {
 	}
 #else
 	cthd_engine_adaptive() :
 			cthd_engine_default("63BE270F-1C11-48FD-A6F7-3AF253FF3E2D"), policy_active(
-					0), fallback_id(-1), int3400_base_path(""), passive_def_only(
+					0), fallback_id(-1), passive_def_only(
 					0), passive_def_processed(0) {
 	}
 #endif

@@ -31,6 +31,7 @@
 #include <upower.h>
 #endif
 
+#include <ctime>
 #include <memory>
 #include "thd_engine.h"
 #include "thd_trt_art_reader.h"
@@ -214,7 +215,17 @@ struct vspt_entry {
 	int sample_period;
 };
 
+/* One virtual sensor participant (e.g. VR1.D0): its VSCT and VSPT tables */
+struct vsensor {
+	std::string name;
+	std::vector<struct vsct_entry> vscts;
+	std::vector<struct vspt_entry> vspts;
+};
+
 class cthd_gddv {
+	/* test/unit/gddv_dump.cpp: parse a vault file and dump the tables */
+	friend class cthd_gddv_test;
+
 private:
 	std::vector<ppcc_t> ppccs;
 	std::vector<struct custom_condition> custom_conditions;
@@ -227,8 +238,14 @@ private:
 #ifndef ANDROID
 	UpClient *upower_client;
 	GDBusProxy *power_profiles_daemon;
-	struct libevdev *tablet_dev;
-	struct libevdev *lid_dev;
+	/* Input devices with a lid and/or tablet-mode switch */
+	struct input_switch {
+		std::string node;
+		struct libevdev *dev;
+	};
+	std::vector<struct input_switch> input_switches;
+	time_t input_switches_scanned;
+	unsigned long input_switch_mismatch;	/* EV_SW codes devices disagree on */
 #endif
 	std::string int3400_base_path;
 	int power_slider;
@@ -262,6 +279,7 @@ private:
 	int parse_itmt3(char *name, char *itmt, unsigned int len);
 	int parse_vsct(char *name, char *psvt, int len);
 	int parse_vspt(char *name, char *psvt, int len);
+	struct vsensor* get_vsensor(const char *name);
 	int parse_trt(char *trt, int len);
 	void parse_idsp(char *name, char *idsp, int len);
 	void parse_trip_point(char *name, char *type, char *val, int len);
@@ -292,7 +310,11 @@ private:
 	void dump_vsct();
 	void dump_vspt();
 #ifndef ANDROID
-	void setup_input_devices();
+	void scan_input_switches();
+	bool drain_input_events(struct libevdev *dev);
+	void release_input_switch(size_t index);
+	bool has_input_switch(unsigned int code) const;
+	int get_input_switch(unsigned int code, int *value);
 #endif
 	int get_trip_temp(const std::string& name, trip_point_type_t type);
 
@@ -300,7 +322,7 @@ public:
 #ifndef ANDROID
 	cthd_gddv() :
 			upower_client(
-			nullptr), power_profiles_daemon(nullptr), tablet_dev(nullptr), lid_dev(nullptr), int3400_base_path(""), power_slider(75), current_target_matched(-1), gddv_cur_buf_len(0) {
+			nullptr), power_profiles_daemon(nullptr), input_switches_scanned(0), input_switch_mismatch(0), int3400_base_path(""), power_slider(75), current_target_matched(-1), gddv_cur_buf_len(0) {
 	}
 #else
 	cthd_gddv() :
@@ -313,9 +335,7 @@ public:
 	std::vector<std::vector<struct condition>> conditions;
 	std::vector<struct adaptive_target> targets;
 
-	std::string vscts_name;
-	std::vector<struct vsct_entry> vscts;
-	std::vector<struct vspt_entry> vspts;
+	std::vector<struct vsensor> vsensors;
 
 	ppcc_t* get_ppcc_param(const std::string& name);
 	int gddv_init(std::string& base_path);

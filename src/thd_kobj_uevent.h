@@ -24,6 +24,7 @@
 #ifndef THD_KOBJ_UEVENT_H_
 #define THD_KOBJ_UEVENT_H_
 
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -45,6 +46,13 @@ private:
 	char device_path[max_buffer_size];
 
 public:
+	enum event_type : uint8_t {
+		NO_EVENT,
+		THERMAL_EVENT,
+		THINKPAD_ACPI_EVENT,
+		KEEP_ALIVE_EVENT,
+	};
+
 	cthd_kobj_uevent() {
 		fd = 0;
 		memset(&nls, 0, sizeof(nls));
@@ -53,7 +61,8 @@ public:
 	int kobj_uevent_open();
 	void kobj_uevent_close();
 	void register_dev_path(char *path);
-	bool check_for_event();
+	event_type check_for_event();
+	event_type parse_event(const char *buffer, size_t len) const;
 }
 ;
 

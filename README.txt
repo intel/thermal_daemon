@@ -56,7 +56,7 @@ add appropriate prefix.
 	sudo systemctl enable thermald.service
 
 4. Terminate using DBUS I/F
-	sudo test/test_pref.sh
+	sudo tools/thermald_set_pref.sh
 		and select "TERMINATE" choice.
 
 
@@ -112,6 +112,58 @@ For build, follow the same procedure as Fedora.
 -------------------------------------------
 
 Releases
+
+Release 2.5.14-rc1
+This is a test release, for testing across a wide variety of platforms.
+
+- Adaptive mode power control:
+  - PSVT entries with a step size and coefficients are controlled as the
+table describes: the limit is interpolated between a sensor's entries and
+moves by step size * limit/unlimit coefficient per sampling period.
+  - ITMT trips are controlled by a PID that settles the power limit near
+the trip temperature, with gains scaled to the PL1 range. It is configured
+in /etc/thermald/itmt-pid.xml, installed with Enable 1; with Enable 0 or
+without the file the previous controller is used.
+  - A power limit in force is kept over a change of the adaptive target
+while its trip is still exceeded, instead of resetting PL1 to its maximum.
+  - Keep PL1 at the PL1MAX ceiling when not throttling.
+
+- New platforms: SoC power-limit based thermal control for Qualcomm Glymur,
+Kalambo and Mahua. thermal-conf.xml with these rules is installed by default
+(an existing one is kept). OpenRC service script.
+
+- Adaptive mode: answer the firmware's keep-alive requests (IMOK); handle
+NotifyPlatform targets; support more than one GDDV virtual sensor, with
+millidegree precision; track every lid/tablet switch device; accept Motion
+conditions; apply hysteresis to Temperature conditions; fall back to the
+default PSVT when a target's PSVT is missing, and to the fallback target when
+no condition matches; ignore IETM target codes that aren't handled; find the
+CPU zone registered as TCPU_PCI; keep adaptive mode on D-Bus Reinit.
+
+- Startup races: stop when a ThinkPad's DYTC appears after thermald started;
+retry adaptive mode once when thermal devices appeared after startup instead
+of falling back until the next boot; start after intel_rapl sysfs is
+available; log when ignore_adaptive exists.
+
+- Data vault parsing: stricter length validation, limit on nested compressed
+segments, PPCC with only a PL1 entry, ITMT v1 entries without the trailing
+string, PSVT temperatures validated.
+
+- Fixes: uevents were handled twice (also received from udevd); boolean
+command line options overwrote each other; a trip's PidControl was ignored
+in zones defined by thermal-conf.xml; the engine lock is held while handling
+engine messages; sensors that need polling are tracked without a 32-bit
+limit; cooling device states and steps from D-Bus and thermal-conf.xml are
+limited; D-Bus SetUserMaxTemperature replies; a busy loop on a removed input
+device; CRLF line endings in the SPEL backend.
+
+- Tools: thermald_live_plot.py plots package power, PL1/PL2 and zone
+temperatures live.
+
+- Testing: a VM regression suite (virtme-ng with a test kernel module that
+fakes RAPL, coretemp, intel_pstate, cpufreq and a backlight), unit tests and
+fuzzers for the data vault and XML parsers, and a hardware smoke test, all
+run in CI.
 
 Release 2.5.13
 - Restricted Qualcomm SPEL PL initialization to XML-defined cooling devices only.
