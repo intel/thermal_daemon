@@ -101,7 +101,8 @@ class Guest:
         shutil.rmtree(CONF_DIR, ignore_errors=True)
         os.makedirs(CONF_DIR)
         for name in ("thermald-features.xml", "thermal-cpu-cdev-order.xml"):
-            shutil.copy(os.path.join(self.repo, "data", name), CONF_DIR)
+            dest = shutil.copy(os.path.join(self.repo, "data", name), CONF_DIR)
+            os.chmod(dest, 0o644)
         for name, text in p.get("conf_files", {}).items():
             write(os.path.join(CONF_DIR, name), text)
         shutil.rmtree(RUN_DIR, ignore_errors=True)
