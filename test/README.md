@@ -8,7 +8,7 @@ up, what each test checks, and how to add tests.
     ./autogen.sh prefix=/ && make -j$(nproc)    # once
     test/run_all.sh                              # ~7 min, no root needed
 
-It builds what it needs, runs the parser unit tests, a short run of each
+It builds what it needs, runs the unit tests, a short run of each
 fuzzer and the VM regression scenarios, and ends with one line per layer:
 
     unit: PASS
@@ -54,7 +54,7 @@ checks and [Manual tests](#manual-tests) for the older hand-run tests.
 
 | Layer | Directory | Needs | What it covers |
 |---|---|---|---|
-| Parser unit tests | `unit/` | gcc, pytest | thermald's GDDV (data vault) parser, built with AddressSanitizer and UBSan: round trips of every table type, every truncation of a valid vault, byte mutations, huge lengths |
+| Unit tests | `unit/` | gcc, pytest | thermald's GDDV (data vault) parser, built with AddressSanitizer and UBSan: round trips of every table type, every truncation of a valid vault, byte mutations, huge lengths. PID sample timing |
 | Fuzzing | `fuzz/` | clang | libFuzzer with ASan and UBSan on the GDDV parser, the three XML configuration parsers and the integer, floating point and name helpers |
 | VM regression | `regression/` | KVM, virtme-ng | the real thermald binary in a VM on a fake platform: PPCC and RAPL limits, condition tables, temperature limits and restore, several zones on one cooling device, XML configs, malformed vaults, random D-Bus calls (to an ASan build), recent fixes |
 | Hardware smoke | `hw/` | root, a supported machine | the real thermald binary on a real machine for a minute or two |
@@ -66,6 +66,7 @@ checks and [Manual tests](#manual-tests) for the older hand-run tests.
       README.md        this guide
       run_all.sh       runs unit, fuzz and VM layers
       unit/            parser unit tests (gddv_dump, test_gddv_parser.py)
+                       PID unit tests (pid_clock, test_pid.py)
       fuzz/            libFuzzer targets (gddv, xml, util), seeds, run.sh
       regression/      VM suite: run.sh, scenarios/, configs/, lib/, real/
       hw/              hw_smoke.py, for real machines
@@ -151,7 +152,7 @@ kernel (`CONFIG_CC_IS_CLANG=y`) and passes `LLVM=1` itself.
 | Layer | Fedora | Ubuntu | Arch Linux / CachyOS |
 |---|---|---|---|
 | Building thermald (all layers) | `automake autoconf-archive gcc gcc-c++ glib2-devel libxml2-devel gtk-doc upower-devel libevdev-devel` | `autoconf autoconf-archive automake g++ gtk-doc-tools libglib2.0-dev libxml2-dev libupower-glib-dev libevdev-dev` | `base-devel autoconf-archive glib2 libxml2 gtk-doc upower libevdev` |
-| Parser unit tests | `python3-pytest libasan libubsan` | `python3-pytest` | `python-pytest` |
+| Parser and PID unit tests | `python3-pytest libasan libubsan` | `python3-pytest` | `python-pytest` |
 | Fuzzing | `clang compiler-rt llvm` | `clang libclang-rt-dev llvm` | `clang compiler-rt llvm` |
 | VM regression | `virtme-ng qemu-system-x86-core acpica-tools python3-pytest python3-dbusmock python3-evdev python3-dbus dbus-daemon kernel-devel-$(uname -r)` | `virtme-ng qemu-system-x86 acpica-tools python3-pytest python3-dbusmock python3-evdev python3-dbus dbus-daemon linux-headers-$(uname -r)`, readable `/boot/vmlinuz-*` | `virtme-ng qemu-system-x86 acpica python-pytest python-dbusmock python-evdev python-dbus dbus`, the running kernel's `-headers` package |
 | Hardware smoke | Python 3, root; `python3-matplotlib` for the plot | Python 3, root; `python3-matplotlib` for the plot | Python 3, root; `python-matplotlib` for the plot |
@@ -218,7 +219,7 @@ One layer at a time:
 
 | Layer | Command | Time |
 |---|---|---|
-| Parser unit tests | `make -C test/unit && pytest test/unit` | ~40 s |
+| Parser and PID unit tests | `make -C test/unit && pytest test/unit` | ~40 s |
 | Fuzzing | `test/fuzz/run.sh` (`FUZZ_SECONDS=3600` for longer, `test/fuzz/run.sh xml` for one target) | 60 s per target |
 | D-Bus fuzzing | `test/regression/run.sh -k dbus_fuzz` (`THD_DBUS_FUZZ_SEED=N THD_DBUS_FUZZ_CALLS=N` for others) | ~20 s |
 | VM regression | `test/regression/run.sh` | ~6 min |

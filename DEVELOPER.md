@@ -339,6 +339,7 @@ difference is what the output is applied to:
   down every poll while the temperature stays above target, and on deactivation
   restores `min_state` and resets the PID.
 
+The PID measures the sample interval in monotonic seconds.
 The `±` is the inverted-range handling again. Configure via `<PidControl>` in
 `thermal-conf.xml`, either per trip-cdev binding or per cooling device.
 

@@ -74,6 +74,7 @@ class cthd_pid {
 
 private:
 	double err_sum, last_err;
+	bool first_call;
 	time_t last_time;
 	unsigned int target_temp;
 	pid_mode_t mode;
@@ -107,5 +108,6 @@ public:
 	void reset() {
 		err_sum = last_err = last_time = 0;
 		boost_pow = 0;
+		first_call = true;
 	}
 };

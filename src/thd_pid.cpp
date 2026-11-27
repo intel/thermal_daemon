@@ -27,6 +27,7 @@ cthd_pid::cthd_pid() {
 	kp = 0.0005;
 	ki = kd = 0.0001;
 	last_time = 0;
+	first_call = true;
 	err_sum = 0.0;
 	last_err = 0.0;
 	target_temp = 0;
@@ -41,10 +42,13 @@ int cthd_pid::pid_output(unsigned int curr_temp, int initial_value) {
 	 * curr_temp < target_temp */
 	int error = (int)curr_temp - (int)target_temp;
 
-	time_t now;
-	time(&now);
+	/* Not the wall clock: a time jump would corrupt the integral */
+	struct timespec ts;
+	clock_gettime(CLOCK_MONOTONIC, &ts);
+	time_t now = ts.tv_sec;
 
-	if (last_time == 0) {
+	if (first_call) {
+		first_call = false;
 		/* First call: initialise state. */
 		last_time = now;
 		last_err = error;
